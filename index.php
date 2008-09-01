@@ -22,6 +22,27 @@ $page = $_GET["page"];
 if ($page == "")
 	$page = "home.php";
 
+	
+// perform security checks on the page
+// security_localphp prevents any nasties, and then we check the the page exists.
+$page_valid = 0;
+if (!security_localphp($page))
+{
+	$_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
+}
+else
+{
+	if (!@file_exists($page))
+	{
+		$_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
+	}
+	else
+        {
+		$page_valid = 1;
+	}
+}
+
+
 
 // set default page state
 if (!$_SESSION["error"]["pagestate"])
@@ -55,6 +76,7 @@ function obj_show(obj)
 
 <style type="text/css">
 @import url("include/style.css");
+@import url("include/style_menu.css");
 </style>
 
 
@@ -89,22 +111,111 @@ function obj_show(obj)
 	</td>
 </tr>
 
-<tr><td width="100%" class="table_header">
-		<table width="100%">
-		<tr>
-			<td width="85%">
-				<b><a href="index.php?page=home.php">Overview</a></b> |
-				<b><a href="index.php?page=customers/customers.php">Customers</a></b> |
-				<b><a href="index.php?page=accounts/accounts.php">Accounts</a></b> |
-				<b><a href="index.php?page=productsandservices/productsandservices.php">Products and Services</a></b> |
-				<b><a href="index.php?page=timekeeping/timekeeping.php">Time Keeping</a></b> |
-				<b><a href="index.php?page=support/support.php">Support Tickets</a></b>
-			</td>
-			<td width="15%" align="right">
-				<b><a href="index.php?page=user/user-details.php">preferences</a></b>
-			</td>
-		</tr>
-		</table>
+<tr>
+	<td width="100%">
+
+	<table width="100%">
+	<?php
+	/*
+		Here we draw the menu. All pages have the top menu displayed, then differing numbers of sub menus, depending
+		on the page currently open.
+
+		In future, this should be replaced with a more fancy javascript solution with roll over features, etc.
+	*/
+
+	if ($page_valid == 1)
+	{
+		// page is valid and exists
+		// this means that the $page value has already been checked to prevent
+		// SQL injection or other unwanted problems.
+
+		$parents = array();
+
+		// get the menu item for this page
+		$mysql_string		= "SELECT parent FROM `menu` WHERE link='$page'";
+		$mysql_menu_result	= mysql_query($mysql_string);
+		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+
+		if ($mysql_menu_num_rows)
+		{
+			while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
+			{
+				$parents[] = $mysql_menu_data["parent"];
+			}
+
+			// we now sort the array, and end up with all the menu
+			// levels in order
+			$parents = array_reverse($parents);
+		}
+	}
+
+	// if we have no sub-menu information, just display the top menu.
+	if (!$parents)
+	{
+		$parents[] = "top";
+	}
+
+	/*
+		Now we display all the menus.
+
+		Note that the "top" menu has the addition of a second column to the right
+		for the user perferences/administration box.
+	*/
+	foreach ($parents as $parent)
+	{
+		print "<tr class=\"table_header\">";
+		if ($parent == "top")
+		{
+			print "<td width=\"85%\">";
+		}
+		else
+		{
+			print "<td width=\"100%\">";
+		}
+	
+		// get the data for this menu
+		$mysql_string		= "SELECT link, topic FROM `menu` WHERE parent='$parent'";
+		$mysql_menu_result	= mysql_query($mysql_string);
+		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+			
+		$count = 0;
+		while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
+		{
+			print "<b><a href=\"index.php?page=". $mysql_menu_data["link"] ."\">". $mysql_menu_data["topic"] ."</a></b>";
+
+			// prevent an extra seperator from being added to the menu.
+			$count++;
+			if ($count != $mysql_menu_num_rows)
+			{
+				print " | ";
+			}
+		}
+
+		print "</td>";
+
+		// special preferences/administration option for top menu only
+		if ($parent == "top")
+		{
+			print "<td width=\"15%\" align=\"right\">";
+			
+			if (user_permissions_get("admin"))
+			{
+				print "<b><a href=\"index.php?page=admin/admin.php\">Administration</a></b>";
+			}
+			else
+			{
+				print "<b><a href=\"index.php?page=user/user-details.php&id=". user_information("id") ."&mode=self\">preferences</a></b>";
+			}
+			
+			print "</td>";
+		}
+		print "</tr>";
+	}
+	?>
+
+	
+	</table>
+	
 	</td></tr>
 
 	<?php
@@ -114,24 +225,12 @@ function obj_show(obj)
         //      - display any errors & notifications
         //      - display the page.
 
-        // CHECK AND LOAD THE PAGE
-	$page_valid = 0;
-        if (!security_localphp($page))
-        {
-                $_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
-        }
-        else
-        {
-                if (!@file_exists($page))
-                {
-                        $_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
-                }
-                else
-                {
-                        include($page);
-			$page_valid = 1;
-                }
-        }
+
+	// LOAD THE PAGE AND PROCESS HEADER CODE
+	if ($page_valid == 1)
+	{
+		include($page);
+	}
 
         // DRAW ERROR/NOTIFCATION MESSAGES
         if ($_SESSION["error"]["message"])
