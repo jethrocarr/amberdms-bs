@@ -16,6 +16,8 @@ include("include/security.php");
 include("include/errors.php");
 include("include/user.php");
 
+include("include/amberphplib/main.php");
+
 
 // get the page to display
 $page = $_GET["page"];
@@ -76,7 +78,6 @@ function obj_show(obj)
 
 <style type="text/css">
 @import url("include/style.css");
-@import url("include/style_menu.css");
 </style>
 
 
@@ -114,7 +115,7 @@ function obj_show(obj)
 <tr>
 	<td width="100%">
 
-	<table width="100%">
+	<table width="100%" cellspacing="0" cellpadding="0" border="0">
 	<?php
 	/*
 		Here we draw the menu. All pages have the top menu displayed, then differing numbers of sub menus, depending
@@ -161,54 +162,33 @@ function obj_show(obj)
 		Note that the "top" menu has the addition of a second column to the right
 		for the user perferences/administration box.
 	*/
-	foreach ($parents as $parent)
+	for ($i = 0; $i <= count($parents); $i++)
 	{
-		print "<tr class=\"table_header\">";
-		if ($parent == "top")
-		{
-			print "<td width=\"85%\">";
-		}
-		else
-		{
-			print "<td width=\"100%\">";
-		}
-	
+		print "<tr>";
+		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+		print "<ul id=\"menu\">";
+		
 		// get the data for this menu
-		$mysql_string		= "SELECT link, topic FROM `menu` WHERE parent='$parent'";
+		$mysql_string		= "SELECT link, topic FROM `menu` WHERE parent='$parents[$i]'";
 		$mysql_menu_result	= mysql_query($mysql_string);
 		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
 			
-		$count = 0;
 		while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
 		{
-			print "<b><a href=\"index.php?page=". $mysql_menu_data["link"] ."\">". $mysql_menu_data["topic"] ."</a></b>";
-
-			// prevent an extra seperator from being added to the menu.
-			$count++;
-			if ($count != $mysql_menu_num_rows)
+			// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+			if ($parents[$i + 1] == $mysql_menu_data["topic"] || $parents[$i] != "top")
 			{
-				print " | ";
-			}
-		}
-
-		print "</td>";
-
-		// special preferences/administration option for top menu only
-		if ($parent == "top")
-		{
-			print "<td width=\"15%\" align=\"right\">";
-			
-			if (user_permissions_get("admin"))
-			{
-				print "<b><a href=\"index.php?page=admin/admin.php\">Administration</a></b>";
+				print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
 			}
 			else
 			{
-				print "<b><a href=\"index.php?page=user/user-details.php&id=". user_information("id") ."&mode=self\">preferences</a></b>";
+				print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
 			}
-			
-			print "</td>";
+
 		}
+
+		print "</ul>";
+		print "</td>";
 		print "</tr>";
 	}
 	?>

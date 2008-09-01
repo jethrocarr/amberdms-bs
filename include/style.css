@@ -54,116 +54,66 @@ a:active {
 
 
 /*
-	Header for all the internal table.
+	Table Styling
 */
-.table_header {
-	background-color: #89d0ea;
-	border: 1px solid #048fc2;
-	padding: 3px;
+.table_content {
+	border-bottom: 1px solid #2580a2;
+	border-spacing: 0px;
 }
 
+	.table_content .header {
+		background-color: #2580a2;
+		color: #ffffff;
+		padding: 8px;
+	}
+
+	.table_content a:hover {
+		color: #ffffff;
+	}
+
+	.table_content td {
+		padding: 4px;
+	}
+
+	.table_content tr:hover {
+		background-color: #2580a2;
+	}
 
 
-.layout-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: none;
-    padding: 0px;
-    font-size: 12px;
-    margin: 0px;
-    table-layout: fixed;
-    empty-cells: show;
-    border-spacing: 0px;
+/*
+	Menu Code
+	Thanks to http://www.cssmenumaker.com/ for this excellent CSS menu code
+*/
+#menu {
+	background: #333333;
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
 }
 
-
-
-#header-left {
-    width: 90px;
-    height: 20px;
-    background-image: url("../images/header-left.png");
-    background-repeat: no-repeat;
-    background-position: top left;
+#menu li {
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	font-size: 10px;
+	margin: 0;
+	padding: 0;
 }
 
-#header-right {
-    height: 20px;
-    background-image: url("../images/header-right.png");
-    background-repeat: repeat-x;
+#menu a {
+	background: #333333;
+	color: #cccccc;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 12px;
+	text-decoration: none;
 }
 
-#footer-right {
-    width: 90px;
-    height: 20px;
-    background-image: url("../images/footer-right.png");
-    background-repeat: no-repeat;
-    background-position: top left;
+#menu a:hover {
+	background: #2580a2;
+	color: #ffffff;
+	padding-bottom: 8px;
 }
-
-#footer-left {
-    height: 20px;
-    background-image: url("../images/footer-left.png");
-    background-repeat: repeat-x;
-}
-
-
-
-#journal-orange {
-    background-image: url("../images/journalstrip-orange.png");
-    background-repeat: no-repeat;
-}
-
-
-td.box-top-left {
-    background-image: url("../images/top-left.png");
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
-}
-
-td.box-top-center {
-    background-image: url("../images/top-center.png");
-    background-repeat: repeat-x;
-    height: 40px;
-}
-
-td.box-top-right {
-    background-image: url("../images/top-right.png");
-    background-repeat: no-repeat;
-    height: 40px;
-    width: 40px;
-}
-
-td.box-left-side {
-    background-image: url("../images/left-side.png");
-    background-repeat: repeat-y;
-    width: 40px;
-}
-
-td.box-right-side {
-    background-image: url("../images/right-side.png");
-    background-repeat: repeat-y;
-    width: 40px;
-}
-
-td.box-bottom-left {
-    background-image: url("../images/bottom-left.png");
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
-}
-
-td.box-bottom-center {
-    background-image: url("../images/bottom-center.png");
-    background-repeat: repeat-x;
-    height: 40px;
-}
-
-td.box-bottom-right {
-    background-image: url("../images/bottom-right.png");
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
-}
-
 
