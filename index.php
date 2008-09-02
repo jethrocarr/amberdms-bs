@@ -139,9 +139,24 @@ function obj_show(obj)
 
 		if ($mysql_menu_num_rows)
 		{
-			while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
+			$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
+			$parents[]	= $mysql_menu_data["parent"];
+			$lastparent	= $mysql_menu_data["parent"];
+
+			// now get the all the other parents
+			$mysql_menu_num_rows = 1;
+			while ($mysql_menu_num_rows == 1)
 			{
-				$parents[] = $mysql_menu_data["parent"];
+				$mysql_string		= "SELECT parent FROM `menu` WHERE topic='$lastparent'";
+				$mysql_menu_result	= mysql_query($mysql_string);
+				$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+
+				if ($mysql_menu_num_rows)
+				{
+					$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
+					$parents[]	= $mysql_menu_data["parent"];
+					$lastparent	= $mysql_menu_data["parent"];
+				}
 			}
 
 			// we now sort the array, and end up with all the menu
@@ -175,14 +190,20 @@ function obj_show(obj)
 			
 		while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
 		{
-			// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-			if ($parents[$i + 1] == $mysql_menu_data["topic"] || $parents[$i] != "top")
+			// if this entry has no topic, it only exists for the purpose of getting a parent
+			// link highlighted. In this case, ignore the current entry.
+
+			if ($mysql_menu_data["topic"])
 			{
-				print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
-			}
-			else
-			{
-				print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+				// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+				if ($parents[$i + 1] == $mysql_menu_data["topic"] || $parents[$i] != "top")
+				{
+					print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+				}
+				else
+				{
+					print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+				}
 			}
 
 		}
@@ -272,11 +293,8 @@ function obj_show(obj)
 		<td align="left">
 		<p style="font-size: 10px">(c) Copyright 2008 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
 		</td>
-
-		<td align="right">
-		<p style="font-size: 10px">Licensed under the GNU GPL version 2 license.</a></p>
-		</td>
 	</tr>
+	</table>
 	
 	</td>
 </tr>
@@ -284,6 +302,12 @@ function obj_show(obj)
 
 </table>
 
+<br><br><br><br><br>
+<br><br><br><br><br>
+<br><br><br><br><br>
+<br><br><br><br><br>
+<br><br><br><br><br>
+<br><br><br><br><br>
 
 </body></html>
 

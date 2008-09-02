@@ -16,6 +16,8 @@
 
 class table
 {
+	var $language = "en_us";	// language to use for the form labels.
+	
 	var $columns;			// array containing all columns to be displayed
 	var $columns_order;		// array containing columns to order by
 	
@@ -109,60 +111,10 @@ class table
 
 		Defaults to US english (en_us) if no language is specified.
 	*/
-	function render_column_names($language)
+	function render_column_names()
 	{
-		if (!$language)
-			$language = "en_us";
-
-			
-		// create an untranslated array, so that we don't have a complete
-		// failure if a transation is missing.
-		foreach ($this->columns as $label)
-		{
-			$this->render_columns[ $label ] =  $label;
-		}
-
-
-		// prepare the SQL
-		$mysql_string = "SELECT label, translation FROM `language` WHERE language='en_us' AND label=(";
-
-		// list all the column labels
-		$count = 0;
-		foreach ($this->columns as $column)
-		{
-			$count++;
-			
-			if ($count < count($this->columns))
-			{
-				$mysql_string .= "'$column' OR ";
-			}
-			else
-			{
-				$mysql_string .= "'$column'";
-			}
-		}
-
-		$mysql_string .= ")";
-
-		
-		// query
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if (!$mysql_num_rows)
-		{
-			return 0;
-		}
-		else
-		{
-			while ($mysql_data = mysql_fetch_array($mysql_result))
-			{
-				$this->render_columns[ $mysql_data["label"] ] = $mysql_data["translation"];
-			}
-
-			return 1;
-		}
-	
+		$this->render_columns = language_translate($this->language, $this->columns);
+		return 1;
 	}	
 
 

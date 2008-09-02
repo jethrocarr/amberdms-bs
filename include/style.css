@@ -73,6 +73,7 @@ a:active {
 
 	.table_content td {
 		padding: 4px;
+		border-bottom: 1px solid #7e7e7e;
 	}
 
 	.table_content tr:hover {
@@ -116,4 +117,49 @@ a:active {
 	color: #ffffff;
 	padding-bottom: 8px;
 }
+
+
+/*
+	Form Styling
+*/
+
+.form_standard {
+}
+
+	.form_standard input {
+		border: 1px #333333 solid;
+		width: 600px;
+	}
+
+
+	.form_standard textarea {
+		border: 1px #333333 solid;
+		width: 600px;
+		height: 60px;
+	}
+
+.form_error {
+	background: #ffeda4;	
+}
+
+.form_table {
+	border-spacing: 0px;
+}
+
+	.form_table .header {
+		background-color: #2580a2;
+		color: #ffffff;
+		padding: 8px;
+	}
+
+	.form_table a:hover {
+		color: #ffffff;
+	}
+
+	.form_table td {
+		padding: 4px;
+	}
+
+
+
 

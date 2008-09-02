@@ -13,10 +13,11 @@ if (user_permissions_get('customers_view'))
 	{
 		// establish a new table object
 		$customer_list = New table;
-		
-		$customer_list->sql_table = "customers";
-		$customer_list->columns = array("name_customer", "name_contact", "contact_phone", "contact_email");
-		$customer_list->columns_order = array("name_customer");
+
+		$customer_list->language	= $_SESSION["user"]["lang"];
+		$customer_list->sql_table	= "customers";
+		$customer_list->columns		= array("name_customer", "name_contact", "contact_phone", "contact_email");
+		$customer_list->columns_order	= array("name_customer");
 
 		// heading
 		print "<h3>CUSTOMER MANAGEMENT</h3><br><br>";
@@ -32,8 +33,9 @@ if (user_permissions_get('customers_view'))
 		else
 		{
 			// translate the column labels
-			$customer_list->render_column_names($_GLOBAL["lang"]);
+			$customer_list->render_column_names();
 		
+			// display header row
 			print "<table class=\"table_content\" width=\"100%\">";
 			print "<tr>";
 			
@@ -46,6 +48,7 @@ if (user_permissions_get('customers_view'))
 				
 			print "</tr>";
 		
+			// display data
 			for ($i=0; $i < $customer_list->data_num_rows; $i++)
 			{
 				print "<tr>";
@@ -60,6 +63,9 @@ if (user_permissions_get('customers_view'))
 			}
 
 			print "</table>";
+
+			// TODO: display CSV download link
+
 		}
 
 		

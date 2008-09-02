@@ -8,6 +8,12 @@
 	code in a propietary/commercal product, please contact sales@amberdms.com.
 */
 
+// Important that we include language first, since other functions
+// require it.
+include("language.php");
+
+// Functions/classes for data entry and processing
 include("tables.php");
+include("forms.php");
 
 

@@ -144,6 +144,9 @@ function user_login($username, $password)
 				$_SESSION["user"]["name"]	= $username;
 				$_SESSION["user"]["authkey"]	= $authkey;
 
+				// TODO: in future, allow the user to select their language
+				$_SESSION["user"]["lang"]	= "en_us";
+
 
 				// does the user need to change their password? If they have no salt, it means the password
 				// is the system default and needs to be changed
