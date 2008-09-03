@@ -11,4 +11,13 @@ $_GLOBAL["db_name"] = "billing_system";			// database name
 $_GLOBAL["db_user"] = "root";				// MySQL user
 $_GLOBAL["db_pass"] = "";				// MySQL password (if any)
 
+// Debug Settings
+$_GLOBAL["debug"] = TRUE;
+
+// Connect to the MySQL database
+include("database.php");
+
+// Initate session variables
+session_start();
+
 ?>

@@ -7,9 +7,8 @@
 
 
 // includes
-include_once("../include/database.php");
-include_once("../include/user.php");
-include_once("../include/security.php");
+include_once("../include/config.php");
+include_once("../include/amberphplib/main.php");
 
 // erase any data - gets rid of stale errors and user sessions.
 $_SESSION["error"] = array();
@@ -19,7 +18,7 @@ $_SESSION["user"] = array();
 if (user_online())
 {
 	// user is already logged in!
-	$_SESSION["error"]["message"] = "You are already logged in!";
+	$_SESSION["error"]["message"][] = "You are already logged in!";
 	$_SESSION["error"]["username_amberdms_bs"] = "error";
 	$_SESSION["error"]["password_amberdms_bs"] = "error";
 
@@ -54,7 +53,7 @@ else
 				// if failed count >= 10 times, and if the last attempt was within
 				// the last 5 days, block the user.
 				
-				$_SESSION["error"]["message"] = "For brute-force security reasons, you have been locked out of the system interface.";
+				$_SESSION["error"]["message"][] = "For brute-force security reasons, you have been locked out of the system interface.";
 				header("Location: ../index.php?page=user/login.php");
 				exit();
 			}
@@ -109,7 +108,7 @@ else
 		// then display the incorrect username/password error.
 		if (!$_SESSION["error"]["message"])
 		{
-			$_SESSION["error"]["message"] = "That username and/or password is invalid!";
+			$_SESSION["error"]["message"][] = "That username and/or password is invalid!";
 			$_SESSION["error"]["username_amberdms_bs-error"] = 1;
 			$_SESSION["error"]["password_amberdms_bs-error"] = 1;
 		}

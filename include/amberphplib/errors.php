@@ -27,7 +27,9 @@
 //
 
 
-
+/*
+	Is this obsolete?
+	
 function error_render_message()
 {
 	if ($_SESSION["error"]["message"])
@@ -63,6 +65,7 @@ function error_render_message()
 
 	return 1;
 }
+*/
 
 
 function error_render_nologin()
@@ -71,13 +74,12 @@ function error_render_nologin()
 	if ($_SESSION["user"]["timeout"])
 	{
 		// user has been logged out due to time.
-		$_SESSION["error"]["message"] = "You have been logged out due to inactivity. You need to login again to continue from where you were. Please <a href=\"index.php?page=user/login.php\">click here</a> to login.";
+		$_SESSION["error"]["message"] = array("You have been logged out due to inactivity. You need to login again to continue from where you were. Please <a href=\"index.php?page=user/login.php\">click here</a> to login.");
 	}
 	else
 	{
 	
-		$_SESSION["error"]["message"] = "You must be logged in to view this page!
-		Please <a href=\"index.php?page=user/login.php\">click here</a> to login.";
+		$_SESSION["error"]["message"] = array("You must be logged in to view this page! Please <a href=\"index.php?page=user/login.php\">click here</a> to login.");
 	
 		// save query string (so a login can take the user to the correct page)
 		$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
@@ -97,7 +99,7 @@ function error_render_noperms()
 	// display a different message if the user isn't online
 	if (user_online())
 	{
-		$_SESSION["error"]["message"] = "Sorry, your login permissions do not permit you to access this content.";
+		$_SESSION["error"]["message"] = array("Sorry, your login permissions do not permit you to access this content.");
 
 		// end the page
 		$_SESSION["error"]["pagestate"] = 0;

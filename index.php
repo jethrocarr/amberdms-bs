@@ -7,15 +7,8 @@
 	Licenced under the GNU GPL version 2 only.
 */
 
-// include the database connection file.
-include("include/database.php");
-
-// include the function pages
-include("include/functions.php");
-include("include/security.php");
-include("include/errors.php");
-include("include/user.php");
-
+// includes
+include("include/config.php");
 include("include/amberphplib/main.php");
 
 
@@ -30,13 +23,13 @@ if ($page == "")
 $page_valid = 0;
 if (!security_localphp($page))
 {
-	$_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
+	$_SESSION["error"]["message"][] = "Sorry, the requested page could not be found - please check your URL.";
 }
 else
 {
 	if (!@file_exists($page))
 	{
-		$_SESSION["error"]["message"] = "Sorry, the requested page could not be found - please check your URL.";
+		$_SESSION["error"]["message"][] = "Sorry, the requested page could not be found - please check your URL.";
 	}
 	else
         {
@@ -196,7 +189,7 @@ function obj_show(obj)
 			if ($mysql_menu_data["topic"])
 			{
 				// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-				if ($parents[$i + 1] == $mysql_menu_data["topic"] || $parents[$i] != "top")
+				if ($parents[$i + 1] == $mysql_menu_data["topic"])
 				{
 					print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
 				}
@@ -237,14 +230,28 @@ function obj_show(obj)
         if ($_SESSION["error"]["message"])
         {
                 print "<tr><td bgcolor=\"#ffeda4\" style=\"border: 1px dashed #dc6d00; padding: 3px;\">";
-                print "<p><b>Error:</b><br><br>" . $_SESSION["error"]["message"] . "</p>";
+                print "<p><b>Error:</b><br><br>";
+
+		foreach ($_SESSION["error"]["message"] as $errormsg)
+		{
+			print "$errormsg<br>";
+		}
+		
+		print "</p>";
                 print "</td></tr>";
 
         }
         elseif ($_SESSION["notification"]["message"])
         {
                 print "<tr><td bgcolor=\"#c7e8ed\" style=\"border: 1px dashed #374893; padding: 3px;\">";
-                print "<p><b>Notification:</b><br><br>" . $_SESSION["notification"]["message"] . "</p>";
+                print "<p><b>Notification:</b><br><br>";
+		
+		foreach ($_SESSION["notification"]["message"] as $notificationmsg)
+		{
+			print "$notificationmsg<br>";
+		}
+
+		print "</p>";
                 print "</td></tr>";
         }
 

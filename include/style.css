@@ -130,12 +130,12 @@ a:active {
 		border: 1px #333333 solid;
 	}
 
-
 	.form_standard textarea {
 		border: 1px #333333 solid;
 		width: 600px;
 		height: 60px;
 	}
+
 
 .form_error {
 	background: #ffeda4;	

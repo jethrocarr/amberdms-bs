@@ -173,6 +173,7 @@ function user_logout()
 	{
 		// log the user out.
 		$_SESSION["user"] = array();
+		$_SESSION["form"] = array();
 		return 1;		
 	}
 

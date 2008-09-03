@@ -126,7 +126,7 @@ class table
 			2. SESSION - if the user goes away and returns.
 
 		*/
-		if ($_POST["table_display_options"])
+		if ($_GET["table_display_options"])
 		{
 			$this->columns		= array();
 			$this->columns_order	= array();
@@ -134,7 +134,7 @@ class table
 			// load checkboxes
 			foreach ($this->columns_available as $column)
 			{
-				$column_setting = security_form_input("/^[a-z]*$/", "$column", 0, "Invalid form option input");
+				$column_setting = security_script_input("/^[a-z]*$/", $_GET[$column]);
 				
 				if ($column_setting == "on")
 				{
@@ -146,9 +146,9 @@ class table
 			$num_cols = count($this->columns_available);
 			for ($i=0; $i < $num_cols; $i++)
 			{
-				if ($_POST["order_$i"])
+				if ($_GET["order_$i"])
 				{
-					$this->columns_order[] = security_form_input("/^\S*$/", "order_$i", 0, "Invalid form option input");
+					$this->columns_order[] = security_script_input("/^\S*$/", $_GET["order_$i"]);
 				}
 			}
 		}
@@ -193,11 +193,20 @@ class table
 
 
 		// start the form
-		print "<form method=\"post\" class=\"form_standard\">";
+		print "<form method=\"get\" class=\"form_standard\">";
 		
 		$form = New form_input;
 		$form->formname = $this->tablename;
 		$form->language = $this->language;
+
+		// include page name
+		$structure = NULL;
+		$structure["fieldname"] 	= "page";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $_GET["page"];
+		$form->add_input($structure);
+		$form->render_field("page");
+
 
 		// flag this form as the table_display_options form
 		$structure = NULL;
@@ -206,6 +215,8 @@ class table
 		$structure["defaultvalue"]	= $this->tablename;
 		$form->add_input($structure);
 		$form->render_field("table_display_options");
+
+
 
 		// configure all the checkboxes
 		$num_cols	= count($this->columns_available);

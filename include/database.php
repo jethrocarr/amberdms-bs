@@ -2,15 +2,10 @@
 /*
 	include/database.php
 
-	Establishes MySQL database connection and does PHP session_start.
-	
+	Establishes MySQL connection.	
 */
 
-// load config file
-include("config.php");
 
-// start the sesssions
-session_start();
 
 // login to the database
 $link = mysql_connect($_GLOBAL["db_hostname"], $_GLOBAL["db_user"], $_GLOBAL["db_pass"]);
