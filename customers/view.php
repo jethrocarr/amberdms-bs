@@ -156,57 +156,6 @@ if (user_permissions_get('customers_view'))
 
 		// display the form
 		$form->render_form();
-		
-	/*
-
-		// general form
-		$form_general = array("name_customer", "name_contact", "contact_phone", "contact_fax");
-		
-		print "<td valign=\"top\" width=\"50%\"><table class=\"form_table\" width=\"100%\">";
-
-		// form header
-		$numcols = count($form_general);
-		print "<tr class=\"header\">";
-		print "<td colspan=\"$numcols\"><b>". language_translate_string($_SESSION["user"]["lang"], "General Details") ."</b></td>";
-		print "</tr>";
-
-		// display all the rows
-		foreach ($form_general as $fieldname)
-		{
-			$form->render_row($fieldname);
-		}
-
-		// end form table
-		print "</table></td>";
-
-
-
-		// shipping address form
-		$form_general = array("name_customer", "name_contact", "contact_phone", "contact_fax");
-		$form_shipping = array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
-		
-		print "<td valign=\"top\" width=\"50%\"><table class=\"form_table\" width=\"100%\">";
-
-		// form header
-		$numcols = count($form_shipping);
-		print "<tr class=\"header\">";
-		print "<td colspan=\"$numcols\"><b>". language_translate_string($_SESSION["user"]["lang"], "Shipping Details") ."</b></td>";
-		print "</tr>";
-
-		// display all the rows
-		foreach ($form_shipping as $fieldname)
-		{
-			$form->render_row($fieldname);
-		}
-
-		// end form table
-		print "</table></td>";
-
-		
-		print "</tr></table>";
-		print "</form>";
-
-		*/
 
 	} // end page_render
 

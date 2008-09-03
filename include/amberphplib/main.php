@@ -13,7 +13,7 @@
 include("language.php");
 
 // Functions/classes for data entry and processing
-include("tables.php");
 include("forms.php");
+include("tables.php");
 
 
