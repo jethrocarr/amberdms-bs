@@ -159,10 +159,6 @@ if (user_permissions_get('customers_write'))
 		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$form->subforms["submit"]		= array("submit");
 		
-		// fetch the form data
-		$form->sql_query = "SELECT * FROM `customers` WHERE id='$id' LIMIT 1";		
-		$form->load_data();
-
 		// display the form
 		$form->render_form();
 

@@ -1,10 +1,10 @@
 <?php
 /*
-	vendors/edit-process.php
+	staff/edit-process.php
 
-	access: vendors_write
+	access: staff_write
 
-	Allows existing vendors to be adjusted, or new vendors to be added.
+	Allows existing staff to be adjusted, or new staff to be added.
 */
 
 // includes
@@ -12,51 +12,37 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 
-if (user_permissions_get('vendors_write'))
+if (user_permissions_get('staff_write'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_vendor", 0, "");
+	$id				= security_form_input_predefined("int", "id_staff", 0, "");
 	
-	$data["name_vendor"]		= security_form_input_predefined("any", "name_vendor", 1, "You must set a vendor name");
-	$data["name_contact"]		= security_form_input_predefined("any", "name_contact", 0, "");
+	$data["name_staff"]		= security_form_input_predefined("any", "name_staff", 1, "You must set a staff name");
+	$data["staff_code"]		= security_form_input_predefined("any", "staff_code", 0, "");
+	$data["staff_position"]		= security_form_input_predefined("any", "staff_position", 0, "");
 	
 	$data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
 	$data["contact_fax"]		= security_form_input_predefined("any", "contact_fax", 0, "");
 	$data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
+	
 	$data["date_start"]		= security_form_input_predefined("date", "date_start", 0, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
-	$data["tax_included"]		= security_form_input_predefined("any", "tax_included", 0, "");
-	$data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
 
-	$data["address1_street"]	= security_form_input_predefined("any", "address1_street", 0, "");
-	$data["address1_city"]		= security_form_input_predefined("any", "address1_city", 0, "");
-	$data["address1_state"]		= security_form_input_predefined("any", "address1_state", 0, "");
-	$data["address1_country"]	= security_form_input_predefined("any", "address1_country", 0, "");
-	$data["address1_zipcode"]	= security_form_input_predefined("any", "address1_zipcode", 0, "");
-	
-	$data["pobox"]			= security_form_input_predefined("any", "pobox", 0, "");
-	
-	$data["address2_street"]	= security_form_input_predefined("any", "address2_street", 0, "");
-	$data["address2_city"]		= security_form_input_predefined("any", "address2_city", 0, "");
-	$data["address2_state"]		= security_form_input_predefined("any", "address2_state", 0, "");
-	$data["address2_country"]	= security_form_input_predefined("any", "address2_country", 0, "");
-	$data["address2_zipcode"]	= security_form_input_predefined("any", "address2_zipcode", 0, "");
-	
 
-	// are we editing an existing vendor or adding a new one?
+	// are we editing an existing staff or adding a new one?
 	if ($id)
 	{
 		$mode = "edit";
 
-		// make sure the vendor actually exists
-		$mysql_string		= "SELECT id FROM `vendors` WHERE id='$id'";
+		// make sure the staff actually exists
+		$mysql_string		= "SELECT id FROM `staff` WHERE id='$id'";
 		$mysql_result		= mysql_query($mysql_string);
 		$mysql_num_rows		= mysql_num_rows($mysql_result);
 
 		if (!$mysql_num_rows)
 		{
-			$_SESSION["error"]["message"][] = "The vendor you have attempted to edit - $id - does not exist in this system.";
+			$_SESSION["error"]["message"][] = "The staff you have attempted to edit - $id - does not exist in this system.";
 		}
 	}
 	else
@@ -69,8 +55,8 @@ if (user_permissions_get('vendors_write'))
 	//// ERROR CHECKING ///////////////////////
 
 
-	// make sure we don't choose a vendor name that has already been taken
-	$mysql_string	= "SELECT id FROM `vendors` WHERE name_vendor='". $data["name_vendor"] ."'";
+	// make sure we don't choose a staff name that has already been taken
+	$mysql_string	= "SELECT id FROM `staff` WHERE name_staff='". $data["name_staff"] ."'";
 	if ($id)
 		$mysql_string .= " AND id!='$id'";
 	$mysql_result	= mysql_query($mysql_string);
@@ -78,8 +64,8 @@ if (user_permissions_get('vendors_write'))
 
 	if ($mysql_num_rows)
 	{
-		$_SESSION["error"]["message"][] = "This vendor name is already used for another vendor - please choose a unique name.";
-		$_SESSION["error"]["name_vendor-error"] = 1;
+		$_SESSION["error"]["message"][] = "Another staff member already has this name - please choose a unique name.";
+		$_SESSION["error"]["name_staff-error"] = 1;
 	}
 
 
@@ -88,12 +74,12 @@ if (user_permissions_get('vendors_write'))
 	{	
 		if ($mode == "edit")
 		{
-			header("Location: ../index.php?page=vendors/view.php&id=$id");
+			header("Location: ../index.php?page=hr/staff-view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
-			header("Location: ../index.php?page=vendors/add.php");
+			header("Location: ../index.php?page=hr/staff-add.php");
 			exit(0);
 		}
 	}
@@ -102,7 +88,7 @@ if (user_permissions_get('vendors_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `vendors` (name_vendor) VALUES ('".$data["name_vendor"]."')";
+			$mysql_string = "INSERT INTO `staff` (name_staff) VALUES ('".$data["name_staff"]."')";
 			if (!mysql_query($mysql_string))
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
@@ -113,33 +99,21 @@ if (user_permissions_get('vendors_write'))
 
 		if ($id)
 		{
-			// update vendor details
-			$mysql_string = "UPDATE `vendors` SET "
-						."name_vendor='". $data["name_vendor"] ."', "
-						."name_contact='". $data["name_contact"] ."', "
+			// update staff details
+			$mysql_string = "UPDATE `staff` SET "
+						."name_staff='". $data["name_staff"] ."', "
+						."staff_code='". $data["staff_code"] ."', "
+						."staff_position='". $data["staff_position"] ."', "
 						."contact_phone='". $data["contact_phone"] ."', "
 						."contact_email='". $data["contact_email"] ."', "
 						."contact_fax='". $data["contact_fax"] ."', "
 						."date_start='". $data["date_start"] ."', "
-						."date_end='". $data["date_end"] ."', "
-						."tax_included='". $data["tax_included"] ."', "
-						."tax_number='". $data["tax_number"] ."', "
-						."address1_street='". $data["address1_street"] ."', "
-						."address1_city='". $data["address1_city"] ."', "
-						."address1_state='". $data["address1_state"] ."', "
-						."address1_country='". $data["address1_country"] ."', "
-						."address1_zipcode='". $data["address1_zipcode"] ."', "
-						."pobox='". $data["pobox"] ."', "
-						."address2_street='". $data["address2_street"] ."', "
-						."address2_city='". $data["address2_city"] ."', "
-						."address2_state='". $data["address2_state"] ."', "
-						."address2_country='". $data["address2_country"] ."', "
-						."address2_zipcode='". $data["address2_zipcode"] ."' "
+						."date_end='". $data["date_end"] ."' "
 						."WHERE id='$id'";
 						
 			if (!mysql_query($mysql_string))
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
+				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
 			}
 			else
 			{
@@ -148,7 +122,7 @@ if (user_permissions_get('vendors_write'))
 		}
 
 		// display updated details
-		header("Location: ../index.php?page=vendors/view.php&id=$id");
+		header("Location: ../index.php?page=hr/staff-view.php&id=$id");
 		exit(0);
 	}
 

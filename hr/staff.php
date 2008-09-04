@@ -82,7 +82,7 @@ if (user_permissions_get('staff_view'))
 				{
 					print "<td>". $staff_list->data[$i]["$columns"] ."</td>";
 				}
-				print "<td><a href=\"index.php?page=staff/staff-view.php&id=". $staff_list->data[$i]["id"] ."\">view</td>";
+				print "<td><a href=\"index.php?page=hr/staff-view.php&id=". $staff_list->data[$i]["id"] ."\">view</td>";
 				
 				print "</tr>";
 			}

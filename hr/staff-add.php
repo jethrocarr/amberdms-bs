@@ -1,17 +1,15 @@
 <?php
 /*
-	vendors/add.php
-	
-	access: vendors_write
+	hr/staff-add.php
 
-	Allows the creation of a new vendor account - this form
+	access: staff_write
+
+	Allows the creation of a new employee - this form
 	requests mininal details, then directs the user to the view/edit form
 	so that they can complete the changes.
-
-
 */
 
-if (user_permissions_get('vendors_write'))
+if (user_permissions_get('staff_write'))
 {
 	function page_render()
 	{
@@ -20,34 +18,34 @@ if (user_permissions_get('vendors_write'))
 		/*
 			Title + Summary
 		*/
-		print "<h2>ADD VENDOR RECORD</h2><br>";
-		print "<p>This page allows you to add a new vendor.</p>";
+		print "<h2>ADD EMPLOYEE</h2><br>";
+		print "<p>This page allows you to add a new employee to the database.</p>";
 
 		/*
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "vendor_view";
+		$form->formname = "staff_view";
 		$form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "vendors/edit-process.php";
+		$form->action = "hr/staff-edit-process.php";
 		$form->method = "post";
-		
+
 
 		// general
 		$structure = NULL;
-		$structure["fieldname"] 	= "name_vendor";
+		$structure["fieldname"] 	= "name_staff";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"] = "name_contact";
+		$structure["fieldname"] = "staff_code";
 		$structure["type"]	= "input";
 		$form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] = "name_contact";
+		$structure["fieldname"] = "staff_position";
 		$structure["type"]	= "input";
 		$form->add_input($structure);
 
@@ -68,103 +66,23 @@ if (user_permissions_get('vendors_write'))
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "input";
+		$structure["type"]	= "date";
 		$form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "input";
+		$structure["type"]	= "date";
 		$form->add_input($structure);
 
-
-		// tax options
-		$structure = NULL;
-		$structure["fieldname"] = "tax_included";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "tax_number";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-
-
-		// billing address
-		$structure = NULL;
-		$structure["fieldname"] = "address1_street";
-		$structure["type"]	= "textarea";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address1_city";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address1_state";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address1_country";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "address1_zipcode";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "pobox";
-		$structure["type"]	= "textarea";
-		$form->add_input($structure);
-
-
-		// shipping address
-		$structure = NULL;
-		$structure["fieldname"] = "address2_street";
-		$structure["type"]	= "textarea";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address2_city";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address2_state";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "address2_country";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "address2_zipcode";
-		$structure["type"]	= "input";
-		$form->add_input($structure);
-		
-
-		// submit button
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Create Vendor";
+		$structure["defaultvalue"]	= "Save Changes";
 		$form->add_input($structure);
 		
-
 		// define subforms
-		$form->subforms["vendor_view"]	= array("name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
-		$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
-		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+		$form->subforms["staff_view"]		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
 		$form->subforms["submit"]		= array("submit");
-		
-		// fetch the form data
-		$form->sql_query = "SELECT * FROM `vendors` WHERE id='$id' LIMIT 1";		
-		$form->load_data();
 
 		// display the form
 		$form->render_form();

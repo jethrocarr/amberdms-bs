@@ -16,12 +16,12 @@ if (user_permissions_get('staff_view'))
 	// nav bar options.
 	$_SESSION["nav"]["active"]	= 1;
 	
-	$_SESSION["nav"]["title"][]	= "Vendor's Details";
-	$_SESSION["nav"]["query"][]	= "page=staff/view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=staff/view.php&id=$id";
+	$_SESSION["nav"]["title"][]	= "Employee's Details";
+	$_SESSION["nav"]["query"][]	= "page=hr/staff-view.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=hr/staff-view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Vendors's Journal";
-	$_SESSION["nav"]["query"][]	= "page=staff/journal.php&id=$id";
+	$_SESSION["nav"]["title"][]	= "Employee's Journal";
+	$_SESSION["nav"]["query"][]	= "page=hr/staff-journal.php&id=$id";
 
 
 	function page_render()
@@ -31,8 +31,8 @@ if (user_permissions_get('staff_view'))
 		/*
 			Title + Summary
 		*/
-		print "<h2>VENDOR DETAILS</h2><br>";
-		print "<p>This page allows you to view and adjust the staff's records.</p>";
+		print "<h3>EMPLOYEE'S DETAILS</h3><br>";
+		print "<p>This page allows you to view and adjust the employee's records.</p>";
 
 		$mysql_string	= "SELECT id FROM `staff` WHERE id='$id'";
 		$mysql_result	= mysql_query($mysql_string);
@@ -40,7 +40,7 @@ if (user_permissions_get('staff_view'))
 
 		if (!$mysql_num_rows)
 		{
-			print "<p><b>Error: The requested staff does not exist. <a href=\"index.php?page=staff/staff.php\">Try looking for your staff on the staff list page.</a></b></p>";
+			print "<p><b>Error: The requested employee does not exist. <a href=\"index.php?page=hr/staff.php\">Try looking for your employee on the staff list page.</a></b></p>";
 		}
 		else
 		{
@@ -51,7 +51,7 @@ if (user_permissions_get('staff_view'))
 			$form->formname = "staff_view";
 			$form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "staff/edit-process.php";
+			$form->action = "hr/staff-edit-process.php";
 			$form->method = "post";
 			
 
@@ -69,12 +69,12 @@ if (user_permissions_get('staff_view'))
 			$form->add_input($structure);
 			
 			$structure = NULL;
-			$structure["fieldname"] = "name_contact";
+			$structure["fieldname"] = "staff_code";
 			$structure["type"]	= "input";
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"] = "name_contact";
+			$structure["fieldname"] = "staff_position";
 			$structure["type"]	= "input";
 			$form->add_input($structure);
 
@@ -103,77 +103,6 @@ if (user_permissions_get('staff_view'))
 			$structure["type"]	= "date";
 			$form->add_input($structure);
 
-
-			// tax options
-			$structure = NULL;
-			$structure["fieldname"] = "tax_included";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "tax_number";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-
-			// billing address
-			$structure = NULL;
-			$structure["fieldname"] = "address1_street";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_city";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_state";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_country";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "address1_zipcode";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "pobox";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-
-
-			// shipping address
-			$structure = NULL;
-			$structure["fieldname"] = "address2_street";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_city";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_state";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_country";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "address2_zipcode";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
 			// submit section
 			if (user_permissions_get("staff_write"))
 			{
@@ -195,10 +124,8 @@ if (user_permissions_get('staff_view'))
 			
 			
 			// define subforms
-			$form->subforms["staff_view"]	= array("id_staff", "name_staff", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
-			$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
-			$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
-			$form->subforms["submit"]	= array("submit");
+			$form->subforms["staff_view"]		= array("id_staff", "name_staff", "staff_code", "staff_position", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+			$form->subforms["submit"]		= array("submit");
 
 			
 			// fetch the form data
