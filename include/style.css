@@ -119,6 +119,45 @@ a:active {
 }
 
 
+#navmenu {
+	background: #057b08;
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+
+#navmenu li {
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	font-size: 10px;
+	margin: 0;
+	padding: 0;
+}
+
+#navmenu a {
+	background: #057b08;
+	color: #cccccc;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 12px;
+	text-decoration: none;
+}
+
+#navmenu a:hover {
+	background: #2580a2;
+	color: #ffffff;
+	padding-bottom: 8px;
+}
+
+
+
+
+
+
+
 /*
 	Form Styling
 */

@@ -126,7 +126,7 @@ function obj_show(obj)
 		$parents = array();
 
 		// get the menu item for this page
-		$mysql_string		= "SELECT parent FROM `menu` WHERE link='$page'";
+		$mysql_string		= "SELECT parent FROM `menu` WHERE link='$page' ORDER BY priority DESC";
 		$mysql_menu_result	= mysql_query($mysql_string);
 		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
 
@@ -140,7 +140,7 @@ function obj_show(obj)
 			$mysql_menu_num_rows = 1;
 			while ($mysql_menu_num_rows == 1)
 			{
-				$mysql_string		= "SELECT parent FROM `menu` WHERE topic='$lastparent'";
+				$mysql_string		= "SELECT parent FROM `menu` WHERE topic='$lastparent' ORDER BY priority DESC";
 				$mysql_menu_result	= mysql_query($mysql_string);
 				$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
 
@@ -157,6 +157,7 @@ function obj_show(obj)
 			$parents = array_reverse($parents);
 		}
 	}
+
 
 	// if we have no sub-menu information, just display the top menu.
 	if (!$parents)
@@ -175,27 +176,43 @@ function obj_show(obj)
 		print "<tr>";
 		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
 		print "<ul id=\"menu\">";
+
+		// get an array of all the permissions this user had
+		$user_permissions	= array();
+		$userid			= user_information("id");
+		$mysql_string		= "SELECT permid FROM `users_permissions` WHERE userid='$userid'";
+		$mysql_result		= mysql_query($mysql_string);
+
+		while ($mysql_data = mysql_fetch_array($mysql_result))
+		{
+			$user_permissions[] = $mysql_data["permid"];
+		}
+
 		
 		// get the data for this menu
-		$mysql_string		= "SELECT link, topic FROM `menu` WHERE parent='$parents[$i]'";
+		$mysql_string		= "SELECT link, topic, permid FROM `menu` WHERE parent='$parents[$i]' ORDER BY priority";
 		$mysql_menu_result	= mysql_query($mysql_string);
 		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
 			
 		while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
 		{
-			// if this entry has no topic, it only exists for the purpose of getting a parent
-			// link highlighted. In this case, ignore the current entry.
-
-			if ($mysql_menu_data["topic"])
+			// check that the user has permissions to display this link
+			if (in_array($mysql_menu_data["permid"], $user_permissions) || $mysql_menu_data["permid"] == 0)
 			{
-				// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-				if ($parents[$i + 1] == $mysql_menu_data["topic"])
+				// if this entry has no topic, it only exists for the purpose of getting a parent
+				// link highlighted. In this case, ignore the current entry.
+
+				if ($mysql_menu_data["topic"])
 				{
-					print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
-				}
-				else
-				{
-					print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+					// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+					if ($parents[$i + 1] == $mysql_menu_data["topic"] || $mysql_menu_data["link"] == $page)
+					{
+						print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+					}
+					else
+					{
+						print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+					}
 				}
 			}
 
@@ -215,7 +232,7 @@ function obj_show(obj)
 	<?php
 
 	// display section.
-        //      - display "up" link
+        //      - display navigation menu
         //      - display any errors & notifications
         //      - display the page.
 
@@ -225,6 +242,61 @@ function obj_show(obj)
 	{
 		include($page);
 	}
+
+
+	/*
+		DRAW NAVIGATION MENU
+
+		The main application menu is built from the configuration in the MySQL database. However, it is often desirable
+		to be able to create a custom menu for the page currently running, for uses such as spliting large pages into
+		multiple sections (simular to tabs).
+	        
+		Usage (example):
+
+			(The following code should go after user permissions verification, but before the page_render function)
+
+			To enable the nav menu on the page:
+			> $_SESSION["nav"]["active"] = 1;
+
+			For each menu entry you wish to have, use the following syntax:
+			> $_SESSION["nav"]["query"][] = "page=home/home.php";
+			> $_SESSION["nav"]["title"][] = "Return to Home";
+
+			To choose which one will be high-lighted when the menu is drawn, specify which
+			page URL should be made current:			
+			> $_SESSION["nav"]["current"] = "page=home/home.php"
+
+		
+	*/	
+	if ($_SESSION["nav"]["active"])
+	{
+		print "<tr>";
+		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+
+		print "<ul id=\"navmenu\">";
+
+		        $j = count($_SESSION["nav"]["query"]);
+		        for ($i=0; $i < $j; $i++)
+		        {
+				// are we viewing the current page?
+				if ($_SESSION["nav"]["current"] == $_SESSION["nav"]["query"][$i])
+				{
+					print "<li><a style=\"background-color: #60ae62;\" href=\"index.php?". $_SESSION["nav"]["query"][$i] ."\" title=\"". $_SESSION["nav"]["title"][$i] ."\">". $_SESSION["nav"]["title"][$i] ."</a></li>";
+				}
+				else
+				{
+					print "<li><a href=\"index.php?". $_SESSION["nav"]["query"][$i] ."\" title=\"". $_SESSION["nav"]["title"][$i] ."\">". $_SESSION["nav"]["title"][$i] ."</a></li>";
+				}
+			}
+
+		
+		print "</ul>";
+
+		print "</td>";
+		print "</tr>";
+	}
+	
+	
 
         // DRAW ERROR/NOTIFCATION MESSAGES
         if ($_SESSION["error"]["message"])
@@ -324,5 +396,6 @@ function obj_show(obj)
 // erase error and notification arrays
 $_SESSION["error"] = array();
 $_SESSION["notification"] = array();
+$_SESSION["nav"] = array();
 
 ?>

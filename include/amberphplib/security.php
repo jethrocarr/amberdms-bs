@@ -41,24 +41,6 @@ function security_localphp($url)
 
 
 /*
-	form_verify_input_custom($expression, $fieldname, $numchars)
-
-	Verifies input from $_POST[$fieldname] using the regex provided
-	as well as checking the length of the variable.
-	
-	This function has 2 important roles:
-	* Preventing SQL or HTML injection of page content
-	* Check user input from the form to make sure it's valid - eg: email addresses, dates, etc.
-
-	In event of a failure, the function will automatically create the required
-	failure values in $_SESSION["error"].
-
-	Returns the input content.
-*/
-
-
-
-/*
 	security_form_input ( $expression, $valuename, $numchars, $errormsg )
 
 	Verifies input from $_POST[$valuename] using the regex provided
@@ -156,7 +138,60 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		break;
 
 		case "date":
-			$expression = "/^[\S\s]*$/";
+			// dates are a special field, since they have to be passed
+			// from the form as 3 different inputs, but we want to re-assemble them
+			// into a single input and make it into a timestamp
+
+			$date_dd	= intval($_POST[$valuename."_dd"]);
+			$date_mm	= intval($_POST[$valuename."_mm"]);
+			$date_yyyy	= intval($_POST[$valuename."_yyyy"]);
+
+			// make sure a date has been provided
+			if ($numchar)
+			{
+				if ($date_dd < 1 || $date_dd > 31)
+					$errormsg_tmp = "Invalid date input";
+
+				if ($date_mm < 1 || $date_mm > 12)
+					$errormsg_tmp = "Invalid date input";
+			
+				if ($date_yyyy < 1600 || $date_yyyy > 2999)
+					$errormsg_tmp = "Invalid date input";
+			}
+			else
+			{
+				// the date is not a required field, but we need to make sure any input is valid
+				if ($date_dd > 31)
+					$errormsg_tmp = "Invalid date input";
+					
+				if ($date_mm > 12)
+					$errormsg_tmp = "Invalid date input";
+
+				if ($date_yyyy > 2999)
+					$errormsg_tmp = "Invalid date input";
+			}
+
+			// convert to timestamp
+			// all dates are handled in the form of timestamps
+			if ($date_dd == 0 && $date_mm == 0 && $date_yyyy == 0)
+			{
+				$timestamp = 0;
+			}
+			else
+			{
+				$timestamp = mktime(0,0,0,$_POST[$valuename."_mm"],$_POST[$valuename."_dd"],$_POST[$valuename."_yyyy"]);
+			}
+			
+			// flag any errors
+			if ($errormsg_tmp)
+			{
+				$_SESSION["error"]["message"][] = $errormsg_tmp;
+				$_SESSION["error"]["". $valuename . "-error"] = 1;
+				$_SESSION["error"][$valuename] = $timestamp;
+			}
+
+			return $timestamp;
+			
 		break;
 
 		case "int":

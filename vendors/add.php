@@ -1,14 +1,13 @@
 <?php
 /*
-	customers/add.php
+	vendors/add.php
 	
-	access: customers_write
+	access: vendors_write
 
-	Form to add a new customer to the database.
-
+	Form to add a new vendor to the database.
 */
 
-if (user_permissions_get('customers_write'))
+if (user_permissions_get('vendors_write'))
 {
 	function page_render()
 	{
@@ -17,23 +16,23 @@ if (user_permissions_get('customers_write'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>ADD CUSTOMER RECORD</h3><br>";
-		print "<p>This page allows you to add a new customer.</p>";
+		print "<h3>ADD VENDOR RECORD</h3><br>";
+		print "<p>This page allows you to add a new vendor.</p>";
 
 		/*
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "customer_view";
+		$form->formname = "vendor_view";
 		$form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "customers/edit-process.php";
+		$form->action = "vendors/edit-process.php";
 		$form->method = "post";
 		
 
 		// general
 		$structure = NULL;
-		$structure["fieldname"] 	= "name_customer";
+		$structure["fieldname"] 	= "name_vendor";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
@@ -65,12 +64,12 @@ if (user_permissions_get('customers_write'))
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
+		$structure["type"]	= "input";
 		$form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
+		$structure["type"]	= "input";
 		$form->add_input($structure);
 
 
@@ -149,18 +148,18 @@ if (user_permissions_get('customers_write'))
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Create Customer";
+		$structure["defaultvalue"]	= "Create Vendor";
 		$form->add_input($structure);
 		
 
 		// define subforms
-		$form->subforms["customer_view"]	= array("name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
+		$form->subforms["vendor_view"]	= array("name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
 		$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$form->subforms["submit"]		= array("submit");
 		
 		// fetch the form data
-		$form->sql_query = "SELECT * FROM `customers` WHERE id='$id' LIMIT 1";		
+		$form->sql_query = "SELECT * FROM `vendors` WHERE id='$id' LIMIT 1";		
 		$form->load_data();
 
 		// display the form

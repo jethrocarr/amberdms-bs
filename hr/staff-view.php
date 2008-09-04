@@ -1,33 +1,27 @@
 <?php
 /*
-	customers/view.php
-	
-	access: customers_view (read-only)
-		customers_write (write access)
+	hr/staff-view.php
 
-	Displays all the details for the customer and if the user has correct
-	permissions allows the customer to be updated.
+	access: staff_view (read-only)
+		staff_write (write access)
+
+	Displays the details of the selected staff member, and if the user
+	has write permissions allows the staff member to be adjusted.
 */
 
-if (user_permissions_get('customers_view'))
+if (user_permissions_get('staff_view'))
 {
 	$id = $_GET["id"];
 	
 	// nav bar options.
 	$_SESSION["nav"]["active"]	= 1;
 	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=customers/view.php&id=$id";
+	$_SESSION["nav"]["title"][]	= "Vendor's Details";
+	$_SESSION["nav"]["query"][]	= "page=staff/view.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=staff/view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=account/services/services.php&customer_id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Customer";
-	$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
+	$_SESSION["nav"]["title"][]	= "Vendors's Journal";
+	$_SESSION["nav"]["query"][]	= "page=staff/journal.php&id=$id";
 
 
 	function page_render()
@@ -37,16 +31,16 @@ if (user_permissions_get('customers_view'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>CUSTOMER DETAILS</h3><br>";
-		print "<p>This page allows you to view and adjust the customer's records.</p>";
+		print "<h2>VENDOR DETAILS</h2><br>";
+		print "<p>This page allows you to view and adjust the staff's records.</p>";
 
-		$mysql_string	= "SELECT id FROM `customers` WHERE id='$id'";
+		$mysql_string	= "SELECT id FROM `staff` WHERE id='$id'";
 		$mysql_result	= mysql_query($mysql_string);
 		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
 		if (!$mysql_num_rows)
 		{
-			print "<p><b>Error: The requested customer does not exist. <a href=\"index.php?page=customers/customers.php\">Try looking for your customer on the customer list page.</a></b></p>";
+			print "<p><b>Error: The requested staff does not exist. <a href=\"index.php?page=staff/staff.php\">Try looking for your staff on the staff list page.</a></b></p>";
 		}
 		else
 		{
@@ -54,22 +48,22 @@ if (user_permissions_get('customers_view'))
 				Define form structure
 			*/
 			$form = New form_input;
-			$form->formname = "customer_view";
+			$form->formname = "staff_view";
 			$form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "customers/edit-process.php";
+			$form->action = "staff/edit-process.php";
 			$form->method = "post";
 			
 
 			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_customer";
+			$structure["fieldname"] 	= "id_staff";
 			$structure["type"]		= "text";
 			$structure["defaultvalue"]	= "$id";
 			$form->add_input($structure);
 			
 			$structure = NULL;
-			$structure["fieldname"] 	= "name_customer";
+			$structure["fieldname"] 	= "name_staff";
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
@@ -181,7 +175,7 @@ if (user_permissions_get('customers_view'))
 			$form->add_input($structure);
 			
 			// submit section
-			if (user_permissions_get("customers_write"))
+			if (user_permissions_get("staff_write"))
 			{
 				$structure = NULL;
 				$structure["fieldname"] 	= "submit";
@@ -195,20 +189,20 @@ if (user_permissions_get('customers_view'))
 				$structure = NULL;
 				$structure["fieldname"] 	= "submit";
 				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to customer records.</i></p>";
+				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to staff records.</i></p>";
 				$form->add_input($structure);
 			}
 			
 			
 			// define subforms
-			$form->subforms["customer_view"]	= array("id_customer", "name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
+			$form->subforms["staff_view"]	= array("id_staff", "name_staff", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
 			$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 			$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 			$form->subforms["submit"]	= array("submit");
 
 			
 			// fetch the form data
-			$form->sql_query = "SELECT * FROM `customers` WHERE id='$id' LIMIT 1";		
+			$form->sql_query = "SELECT * FROM `staff` WHERE id='$id' LIMIT 1";		
 			$form->load_data();
 
 			// display the form

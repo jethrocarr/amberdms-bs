@@ -195,6 +195,7 @@ class form_input
 				text		- text only display, with hidden field as well
 
 				textarea	- space for blocks of text
+				date		- special date field - splits a timestamp into 3 DD/MM/YYYY fields
 
 				checkbox	- checkboxs (tick boxes)
 				radio		- radio buttons
@@ -244,7 +245,27 @@ class form_input
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea></td>";
 			break;
 
+			case "date":
+				if ($this->structure[$fieldname]["defaultvalue"] == 0)
+				{
+					$date_a = array("","","");
+				}
+				else
+				{
+					$date = date("d-m-Y", $this->structure[$fieldname]["defaultvalue"]);
+					$date_a = split("-", $date);
+				}
+
+				print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[0] ."\"> ";
+				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
+				print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[2] ."\">";
+				print " <i>(dd/mm/yyyy)</i>";
+
+				// TODO: it would be good to have a javascript calender pop-up to use here.
+			break;
+
 			case "radio":
+				// TODO: write me
 			break;
 
 			case "checkbox":

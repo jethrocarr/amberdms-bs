@@ -1,10 +1,10 @@
 <?php
 /*
-	customers/edit-process.php
+	vendors/edit-process.php
 
-	access: customers_write
+	access: vendors_write
 
-	Allows existing customers to be adjusted, or new customers to be added.
+	Allows existing vendors to be adjusted, or new vendors to be added.
 */
 
 // includes
@@ -12,13 +12,13 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 
-if (user_permissions_get('customers_write'))
+if (user_permissions_get('vendors_write'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_customer", 0, "");
+	$id				= security_form_input_predefined("int", "id_vendor", 0, "");
 	
-	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 1, "You must set a customer name");
+	$data["name_vendor"]		= security_form_input_predefined("any", "name_vendor", 1, "You must set a vendor name");
 	$data["name_contact"]		= security_form_input_predefined("any", "name_contact", 0, "");
 	
 	$data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
@@ -44,19 +44,19 @@ if (user_permissions_get('customers_write'))
 	$data["address2_zipcode"]	= security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
 
-	// are we editing an existing customer or adding a new one?
+	// are we editing an existing vendor or adding a new one?
 	if ($id)
 	{
 		$mode = "edit";
 
-		// make sure the customer actually exists
-		$mysql_string		= "SELECT id FROM `customers` WHERE id='$id'";
+		// make sure the vendor actually exists
+		$mysql_string		= "SELECT id FROM `vendors` WHERE id='$id'";
 		$mysql_result		= mysql_query($mysql_string);
 		$mysql_num_rows		= mysql_num_rows($mysql_result);
 
 		if (!$mysql_num_rows)
 		{
-			$_SESSION["error"]["message"][] = "The customer you have attempted to edit - $id - does not exist in this system.";
+			$_SESSION["error"]["message"][] = "The vendor you have attempted to edit - $id - does not exist in this system.";
 		}
 	}
 	else
@@ -69,8 +69,8 @@ if (user_permissions_get('customers_write'))
 	//// ERROR CHECKING ///////////////////////
 
 
-	// make sure we don't choose a customer name that has already been taken
-	$mysql_string	= "SELECT id FROM `customers` WHERE name_customer='". $data["name_customer"] ."'";
+	// make sure we don't choose a vendor name that has already been taken
+	$mysql_string	= "SELECT id FROM `vendors` WHERE name_vendor='". $data["name_vendor"] ."'";
 	if ($id)
 		$mysql_string .= " AND id!='$id'";
 	$mysql_result	= mysql_query($mysql_string);
@@ -78,8 +78,8 @@ if (user_permissions_get('customers_write'))
 
 	if ($mysql_num_rows)
 	{
-		$_SESSION["error"]["message"][] = "This customer name is already used for another customer - please choose a unique name.";
-		$_SESSION["error"]["name_customer-error"] = 1;
+		$_SESSION["error"]["message"][] = "This vendor name is already used for another vendor - please choose a unique name.";
+		$_SESSION["error"]["name_vendor-error"] = 1;
 	}
 
 
@@ -88,12 +88,12 @@ if (user_permissions_get('customers_write'))
 	{	
 		if ($mode == "edit")
 		{
-			header("Location: ../index.php?page=customers/view.php&id=$id");
+			header("Location: ../index.php?page=vendors/view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
-			header("Location: ../index.php?page=customers/add.php");
+			header("Location: ../index.php?page=vendors/add.php");
 			exit(0);
 		}
 	}
@@ -102,7 +102,7 @@ if (user_permissions_get('customers_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `customers` (name_customer) VALUES ('".$data["name_customer"]."')";
+			$mysql_string = "INSERT INTO `vendors` (name_vendor) VALUES ('".$data["name_vendor"]."')";
 			if (!mysql_query($mysql_string))
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
@@ -113,9 +113,9 @@ if (user_permissions_get('customers_write'))
 
 		if ($id)
 		{
-			// update customer details
-			$mysql_string = "UPDATE `customers` SET "
-						."name_customer='". $data["name_customer"] ."', "
+			// update vendor details
+			$mysql_string = "UPDATE `vendors` SET "
+						."name_vendor='". $data["name_vendor"] ."', "
 						."name_contact='". $data["name_contact"] ."', "
 						."contact_phone='". $data["contact_phone"] ."', "
 						."contact_email='". $data["contact_email"] ."', "
@@ -148,7 +148,7 @@ if (user_permissions_get('customers_write'))
 		}
 
 		// display updated details
-		header("Location: ../index.php?page=customers/view.php&id=$id");
+		header("Location: ../index.php?page=vendors/view.php&id=$id");
 		exit(0);
 	}
 
