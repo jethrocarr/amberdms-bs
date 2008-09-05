@@ -18,7 +18,7 @@ if (user_permissions_get('staff_write'))
 		/*
 			Title + Summary
 		*/
-		print "<h2>ADD EMPLOYEE</h2><br>";
+		print "<h3>ADD EMPLOYEE</h3><br>";
 		print "<p>This page allows you to add a new employee to the database.</p>";
 
 		/*

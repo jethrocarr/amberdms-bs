@@ -18,19 +18,20 @@ if (user_permissions_get('vendors_view'))
 		$vendor_list->tablename	= "vendor_list";
 		$vendor_list->sql_table	= "vendors";
 
-		$vendor_list->columns_available = array("name_vendor",
-								"name_contact",
-								"contact_phone",
-								"contact_email",
-								"contact_fax",
-								"date_start",
-								"date_end",
-								"tax_number",
-								"address1_city",
-								"address1_state",
-								"address1_country"
-								);
 
+		// define all the columns and structure
+		$vendor_list->add_column("standard", "id_vendor", "id");
+		$vendor_list->add_column("standard", "name_vendor", "");
+		$vendor_list->add_column("standard", "name_contact", "");
+		$vendor_list->add_column("standard", "contact_phone", "");
+		$vendor_list->add_column("standard", "contact_email", "");
+		$vendor_list->add_column("standard", "contact_fax", "");
+		$vendor_list->add_column("date", "date_start", "");
+		$vendor_list->add_column("date", "date_end", "");
+		$vendor_list->add_column("standard", "tax_number", "");
+		$vendor_list->add_column("standard", "address1_city", "");
+		$vendor_list->add_column("standard", "address1_state", "");
+		$vendor_list->add_column("standard", "address1_country", "");
 
 		// defaults
 		$vendor_list->columns		= array("name_vendor", "name_contact", "contact_phone", "contact_email");
@@ -48,7 +49,7 @@ if (user_permissions_get('vendors_view'))
 
 		// fetch all the vendor information
 		$vendor_list->generate_sql();
-		$vendor_list->generate_data();
+		$vendor_list->load_data_sql();
 
 		if (!count($vendor_list->columns))
 		{

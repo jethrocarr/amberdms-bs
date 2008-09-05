@@ -19,10 +19,11 @@ class table
 	var $tablename;			// name of the table - used for internal purposes, not displayed
 	var $language = "en_us";	// language to use for the form labels.
 	
-	var $columns;			// array containing all columns to be displayed
+	var $columns;			// array containing the list of all the columns to display
 	var $columns_order;		// array containing columns to order by
-	var $columns_available;		// used for the options form for displays columns
-	
+
+	var $structure;			// contains the structure of all the defined columns.
+
 	var $data;			// table content
 	var $data_num_rows;		// number of rows
 
@@ -31,6 +32,34 @@ class table
 
 	var $render_columns;		// human readable column names
 
+
+	/*
+		add_column($type, $name, $dbname)
+	
+		Defines the column structure.
+		type	- A known type of column
+				standard
+				date
+				fullname	- there are two fields in the DB that need to be merged to make a full name)
+				price		- displays a price field correctly
+				
+		name	- name/label of the column for display purposes
+
+		dbname	- name of the field in the DB or session data to use for the input data
+	*/
+	function add_column($type, $name, $dbname)
+	{
+		if (!$dbname)
+		{
+			$dbname = $name;
+		}
+		
+		$this->structure[$name]["type"]		= $type;
+		$this->structure[$name]["dbname"]	= $dbname;
+		
+	}
+
+	
 
 	/*
 		generate_sql()
@@ -44,7 +73,22 @@ class table
 		
 		foreach ($this->columns as $column)
 		{
-			$this->sql_query .= "$column, ";
+			$dbname = $this->structure[$column]["dbname"];
+			
+			/*
+				See the add_column function for comments about
+				the different possible types.
+			*/
+			if ($this->structure[$column]["type"] == "fullname")
+			{
+				$this->sql_query .= $dbname ."_firstname, ";
+				$this->sql_query .= $dbname ."_lastname, ";
+			}
+			else
+			{
+				// default, standard query
+				$this->sql_query .= "$dbname, ";
+			}
 		}
 
 		$this->sql_query .= "id FROM `". $this->sql_table ."` ";
@@ -60,14 +104,27 @@ class table
 			foreach ($this->columns_order as $column_order)
 			{
 				$count++;
-			
-				if ($count < count($this->columns_order))
+				$dbname = $this->structure[$column_order]["dbname"];
+
+				/*
+						See the add_column function for comments about
+						the different possible types.
+				*/
+				if ($this->structure[$column_order]["type"] == "fullname")
 				{
-					$this->sql_query .= $column_order .", ";
+					$this->sql_query .= $dbname ."_firstname, ";
+					$this->sql_query .= $dbname ."_lastname";
 				}
 				else
 				{
-					$this->sql_query .= $column_order;
+					$this->sql_query .= $dbname;
+				}
+
+
+				// add seporator if required
+				if ($count < count($this->columns_order))
+				{
+					$this->sql_query .= ", ";
 				}
 			}
 			
@@ -80,8 +137,8 @@ class table
 
 
 	/*
-		generate_data()
-
+		load_data_sql()
+		
 		This function executes the SQL statement and fetches all the data from
 		MySQL into an associate array.
 
@@ -91,9 +148,14 @@ class table
 
 		Returns the number of rows found.
 	*/
-	function generate_data()
+	function load_data_sql()
 	{
-		$mysql_result		= mysql_query($this->sql_query);
+		if (!$mysql_result = mysql_query($this->sql_query))
+		{
+			print "<p><b>A fatal SQL error occured: ". mysql_error() ."</b></p>";
+			return 0;
+		}
+		
 		$mysql_num_rows		= mysql_num_rows($mysql_result);
 		$this->data_num_rows	= $mysql_num_rows;
 
@@ -105,7 +167,51 @@ class table
 		{
 			while ($mysql_data = mysql_fetch_array($mysql_result))
 			{
-				$this->data[] = $mysql_data;
+				$tmparray = array();
+				
+				foreach (array_keys($this->structure) as $structurecol)
+				{
+					/*
+						See the add_column function for comments about
+						the different possible types.
+					*/
+					switch ($this->structure[$structurecol]["type"])
+					{
+						case "fullname":
+							$tmparray[$structurecol] = $mysql_data[ $this->structure[$structurecol]["dbname"]."_firstname" ] ." ". $mysql_data[$this->structure[$structurecol]["dbname"]."_lastname" ];
+						break;
+
+						case "date":
+							if ($mysql_data[$this->structure[$structurecol]["dbname"]])
+							{
+								$tmparray[$structurecol] = date("d-m-Y", $mysql_data[$this->structure[$structurecol]["dbname"]]);
+							}
+							else
+							{
+								// no date in this field, add filler
+								$tmparray[$structurecol] = "---";
+							}
+						break;
+
+						case "price":
+							// TODO: in future, have currency field here
+
+							// for now, just add a $ symbol to the field.
+							$tmparray[$structurecol] = "$". $mysql_data[$this->structure[$structurecol]["dbname"]];
+						break;
+
+						default:
+							// standard DB type
+							$tmparray[$structurecol] = $mysql_data[$this->structure[$structurecol]["dbname"]];
+						break;
+					}
+				}
+
+				// add the id field
+				$tmparray["id"] = $mysql_data["id"];
+			
+				// save data to final results
+				$this->data[] = $tmparray;
 			}
 
 			return $mysql_num_rows;
@@ -132,7 +238,7 @@ class table
 			$this->columns_order	= array();
 
 			// load checkboxes
-			foreach ($this->columns_available as $column)
+			foreach (array_keys($this->structure) as $column)
 			{
 				$column_setting = security_script_input("/^[a-z]*$/", $_GET[$column]);
 				
@@ -143,7 +249,7 @@ class table
 			}
 
 			// load orderby options
-			$num_cols = count($this->columns_available);
+			$num_cols = count(array_keys($this->structure));
 			for ($i=0; $i < $num_cols; $i++)
 			{
 				if ($_GET["order_$i"])
@@ -170,7 +276,7 @@ class table
 	/*
 		render_column_names($language)
 
-		This function looks up the human-translation of the column names and returns the results.
+		This function looks up the human-translation of the column names and saves it into $this->render_columns
 
 		Defaults to US english (en_us) if no language is specified.
 	*/
@@ -181,6 +287,7 @@ class table
 	}
 
 
+
 	/*
 		render_options_form()
 		
@@ -188,8 +295,11 @@ class table
 	*/
 	function render_options_form()
 	{	
+		// create tmp array to prevent excessive use of array_keys
+		$columns_available = array_keys($this->structure);
+		
 		// get labels for all the columns
-		$labels = language_translate($this->language, $this->columns_available);
+		$labels = language_translate($this->language, $columns_available);
 
 
 		// start the form
@@ -219,12 +329,12 @@ class table
 
 
 		// configure all the checkboxes
-		$num_cols	= count($this->columns_available);
+		$num_cols	= count($columns_available);
 		$num_cols_half	= sprintf("%d", $num_cols / 2);
 		
 		for ($i=0; $i < $num_cols; $i++)
 		{
-			$column = $this->columns_available[$i];
+			$column = $columns_available[$i];
 			
 			// define the checkbox
 			$structure = NULL;
@@ -248,7 +358,6 @@ class table
 			
 		}
 		
-
 
 		// structure table
 		print "<table width=\"100%\" style=\"border: 1px solid #000000;\"><tr>";
@@ -287,7 +396,7 @@ class table
 			print "<b>Order By (in the following order):</b><br><br>";
 
 			// limit the number of order boxes to 4
-			$num_cols = count($this->columns_available);
+			$num_cols = count($columns_available);
 
 			if ($num_cols > 4)
 				$num_cols = 4;
@@ -303,7 +412,7 @@ class table
 				if ($this->columns_order[$i])
 					$structure["defaultvalue"] = $this->columns_order[$i];
 
-				$structure["values"] = $this->columns_available;
+				$structure["values"] = $columns_available;
 
 				$form->add_input($structure);
 

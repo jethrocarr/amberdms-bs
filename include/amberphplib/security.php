@@ -123,6 +123,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	* date		date - TODO: write this one
 	* email		Standard email address
 	* int		Standard integer
+	* float		Floating point integer
 	* ipv4		XXX.XXX.XXX.XXX IPv4 syntax
 
 	For further details, refer to the commentsfor the security_form_input function.
@@ -171,6 +172,17 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 					$errormsg_tmp = "Invalid date input";
 			}
 
+			// make sure user has filled in all 3 date fields
+			if ($date_dd && (!$date_mm || !$date_yyyy))
+				$errormsg_tmp = "Invalid date input";
+
+			if ($date_mm && (!$date_dd || !$date_yyyy))
+				$errormsg_tmp = "Invalid date input";
+				
+			if ($date_yyyy && (!$date_dd || !$date_mm))
+				$errormsg_tmp = "Invalid date input";
+
+				
 			// convert to timestamp
 			// all dates are handled in the form of timestamps
 			if ($date_dd == 0 && $date_mm == 0 && $date_yyyy == 0)
@@ -182,20 +194,34 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 				$timestamp = mktime(0,0,0,$_POST[$valuename."_mm"],$_POST[$valuename."_dd"],$_POST[$valuename."_yyyy"]);
 			}
 			
-			// flag any errors
 			if ($errormsg_tmp)
 			{
+				// there has been an error:
+				// * flag this date field as being incorrect input
+				// * set the returned value to 0 - if they user has entered some fields, but not
+				//   others, the timestamp will get regenerated incorrectly
 				$_SESSION["error"]["message"][] = $errormsg_tmp;
 				$_SESSION["error"]["". $valuename . "-error"] = 1;
+				$_SESSION["error"][$valuename] = 0;
+			}
+			else
+			{
+				// save timestamp incase of errors
 				$_SESSION["error"][$valuename] = $timestamp;
 			}
 
+			
+			// return the value
 			return $timestamp;
 			
 		break;
 
 		case "int":
 			$expression = "/^[0-9]*$/";
+		break;
+
+		case "float":
+			$expression = "/^[0-9]*.[0-9]*$/";
 		break;
 		
 		case "email":

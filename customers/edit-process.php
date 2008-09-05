@@ -139,11 +139,19 @@ if (user_permissions_get('customers_write'))
 						
 			if (!mysql_query($mysql_string))
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
+				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
 			}
 			else
 			{
-				$_SESSION["notification"]["message"][] = "Customer record successfully updated.";
+				if ($mode == "add")
+				{
+					$_SESSION["notification"]["message"][] = "Customer successfully created.";
+				}
+				else
+				{
+					$_SESSION["notification"]["message"][] = "Customer successfully updated.";
+				}
+				
 			}
 		}
 

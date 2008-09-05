@@ -18,15 +18,16 @@ if (user_permissions_get('staff_view'))
 		$staff_list->tablename	= "staff_list";
 		$staff_list->sql_table	= "staff";
 
-		$staff_list->columns_available = array("name_staff",
-								"staff_code",
-								"staff_position",
-								"contact_phone",
-								"contact_email",
-								"contact_fax",
-								"date_start",
-								"date_end",
-								);
+		// define all the columns and structure
+		$staff_list->add_column("standard", "id_staff", "id");
+		$staff_list->add_column("standard", "staff_code", "staff_code");
+		$staff_list->add_column("fullname", "name_staff", "name_staff");
+		$staff_list->add_column("standard", "staff_position", "staff_position");
+		$staff_list->add_column("standard", "contact_phone", "contact_phone");
+		$staff_list->add_column("standard", "contact_email", "contact_email");
+		$staff_list->add_column("standard", "contact_fax", "contact_fax");
+		$staff_list->add_column("date", "date_start", "date_start");
+		$staff_list->add_column("date", "date_end", "date_end");
 
 
 		// defaults
@@ -45,7 +46,7 @@ if (user_permissions_get('staff_view'))
 
 		// fetch all the staff information
 		$staff_list->generate_sql();
-		$staff_list->generate_data();
+		$staff_list->load_data_sql();
 
 		if (!count($staff_list->columns))
 		{

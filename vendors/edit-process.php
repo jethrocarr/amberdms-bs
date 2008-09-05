@@ -143,7 +143,14 @@ if (user_permissions_get('vendors_write'))
 			}
 			else
 			{
-				$_SESSION["notification"]["message"][] = "Customer record successfully updated.";
+				if ($mode == "add")
+				{
+					$_SESSION["notification"]["message"][] = "Vendor successfully created.";
+				}
+				else
+				{
+					$_SESSION["notification"]["message"][] = "Vendor successfully updated.";
+				}
 			}
 		}
 

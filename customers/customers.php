@@ -18,18 +18,20 @@ if (user_permissions_get('customers_view'))
 		$customer_list->tablename	= "customer_list";
 		$customer_list->sql_table	= "customers";
 
-		$customer_list->columns_available = array("name_customer",
-								"name_contact",
-								"contact_phone",
-								"contact_email",
-								"contact_fax",
-								"date_start",
-								"date_end",
-								"tax_number",
-								"address1_city",
-								"address1_state",
-								"address1_country"
-								);
+		// define all the columns and structure
+		$customer_list->add_column("standard", "id_customer", "id");
+		$customer_list->add_column("standard", "name_customer", "");
+		$customer_list->add_column("standard", "name_contact", "");
+		$customer_list->add_column("standard", "contact_phone", "");
+		$customer_list->add_column("standard", "contact_email", "");
+		$customer_list->add_column("standard", "contact_fax", "");
+		$customer_list->add_column("date", "date_start", "");
+		$customer_list->add_column("date", "date_end", "");
+		$customer_list->add_column("standard", "tax_number", "");
+		$customer_list->add_column("standard", "address1_city", "");
+		$customer_list->add_column("standard", "address1_state", "");
+		$customer_list->add_column("standard", "address1_country", "");
+
 
 
 		// defaults
@@ -48,7 +50,7 @@ if (user_permissions_get('customers_view'))
 
 		// fetch all the customer information
 		$customer_list->generate_sql();
-		$customer_list->generate_data();
+		$customer_list->load_data_sql();
 
 		if (!count($customer_list->columns))
 		{
