@@ -67,6 +67,11 @@ a:active {
 		padding: 8px;
 	}
 
+	.table_content .footer {
+		background-color: #e7e7e7;
+		color: #000000;
+	}
+
 	.table_content a:hover {
 		color: #ffffff;
 	}

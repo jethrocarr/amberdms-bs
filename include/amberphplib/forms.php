@@ -195,7 +195,10 @@ class form_input
 				text		- text only display, with hidden field as well
 
 				textarea	- space for blocks of text
+				fullname	- a firstname and lastname in seporate boxes
+				
 				date		- special date field - splits a timestamp into 3 DD/MM/YYYY fields
+				hourmins	- splits the specified number of seconds into hours, and minutes
 
 				checkbox	- checkboxs (tick boxes)
 				radio		- radio buttons
@@ -246,24 +249,45 @@ class form_input
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea></td>";
 			break;
 
+			case "fullname":
+				print "<input name=\"". $fieldname ."_hh\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_hours\"> hours ";
+				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_mins\"> mins";
+			break;
+
 			case "date":
-				if ($this->structure[$fieldname]["defaultvalue"] == 0)
+				if ($this->structure[$fieldname]["defaultvalue"] == "0000-00-00" || $this->structure[$fieldname]["defaultvalue"] == 0)
 				{
 					$date_a = array("","","");
 				}
 				else
 				{
-					$date = date("d-m-Y", $this->structure[$fieldname]["defaultvalue"]);
-					$date_a = split("-", $date);
+					$date_a = split("-", $this->structure[$fieldname]["defaultvalue"]);
 				}
 
-				print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[0] ."\"> ";
+				print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
 				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
-				print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[2] ."\">";
+				print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
 				print " <i>(dd/mm/yyyy)</i>";
 
 				// TODO: it would be good to have a javascript calender pop-up to use here.
 			break;
+
+			case "hourmins":
+				if ($this->structure[$fieldname]["defaultvalue"] == 0)
+				{
+					$time_hours	= "";
+					$time_mins	= "";
+				}
+				else
+				{
+					$time_processed	= split(":", time_format_hourmins($this->structure[$fieldname]["defaultvalue"]));
+					$time_hours	= $time_processed[0];
+					$time_mins	= $time_processed[1];
+				}
+
+				print "<input name=\"". $fieldname ."_hh\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_hours\"> hours ";
+				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_mins\"> mins";
+				
 
 			case "radio":
 				// TODO: write me

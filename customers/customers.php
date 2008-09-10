@@ -62,43 +62,17 @@ if (user_permissions_get('customers_view'))
 		}
 		else
 		{
-			// translate the column labels
-			$customer_list->render_column_names();
-		
-			// display header row
-			print "<table class=\"table_content\" width=\"100%\">";
-			print "<tr>";
-			
-				foreach ($customer_list->render_columns as $columns)
-				{
-					print "<td class=\"header\"><b>". $columns ."</b></td>";
-				}
-				
-				print "<td class=\"header\"></td>";	// filler for link column
-				
-			print "</tr>";
-		
-			// display data
-			for ($i=0; $i < $customer_list->data_num_rows; $i++)
-			{
-				print "<tr>";
+			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$customer_list->add_link("view", "customers/view.php", $structure);
 
-				foreach ($customer_list->columns as $columns)
-				{
-					print "<td>". $customer_list->data[$i]["$columns"] ."</td>";
-				}
-				print "<td><a href=\"index.php?page=customers/view.php&id=". $customer_list->data[$i]["id"] ."\">view</td>";
-				
-				print "</tr>";
-			}
-
-			print "</table>";
+			// display the table
+			$customer_list->render_table();
 
 			// TODO: display CSV download link
-
 		}
 
-		
 	} // end page_render
 
 } // end of if logged in

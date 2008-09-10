@@ -18,8 +18,8 @@ if (user_permissions_get('timekeeping'))
 	$_SESSION["nav"]["query"][]	= "page=timekeeping/timereg.php&year=". $_SESSION["timereg"]["year"] ."&weekofyear=". $_SESSION["timereg"]["weekofyear"]."";
 
 	$_SESSION["nav"]["title"][]	= "Day View";
-	$_SESSION["nav"]["query"][]	= "page=timekeeping/timereg.php&date=$date";
-	$_SESSION["nav"]["current"]	= "page=timekeeping/timereg.php&date=$date";
+	$_SESSION["nav"]["query"][]	= "page=timekeeping/timereg-day.php&date=$date";
+	$_SESSION["nav"]["current"]	= "page=timekeeping/timereg-day.php&date=$date";
 
 
 	function page_render()
@@ -74,66 +74,12 @@ if (user_permissions_get('timekeeping'))
 		}
 		else
 		{
-			// translate the column labels
-			$timereg_table->render_column_names();
-		
-			// display header row
-			print "<table class=\"table_content\" width=\"100%\">";
-			print "<tr>";
-			
-				foreach ($timereg_table->render_columns as $columns)
-				{
-					print "<td class=\"header\"><b>". $columns ."</b></td>";
-				}
-				
-				print "<td class=\"header\"></td>";	// filler for link column
-				
-			print "</tr>";
-		
-			// display data
-			for ($i=0; $i < $timereg_table->data_num_rows; $i++)
-			{
-				print "<tr>";
+			$structure = NULL;
+			$structure["date"]["value"]	= $date;
+			$structure["editid"]["column"]	= "id";
+			$timereg_table->add_link("edit", "timekeeping/timereg-day.php", $structure);
 
-				foreach ($timereg_table->columns as $columns)
-				{
-					print "<td>". $timereg_table->data[$i]["$columns"] ."</td>";
-				}
-				print "<td><a href=\"index.php?page=timekeeping/timereg-day.php&date=$date&edit=". $timereg_table->data[$i]["id"] ."\">edit</td>";
-				
-				print "</tr>";
-			}
-
-/*
-			// display totals
-			print "<table class=\"table_content\" width=\"100%\">";
-			print "<tr>";
-			
-				foreach ($timereg_table->render_columns as $columns)
-				{
-					print "<td class=\"header\">";
-					
-					if (in_array($columns, $timereg_table->total_columns))
-					{
-						for ($i=0; $i < $timereg_table->data_num_rows; $i++)
-						{
-							$timereg_table->raw_data[$i]
-						
-						print "<b>". $columns ."</b></td>";
-					}
-					
-					print "</td>";
-				}
-				
-				print "<td class=\"header\"></td>";	// filler for link column
-				
-			print "</tr>";
-*/
-		
-			print "</table>";
-
-			// TODO: display CSV download link
-
+			$timereg_table->render_table();
 		}
 
 
@@ -152,8 +98,9 @@ if (user_permissions_get('timekeeping'))
 		}
 		else
 		{
-			print "<h3>CREATE TIME RECORD:</h3>";
+			print "<h3>BOOK TIME:</h3>";
 		}
+		print "<br><br>";
 
 		
 		$form = New form_input;
@@ -164,22 +111,32 @@ if (user_permissions_get('timekeeping'))
 		$form->method = "post";
 			
 			
-		// general
+		// hidden stuff
 		$structure = NULL;
 		$structure["fieldname"] 	= "id_timereg";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= "$editid";
 		$form->add_input($structure);
-			
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "date";
+		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= "$date";
+		$form->add_input($structure);
+		
 		$structure = NULL;
 		$structure["fieldname"] 	= "time_booked";
-		$structure["type"]		= "hoursmins";
+		$structure["type"]		= "hourmins";
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"]		= "description";
 		$structure["type"]		= "textarea";
+		$structure["options"]["req"]	= "yes";
+		$form->add_input($structure);
 		$form->add_input($structure);
 
 		// get data from DB and create project dropdown
@@ -211,7 +168,7 @@ if (user_permissions_get('timekeeping'))
 		
 		
 		// define subforms
-		$form->subforms["timereg_day"]		= array("projectid", "time_booked", "description");
+		$form->subforms["timereg_day"]		= array("projectid", "date", "time_booked", "description");
 		$form->subforms["hidden"]		= array("id_timereg");
 		$form->subforms["submit"]		= array("submit");
 
@@ -223,7 +180,7 @@ if (user_permissions_get('timekeeping'))
 		if ($mysql_num_rows)
 		{
 			// fetch the form data
-			$form->sql_query = "SELECT * FROM `customers` WHERE id='$id' LIMIT 1";		
+			$form->sql_query = "SELECT * FROM `timereg` WHERE id='$editid' LIMIT 1";
 			$form->load_data();
 		}
 

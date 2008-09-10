@@ -120,7 +120,9 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 
 	"type" options:
 	* any		Allow any input (note: HTML tags will still be stripped)
-	* date		date - TODO: write this one
+	* date		Reassembles 3 different fields into a single YYYY-MM-DD format
+	* fullname	Seporate firstname and lastname fields
+	* hourmins	Take 2 fields (hours + minutes), adds them, and returns the number of seconds
 	* email		Standard email address
 	* int		Standard integer
 	* float		Floating point integer
@@ -139,10 +141,13 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		break;
 
 		case "date":
+			// TODO: audit the error handling in this function, seems like it's generating
+			// messages which are used for no reason.
+		
 			// dates are a special field, since they have to be passed
 			// from the form as 3 different inputs, but we want to re-assemble them
-			// into a single input and make it into a timestamp
-
+			// into a single YYYY-MM-DD format
+			
 			$date_dd	= intval($_POST[$valuename."_dd"]);
 			$date_mm	= intval($_POST[$valuename."_mm"]);
 			$date_yyyy	= intval($_POST[$valuename."_yyyy"]);
@@ -182,38 +187,102 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			if ($date_yyyy && (!$date_dd || !$date_mm))
 				$errormsg_tmp = "Invalid date input";
 
-				
-			// convert to timestamp
-			// all dates are handled in the form of timestamps
-			if ($date_dd == 0 && $date_mm == 0 && $date_yyyy == 0)
-			{
-				$timestamp = 0;
-			}
-			else
-			{
-				$timestamp = mktime(0,0,0,$_POST[$valuename."_mm"],$_POST[$valuename."_dd"],$_POST[$valuename."_yyyy"]);
-			}
+		
+			// join the dates
+			$date_final = "$date_yyyy-$date_mm-$date_dd";
 			
 			if ($errormsg_tmp)
 			{
-				// there has been an error:
-				// * flag this date field as being incorrect input
-				// * set the returned value to 0 - if they user has entered some fields, but not
-				//   others, the timestamp will get regenerated incorrectly
+				// there has been an error - flag the hourmins field as being incorrect input
+				$_SESSION["error"]["message"][] = $errormsg;
+				$_SESSION["error"]["". $valuename . "-error"] = 1;
+				$_SESSION["error"][$valuename] = 0;
+			}
+			else
+			{
+				// save value incase of errors
+				$_SESSION["error"][$valuename] = $date_final;
+			}
+
+			
+			// return the value
+			return $date_final;
+			
+		break;
+
+		case "fullname":
+			// the name is in 2 fields - firstname and lastname
+			// we need to check and join them.
+
+			$error = 0;
+
+			// get the data
+			$name_first	= $_POST[$valuename."_firstname"];
+			$name_last	= $_POST[$valuename."_lastname"];
+			
+			$name_full	= "$name_first $name_last";
+
+
+			// make sure fields are complete
+			if ($numchars)
+			{
+				if (!$name_first)
+					$error = 1;
+					
+				if (!$name_last)
+					$error = 1;
+			}
+
+
+			// check + process input
+			$name_final = security_script_input("/^[\S\s]$/", $value);
+
+			if ($name_final == "error")
+				$error = 1;
+
+			
+			// return error or success
+			if ($error)
+			{
+				$_SESSION["error"]["message"][] = $errormsg;
+				$_SESSION["error"]["". $valuename . "-error"] = 1;
+				$_SESSION["error"][$valuename] = $name_full;
+
+				return $name_full;
+			}
+			else
+			{
+				return $name_final;
+			}
+			
+		break;
+
+		case "hourmins":
+			// hourmins is a special field - we want to take
+			// two fields (hours + mins) and add then together
+			// to produce the number of seconds.
+			//
+			
+			$time_hh	= intval($_POST[$valuename."_hh"]);
+			$time_mm	= intval($_POST[$valuename."_mm"]);
+
+			// caclulate the time in seconds
+			$timestamp 	= ($time_mm * 60) + (($time_hh * 60) * 60);
+
+			// make sure a value has been provided
+			if ($numchar && $timestamp == 0)
+			{
 				$_SESSION["error"]["message"][] = $errormsg_tmp;
 				$_SESSION["error"]["". $valuename . "-error"] = 1;
 				$_SESSION["error"][$valuename] = 0;
 			}
 			else
 			{
-				// save timestamp incase of errors
 				$_SESSION["error"][$valuename] = $timestamp;
 			}
 
-			
-			// return the value
 			return $timestamp;
-			
+
 		break;
 
 		case "int":

@@ -22,6 +22,11 @@ class table
 	var $columns;			// array containing the list of all the columns to display
 	var $columns_order;		// array containing columns to order by
 
+	var $total_columns;		// array of columns to create totals for
+	var $total_rows;		// array of columns to create per-row totals for
+
+	var $links;			// array of links to place in a final column
+
 	var $structure;			// contains the structure of all the defined columns.
 
 	var $data;			// table content
@@ -39,7 +44,7 @@ class table
 		Defines the column structure.
 		type	- A known type of column
 				standard
-				date
+				date		- YYYY-MM-DD format date field
 				fullname	- there are two fields in the DB that need to be merged to make a full name)
 				price		- displays a price field correctly
 				hourmins	- input is a number of seconds, display as H:MM
@@ -58,6 +63,29 @@ class table
 		$this->structure[$name]["type"]		= $type;
 		$this->structure[$name]["dbname"]	= $dbname;
 		
+	}
+
+
+	/*
+		add_link($name, $page, $options_array)
+
+		Adds a new link to the links array, with "name" becomming the link after undergoing
+		translation. Note that $page is equal to the page to display, you don't need to define
+		"index.php?page=" or anything.
+		
+		$options_array is used to specifiy get values, and has the following structure:
+		$options_array["get_field_name"]["value"]	= "value";
+		$options_array["get_field_name"]["column"]	= "columnname";
+
+		If the value option is specified, a GET field will be added with the specified value,
+		otherwise if the column option is
+
+		
+	*/
+	function add_link($name, $page, $options_array)
+	{
+		$this->links[$name]["page"]	= $page;
+		$this->links[$name]["options"]	= $options_array;
 	}
 
 	
@@ -181,30 +209,6 @@ class table
 						case "fullname":
 							$tmparray[$structurecol] = $mysql_data[ $this->structure[$structurecol]["dbname"]."_firstname" ] ." ". $mysql_data[$this->structure[$structurecol]["dbname"]."_lastname" ];
 						break;
-
-						case "date":
-							if ($mysql_data[$this->structure[$structurecol]["dbname"]])
-							{
-								$tmparray[$structurecol] = date("d-m-Y", $mysql_data[$this->structure[$structurecol]["dbname"]]);
-							}
-							else
-							{
-								// no date in this field, add filler
-								$tmparray[$structurecol] = "---";
-							}
-						break;
-
-						case "price":
-							// TODO: in future, have currency field here
-
-							// for now, just add a $ symbol to the field.
-							$tmparray[$structurecol] = "$". $mysql_data[$this->structure[$structurecol]["dbname"]];
-						break;
-
-						case "hourmins":
-							// value is a number of seconds, we need to convert into an H:MM format.
-							$tmparray[$structurecol] = time_format_hourmins($mysql_data[$this->structure[$structurecol]["dbname"]]);
-						break;
 							
 						default:
 							// standard DB type
@@ -290,6 +294,54 @@ class table
 	{
 		$this->render_columns = language_translate($this->language, $this->columns);
 		return 1;
+	}
+
+
+	/*
+		render_field($column, $row)
+
+		This function correctly formats/processes values based on their type, and then returns them.
+	*/
+	function render_field($column, $row)
+	{
+		/*
+			See the add_column function for comments about
+			the different possible types.
+		*/
+		switch ($this->structure[$column]["type"])
+		{
+			case "date":
+				if ($this->data[$row][$column] == "0000-00-00" || $this->data[$row][$column] == 0)
+				{
+					// no date in this field, add filler
+					$result = "---";
+				}
+				else
+				{
+					$result = $this->data[$row][$column];
+				}
+			break;
+
+			case "price":
+				// TODO: in future, have currency field here
+
+				// for now, just add a $ symbol to the field.
+				$tmparray[$structurecol] = "$". $this->data[$row][$column];
+			break;
+
+			case "hourmins":
+				// value is a number of seconds, we need to convert into an H:MM format.
+				$result = time_format_hourmins($this->data[$row][$column]);
+			break;
+
+			default:
+				$result = $this->data[$row][$column];
+			break;
+			
+		} // end of switch
+
+
+		return $result;
 	}
 
 
@@ -447,6 +499,115 @@ class table
 	}
 
 
+
+	/*
+		render_table()
+
+		This function renders the entire table.
+	*/
+	function render_table()
+	{
+		// translate the column labels
+		$this->render_column_names();
+
+		// display header row
+		print "<table class=\"table_content\" width=\"100%\">";
+		print "<tr>";
+
+		foreach ($this->render_columns as $columns)
+		{
+			print "<td class=\"header\"><b>". $columns ."</b></td>";
+		}
+
+		if ($this->links)
+			print "<td class=\"header\"></td>";	// filler for link column
+	
+		print "</tr>";
+
+		// display data
+		for ($i=0; $i < $this->data_num_rows; $i++)
+		{
+			print "<tr>";
+
+			foreach ($this->columns as $columns)
+			{
+				print "<td>". $this->render_field($columns, $i) ."</td>";
+			}
+			
+			if ($this->links)
+			{
+				print "<td>";
+
+				foreach (array_keys($this->links) as $link)
+				{
+					$linkname = language_translate_string($this->language, $link);
+
+					// link to page
+					print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
+
+					// add each option
+					foreach (array_keys($this->links[$link]["options"]) as $getfield)
+					{
+						/*
+							There are two methods for setting the value of the variable:
+							1. The value has been passed.
+							2. The name of a column to take the value from has been passed
+						*/
+						if ($this->links[$link]["options"][$getfield]["value"])
+						{
+							print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+						}
+						else
+						{
+							print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+						}
+					}
+
+					// finish link
+					print "\">$linkname</a>";
+				}
+
+				print "</td>";
+			}
+	
+			print "</tr>";
+		}
+
+
+		// display totals for columns
+		if ($this->total_columns)
+		{
+			print "<tr>";
+
+			foreach ($this->render_columns as $column)
+			{
+				print "<td class=\"footer\">";
+		
+				if (in_array($column, $this->total_columns))
+				{
+					$this->data["total"][$column] = 0;
+					
+					for ($i=0; $i < $this->data_num_rows; $i++)
+					{
+						$this->data["total"][$column] += $this->data[$i][$column];
+					}
+
+					print "<b>". $this->render_field($column, "total") ."</b>";
+				}
+		
+				print "</td>";
+			}
+
+			if ($this->links)
+				print "<td class=\"footer\"></td>";	// filler for link column
+			
+			print "</tr>";
+		}
+	
+		print "</table>";
+		
+		
+	}
 
 } // end of table class
 
