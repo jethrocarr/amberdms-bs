@@ -117,111 +117,116 @@ function obj_show(obj)
 		In future, this should be replaced with a more fancy javascript solution with roll over features, etc.
 	*/
 
-	if ($page_valid == 1)
+	if (user_online())
 	{
-		// page is valid and exists
-		// this means that the $page value has already been checked to prevent
-		// SQL injection or other unwanted problems.
 
-		$parents = array();
-
-		// get the menu item for this page
-		$mysql_string		= "SELECT parent FROM `menu` WHERE link='$page' ORDER BY priority DESC";
-		$mysql_menu_result	= mysql_query($mysql_string);
-		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
-
-		if ($mysql_menu_num_rows)
+		if ($page_valid == 1)
 		{
-			$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
-			$parents[]	= $mysql_menu_data["parent"];
-			$lastparent	= $mysql_menu_data["parent"];
+			// page is valid and exists
+			// this means that the $page value has already been checked to prevent
+			// SQL injection or other unwanted problems.
 
-			// now get the all the other parents
-			$mysql_menu_num_rows = 1;
-			while ($mysql_menu_num_rows == 1)
+			$parents = array();
+
+			// get the menu item for this page
+			$mysql_string		= "SELECT parent FROM `menu` WHERE link='$page' ORDER BY priority DESC";
+			$mysql_menu_result	= mysql_query($mysql_string);
+			$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+
+			if ($mysql_menu_num_rows)
 			{
-				$mysql_string		= "SELECT parent FROM `menu` WHERE topic='$lastparent' ORDER BY priority DESC";
-				$mysql_menu_result	= mysql_query($mysql_string);
-				$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+				$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
+				$parents[]	= $mysql_menu_data["parent"];
+				$lastparent	= $mysql_menu_data["parent"];
 
-				if ($mysql_menu_num_rows)
+				// now get the all the other parents
+				$mysql_menu_num_rows = 1;
+				while ($mysql_menu_num_rows == 1)
 				{
-					$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
-					$parents[]	= $mysql_menu_data["parent"];
-					$lastparent	= $mysql_menu_data["parent"];
+					$mysql_string		= "SELECT parent FROM `menu` WHERE topic='$lastparent' ORDER BY priority DESC";
+					$mysql_menu_result	= mysql_query($mysql_string);
+					$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+
+					if ($mysql_menu_num_rows)
+					{
+						$mysql_menu_data = mysql_fetch_array($mysql_menu_result);
+						$parents[]	= $mysql_menu_data["parent"];
+						$lastparent	= $mysql_menu_data["parent"];
+					}
 				}
+
+				// we now sort the array, and end up with all the menu
+				// levels in order
+				$parents = array_reverse($parents);
+			}
+		}
+
+
+		// if we have no sub-menu information, just display the top menu.
+		if (!$parents)
+		{
+			$parents[] = "top";
+		}
+
+		/*
+			Now we display all the menus.
+
+			Note that the "top" menu has the addition of a second column to the right
+			for the user perferences/administration box.
+		*/
+		for ($i = 0; $i <= count($parents); $i++)
+		{
+			print "<tr>";
+			print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+			print "<ul id=\"menu\">";
+
+			// get an array of all the permissions this user had
+			$user_permissions	= array();
+			$userid			= user_information("id");
+			$mysql_string		= "SELECT permid FROM `users_permissions` WHERE userid='$userid'";
+			$mysql_result		= mysql_query($mysql_string);
+
+			while ($mysql_data = mysql_fetch_array($mysql_result))
+			{
+				$user_permissions[] = $mysql_data["permid"];
 			}
 
-			// we now sort the array, and end up with all the menu
-			// levels in order
-			$parents = array_reverse($parents);
-		}
-	}
-
-
-	// if we have no sub-menu information, just display the top menu.
-	if (!$parents)
-	{
-		$parents[] = "top";
-	}
-
-	/*
-		Now we display all the menus.
-
-		Note that the "top" menu has the addition of a second column to the right
-		for the user perferences/administration box.
-	*/
-	for ($i = 0; $i <= count($parents); $i++)
-	{
-		print "<tr>";
-		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
-		print "<ul id=\"menu\">";
-
-		// get an array of all the permissions this user had
-		$user_permissions	= array();
-		$userid			= user_information("id");
-		$mysql_string		= "SELECT permid FROM `users_permissions` WHERE userid='$userid'";
-		$mysql_result		= mysql_query($mysql_string);
-
-		while ($mysql_data = mysql_fetch_array($mysql_result))
-		{
-			$user_permissions[] = $mysql_data["permid"];
-		}
-
-		
-		// get the data for this menu
-		$mysql_string		= "SELECT link, topic, permid FROM `menu` WHERE parent='$parents[$i]' ORDER BY priority";
-		$mysql_menu_result	= mysql_query($mysql_string);
-		$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
 			
-		while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
-		{
-			// check that the user has permissions to display this link
-			if (in_array($mysql_menu_data["permid"], $user_permissions) || $mysql_menu_data["permid"] == 0)
+			// get the data for this menu
+			$mysql_string		= "SELECT link, topic, permid FROM `menu` WHERE parent='$parents[$i]' ORDER BY priority";
+			$mysql_menu_result	= mysql_query($mysql_string);
+			$mysql_menu_num_rows	= mysql_num_rows($mysql_menu_result);
+				
+			while ($mysql_menu_data = mysql_fetch_array($mysql_menu_result))
 			{
-				// if this entry has no topic, it only exists for the purpose of getting a parent
-				// link highlighted. In this case, ignore the current entry.
-
-				if ($mysql_menu_data["topic"])
+				// check that the user has permissions to display this link
+				if (in_array($mysql_menu_data["permid"], $user_permissions) || $mysql_menu_data["permid"] == 0)
 				{
-					// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-					if ($parents[$i + 1] == $mysql_menu_data["topic"] || $mysql_menu_data["link"] == $page)
+					// if this entry has no topic, it only exists for the purpose of getting a parent
+					// link highlighted. In this case, ignore the current entry.
+
+					if ($mysql_menu_data["topic"])
 					{
-						print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
-					}
-					else
-					{
-						print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+						// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+						if ($parents[$i + 1] == $mysql_menu_data["topic"] || $mysql_menu_data["link"] == $page)
+						{
+							print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+						}
+						else
+						{
+							print "<li><a href=\"index.php?page=". $mysql_menu_data["link"] ."\" title=". $mysql_menu_data["topic"] .">". $mysql_menu_data["topic"] ."</a></li>";
+						}
 					}
 				}
+
 			}
 
+			print "</ul>";
+			print "</td>";
+			print "</tr>";
 		}
 
-		print "</ul>";
-		print "</td>";
-		print "</tr>";
-	}
+	} // end if user is online
 	?>
 
 	

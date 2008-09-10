@@ -42,6 +42,7 @@ class table
 				date
 				fullname	- there are two fields in the DB that need to be merged to make a full name)
 				price		- displays a price field correctly
+				hourmins	- input is a number of seconds, display as H:MM
 				
 		name	- name/label of the column for display purposes
 
@@ -200,6 +201,11 @@ class table
 							$tmparray[$structurecol] = "$". $mysql_data[$this->structure[$structurecol]["dbname"]];
 						break;
 
+						case "hourmins":
+							// value is a number of seconds, we need to convert into an H:MM format.
+							$tmparray[$structurecol] = time_format_hourmins($mysql_data[$this->structure[$structurecol]["dbname"]]);
+						break;
+							
 						default:
 							// standard DB type
 							$tmparray[$structurecol] = $mysql_data[$this->structure[$structurecol]["dbname"]];

@@ -212,7 +212,8 @@ class form_input
 						["rows"]	Num of rows for textarea
 						["cols"]	Num of cols for textarea
 		
-			$option_array["values"] = array();	Array of values - used for radio or dropdown type fields
+			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
+			$option_array["translations"] = array();	Associate array used for labeling the values in radio or dropdown type fields
 		
 	*/
 	function render_field ($fieldname)
@@ -280,8 +281,26 @@ class form_input
 
 			case "dropdown":
 
-				// get translation for all options
-				$translations = language_translate($this->language, $this->structure[$fieldname]["values"]);
+				/*
+					there are two ways to draw drop down tables:
+					
+					1. Just pass it the array of values, and the code will translate them using the language DB
+
+					2. Pass it an array of translation values with the array keys matching the value names. This
+					   is useful when you want to populate a dropdown with data from a different table.
+				*/
+
+
+				if ($this->structure[$fieldname]["translations"])
+				{
+					$translations = $this->structure[$fieldname]["translations"];
+				}
+				else
+				{
+					// get translation for all options
+					$translations = language_translate($this->language, $this->structure[$fieldname]["values"]);
+				}
+
 
 				// start dropdown/select box
 				print "<select name=\"$fieldname\" size=\"1\">";
@@ -356,23 +375,36 @@ class form_input
 		// draw each sub form
 		foreach (array_keys($this->subforms) as $form_label)
 		{
-			// start table
-			print "<table class=\"form_table\" width=\"100%\">";
-
-			// form header
-			$numcols = count($this->subforms[$form_label]);
-			print "<tr class=\"header\">";
-			print "<td colspan=\"$numcols\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
-			print "</tr>";
-
-			// display all the rows
-			foreach ($this->subforms[$form_label] as $fieldname)
+			if ($form_label == "hidden")
 			{
-				$this->render_row($fieldname);
+				/*
+					Form contains hidden fields, we don't want to create table rows
+				*/
+				foreach ($this->subforms[$form_label] as $fieldname)
+				{
+					$this->render_field($fieldname);
+				}
 			}
+			else
+			{
+				// start table
+				print "<table class=\"form_table\" width=\"100%\">";
 
-			// end table
-			print "</table><br>";
+				// form header
+				$numcols = count($this->subforms[$form_label]);
+				print "<tr class=\"header\">";
+				print "<td colspan=\"$numcols\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
+				print "</tr>";
+
+				// display all the rows
+				foreach ($this->subforms[$form_label] as $fieldname)
+				{
+					$this->render_row($fieldname);
+				}
+
+				// end table
+				print "</table><br>";
+			}
 		}
 
 		// end form
