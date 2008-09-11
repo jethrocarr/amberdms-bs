@@ -121,7 +121,6 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	"type" options:
 	* any		Allow any input (note: HTML tags will still be stripped)
 	* date		Reassembles 3 different fields into a single YYYY-MM-DD format
-	* fullname	Seporate firstname and lastname fields
 	* hourmins	Take 2 fields (hours + minutes), adds them, and returns the number of seconds
 	* email		Standard email address
 	* int		Standard integer
@@ -207,53 +206,6 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			
 			// return the value
 			return $date_final;
-			
-		break;
-
-		case "fullname":
-			// the name is in 2 fields - firstname and lastname
-			// we need to check and join them.
-
-			$error = 0;
-
-			// get the data
-			$name_first	= $_POST[$valuename."_firstname"];
-			$name_last	= $_POST[$valuename."_lastname"];
-			
-			$name_full	= "$name_first $name_last";
-
-
-			// make sure fields are complete
-			if ($numchars)
-			{
-				if (!$name_first)
-					$error = 1;
-					
-				if (!$name_last)
-					$error = 1;
-			}
-
-
-			// check + process input
-			$name_final = security_script_input("/^[\S\s]$/", $value);
-
-			if ($name_final == "error")
-				$error = 1;
-
-			
-			// return error or success
-			if ($error)
-			{
-				$_SESSION["error"]["message"][] = $errormsg;
-				$_SESSION["error"]["". $valuename . "-error"] = 1;
-				$_SESSION["error"][$valuename] = $name_full;
-
-				return $name_full;
-			}
-			else
-			{
-				return $name_final;
-			}
 			
 		break;
 

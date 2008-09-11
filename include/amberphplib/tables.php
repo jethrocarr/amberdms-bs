@@ -45,7 +45,6 @@ class table
 		type	- A known type of column
 				standard
 				date		- YYYY-MM-DD format date field
-				fullname	- there are two fields in the DB that need to be merged to make a full name)
 				price		- displays a price field correctly
 				hourmins	- input is a number of seconds, display as H:MM
 				
@@ -102,22 +101,7 @@ class table
 		
 		foreach ($this->columns as $column)
 		{
-			$dbname = $this->structure[$column]["dbname"];
-			
-			/*
-				See the add_column function for comments about
-				the different possible types.
-			*/
-			if ($this->structure[$column]["type"] == "fullname")
-			{
-				$this->sql_query .= $dbname ."_firstname, ";
-				$this->sql_query .= $dbname ."_lastname, ";
-			}
-			else
-			{
-				// default, standard query
-				$this->sql_query .= "$dbname, ";
-			}
+			$this->sql_query .= $this->structure[$column]["dbname"] .", ";
 		}
 
 		$this->sql_query .= "id FROM `". $this->sql_table ."` ";
@@ -133,22 +117,9 @@ class table
 			foreach ($this->columns_order as $column_order)
 			{
 				$count++;
-				$dbname = $this->structure[$column_order]["dbname"];
 
-				/*
-						See the add_column function for comments about
-						the different possible types.
-				*/
-				if ($this->structure[$column_order]["type"] == "fullname")
-				{
-					$this->sql_query .= $dbname ."_firstname, ";
-					$this->sql_query .= $dbname ."_lastname";
-				}
-				else
-				{
-					$this->sql_query .= $dbname;
-				}
-
+				$this->sql_query .= $this->structure[$column_order]["dbname"];
+				
 
 				// add seporator if required
 				if ($count < count($this->columns_order))
@@ -200,21 +171,7 @@ class table
 				
 				foreach (array_keys($this->structure) as $structurecol)
 				{
-					/*
-						See the add_column function for comments about
-						the different possible types.
-					*/
-					switch ($this->structure[$structurecol]["type"])
-					{
-						case "fullname":
-							$tmparray[$structurecol] = $mysql_data[ $this->structure[$structurecol]["dbname"]."_firstname" ] ." ". $mysql_data[$this->structure[$structurecol]["dbname"]."_lastname" ];
-						break;
-							
-						default:
-							// standard DB type
-							$tmparray[$structurecol] = $mysql_data[$this->structure[$structurecol]["dbname"]];
-						break;
-					}
+					$tmparray[$structurecol] = $mysql_data[$this->structure[$structurecol]["dbname"]];
 				}
 
 				// add the id field
@@ -326,7 +283,7 @@ class table
 				// TODO: in future, have currency field here
 
 				// for now, just add a $ symbol to the field.
-				$tmparray[$structurecol] = "$". $this->data[$row][$column];
+				$result = "$". $this->data[$row][$column];
 			break;
 
 			case "hourmins":

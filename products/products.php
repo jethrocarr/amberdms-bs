@@ -57,37 +57,14 @@ if (user_permissions_get('products_view'))
 		}
 		else
 		{
-			// translate the column labels
-			$product_list->render_column_names();
-		
-			// display header row
-			print "<table class=\"table_content\" width=\"100%\">";
-			print "<tr>";
-			
-				foreach ($product_list->render_columns as $columns)
-				{
-					print "<td class=\"header\"><b>". $columns ."</b></td>";
-				}
-				
-				print "<td class=\"header\"></td>";	// filler for link column
-				
-			print "</tr>";
-		
-			// display data
-			for ($i=0; $i < $product_list->data_num_rows; $i++)
-			{
-				print "<tr>";
 
-				foreach ($product_list->columns as $columns)
-				{
-					print "<td>". $product_list->data[$i]["$columns"] ."</td>";
-				}
-				print "<td><a href=\"index.php?page=products/view.php&id=". $product_list->data[$i]["id"] ."\">view</td>";
-				
-				print "</tr>";
-			}
+			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$product_list->add_link("view", "products/view.php", $structure);
 
-			print "</table>";
+			// display the table
+			$product_list->render_table();
 
 			// TODO: display CSV download link
 

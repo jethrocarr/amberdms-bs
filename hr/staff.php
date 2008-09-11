@@ -21,7 +21,7 @@ if (user_permissions_get('staff_view'))
 		// define all the columns and structure
 		$staff_list->add_column("standard", "id_staff", "id");
 		$staff_list->add_column("standard", "staff_code", "staff_code");
-		$staff_list->add_column("fullname", "name_staff", "name_staff");
+		$staff_list->add_column("standard", "name_staff", "name_staff");
 		$staff_list->add_column("standard", "staff_position", "staff_position");
 		$staff_list->add_column("standard", "contact_phone", "contact_phone");
 		$staff_list->add_column("standard", "contact_email", "contact_email");

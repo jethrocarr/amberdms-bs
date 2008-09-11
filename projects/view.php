@@ -20,6 +20,9 @@ if (user_permissions_get('projects_view'))
 	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=projects/view.php&id=$id";
 
+	$_SESSION["nav"]["title"][]	= "Project Phases";
+	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
+	
 	$_SESSION["nav"]["title"][]	= "Timebooked";
 	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
 	

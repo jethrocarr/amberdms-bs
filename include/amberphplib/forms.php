@@ -139,8 +139,20 @@ class form_input
 			case "submit":
 				// special submit button row
 				print "<td width=\"100%\" colspan=\"2\">";
+
+				// only display the message below if actually required
+				$req = 0;
+				foreach (array_keys($this->structure) as $tmp_fieldname)
+				{
+					if ($this->structure[$tmp_fieldname]["options"]["req"])
+						$req = 1;
+				}
+
+				if ($req)
 					print "<p><i>Please note that all fields marked with \"*\" must be filled in.</i></p>";
-					$this->render_field($fieldname);
+
+					
+				$this->render_field($fieldname);
 				print "</td>";
 			break;
 
@@ -195,7 +207,6 @@ class form_input
 				text		- text only display, with hidden field as well
 
 				textarea	- space for blocks of text
-				fullname	- a firstname and lastname in seporate boxes
 				
 				date		- special date field - splits a timestamp into 3 DD/MM/YYYY fields
 				hourmins	- splits the specified number of seconds into hours, and minutes
@@ -247,11 +258,6 @@ class form_input
 				print "rows=\"". $this->structure[$fieldname]["options"]["rows"] ."\" ";
 				print "cols=\"". $this->structure[$fieldname]["options"]["cols"] ."\" ";
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea></td>";
-			break;
-
-			case "fullname":
-				print "<input name=\"". $fieldname ."_hh\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_hours\"> hours ";
-				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_mins\"> mins";
 			break;
 
 			case "date":
@@ -415,9 +421,8 @@ class form_input
 				print "<table class=\"form_table\" width=\"100%\">";
 
 				// form header
-				$numcols = count($this->subforms[$form_label]);
 				print "<tr class=\"header\">";
-				print "<td colspan=\"$numcols\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
+				print "<td colspan=\"2\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
 				print "</tr>";
 
 				// display all the rows

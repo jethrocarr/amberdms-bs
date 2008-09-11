@@ -56,6 +56,33 @@ if (user_permissions_get('timekeeping'))
 	// make sure we don't end up with more than 24 hours booked for one day
 	// TODO: write me
 
+	// get a total of the time currently booked for this date
+	$mysql_string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='". $data["employeeid"] ."'";
+	if ($id)
+		$mysql_string .= " AND id!='$id'";
+		
+	$mysql_result	= mysql_query($mysql_string);
+	$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+	$timetotal = 0;
+	if ($mysql_num_rows)
+	{
+		while ($mysql_data = mysql_fetch_array($mysql_result))
+		{
+			$timetotal += $mysql_data["time_booked"];
+		}
+	}
+
+	// add new value of the current item
+	$timetotal += $data["time_booked"];
+
+	// make sure the totals are less than 24 hours
+	if ($timetotal > 86400)
+	{
+		$_SESSION["error"]["message"][] = "You can not book more than 24 hours of time in one day.";
+	}
+	
+
 
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])

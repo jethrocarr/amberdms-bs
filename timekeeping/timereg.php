@@ -106,6 +106,10 @@ if (user_permissions_get('timekeeping'))
 			2. Fetch total time spent on each project, for each day.
 
 			3. Display into a table, with easy edit + add links.
+
+
+			TODO: Re-write this section of code to be compliant with the new table class structure - this
+			will allow future support of alternate output formats such as CSV or PDF
 		*/
 
 

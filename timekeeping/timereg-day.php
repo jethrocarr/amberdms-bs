@@ -28,12 +28,26 @@ if (user_permissions_get('timekeeping'))
 		$date		= security_script_input('/^[0-9-]*$/', $_GET["date"]);
 		$employeeid	= user_information("employeeid");
 
+		$date_split = split("-", $date);
 
 		/*
 			Title + Summary
 		*/
-		print "<h3>TIME REGISTRATION - $date</h3><br><br>";
+		print "<h3>TIME REGISTRATION - ". date("l d F Y", mktime(0,0,0, $date_split[1], $date_split[2], $date_split[0])) ."</h3><br>";
 
+
+		// links
+		$date_previous	= mktime(0,0,0, $date_split[1], ($date_split[2] - 1), $date_split[0]);
+		$date_previous	= date("Y-m-d", $date_previous);
+		
+		$date_next	= mktime(0,0,0, $date_split[1], ($date_split[2] + 1), $date_split[0]);
+		$date_next	= date("Y-m-d", $date_next);
+
+		print "<p><b>";
+		print "<a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_previous\">Previous Day</a> || ";
+		print "<a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next\">Next Day</a>";
+		print "</b></p><br>";
+		
 
 	
 		/*
@@ -75,8 +89,8 @@ if (user_permissions_get('timekeeping'))
 		else
 		{
 			$structure = NULL;
-			$structure["date"]["value"]	= $date;
 			$structure["editid"]["column"]	= "id";
+			$structure["date"]["value"]	= "$date#form";
 			$timereg_table->add_link("edit", "timekeeping/timereg-day.php", $structure);
 
 			$timereg_table->render_table();
@@ -90,7 +104,7 @@ if (user_permissions_get('timekeeping'))
 			Allows the creation of a new entry for the day, or the adjustment of an existing one.
 		*/
 	
-		print "<br><br>";
+		print "<a name=\"form\"></a><br><br>";
 		
 		if ($editid)
 		{
@@ -124,6 +138,7 @@ if (user_permissions_get('timekeeping'))
 		$structure["fieldname"] 	= "date";
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= "$date";
+		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 		
 		$structure = NULL;
@@ -186,6 +201,84 @@ if (user_permissions_get('timekeeping'))
 
 		// display the form
 		$form->render_form();
+
+
+
+
+		/*
+			Delete Form
+
+			If the user is editing an option, offer a delete option.
+		*/
+	
+		if ($editid)
+		{
+			print "<br><br>";
+			print "<h3>DELETE TIME RECORD:</h3>";
+			print "<br><br>";
+
+			
+			$form_del = New form_input;
+			$form_del->formname = "timereg_delete";
+			$form_del->language = $_SESSION["user"]["lang"];
+			
+			$form_del->action = "timekeeping/timereg-day-delete-process.php";
+			$form_del->method = "post";
+				
+				
+			// hidden stuff
+			$structure = NULL;
+			$structure["fieldname"] 	= "id_timereg";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= "$editid";
+			$form_del->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] 	= "date";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= "$date";
+			$form_del->add_input($structure);
+			
+			
+			// general
+			$structure = NULL;
+			$structure["fieldname"] 	= "message";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "If you no longer require this time entry, you can delete it using the button below";
+			$form_del->add_input($structure);
+			
+			
+			// submit section
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Delete Time Entry";
+			$form_del->add_input($structure);
+			
+			
+			// define subforms
+			$form_del->subforms["hidden"]		= array("id_timereg", "date");
+			$form_del->subforms["timereg_delete"]	= array("message", "submit");
+
+				
+			$mysql_string	= "SELECT id FROM `timereg` WHERE id='$editid'";
+			$mysql_result	= mysql_query($mysql_string);
+			$mysql_num_rows	= mysql_num_rows($mysql_result);
+			
+			if ($mysql_num_rows)
+			{
+				// fetch the form data
+				$form_del->sql_query = "SELECT id, date FROM `timereg` WHERE id='$editid' LIMIT 1";
+				$form_del->load_data();
+			}
+			
+
+			// display the form
+			$form_del->render_form();
+			
+		}
+
+		
 
 	} // end page_render
 
