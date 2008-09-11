@@ -30,6 +30,8 @@ class form_input
 	*/
 	function add_input ($option_array)
 	{
+		log_debug("form", "Executing add_input for field ". $option_array["fieldname"]);
+		
 		if (!$option_array["fieldname"] || !$option_array["type"])
 			print "Warning: missing fieldname and/or type from add_input function<br>";
 
@@ -45,6 +47,8 @@ class form_input
 	*/
 	function load_data()
 	{
+		log_debug("form", "Executing load_data()");
+		
 		if ($_SESSION["error"]["message"])
 		{
 			return $this->load_data_error();
@@ -63,6 +67,8 @@ class form_input
 	*/
 	function load_data_error()
 	{
+		log_debug("form", "Executing load_data_error()");
+	
 		foreach (array_keys($this->structure) as $fieldname)
 		{
 			// make sure we don't import any data for non-user editable fields
@@ -88,6 +94,9 @@ class form_input
 	*/
 	function load_data_sql()
 	{
+		log_debug("form", "Executing load_data_sql()");
+		log_debug("form", "SQL: ". $this->sql_query); 
+		
 		// execute the SQL query
 		$mysql_result		= mysql_query($this->sql_query);
 		$mysql_num_rows		= mysql_num_rows($mysql_result);
@@ -124,6 +133,9 @@ class form_input
 	*/
 	function render_row ($fieldname)
 	{
+		log_debug("form", "Executing render_row($fieldname)");
+	
+	
 		// if the fieldname has experienced an error, we want to highlight the field
 		if ($_SESSION["error"]["$fieldname-error"])
 		{
@@ -232,6 +244,8 @@ class form_input
 	*/
 	function render_field ($fieldname)
 	{
+		log_debug("form", "Executing render_field($fieldname)");
+		
 		switch ($this->structure[$fieldname]["type"])
 		{
 			case "input":
@@ -385,6 +399,8 @@ class form_input
 	*/
 	function render_form()
 	{
+		log_debug("form", "Executing render_form()");
+	
 		if (!$this->action || !$this->method)
 		{
 			print "Warning: No form action or method defined for form class<br>";

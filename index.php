@@ -383,6 +383,25 @@ function obj_show(obj)
 	</td>
 </tr>
 
+<?php
+
+if ($_SESSION["user"]["log_debug"])
+{
+	print "<tr>";
+	print "<td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed;\">";
+	print "<p><b>Debug Output:</b></p>";
+	
+	foreach ($_SESSION["user"]["log_debug"] as $log)
+	{
+		print "$log<br>";
+	}
+
+	print "</td>";
+	print "</tr>";
+}
+
+?>
+
 
 </table>
 
@@ -399,6 +418,7 @@ function obj_show(obj)
 <?php
 
 // erase error and notification arrays
+$_SESSION["user"]["log_debug"] = array();
 $_SESSION["error"] = array();
 $_SESSION["notification"] = array();
 $_SESSION["nav"] = array();

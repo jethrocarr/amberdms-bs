@@ -54,6 +54,8 @@ class table
 	*/
 	function add_column($type, $name, $dbname)
 	{
+		log_debug("table", "Executing add_column($type, $name, $dbname)");
+
 		if (!$dbname)
 		{
 			$dbname = $name;
@@ -96,6 +98,8 @@ class table
 	*/
 	function generate_sql()
 	{
+		log_debug("table", "Generating SQL statement....");
+		
 		// prepare the select statement
 		$this->sql_query = "SELECT ";
 		
@@ -150,6 +154,8 @@ class table
 	*/
 	function load_data_sql()
 	{
+		log_debug("table", "SQL: ". $this->sql_query);
+	
 		if (!$mysql_result = mysql_query($this->sql_query))
 		{
 			print "<p><b>A fatal SQL error occured: ". mysql_error() ."</b></p>";
@@ -201,6 +207,8 @@ class table
 		*/
 		if ($_GET["table_display_options"])
 		{
+			log_debug("table", "Loading options form from $_GET");
+			
 			$this->columns		= array();
 			$this->columns_order	= array();
 
@@ -227,6 +235,8 @@ class table
 		}
 		elseif ($_SESSION["form"][$this->tablename]["columns"])
 		{
+			log_debug("table", "Loading options form from session data");
+			
 			// load checkboxes
 			$this->columns		= $_SESSION["form"][$this->tablename]["columns"];
 			$this->columns_order	= $_SESSION["form"][$this->tablename]["columns_order"];
@@ -310,6 +320,9 @@ class table
 	*/
 	function render_options_form()
 	{	
+		log_debug("table", "Executing render_options_form()");
+
+		
 		// create tmp array to prevent excessive use of array_keys
 		$columns_available = array_keys($this->structure);
 		
@@ -464,6 +477,8 @@ class table
 	*/
 	function render_table()
 	{
+		log_debug("table", "Executing render_table()");
+	
 		// translate the column labels
 		$this->render_column_names();
 

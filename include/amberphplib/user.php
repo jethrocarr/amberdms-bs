@@ -148,6 +148,10 @@ function user_login($username, $password)
 				$_SESSION["user"]["lang"]	= "en_us";
 
 
+				// TODO: currently debugging is enabled for all users
+				$_SESSION["user"]["debug"]	= "yes";
+
+
 				// does the user need to change their password? If they have no salt, it means the password
 				// is the system default and needs to be changed
 				if ($mysql_data["password_salt"] == "")

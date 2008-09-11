@@ -65,21 +65,31 @@ if (user_permissions_get('timekeeping'))
 		$timereg_table->sql_table	= "timereg";
 
 		// define all the columns and structure
-		$timereg_table->add_column("standard", "code_project", "");
 		$timereg_table->add_column("standard", "name_project", "");
+		$timereg_table->add_column("standard", "name_phase", "");
 		$timereg_table->add_column("hourmins", "time_booked", "");
 		$timereg_table->add_column("standard", "description", "");
 
 		// defaults
-		$timereg_table->columns		= array("code_project", "name_project", "description", "time_booked");
-		$timereg_table->columns_order	= array("code_project");
+		$timereg_table->columns		= array("name_project", "name_phase", "description", "time_booked");
+		$timereg_table->columns_order	= array("name_project", "name_phase");
 
 		// create totals
 		$timereg_table->total_columns	= array("time_booked");
 		
 
 		// fetch data from both the projects and timereg table with a custom query
-		$timereg_table->sql_query = "SELECT timereg.id, timereg.time_booked, timereg.description, projects.code_project, projects.name_project FROM timereg LEFT JOIN projects ON timereg.projectid = projects.id WHERE timereg.employeeid='$employeeid' AND timereg.date='$date'";	
+		$timereg_table->sql_query =	"SELECT timereg.id, "
+						."timereg.time_booked, "
+						."timereg.description, "
+						."projects.name_project, "
+						."project_phases.name_phase "
+						."FROM timereg "
+						."LEFT JOIN project_phases ON timereg.phaseid = project_phases.id "
+						."LEFT JOIN projects ON project_phases.projectid = projects.id "
+						."WHERE "
+						."timereg.employeeid='$employeeid' "
+						."AND timereg.date='$date'";
 		$timereg_table->load_data_sql();
 
 		if (!$timereg_table->data_num_rows)
@@ -154,20 +164,39 @@ if (user_permissions_get('timekeeping'))
 		$form->add_input($structure);
 		$form->add_input($structure);
 
-		// get data from DB and create project dropdown
+		// get data from DB and create project/phase dropdown
 		$structure = NULL;
-		$structure["fieldname"] 	= "projectid";
+		$structure["fieldname"] 	= "phaseid";
 		$structure["type"]		= "dropdown";
 		$structure["options"]["req"]	= "yes";
 
-		$mysql_string	= "SELECT id, code_project, name_project FROM `projects` ORDER BY code_project, name_project";
-		$mysql_result	= mysql_query($mysql_string);
+		$mysql_string =	 "SELECT "
+				."projects.name_project, "
+				."project_phases.id as phaseid, "
+				."project_phases.name_phase "
+				."FROM `projects` "
+				."LEFT JOIN project_phases ON project_phases.projectid = projects.id "
+				."ORDER BY "
+				."projects.name_project, "
+				."project_phases.name_phase";
+		
+		log_debug("timereg", "SQL: $mysql_string");
+		
+		if (!$mysql_result = mysql_query($mysql_string))
+		{
+			log_debug("timereg", "FATAL SQL: ". mysql_error());
+		}
+		
 		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
 		while ($mysql_data = mysql_fetch_array($mysql_result))
 		{
-			$structure["values"][]					= $mysql_data["id"];
-			$structure["translations"][ $mysql_data["id"] ]		= $mysql_data["code_project"] ." (". $mysql_data["name_project"] .")";
+			// only add a project if there is a phaseid for it
+			if ($mysql_data["phaseid"])
+			{
+				$structure["values"][]					= $mysql_data["phaseid"];
+				$structure["translations"][ $mysql_data["phaseid"] ]	= $mysql_data["name_project"] ." - ". $mysql_data["name_phase"];
+			}
 		}
 
 				
@@ -183,7 +212,7 @@ if (user_permissions_get('timekeeping'))
 		
 		
 		// define subforms
-		$form->subforms["timereg_day"]		= array("projectid", "date", "time_booked", "description");
+		$form->subforms["timereg_day"]		= array("phaseid", "date", "time_booked", "description");
 		$form->subforms["hidden"]		= array("id_timereg");
 		$form->subforms["submit"]		= array("submit");
 

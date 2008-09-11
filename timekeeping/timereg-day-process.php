@@ -19,7 +19,7 @@ if (user_permissions_get('timekeeping'))
 	$id				= security_form_input_predefined("int", "id_timereg", 0, "");
 	
 	$data["date"]			= security_form_input_predefined("date", "date", 1, "You must specify a date for the entry to belong to.");
-	$data["projectid"]		= security_form_input_predefined("int", "projectid", 1, "You must select a project for the time to be assigned to");
+	$data["phaseid"]		= security_form_input_predefined("int", "phaseid", 1, "You must select a project & phase for the time to be assigned to");
 	$data["time_booked"]		= security_form_input_predefined("hourmins", "time_booked", 1, "You must enter some time to book");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "You must enter a description");
 
@@ -118,7 +118,7 @@ if (user_permissions_get('timekeeping'))
 			$mysql_string = "UPDATE `timereg` SET "
 						."date='". $data["date"] ."', "
 						."employeeid='". $data["employeeid"] ."', "
-						."projectid='". $data["projectid"] ."', "
+						."phaseid='". $data["phaseid"] ."', "
 						."time_booked='". $data["time_booked"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id'";
