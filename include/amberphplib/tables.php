@@ -89,7 +89,34 @@ class table
 		$this->links[$name]["options"]	= $options_array;
 	}
 
+
+	/*
+		custom_column_label($column, $label)
+
+		Instead of doing a translate, the render functions will load the label from the data
+		inputted by this function
+	*/
+	function custom_column_label($column, $label)
+	{
+		log_debug("table", "Executing custom_column_label($column, $label)");
+		
+		$this->structure[$column]["custom"]["label"] = $label;
+	}
+
+
+	/*
+		custom_column_link($column, $link)
+
+		Create the column label into a hyper link to the specified link.
+	*/
+	function custom_column_link($column, $link)
+	{
+		log_debug("table", "Executing custom_column_link($column, $link)");
+		
+		$this->structure[$column]["custom"]["link"] = $link;
+	}
 	
+
 
 	/*
 		generate_sql()
@@ -251,15 +278,27 @@ class table
 
 
 	/*
-		render_column_names($language)
+		render_column_names()
 
-		This function looks up the human-translation of the column names and saves it into $this->render_columns
-
-		Defaults to US english (en_us) if no language is specified.
+		This function creates the labels for the columns. There are two different ways for this to occur:
+		1. Using the translate functions, look up the label in the language DB
+		2. Use the custom provided label.
 	*/
 	function render_column_names()
 	{
-		$this->render_columns = language_translate($this->language, $this->columns);
+		foreach ($this->columns as $column)
+		{
+			if ($this->structure[$column]["custom"]["label"])
+			{
+				$this->render_columns[$column] = $this->structure[$column]["custom"]["label"];
+			}
+			else
+			{
+				// do translation
+				$this->render_columns[$column] = language_translate_string($this->language, $column);
+			}
+		}
+
 		return 1;
 	}
 
@@ -271,6 +310,8 @@ class table
 	*/
 	function render_field($column, $row)
 	{
+		log_debug("table", "Executing render_field($column, $row)");
+
 		/*
 			See the add_column function for comments about
 			the different possible types.
@@ -478,7 +519,7 @@ class table
 	function render_table()
 	{
 		log_debug("table", "Executing render_table()");
-	
+
 		// translate the column labels
 		$this->render_column_names();
 
@@ -486,14 +527,29 @@ class table
 		print "<table class=\"table_content\" width=\"100%\">";
 		print "<tr>";
 
-		foreach ($this->render_columns as $columns)
+		foreach ($this->columns as $column)
 		{
-			print "<td class=\"header\"><b>". $columns ."</b></td>";
+			// add a custom link if one has been specified, otherwise
+			// just display the standard name
+			if ($this->structure[$column]["custom"]["link"])
+			{
+				print "<td class=\"header\"><b><a class=\"header_link\" href=\"". $this->structure[$column]["custom"]["link"] ."\">". $this->render_columns[$column] ."</a></b></td>";
+			}
+			else
+			{
+				print "<td class=\"header\"><b>". $this->render_columns[$column] ."</b></td>";
+			}
 		}
-
-		if ($this->links)
-			print "<td class=\"header\"></td>";	// filler for link column
+		
+		// title for optional total column (displayed when row totals are active)
+		if ($this->total_rows)
+			print "<td class=\"header\"><b>Total:</b></td>";
 	
+		// filler for optional link column
+		if ($this->links)
+			print "<td class=\"header\"></td>";
+
+
 		print "</tr>";
 
 		// display data
@@ -501,11 +557,32 @@ class table
 		{
 			print "<tr>";
 
+			// content for columns
 			foreach ($this->columns as $columns)
 			{
 				print "<td>". $this->render_field($columns, $i) ."</td>";
 			}
+
+
+			// optional: row totals column
+			if ($this->total_rows)
+			{
+				$this->data[$i]["total"] = 0;
+
+				foreach ($this->total_rows as $total_col)
+				{
+					// add to the total
+					$this->data[$i]["total"] += $this->data[$i][$total_col];
+
+					// make the type of the column the same as one of the columns to be totaled
+					$this->structure["total"]["type"] = $this->structure[$total_col]["type"];
+				}
+				
+				print "<td><b>". $this->render_field("total", $i) ."</b></td>";
+			}
+
 			
+			// optional: links column
 			if ($this->links)
 			{
 				print "<td>";
@@ -551,7 +628,7 @@ class table
 		{
 			print "<tr>";
 
-			foreach ($this->render_columns as $column)
+			foreach ($this->columns as $column)
 			{
 				print "<td class=\"footer\">";
 		
@@ -570,8 +647,24 @@ class table
 				print "</td>";
 			}
 
+			// optional: totals for rows
+			if ($this->total_rows)
+			{
+				$this->data["total"]["total"] = 0;
+
+				// total all the total columns
+				foreach ($this->total_columns as $column)
+				{
+					$this->data["total"]["total"] += $this->data["total"][$column];
+				}
+
+				print "<td class=\"footer\"><b>". $this->render_field("total", "total") ."</b></td>";
+			}
+
+
+			// optional: filler for link column
 			if ($this->links)
-				print "<td class=\"footer\"></td>";	// filler for link column
+				print "<td class=\"footer\"></td>";
 			
 			print "</tr>";
 		}

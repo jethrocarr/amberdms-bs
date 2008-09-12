@@ -113,6 +113,202 @@ if (user_permissions_get('timekeeping'))
 		*/
 
 
+		// establish a new table object
+		$timereg_list = New table;
+
+		$timereg_list->language	= $_SESSION["user"]["lang"];
+		$timereg_list->tablename	= "timereg_list";
+		$timereg_list->sql_table	= "timeregs";
+
+		// define all the columns and structure
+		$timereg_list->add_column("standard", "projectandphase", "");
+		$timereg_list->add_column("hourmins", "monday", "");
+		$timereg_list->add_column("hourmins", "tuesday",  "");
+		$timereg_list->add_column("hourmins", "wednesday",  "");
+		$timereg_list->add_column("hourmins", "thursday",  "");
+		$timereg_list->add_column("hourmins", "friday",  "");
+		$timereg_list->add_column("hourmins", "saturday",  "");
+		$timereg_list->add_column("hourmins", "sunday",  "");
+
+
+		// custom labels and links
+		$timereg_list->custom_column_label("monday", "Monday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[0] .")</font>");
+		$timereg_list->custom_column_link("monday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[0] ."");
+
+		$timereg_list->custom_column_label("tuesday", "Tuesday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[1] .")</font>");
+		$timereg_list->custom_column_link("tuesday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[1] ."");
+
+		$timereg_list->custom_column_label("wednesday", "Wednesday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[2] .")</font>");
+		$timereg_list->custom_column_link("wednesday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[2] ."");
+		
+		$timereg_list->custom_column_label("thursday", "Thursday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[3] .")</font>");
+		$timereg_list->custom_column_link("thursday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[3] ."");
+		
+		$timereg_list->custom_column_label("friday", "Friday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[4] .")</font>");
+		$timereg_list->custom_column_link("friday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[4] ."");
+		
+		$timereg_list->custom_column_label("saturday", "Saturday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[5] .")</font>");
+		$timereg_list->custom_column_link("saturday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[5] ."");
+		
+		$timereg_list->custom_column_label("sunday", "Sunday<br><font style=\"font-size: 8px;\">(". $date_selected_daysofweek[6] .")</font>");
+		$timereg_list->custom_column_link("sunday", "index.php?page=timekeeping/timereg-day.php&date=". $date_selected_daysofweek[6] ."");
+		
+		
+		// defaults
+		$timereg_list->columns		= array("projectandphase", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+
+		// totals
+		$timereg_list->total_columns	= array("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+		$timereg_list->total_rows	= array("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+
+
+
+		// map dates to day of the week
+		$days[ $date_selected_daysofweek[0] ] = "monday";
+		$days[ $date_selected_daysofweek[1] ] = "tuesday";
+		$days[ $date_selected_daysofweek[2] ] = "wednesday";
+		$days[ $date_selected_daysofweek[3] ] = "thursday";
+		$days[ $date_selected_daysofweek[4] ] = "friday";
+		$days[ $date_selected_daysofweek[5] ] = "saturday";
+		$days[ $date_selected_daysofweek[6] ] = "sunday";
+
+		/*
+			Fetch the data
+		
+			This step is too complete to use the automatic SQL generation code in the tables class. What we need to do is:
+			 1. Fetch each phase ID for the day
+			 2. Create a combined project/phase name value
+			 3. Total up all time spent on that project/phase for the day
+			 4. Add the data to the $timereg->data[$rowid]["columnname"] structure.
+			 5. Perform custom translations of the column names in order to insert links
+			 6. Draw the table using render_table()
+		*/
+
+		$phasearray = array();
+	
+		// 1. Fetch each phase ID for the day
+
+		// fetch the data
+		$mysql_string = "SELECT "
+				."phaseid "
+				."FROM `timereg` "
+				."WHERE employeeid='$employeeid' "
+				."AND date >= '$date_selected_start' "
+				."AND date <= '$date_selected_end'";
+
+		log_debug("timereg", "Fetching all phase IDs for bookings in the week");
+		log_debug("timereg", "SQL: $mysql_string");
+				
+		if (!$mysql_result = mysql_query($mysql_string))
+			log_debug("timereg", "FATAL SQL: ". mysql_error());
+		
+
+		// process any results
+		$timereg_list->data_num_rows = mysql_num_rows($mysql_result);
+		
+		if ($timereg_list->data_num_rows)
+		{
+			while ($mysql_data = mysql_fetch_array($mysql_result))
+			{
+				// create an array of all the phase ids, without any duplicates
+				if (!in_array($mysql_data["phaseid"], $phasearray))
+				{
+					$phasearray[] = $mysql_data["phaseid"];
+				}
+			}
+		}
+
+
+		// we have all the phases/projects that have been booked for the day (if any).
+		// we now run through them...
+		foreach ($phasearray as $phaseid)
+		{
+			$tmparray = NULL;
+			
+			
+			// 2. Fetch the project and phase name values
+			
+			// fetch the data
+			$mysql_string = "SELECT "
+					."project_phases.name_phase, "
+					."projects.name_project "
+					."FROM project_phases "
+					."LEFT JOIN projects ON project_phases.projectid = projects.id "
+					."WHERE project_phases.id='$phaseid'";
+			
+			log_debug("timereg", "Fetching project and phase name values for phase $phaseid");
+			log_debug("timereg", "SQL: $mysql_string");
+
+			if (!$mysql_result = mysql_query($mysql_string))
+				log_debug("timereg", "FATAL SQL: ". mysql_error());
+
+
+			// process the name data
+			while ($mysql_data = mysql_fetch_array($mysql_result))
+			{
+				$tmparray["projectandphase"] = $mysql_data["name_project"] ." - ". $mysql_data["name_phase"];
+			}
+
+
+
+			// 3. Total up all time spent on that project/phase for the day
+
+			// fetch the data
+			$mysql_string = "SELECT "
+					."date, "
+					."time_booked "
+					."FROM timereg "
+					."WHERE employeeid='$employeeid' "
+					."AND date >= '$date_selected_start' "
+					."AND date <= '$date_selected_end' "
+					."AND phaseid='$phaseid'";
+					
+			log_debug("timereg", "Fetching all hours for phase $phaseid");
+			log_debug("timereg", "SQL: $mysql_string");
+
+			if (!$mysql_result = mysql_query($mysql_string))
+				log_debug("timereg", "FATAL SQL: ". mysql_error());
+
+			while ($mysql_data = mysql_fetch_array($mysql_result))
+			{
+				$tmparray[ $days[ $mysql_data["date"] ] ] += $mysql_data["time_booked"];
+			}
+
+
+			// 4. Add the data to the table data structure to allow rendering
+			$timereg_list->data[] = $tmparray;
+		}
+
+
+
+		// 5. Perform custom translations of the column names in order to insert links
+
+
+
+		// 6. Draw the table using render_table()
+		if (!$timereg_list->data_num_rows)
+		{
+			print "<p><b>You have no time registered for this week.</b></p>";
+		}
+		else
+		{
+/*			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$timereg_list->add_link("view", "timeregs/view.php", $structure);
+*/
+
+			// display the table
+			$timereg_list->render_table();
+
+			// TODO: display CSV download link
+		}
+
+
+
+
+
+/*
 
 
 		//// 1. Get list of all projects
@@ -222,7 +418,7 @@ if (user_permissions_get('timekeeping'))
 
 
 		// TODO: display CSV download link
-
+*/
 
 	} // end page_render
 

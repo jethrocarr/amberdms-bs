@@ -43,7 +43,7 @@ if (user_permissions_get('projects_write'))
 			$mode = "edit";
 			
 			// are we editing an existing phase? make sure it exists and belongs to this project
-			$mysql_string	= "SELECT projectid FROM `project-phases` WHERE id='$phaseid'";
+			$mysql_string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid'";
 			$mysql_result	= mysql_query($mysql_string);
 			$mysql_num_rows	= mysql_num_rows($mysql_result);
 
@@ -76,7 +76,7 @@ if (user_permissions_get('projects_write'))
 
 	// make sure we don't choose a phase name that has already been used for this project
 	// Note: we don't mind if this phase name is the same as other phases in DIFFERENT projects
-	$mysql_string	= "SELECT id FROM `project-phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid'";
+	$mysql_string	= "SELECT id FROM `project_phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid'";
 	if ($phaseid)
 		$mysql_string .= " AND id!='$phaseid'";
 	$mysql_result	= mysql_query($mysql_string);
@@ -100,7 +100,7 @@ if (user_permissions_get('projects_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `project-phases` (projectid) VALUES ('$projectid')";
+			$mysql_string = "INSERT INTO `project_phases` (projectid) VALUES ('$projectid')";
 			if (!mysql_query($mysql_string))
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
@@ -112,7 +112,7 @@ if (user_permissions_get('projects_write'))
 		if ($phaseid)
 		{
 			// update phase details
-			$mysql_string = "UPDATE `project-phases` SET "
+			$mysql_string = "UPDATE `project_phases` SET "
 						."name_phase='". $data["name_phase"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$phaseid'";

@@ -183,9 +183,7 @@ if (user_permissions_get('timekeeping'))
 		log_debug("timereg", "SQL: $mysql_string");
 		
 		if (!$mysql_result = mysql_query($mysql_string))
-		{
 			log_debug("timereg", "FATAL SQL: ". mysql_error());
-		}
 		
 		$mysql_num_rows	= mysql_num_rows($mysql_result);
 

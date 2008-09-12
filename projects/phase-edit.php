@@ -57,7 +57,7 @@ if (user_permissions_get('projects_write'))
 			if ($phaseid)
 			{
 				// are we editing an existing phase? make sure it exists and belongs to this project
-				$mysql_string	= "SELECT projectid FROM `project-phases` WHERE id='$phaseid'";
+				$mysql_string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid'";
 				$mysql_result	= mysql_query($mysql_string);
 				$mysql_num_rows	= mysql_num_rows($mysql_result);
 
@@ -163,7 +163,7 @@ if (user_permissions_get('projects_write'))
 			// fetch the form data if editing
 			if ($phaseid)
 			{
-				$form->sql_query = "SELECT * FROM `project-phases` WHERE id='$phaseid' LIMIT 1";
+				$form->sql_query = "SELECT * FROM `project_phases` WHERE id='$phaseid' LIMIT 1";
 				$form->load_data();
 			}
 

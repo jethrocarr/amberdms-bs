@@ -69,7 +69,7 @@ if (user_permissions_get('projects_view'))
 			$phase_list->columns_order	= array("name_phase");
 
 			// fetch all the phase information
-			$phase_list->sql_query = "SELECT name_phase, description, id FROM `project-phases` WHERE projectid='$projectid'";
+			$phase_list->sql_query = "SELECT name_phase, description, id FROM `project_phases` WHERE projectid='$projectid'";
 			$phase_list->load_data_sql();
 
 			if (!$phase_list->data_num_rows)
