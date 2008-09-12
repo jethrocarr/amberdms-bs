@@ -28,6 +28,8 @@ class table
 	var $links;			// array of links to place in a final column
 
 	var $structure;			// contains the structure of all the defined columns.
+	var $filter = array();		// structure of the filtering
+	var $option = array();		// fixed options to add to the option form
 
 	var $data;			// table content
 	var $data_num_rows;		// number of rows
@@ -91,6 +93,50 @@ class table
 
 
 	/*
+		add_filter($option_array)
+
+		Allows the specification of filter options, which display fields such as input boxes
+		or dropdowns for search or filtering purposes.
+
+		The input to these options is then used to form SQL WHERE queries.
+
+		The structure for the $option_array is the same as for add_input for the form_input class
+		- see the form::render_field function for structure definition - with one addition:
+		
+			$option_array["sql"] = "QUERY";
+			
+			Where QUERY can be any SQL statment that goes after WHERE, with the word "value"
+			being a variable that gets replaced by the input in this option field.
+
+			eg:
+			$option_array["sql"] = "date > 'value'";
+
+			
+
+	*/
+	function add_filter($option_array)
+	{
+		log_debug("table", "Executing add_filter(option_array)");
+		
+		$this->filter[ $option_array["fieldname"] ] = $option_array;
+	}
+
+
+	/*
+		add_fixed_option($fieldname, $value)
+
+		Adds a fixed hidden form input to the option form - for stuff like specifiy the ID of
+		an object, etc.
+	*/
+	function add_fixed_option($fieldname, $value)
+	{
+		log_debug("table", "Executing add_fixed_option($fieldname, $value)");
+
+		$this->option[$fieldname] = $value;
+	}
+
+
+	/*
 		custom_column_label($column, $label)
 
 		Instead of doing a translate, the render functions will load the label from the data
@@ -125,7 +171,7 @@ class table
 	*/
 	function generate_sql()
 	{
-		log_debug("table", "Generating SQL statement....");
+		log_debug("table", "Executing generate_sql");
 		
 		// prepare the select statement
 		$this->sql_query = "SELECT ";
@@ -137,7 +183,47 @@ class table
 
 		$this->sql_query .= "id FROM `". $this->sql_table ."` ";
 		
+	
+		// add WHERE filters
+		if ($this->filter)
+		{
+			$this->sql_query .= "WHERE ";
+			$this->generate_sql_filterrules;
+		}
+	
+		// add orderby rules
+		$this->generate_sql_orderrules();
 		
+
+		return 1;
+	}
+
+
+	/*
+		generate_sql_filterrules()
+
+		Adds where filters to the SQL statement
+	*/
+	function generate_sql_filterrules()
+	{
+		log_debug("table", "Executing generate_sql_filterrules()");
+
+		foreach (array_keys($this->filter) as $fieldname)
+		{
+			$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
+			$this->sql_query .= "$query ";
+		}
+	}
+
+
+	/*
+		generate_sql_orderrules()
+
+		Appends order by rules to the SQL statement
+	*/
+	function generate_sql_orderrules()
+	{
+		log_debug("table", "Executing generate_sql_orderrules()");
 		
 		if ($this->columns_order)
 		{
@@ -161,11 +247,9 @@ class table
 			
 			$this->sql_query .= " ASC";
 		}
-		
-
-		return 1;
 	}
 
+	
 
 	/*
 		load_data_sql()
@@ -259,6 +343,13 @@ class table
 					$this->columns_order[] = security_script_input("/^\S*$/", $_GET["order_$i"]);
 				}
 			}
+
+			// load filterby option
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^\S*$/", $_GET["filter_$fieldname"]);
+			}
+
 		}
 		elseif ($_SESSION["form"][$this->tablename]["columns"])
 		{
@@ -266,12 +357,25 @@ class table
 			
 			// load checkboxes
 			$this->columns		= $_SESSION["form"][$this->tablename]["columns"];
+
+			// load orderby options
 			$this->columns_order	= $_SESSION["form"][$this->tablename]["columns_order"];
+
+			// load filterby options
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->tablename]["filters"][$fieldname];
+			}
 		}
 
 		// save options to session data
 		$_SESSION["form"][$this->tablename]["columns"]		= $this->columns;
 		$_SESSION["form"][$this->tablename]["columns_order"]	= $this->columns_order;
+		
+		foreach (array_keys($this->filter) as $fieldname)
+		{
+			$_SESSION["form"][$this->tablename]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
+		}
 
 		return 1;
 	}
@@ -386,6 +490,17 @@ class table
 		$form->add_input($structure);
 		$form->render_field("page");
 
+		// include any other fixed options
+		foreach (array_keys($this->option) as $fieldname)
+		{
+			$structure = NULL;
+			$structure["fieldname"]		= $fieldname;
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $this->option[$fieldname];
+			$form->add_input($structure);
+			$form->render_field($fieldname);
+		}
+
 
 		// flag this form as the table_display_options form
 		$structure = NULL;
@@ -396,6 +511,9 @@ class table
 		$form->render_field("table_display_options");
 
 
+		/*
+			Check box options
+		*/
 
 		// configure all the checkboxes
 		$num_cols	= count($columns_available);
@@ -429,40 +547,68 @@ class table
 		
 
 		// structure table
-		print "<table width=\"100%\" style=\"border: 1px solid #000000;\"><tr>";
+		print "<table width=\"100%\"><tr>";
 	
-		print "<td width=\"25%\" valign=\"top\">";
-		
+	
+		print "<td width=\"50%\" valign=\"top\"  style=\"padding: 4px; background-color: #e7e7e7;\">";
 			print "<b>Fields to display:</b><br><br>";
 
-			// display the checkbox(s)
-			foreach ($column_a1 as $column)
-			{
-				$form->render_field($column);
-			}
-
-		print "</td>";
-
-		print "<td width=\"25%\" valign=\"top\">";
+			print "<table width=\"100%\">";
+				print "<td width=\"50%\" valign=\"top\">";
 		
-			print "<br><br>";
+				// display the checkbox(s)
+				foreach ($column_a1 as $column)
+				{
+					$form->render_field($column);
+				}
+
+				print "</td>";
+
+				print "<td width=\"50%\" valign=\"top\">";
 			
-			// display the checkbox(s)
-			foreach ($column_a2 as $column)
-			{
-				$form->render_field($column);
-			}
+				// display the checkbox(s)
+				foreach ($column_a2 as $column)
+				{
+					$form->render_field($column);
+				}
 
+				print "</td>";
+			print "</table>";
 		print "</td>";
 
 		
-		print "<td width=\"25%\" valign=\"top\"></td>";
+		/*
+			Filter Options
+		*/
+		
+		
+		print "<td width=\"50%\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+			print "<b>Filter/Search Options:</b><br><br>";
+
+			print "<table width=\"100%\">";
+
+			if ($this->filter)
+			{
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					$form->add_input($this->filter[$fieldname]);
+					$form->render_row($fieldname);
+				}
+			}
+			
+			print "</table>";		
+		print "</td>";
 		
 
-		
-		print "<td width=\"25%\" valign=\"top\">";
+		// new row
+		print "</tr>";
+		print "<tr>";
 
-			print "<b>Order By (in the following order):</b><br><br>";
+
+		/* Order By Options */
+		print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+
+			print "<br><b>Order By:</b><br>";
 
 			// limit the number of order boxes to 4
 			$num_cols = count($columns_available);
@@ -487,25 +633,35 @@ class table
 
 				// display drop down
 				$form->render_field($structure["fieldname"]);
-				print "<br>";
+
+				if ($i < ($num_cols - 1))
+				{
+					print " then ";
+				}
 			}
 			
 		print "</td>";
 
-		
-		// end of structure table
-		print "</tr></table>";
+
+		/*
+			Submit Row
+		*/
+		print "<tr>";
+		print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
 	
-		$structure = NULL;
-		$structure["fieldname"]		= "submit";
-		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Apply Options";
-		$form->add_input($structure);
+			$structure = NULL;
+			$structure["fieldname"]		= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Apply Options";
+			$form->add_input($structure);
 
-		print "<br>";
-		$form->render_field("submit");
-		print "<br><br>";
+			$form->render_field("submit");
+		print "</td>";
 
+
+		// end of structure table
+		print "</tr></table><br><br>";
+		
 		print "</form>";
 	}
 

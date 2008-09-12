@@ -180,8 +180,7 @@ if (user_permissions_get('timekeeping'))
 			 2. Create a combined project/phase name value
 			 3. Total up all time spent on that project/phase for the day
 			 4. Add the data to the $timereg->data[$rowid]["columnname"] structure.
-			 5. Perform custom translations of the column names in order to insert links
-			 6. Draw the table using render_table()
+			 5. Draw the table using render_table()
 		*/
 
 		$phasearray = array();
@@ -204,9 +203,9 @@ if (user_permissions_get('timekeeping'))
 		
 
 		// process any results
-		$timereg_list->data_num_rows = mysql_num_rows($mysql_result);
+		$mysql_num_rows = mysql_num_rows($mysql_result);
 		
-		if ($timereg_list->data_num_rows)
+		if ($mysql_num_rows)
 		{
 			while ($mysql_data = mysql_fetch_array($mysql_result))
 			{
@@ -217,6 +216,9 @@ if (user_permissions_get('timekeeping'))
 				}
 			}
 		}
+		
+		$timereg_list->data_num_rows = count($phasearray);
+		
 
 
 		// we have all the phases/projects that have been booked for the day (if any).
@@ -281,31 +283,8 @@ if (user_permissions_get('timekeeping'))
 
 
 
-		// 5. Perform custom translations of the column names in order to insert links
-
-
-
-		// 6. Draw the table using render_table()
-		if (!$timereg_list->data_num_rows)
-		{
-			print "<p><b>You have no time registered for this week.</b></p>";
-		}
-		else
-		{
-/*			// view link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$timereg_list->add_link("view", "timeregs/view.php", $structure);
-*/
-
-			// display the table
-			$timereg_list->render_table();
-
-			// TODO: display CSV download link
-		}
-
-
-
+		// 5. Draw the table
+		$timereg_list->render_table();
 
 
 /*

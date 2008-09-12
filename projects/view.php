@@ -83,13 +83,13 @@ if (user_permissions_get('projects_view'))
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"] = "date_start";
-			$structure["type"]	= "date";
+			$structure["fieldname"] 	= "date_start";
+			$structure["type"]		= "date";
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"] = "date_end";
-			$structure["type"]	= "date";
+			$structure["fieldname"] 	= "date_end";
+			$structure["type"]		= "date";
 			$form->add_input($structure);
 
 			$structure = NULL;

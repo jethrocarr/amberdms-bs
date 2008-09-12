@@ -29,7 +29,6 @@ if (user_permissions_get('projects_view'))
 		$project_list->columns		= array("code_project", "name_project", "date_start", "date_end");
 		$project_list->columns_order	= array("name_project");
 
-
 		// heading
 		print "<h3>PROJECT LIST</h3><br><br>";
 
