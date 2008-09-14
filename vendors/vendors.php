@@ -37,6 +37,9 @@ if (user_permissions_get('vendors_view'))
 		$vendor_list->columns		= array("name_vendor", "name_contact", "contact_phone", "contact_email");
 		$vendor_list->columns_order	= array("name_vendor");
 
+		// custom SQL stuff
+		$vendor_list->prepare_sql_addfield("id", "");
+
 
 		// heading
 		print "<h3>VENDORS/SUPPLIERS LIST</h3><br><br>";

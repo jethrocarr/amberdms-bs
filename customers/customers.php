@@ -32,11 +32,12 @@ if (user_permissions_get('customers_view'))
 		$customer_list->add_column("standard", "address1_state", "");
 		$customer_list->add_column("standard", "address1_country", "");
 
-
-
 		// defaults
 		$customer_list->columns		= array("name_customer", "name_contact", "contact_phone", "contact_email");
 		$customer_list->columns_order	= array("name_customer");
+
+		// custom SQL stuff
+		$customer_list->prepare_sql_addfield("id", "");
 
 
 		// heading

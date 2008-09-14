@@ -33,6 +33,10 @@ if (user_permissions_get('products_view'))
 		$product_list->columns		= array("code_product", "name_product", "price_cost", "price_sale", "quantity_instock");
 		$product_list->columns_order	= array("code_product");
 
+		// custom SQL stuff
+		$product_list->prepare_sql_addfield("id", "");
+
+
 
 		// heading
 		print "<h3>PRODUCTS LIST</h3><br><br>";

@@ -34,6 +34,9 @@ if (user_permissions_get('staff_view'))
 		$staff_list->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
 		$staff_list->columns_order	= array("name_staff");
 
+		// custom SQL stuff
+		$staff_list->prepare_sql_addfield("id", "");
+
 
 		// heading
 		print "<h3>STAFF LIST</h3><br><br>";

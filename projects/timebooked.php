@@ -64,11 +64,11 @@ if (user_permissions_get('projects_view'))
 			$timereg_table->sql_table	= "timereg";
 
 			// define all the columns and structure
-			$timereg_table->add_column("date", "date", "");
-			$timereg_table->add_column("standard", "name_phase", "");
-			$timereg_table->add_column("standard", "name_staff", "");
-			$timereg_table->add_column("standard", "description", "");
-			$timereg_table->add_column("hourmins", "time_booked", "");
+			$timereg_table->add_column("date", "date", "timereg.date");
+			$timereg_table->add_column("standard", "name_phase", "project_phases.name_phase");
+			$timereg_table->add_column("standard", "name_staff", "staff.name_staff");
+			$timereg_table->add_column("standard", "description", "timereg.description");
+			$timereg_table->add_column("hourmins", "time_booked", "timereg.time_booked");
 
 			// defaults
 			$timereg_table->columns		= array("date", "name_phase", "name_staff", "description", "time_booked");
@@ -103,7 +103,8 @@ if (user_permissions_get('projects_view'))
 			/// Generate & execute SQL query
 
 			// fetch data from both the projects and timereg table with a custom query
-			$timereg_table->sql_query =	"SELECT timereg.id, "
+			/*
+			$timereg_table->sql_query =	"SELECT id, "
 							."timereg.date, "
 							."timereg.time_booked, "
 							."timereg.description, "
@@ -115,9 +116,15 @@ if (user_permissions_get('projects_view'))
 							."LEFT JOIN projects ON project_phases.projectid = projects.id "
 							."WHERE "
 							."projects.id = '$projectid'";
+			*/	
+			$timereg_table->prepare_sql_addfield("timereg.id", "");
+			$timereg_table->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
+			$timereg_table->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
+			$timereg_table->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
+			$timereg_table->prepare_sql_addwhere("projects.id = '$projectid'");
+			
 
-			$timereg_table->generate_sql_filterrules();
-			$timereg_table->generate_sql_orderrules();
+			$timereg_table->generate_sql();
 			$timereg_table->load_data_sql();
 
 

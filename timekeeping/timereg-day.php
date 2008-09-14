@@ -65,10 +65,10 @@ if (user_permissions_get('timekeeping'))
 		$timereg_table->sql_table	= "timereg";
 
 		// define all the columns and structure
-		$timereg_table->add_column("standard", "name_project", "");
-		$timereg_table->add_column("standard", "name_phase", "");
-		$timereg_table->add_column("hourmins", "time_booked", "");
-		$timereg_table->add_column("standard", "description", "");
+		$timereg_table->add_column("standard", "name_project", "projects.name_project");
+		$timereg_table->add_column("standard", "name_phase", "project_phases.name_phase");
+		$timereg_table->add_column("hourmins", "time_booked", "timereg.time_booked");
+		$timereg_table->add_column("standard", "description", "timereg.description");
 
 		// defaults
 		$timereg_table->columns		= array("name_project", "name_phase", "description", "time_booked");
@@ -76,20 +76,16 @@ if (user_permissions_get('timekeeping'))
 
 		// create totals
 		$timereg_table->total_columns	= array("time_booked");
-		
-
-		// fetch data from both the projects and timereg table with a custom query
-		$timereg_table->sql_query =	"SELECT timereg.id, "
-						."timereg.time_booked, "
-						."timereg.description, "
-						."projects.name_project, "
-						."project_phases.name_phase "
-						."FROM timereg "
-						."LEFT JOIN project_phases ON timereg.phaseid = project_phases.id "
-						."LEFT JOIN projects ON project_phases.projectid = projects.id "
-						."WHERE "
-						."timereg.employeeid='$employeeid' "
-						."AND timereg.date='$date'";
+	
+		// custom SQL
+		$timereg_table->prepare_sql_addfield("id", "timereg.id");
+		$timereg_table->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
+		$timereg_table->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
+		$timereg_table->prepare_sql_addwhere("timereg.employeeid = '$employeeid'");
+		$timereg_table->prepare_sql_addwhere("timereg.date = '$date'");
+			
+		// execute SQL statement	
+		$timereg_table->generate_sql();
 		$timereg_table->load_data_sql();
 
 		if (!$timereg_table->data_num_rows)
