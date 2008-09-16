@@ -209,6 +209,7 @@ function user_login($username, $password)
 				mysql_query($mysql_string);
 
 				// set session variables
+				$_SESSION["user"]["id"]		= $mysql_data["id"];
 				$_SESSION["user"]["name"]	= $username;
 				$_SESSION["user"]["authkey"]	= $authkey;
 

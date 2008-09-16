@@ -73,17 +73,25 @@ class form_input
 	{
 		log_debug("form", "Executing load_data_error()");
 	
-		foreach (array_keys($this->structure) as $fieldname)
+		if ($_SESSION["error"]["form"][$this->formname])
 		{
-			// make sure we don't import any data for non-user editable fields
-			// since these fields
-			if ($this->structure[$fieldname]["type"] != "submit" 
-				&& $this->structure[$fieldname]["type"] != "message" 
-				&& $this->structure[$fieldname]["type"] != "text"
-				&& $this->structure[$fieldname]["type"] != "hidden")
+
+			foreach (array_keys($this->structure) as $fieldname)
 			{
-				$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+				// make sure we don't import any data for non-user editable fields
+				// since these fields
+				if ($this->structure[$fieldname]["type"] != "submit" 
+					&& $this->structure[$fieldname]["type"] != "message" 
+					&& $this->structure[$fieldname]["type"] != "text"
+					&& $this->structure[$fieldname]["type"] != "hidden")
+				{
+					$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+				}
 			}
+		}
+		else
+		{
+			log_debug("form", "No error data to import.");
 		}
 	
 		return 1;

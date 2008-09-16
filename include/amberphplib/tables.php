@@ -371,24 +371,25 @@ class table
 	*/
 	function load_data_sql()
 	{
-		log_debug("table", "SQL: ". $this->sql_query);
-	
-		if (!$mysql_result = mysql_query($this->sql_query))
-		{
-			print "<p><b>A fatal SQL error occured: ". mysql_error() ."</b></p>";
-			return 0;
-		}
-		
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
-		$this->data_num_rows	= $mysql_num_rows;
+		log_debug("table", "Executing load_data_sql()");
 
-		if (!$mysql_num_rows)
+		$sql = New sql_query;
+		$sql->string = $this->sql_query;
+		
+		if (!$sql->execute())
+			return 0;
+
+		$this->data_num_rows = $sql->num_rows();
+
+		if (!$this->data_num_rows)
 		{
 			return 0;
 		}
 		else
 		{
-			while ($mysql_data = mysql_fetch_array($mysql_result))
+			$sql->fetch_array();
+			
+			foreach ($sql->data as $data)
 			{
 				$tmparray = array();
 			
@@ -397,14 +398,14 @@ class table
 				// are not included as columns but required for things such as hyperlinks.
 				foreach ($this->sql_structure["fields"] as $sqlfield)
 				{
-					$tmparray[$sqlfield] = $mysql_data[$sqlfield];
+					$tmparray[$sqlfield] = $data[$sqlfield];
 				}
 
 				// save data to final results
 				$this->data[] = $tmparray;
 			}
 
-			return $mysql_num_rows;
+			return $this->data_num_rows;
 		}
 	}
 

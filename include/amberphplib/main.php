@@ -12,6 +12,9 @@
 // require it.
 include("language.php");
 
+// DB SQL processing and execution
+include("sql.php");
+
 // User + Security Functions
 include("user.php");
 include("security.php");

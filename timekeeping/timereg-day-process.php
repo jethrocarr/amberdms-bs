@@ -11,20 +11,23 @@
 include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
+// custom includes
+include("../include/user/permissions_staff.php");
+
+
 
 if (user_permissions_get('timekeeping'))
 {
 	/////////////////////////
 
 	$id				= security_form_input_predefined("int", "id_timereg", 0, "");
+	$employeeid			= security_form_input_predefined("int", "id_employee", 1, "");
 	
 	$data["date"]			= security_form_input_predefined("date", "date", 1, "You must specify a date for the entry to belong to.");
 	$data["phaseid"]		= security_form_input_predefined("int", "phaseid", 1, "You must select a project & phase for the time to be assigned to");
 	$data["time_booked"]		= security_form_input_predefined("hourmins", "time_booked", 1, "You must enter some time to book");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "You must enter a description");
 
-	// TODO: this will need completion for access control
-	$data["employeeid"]		= user_information("employeeid");
 
 
 	// are we editing an existing time entry or adding a new one?
@@ -52,9 +55,14 @@ if (user_permissions_get('timekeeping'))
 	//// ERROR CHECKING ///////////////////////
 
 
+	// make sure user has permissions to write for this staff member
+	if (!user_permissions_staff_get("timereg_write", $employeeid))
+	{
+		$_SESSION["error"]["message"][] = "Sorry, you do not have access rights to book time for this employee.";
+	}
+
 
 	// make sure we don't end up with more than 24 hours booked for one day
-	// TODO: write me
 
 	// get a total of the time currently booked for this date
 	$mysql_string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='". $data["employeeid"] ."'";
@@ -82,6 +90,7 @@ if (user_permissions_get('timekeeping'))
 		$_SESSION["error"]["message"][] = "You can not book more than 24 hours of time in one day.";
 	}
 	
+
 
 
 	/// if there was an error, go back to the entry page
@@ -119,7 +128,7 @@ if (user_permissions_get('timekeeping'))
 			// update timereg details
 			$mysql_string = "UPDATE `timereg` SET "
 						."date='". $data["date"] ."', "
-						."employeeid='". $data["employeeid"] ."', "
+						."employeeid='". $employeeid ."', "
 						."phaseid='". $data["phaseid"] ."', "
 						."time_booked='". $data["time_booked"] ."', "
 						."description='". $data["description"] ."' "
@@ -133,11 +142,11 @@ if (user_permissions_get('timekeeping'))
 			{
 				if ($mode == "add")
 				{
-					$_SESSION["notification"]["message"][] = "Customer successfully created.";
+					$_SESSION["notification"]["message"][] = "Time successfully booked.";
 				}
 				else
 				{
-					$_SESSION["notification"]["message"][] = "Customer successfully updated.";
+					$_SESSION["notification"]["message"][] = "Time booked has been updated successfully.";
 				}
 				
 			}
