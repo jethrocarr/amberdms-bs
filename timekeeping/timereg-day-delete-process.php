@@ -40,6 +40,7 @@ if (user_permissions_get('timekeeping'))
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
+		$_SESSION["error"]["form"]["timereg_delete"] = "failed";
 		header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] ."&editid=$id");
 		exit(0);
 	}

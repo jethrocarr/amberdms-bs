@@ -54,7 +54,9 @@ a:active {
 
 
 /*
-	Table Styling
+	table_content
+
+	Used for all the tables drawn by the table class	
 */
 .table_content {
 	border-bottom: 1px solid #2580a2;
@@ -88,6 +90,19 @@ a:active {
 	.table_content tr:hover {
 		background-color: #2580a2;
 	}
+
+
+/*
+	table_highlight
+
+	Used to give a table a different background colour - typically used to highlight
+	a segment of text, or a 2nd table or form on the same page.
+*/
+.table_highlight {
+	padding: 4px;
+	background-color: #e7e7e7;
+}
+
 
 
 /*

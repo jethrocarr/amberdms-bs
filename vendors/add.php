@@ -23,7 +23,7 @@ if (user_permissions_get('vendors_write'))
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "vendor_view";
+		$form->formname = "vendor_add";
 		$form->language = $_SESSION["user"]["lang"];
 
 		$form->action = "vendors/edit-process.php";
@@ -157,7 +157,10 @@ if (user_permissions_get('vendors_write'))
 		$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$form->subforms["submit"]		= array("submit");
-		
+	
+		// load any data returned due to errors
+		$form->load_data_error();
+	
 		// display the form
 		$form->render_form();
 

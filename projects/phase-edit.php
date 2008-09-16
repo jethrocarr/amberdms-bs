@@ -166,6 +166,11 @@ if (user_permissions_get('projects_write'))
 				$form->sql_query = "SELECT * FROM `project_phases` WHERE id='$phaseid' LIMIT 1";
 				$form->load_data();
 			}
+			else
+			{
+				// load any data returned due to errors
+				$form->load_data_error();
+			}
 
 
 			// display the form

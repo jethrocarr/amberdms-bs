@@ -6,6 +6,10 @@
 
 	class form_input	Functions for UI component of forms.
 
+	standalone functions:
+
+	function form_helper_prepare_dropdownfromdb
+
 */
 
 class form_input
@@ -49,7 +53,7 @@ class form_input
 	{
 		log_debug("form", "Executing load_data()");
 		
-		if ($_SESSION["error"]["message"])
+		if ($_SESSION["error"]["form"][$this->formname])
 		{
 			return $this->load_data_error();
 		}
@@ -237,6 +241,7 @@ class form_input
 						["max_length"]	Max length for input/password types
 						["rows"]	Num of rows for textarea
 						["cols"]	Num of cols for textarea
+						["label"]	Label field for checkboxes to use instead of a translation
 		
 			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();	Associate array used for labeling the values in radio or dropdown type fields
@@ -316,10 +321,17 @@ class form_input
 			case "checkbox":
 				print "<input ";
 
-				if ($this->structure[$fieldname]["defaultvalue"] == "on" || $this->structure[$fieldname]["defaultvalue"] == "1")
+				if ($this->structure[$fieldname]["defaultvalue"] == "on" || $this->structure[$fieldname]["defaultvalue"] == "1" || $this->structure[$fieldname]["defaultvalue"] == "enabled")
 					print "checked ";
-			
-				$translation = language_translate_string($this->language, $fieldname);
+
+				if ($this->structure[$fieldname]["options"]["label"])
+				{
+					$translation = $this->structure[$fieldname]["options"]["label"];
+				}
+				else
+				{
+					$translation = language_translate_string($this->language, $fieldname);
+				}
 				print "type=\"checkbox\" name=\"". $fieldname ."\">". $translation ."<br>";
 			break;
 
@@ -460,6 +472,51 @@ class form_input
 
 } // end of class form_input
 
+
+/*
+	Standalone Functions
+*/
+
+
+/*
+	form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
+
+	This function generates the relevent structure needed to add a drop down
+	to a form (or the option form for a table) based on the values provided from
+	the SQL statement.
+	
+	All the SQL statement needs todo, is to provide 2 different values, labeled "id" and "label"
+	and the function will do the rest.
+
+	Returns the structure array, which can then be passed directly to form::add_input($structure_array);
+*/
+
+function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
+{
+	log_debug("form", "Executing form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)");
+	
+	$structure = NULL;
+	$structure["fieldname"] = $fieldname;
+	$structure["type"]	= "dropdown";
+
+	if (!$mysql_result = mysql_query($sqlquery))
+		log_debug("timereg", "FATAL SQL: ". mysql_error());
+			
+	$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+	while ($mysql_data = mysql_fetch_array($mysql_result))
+	{
+		// only add an option if there is an id and label for it
+		if ($mysql_data["id"] && $mysql_data["label"])
+		{
+			$structure["values"][]					= $mysql_data["id"];
+			$structure["translations"][ $mysql_data["id"] ]		= $mysql_data["label"];
+		}
+	}
+
+	// return the structure
+	return $structure;
+}
 
 
 ?>

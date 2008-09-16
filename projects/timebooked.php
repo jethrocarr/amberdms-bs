@@ -86,14 +86,35 @@ if (user_permissions_get('projects_view'))
 			$structure = NULL;
 			$structure["fieldname"] = "date_start";
 			$structure["type"]	= "date";
+			$structure["sql"]	= "date >= 'value'";
+			$timereg_table->add_filter($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] = "date_end";
+			$structure["type"]	= "date";
+			$structure["sql"]	= "date <= 'value'";
+			$timereg_table->add_filter($structure);
+			
+			$structure		= form_helper_prepare_dropdownfromdb("phaseid", "SELECT id, name_phase as label FROM project_phases WHERE projectid='$projectid' ORDER BY name_phase ASC");
+			$structure["sql"]	= "project_phases.id='value'";
+			$timereg_table->add_filter($structure);
+
+			$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+			$structure["sql"]	= "timereg.employeeid='value'";
+			$timereg_table->add_filter($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] = "searchbox";
+			$structure["type"]	= "input";
+			$structure["sql"]	= "timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%'";
 			$timereg_table->add_filter($structure);
 
 
-	
+
 			// create totals
 			$timereg_table->total_columns	= array("time_booked");
-
-		
+	
+	
 			// options form
 			$timereg_table->load_options_form();
 			$timereg_table->render_options_form();
@@ -101,39 +122,21 @@ if (user_permissions_get('projects_view'))
 
 
 			/// Generate & execute SQL query
-
-			// fetch data from both the projects and timereg table with a custom query
-			/*
-			$timereg_table->sql_query =	"SELECT id, "
-							."timereg.date, "
-							."timereg.time_booked, "
-							."timereg.description, "
-							."project_phases.name_phase, "
-							."staff.name_staff "
-							."FROM timereg "
-							."LEFT JOIN staff ON timereg.employeeid = staff.id "
-							."LEFT JOIN project_phases ON timereg.phaseid = project_phases.id "
-							."LEFT JOIN projects ON project_phases.projectid = projects.id "
-							."WHERE "
-							."projects.id = '$projectid'";
-			*/	
-			$timereg_table->prepare_sql_addfield("timereg.id", "");
+			$timereg_table->prepare_sql_addfield("id", "timereg.id");
 			$timereg_table->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
 			$timereg_table->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
 			$timereg_table->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
 			$timereg_table->prepare_sql_addwhere("projects.id = '$projectid'");
 			
-
 			$timereg_table->generate_sql();
 			$timereg_table->load_data_sql();
-
 
 
 			/// Display table data
 
 			if (!$timereg_table->data_num_rows)
 			{
-				print "<p><b>There is currently no time registered to this project.</b></p>";
+				print "<p><b>There is currently no time registered to this project that matches your filter options.</b></p>";
 			}
 			else
 			{

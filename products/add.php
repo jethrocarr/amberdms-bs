@@ -23,7 +23,7 @@ if (user_permissions_get('products_write'))
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "product_view";
+		$form->formname = "product_add";
 		$form->language = $_SESSION["user"]["lang"];
 
 		$form->action = "products/edit-process.php";
@@ -91,6 +91,8 @@ if (user_permissions_get('products_write'))
 		$form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$form->subforms["submit"]		= array("submit");
 
+		// load any data returned due to errors
+		$form->load_data_error();
 
 		// display the form
 		$form->render_form();

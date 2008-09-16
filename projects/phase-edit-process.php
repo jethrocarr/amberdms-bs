@@ -92,6 +92,7 @@ if (user_permissions_get('projects_write'))
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
+		$_SESSION["error"]["form"]["phase_view"] = "failed";
 		header("Location: ../index.php?page=projects/phase-edit.php&projectid=$projectid&phaseid=$phaseid");
 		exit(0);
 	}

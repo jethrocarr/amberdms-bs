@@ -1,36 +1,24 @@
 <?php
-//
-// include/user.php
-//
-// contains functions for authenticating users securely, checking their permissions,
-// and querying for their information.
-//
-//
-// FUNCTIONS:
-//
-// user_online()
-//	returns "1" if a valid user is logged in, returns "0" otherwise.
-//
-// user_login(username, password)
-//	authenticates the user, returns "1" if successful, returns "0" if otherwise.
-//
-// user_logout()
-//	logs out the user.
-//
-// user_newuser(username, password, realname)
-//	create a new user account.
-//
-// user_changepwd(userid, password)
-//	sets the password for a user account
-//
-// user_permissions_get(permission)
-//	if the user has the requested permission, return "1" otherwise return "0"
-//
-// user_information(field)
-//	request the value of a field from the database relating to the user.
-//
+/*
+	user.php
+
+	Contain user management and authentication functions.
+
+	TODO: Put all information on authentication system methods here.
+*/
 
 
+
+/*
+	user_online()
+
+	This function returns "1" if a valid user is logged in, or "0" otherwise.
+
+	This function works by checking the user's authentication key from their session data against the SQL
+	database to verify that their IP has not changed, and that they are who they say they are.
+
+	For further details about the authentication system, please refer to the comments at the top of this file.
+*/
 
 function user_online()
 {
@@ -48,20 +36,29 @@ function user_online()
 	{
 		$mysql_data = mysql_fetch_array($mysql_result);
 
-		// do time check - if the user hasn't accessed a page for 2 hours, we log em' out.
 		$time = time();
 		if ($time < ($mysql_data["time"] + 7200))
 		{
-			// reset time counter
-			$mysql_string = "UPDATE `users` SET time='$time'";
-			mysql_query($mysql_string);
+			// we want to update the time value in the database, but we don't want to do this
+			// on every single page load - no need, and a waste of performance.
+			//
+			// therefore, we only update the time record in the DB if it's older than 30 minutes. We use
+			// this time to see if the user has been inactive for long periods of time, to log them out.
+			if (($time -  $mysql_data["time"]) > 1800)
+			{
+				// update time field
+				$mysql_string = "UPDATE `users` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."'";
+				mysql_query($mysql_string);
+			}
 
 			// user is logged in.
 			return 1;
 		}
 		else
 		{
-			// we timeout the user for security reasons. However, we save the query string, so they can easily log back in to where they were.
+			// The user hasn't accessed a page for 2 hours, we log em' out for security reasons.
+			
+			// We save the query string, so they can easily log back in to where they were.			
 			$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
 		
 			// log user out
@@ -77,8 +74,79 @@ function user_online()
 }
 
 
+/*
+	user_login($username, $password)
+
+	This function performs two main tasks:
+	* If enabled, it performs brute-force blacklisting defense, and will block authentication attempts from blacklisted IP addresses.
+	* Checks the username/password and authenticates the user.
+
+	The function returns 1 on success or 0 on failure.
+*/
 function user_login($username, $password)
 {
+	//
+	// first we do a check of the IP against a brute-force table. Whilst admins should always lock down their interfaces
+	// to trusted IPs only, in the real-world this often does not happen.
+	//
+	$mysql_query		= "SELECT value as blacklist_enable FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1";
+	$mysql_result		= mysql_query($mysql_query);
+	$mysql_data		= mysql_fetch_array($mysql_result);
+	$blacklist_enable	= $mysql_data["blacklist_enable"];
+
+	$mysql_query		= "SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1";
+	$mysql_result		= mysql_query($mysql_query);
+	$mysql_data		= mysql_fetch_array($mysql_result);
+	$blacklist_limit	= $mysql_data["blacklist_limit"];
+
+
+	if ($blacklist_enable == "enabled")
+	{
+		// check the database - is this IP in the bad list?
+		$mysql_string                   = "SELECT failedcount, time FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+		$mysql_blacklist_result         = mysql_query($mysql_string);
+		$mysql_blacklist_num_rows       = mysql_num_rows($mysql_blacklist_result);
+
+		if ($mysql_blacklist_num_rows)
+		{
+			while ($mysql_blacklist_data = mysql_fetch_array($mysql_blacklist_result))
+			{
+				// IP is in bad list - but we need to check the count against the time, to see if it's just an innocent wrong password,
+				// or if it's something more sinister.
+
+				if ($mysql_blacklist_data["failedcount"] >= $blacklist_limit && $mysql_blacklist_data["time"] >= (time() - 432000))
+				{
+					// if failed count >= blacklist limit, and if the last attempt was within
+					// the last 5 days, block the user.
+					
+					$_SESSION["error"]["message"] = array("For brute-force security reasons, you have been locked out of the system interface.");
+					return 0;
+				}
+				elseif ($mysql_blacklist_data["time"] < (time() - 432000))
+				{
+					// It has been more than 5 days since the last attempt was blocked. Start clearing the counter, by
+					// removing 2 attempts.
+					
+					if ($mysql_blacklist_data["failedcount"] > 2)
+					{
+						// decrease by 2.
+						$newcount = $mysql_blacklist_data["failedcount"] - 2;
+						$data = "UPDATE `users_blacklist` SET `failedcount`='$newcount' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+						mysql_query($data);
+					}
+					else
+					{
+						// time to remove the entry completely
+						$data = "DELETE FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+						mysql_query($data);
+					}
+				}
+			}
+		}
+	} // end of blacklist check
+
+
+
 	// get user data
 	$mysql_string	= "SELECT id, password, password_salt FROM `users` WHERE username='$username' LIMIT 1";
 	$mysql_result	= mysql_query($mysql_string);
@@ -120,7 +188,7 @@ function user_login($username, $password)
 				// * An exploit in the PHP session handling that allows a user to change their session
 				//   information.
 				//
-				// * An exploit elsewhere in AOConf which allows the changing of any session variable will
+				// * An exploit elsewhere in this application which allows the changing of any session variable will
 				//   not allow a user to gain different authentication rights.
 				//
 				
@@ -165,12 +233,56 @@ function user_login($username, $password)
 			}
 		}		
 	}
-	
 
+	// user authentication failed - incorrect password or username
+	
+	// add time delay to reduce effectiveness of rapid attacks.
+	sleep(2);
+	
+		
+        // update/create entry in blacklist section.
+	// this is used to prevent brute-force attacks.
+	if ($blacklist_enable == "enabled")
+	{
+	        // check if there is already an entry.
+	        $mysql_string                   = "SELECT failedcount FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+        	$mysql_blacklist_result         = mysql_query($mysql_string);
+	        $mysql_blacklist_num_rows       = mysql_num_rows($mysql_blacklist_result);
+
+	        if ($mysql_blacklist_num_rows)
+        	{
+	                // IP is in the list. Increase the failed count, and set the time to now.
+        	        while ($mysql_blacklist_data = mysql_fetch_array($mysql_blacklist_result))
+                	{
+				$newcount       = $mysql_blacklist_data["failedcount"] + 1;
+				$newtime        = time();
+
+				$data = "UPDATE `users_blacklist` SET `failedcount`='$newcount', time='$newtime' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+				mysql_query($data);
+			}
+		}
+		else
+		{
+			// IP is not currently in the list. We need to add it.
+			$newtime        = time();
+			
+			$data = "INSERT INTO `users_blacklist` (ipaddress, failedcount, time) VALUES ('" . $_SERVER["REMOTE_ADDR"] . "', '1', '$newtime')";
+			mysql_query($data);
+		}
+		
+	}
+
+	// return failed authentication
 	return 0;
 }
 
 
+
+/*
+	user_logout()
+
+	Logs the user out of the system and clears all session variables relating to their connection.
+*/
 function user_logout()
 {
 	if ($_SESSION["user"]["name"])
@@ -185,6 +297,12 @@ function user_logout()
 }
 
 
+
+/*
+	user_newuser($username, $password, $realname, $email)
+
+	Creates a new user account in the database and returns the ID of the new user account.
+*/
 function user_newuser($username, $password, $realname, $email)
 {
 	// make sure that the user running this command is an admin
@@ -194,7 +312,7 @@ function user_newuser($username, $password, $realname, $email)
 		if ($username && $password && $realname && $email)
 		{
 			// create the user account
-			$mysql_string = "INSERT INTO `users` (username, realname, email) VALUES ('$username', '$realname', '$email')";
+			$mysql_string = "INSERT INTO `users` (username, realname, contact_email) VALUES ('$username', '$realname', '$email')";
 			if (!mysql_query($mysql_string))
 			{
 				die('MySQL Error: ' . mysql_error());
@@ -214,6 +332,16 @@ function user_newuser($username, $password, $realname, $email)
 	return 0;
 }
 
+
+
+/*
+	user_changepwd($userid, $password)
+
+	Updates the user's password - regenerates the password salt and hashes
+	the password with the salt and SHA algorithm.
+
+	Returns 1 on success, 0 on failure.
+*/
 function user_changepwd($userid, $password)
 {
 	if (user_permissions_get("admin"))
@@ -256,10 +384,19 @@ function user_changepwd($userid, $password)
 }
 
 
+
+/*
+	user_permissions_get($type)
+
+	This function looks up the database to see if the user has the specified permission. If so,
+	the function will return 1.
+
+	If the user does not have the permission, the function will return 0.
+*/
 function user_permissions_get($type)
 {
 
-	// everyone (including guests) have the "public" permission, so don't waste CPU checking for it.
+	// everyone (including guests) have the "public" permission, so don't waste cycles checking for it
 	if ($type == "public")
 	{
 		return 1;
@@ -298,6 +435,12 @@ function user_permissions_get($type)
 }
 
 
+
+/*
+	user_information($field)
+
+	This function looks up the specified field in the database's "users" table and returns the result.
+*/
 function user_information($field)
 {
 	// this verifys that the user session data is correct, and that they are currently logged in.

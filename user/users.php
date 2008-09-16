@@ -1,63 +1,78 @@
 <?php
-//
-// users/users.php
-//
-// add, edit and delete users.
-//
+/*
+	user/users.php
 
+	Administrator-only utility to create, edit or delete user accounts.
+*/
 
 // only admins may access this page
 if (user_permissions_get("admin"))
 {
-	$_SESSION["error"]["menuid"] = "20";
 	
 	function page_render()
 	{
-		print "<h2>ADMIN ACCESS</h2>";
-		print "<p>Create, edit or remove administrator user accounts here.</p>";
+		print "<h3>USER MANAGEMENT</h3>";
+		print "<p>This page allows you to create, edit or delete user accounts, as well as allowing you to define the the account permissions.</p>";
 
-		// add interface button
-		print "<form method=\"get\" action=\"index.php\">";
-		print "<input type=\"hidden\" name=\"page\" value=\"user/user-add.php\">";
-		print "<input type=\"submit\" value=\"Add new admin\">";
-		print "</form><br>";
-		
-		// get all the users
-		$mysql_string	= "SELECT id, username, realname, email FROM `users` ORDER BY username";
-		$mysql_result	= mysql_query($mysql_string);
 
-		print "<table width=\"100%\" style=\"border: 1px #000000 dashed;\"><tr><td width=\"100%\">";
-		
-		print "<table width=\"100%\" cellpadding=\"3\" cellspacing=\"2\" border=\"0\">";
-		print "<tr>";
-		print "<td width=\"25%\"><b>Username</b></td>";
-		print "<td width=\"25%\"><b>Realname</b></td>";
-		print "<td width=\"40%\"><b>Email Address</b></td>";
-		print "<td width=\"10%\"></td>";
-		print "</tr>";
+		// establish a new table object
+		$user_list = New table;
 
-		
-		// display a list of all the users.
-		while ($mysql_data = mysql_fetch_array($mysql_result))
+		$user_list->language	= $_SESSION["user"]["lang"];
+		$user_list->tablename	= "user_list";
+		$user_list->sql_table	= "users";
+
+		// define all the columns and structure
+		$user_list->add_column("standard", "username", "");
+		$user_list->add_column("standard", "realname", "");
+		$user_list->add_column("standard", "contact_email", "");
+		$user_list->add_column("timestamp", "lastlogin_time", "time");
+		$user_list->add_column("standard", "lastlogin_ipaddress", "ipaddress");
+
+		// defaults
+		$user_list->columns		= array("username", "realname", "contact_email", "lastlogin_time");
+		$user_list->columns_order	= array("username");
+
+		// custom SQL stuff
+		$user_list->prepare_sql_addfield("id", "");
+
+		// acceptable filter options
+		$structure = NULL;
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "username LIKE '%value%' OR realname LIKE '%value%' OR contact_email LIKE '%value%'";
+		$user_list->add_filter($structure);
+
+
+		// options form
+		$user_list->load_options_form();
+		$user_list->render_options_form();
+
+
+		// fetch all the user information
+		$user_list->generate_sql();
+		$user_list->load_data_sql();
+
+		if (!count($user_list->columns))
 		{
-			print "<tr>";
-
-			// username
-			print "<td width=\"25%\">" . $mysql_data["username"] . "</td>";
-
-			// realname
-			print "<td width=\"25%\">" . $mysql_data["realname"] . "</td>";
-
-			// email
-			print "<td width=\"40%\">" . $mysql_data["email"] . "</td>";
-
-			// controls
-			print "<td width=\"10%\"><a href=\"index.php?page=user/user-details.php&id=" . $mysql_data["id"] . "\">details</a></td>";
-			print "</tr>";
+			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		
-		print "</table>";
-		print "</td></tr></table>";
+		elseif (!$user_list->data_num_rows)
+		{
+			print "<p><b>No users that match your options were found.</b></p>";
+		}
+		else
+		{
+			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$user_list->add_link("view", "user/user-view.php", $structure);
+
+			// display the table
+			$user_list->render_table();
+
+			// TODO: display CSV download link
+		}
 
 	} // end of page_render()
 	

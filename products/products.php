@@ -36,6 +36,13 @@ if (user_permissions_get('products_view'))
 		// custom SQL stuff
 		$product_list->prepare_sql_addfield("id", "");
 
+		// acceptable filter options
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "name_product LIKE '%value%' OR code_product LIKE '%value%'";
+		$product_list->add_filter($structure);
+
+
 
 
 		// heading

@@ -24,7 +24,7 @@ if (user_permissions_get('projects_write'))
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "project_view";
+		$form->formname = "project_add";
 		$form->language = $_SESSION["user"]["lang"];
 
 		$form->action = "projects/edit-process.php";
@@ -71,6 +71,9 @@ if (user_permissions_get('projects_write'))
 		$form->subforms["project_view"]		= array("code_project", "name_project", "date_start", "date_end", "details");
 		$form->subforms["submit"]		= array("submit");
 		
+		// load any data returned due to errors
+		$form->load_data_error();
+
 		// display the form
 		$form->render_form();
 

@@ -1,72 +1,177 @@
 <?php
-//
-// user/user-edit-process.php
-//
-// edit an administrator account
-//
+/*
+	user/user-edit-process.php
+
+	Access: admin users only
+
+	Updates or creates a user account based on the information provided to it.
+*/
+
 
 // includes
-include_once("../include/database.php");
-include_once("../include/user.php");
-include_once("../include/security.php");
+include_once("../include/config.php");
+include_once("../include/amberphplib/main.php");
 
 
-if (user_permissions_get("admin"))
+if (user_permissions_get('admin'))
 {
-	// check input
-	$userid			= security_form_input("/^[0-9]*$/", "userid", 1, "No user ID supplied.");
-	$realname		= security_form_input("/^[A-Za-z0-9.\s]*$/", "realname", 4, "Please enter a realname.");
-	$email			= security_form_input("/^([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+$/", "email", 4, "Please enter a valid email address.");
+	////// INPUT PROCESSING ////////////////////////
+
+	$id				= security_form_input_predefined("int", "id_user", 0, "");
+	
+	$data["username"]		= security_form_input_predefined("any", "username", 1, "");
+	$data["realname"]		= security_form_input_predefined("any", "realname", 1, "");
+	$data["contact_email"]		= security_form_input_predefined("any", "contact_email", 1, "");
+
+	// are we editing an existing user or adding a new one?
+	if ($id)
+	{
+		$mode = "edit";
+
+		// make sure the user actually exists
+		$mysql_string		= "SELECT id FROM `users` WHERE id='$id'";
+		$mysql_result		= mysql_query($mysql_string);
+		$mysql_num_rows		= mysql_num_rows($mysql_result);
+
+		if (!$mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "The user you have attempted to edit - $id - does not exist in this system.";
+		}
+	}
+	else
+	{
+		$mode = "add";
+	}
+
+
+	///// ERROR CHECKING ///////////////////////
+
+	// make sure we don't choose a user name that has already been taken
+	$mysql_string	= "SELECT id FROM `users` WHERE username='". $data["username"] ."'";
+	if ($id)
+		$mysql_string .= " AND id!='$id'";
+	$mysql_result	= mysql_query($mysql_string);
+	$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+	if ($mysql_num_rows)
+	{
+		$_SESSION["error"]["message"][] = "This user name is already used for another user - please choose a unique name.";
+		$_SESSION["error"]["username-error"] = 1;
+	}
 
 
 	// check password (if the user has requested to change it)
 	if ($_POST["password"] || $_POST["password_confirm"])
 	{
-		$password		= security_form_input("/^\S*$/", "password", 4, "Please enter a password.");
-		$password_confirm	= security_form_input("/^\S*$/", "password_confirm", 4, "Please enter a confirmation password.");
+		$data["password"]		= security_form_input_predefined("any", "password", 1, "");
+		$data["password_confirm"]	= security_form_input_predefined("any", "password_confirm", 1, "");
 
-		if ($password != $password_confirm)
+		if ($data["password"] != $data["password_confirm"])
 		{
-			$_SESSION["error"]["message"]		.= "Your passwords do not match!";
-			$_SESSION["error"]["password_confirm"]	= "error";
+			$_SESSION["error"]["message"][]		= "Your passwords do not match!";
+			$_SESSION["error"]["password-error"]		= 1;
+			$_SESSION["error"]["password_confirm-error"]	= 1;
+		}
+	}
+	else
+	{
+		// if adding a new user, a password *must* be provided
+		if ($mode == "add")
+		{
+			$_SESSION["error"]["message"][]			= "You must supply a password!";
+			$_SESSION["error"]["password-error"]		= 1;
+			$_SESSION["error"]["password_confirm-error"]	= 1;
 		}
 	}
 
+
+
+
+	//// PROCESS DATA ////////////////////////////
+
+
 	if ($_SESSION["error"]["message"])
 	{
-		// errors occured
-		$_SESSION["error"]["form"] = "edit";
-		header("Location: ../../index.php?page=user/user-details.php&id=$userid");
-		exit(0);
+		if ($mode == "edit")
+		{
+			$_SESSION["error"]["form"]["user_view"] = "failed";
+			header("Location: ../index.php?page=user/user-view.php&id=$id");
+			exit(0);
+		}
+		else
+		{
+			$_SESSION["error"]["form"]["user_add"] = "failed";
+			header("Location: ../index.php?page=user/user-add.php");
+			exit(0);
+		}
 	}
 	else
 	{
 		$_SESSION["error"] = array();
 
-		// generate a new password and salt
-		if ($password)
+		if ($mode == "add")
 		{
-			user_changepwd($userid, $password);
-		}
+			// create the user account
+			$id = user_newuser($data["username"], $data["password"], $data["realname"], $data["contact_email"]);
 
-		// update the account details
-		$mysql_string = "UPDATE `users` SET realname='$realname', email='$email' WHERE id='$userid'";
-		$mysql_result = mysql_query($mysql_string);
-		if (!$mysql_result)
-		{
-			die('MySQL Error: ' . mysql_error());
+			if ($id)
+			{
+				// assign the user "disabled" permissions
+				$mysql_string = "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '1')";
+				
+				if (!mysql_query($mysql_string))
+				{
+					$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+					$_SESSION["error"]["message"][] = "The user account may have incorrect permissions assigned to it.";
+				}
+				else
+				{
+					$_SESSION["notification"]["message"][] = "Successfully created user account. Note that the user is disabled by default, you will need to use the User Permissions page to assign them access rights.";
+				}
+			}
+			else
+			{
+				$_SESSION["error"]["message"][] = "A fatal error occured whilst trying to create the new user account.";
+			}
 		}
+		else
+		{
+			// generate a new password and salt
+			if ($data["password"])
+			{
+				user_changepwd($id, $data["password"]);
+			}
+
+			// update the account details
+			//
+			// We kick the user when we update these details, since values such as the username
+			// will be saved in the user's session arrays and we don't want any weird errors.
+			//
+			// By setting authkey to nothing, the user will be kicked.
+			//
+			$mysql_string = "UPDATE `users` SET "
+					."username='". $data["username"] ."', "
+					."realname='". $data["realname"] ."', "
+					."contact_email='". $data["contact_email"] ."', "
+					."authkey='' "
+					."WHERE id='$id'";
 			
-		$_SESSION["notification"]["message"] = "The user's preferences have been updated successfully.";
-		
+			if (!mysql_query($mysql_string))
+			{
+				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+			}
+			else
+			{
+				$_SESSION["notification"]["message"][] = "The user's details have been updated successfully.";
+			}
+		}
 
-		// goto preferences page
-		$_SESSION["error"]["form"] = "edit";
-		header("Location: ../index.php?page=user/user-details.php&id=$userid");
+		// goto view page
+		header("Location: ../index.php?page=user/user-view.php&id=$id");
 		exit(0);
 
-	} // if valid data input
 
+	} // if valid data input
 	
 	
 } // end of "is user logged in?"
@@ -74,6 +179,8 @@ else
 {
 	// user does not have permissions to access this page.
 	error_render_noperms();
+	header("Location: ../index.php?page=message.php");
+	exit(0);
 }
 
 

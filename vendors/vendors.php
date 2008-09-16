@@ -20,7 +20,6 @@ if (user_permissions_get('vendors_view'))
 
 
 		// define all the columns and structure
-		$vendor_list->add_column("standard", "id_vendor", "id");
 		$vendor_list->add_column("standard", "name_vendor", "");
 		$vendor_list->add_column("standard", "name_contact", "");
 		$vendor_list->add_column("standard", "contact_phone", "");
@@ -39,6 +38,26 @@ if (user_permissions_get('vendors_view'))
 
 		// custom SQL stuff
 		$vendor_list->prepare_sql_addfield("id", "");
+
+		// acceptable filter options
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date >= 'value'";
+		$vendor_list->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date <= 'value'";
+		$vendor_list->add_filter($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$vendor_list->add_filter($structure);
+
 
 
 		// heading

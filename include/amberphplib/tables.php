@@ -48,6 +48,7 @@ class table
 		type	- A known type of column
 				standard
 				date		- YYYY-MM-DD format date field
+				timestamp	- UNIX style timestamp field
 				price		- displays a price field correctly
 				hourmins	- input is a number of seconds, display as H:MM
 				
@@ -112,6 +113,10 @@ class table
 	function add_filter($option_array)
 	{
 		log_debug("table", "Executing add_filter(option_array)");
+
+		// we append "filter_" to fieldname, to prevent the chance of the filter field
+		// having the same name as one of the column fields and breaking stuff.
+		$option_array["fieldname"] = "filter_" . $option_array["fieldname"];
 		
 		$this->filter[ $option_array["fieldname"] ] = $option_array;
 	}
@@ -260,6 +265,24 @@ class table
 			}
 		}
 
+		// add groupby rules
+		if ($this->sql_structure["groupby"])
+		{
+			$this->sql_query .= "GROUP BY ";
+			
+			$num_values = count($this->sql_structure["groupby"]);
+	
+			for ($i=0; $i < $num_values; $i++)
+			{
+				$this->sql_query .= $this->sql_structure["groupby"][$i] . " ";
+
+				if ($i < ($num_values - 1))
+				{
+					$this->sql_query .= ", ";
+				}
+			}
+		}
+	
 
 		// add orderby rules
 		if ($this->sql_structure["orderby"])
@@ -298,8 +321,13 @@ class table
 
 		foreach (array_keys($this->filter) as $fieldname)
 		{
-			$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
-			$this->sql_structure["where"][] = $query;
+			// note: we only add the filter if a value has been saved to default value, otherwise
+			// we assume the SQL could break.
+			if ($this->filter[$fieldname]["defaultvalue"])
+			{
+				$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
+				$this->sql_structure["where"][] = $query;
+			}
 		}
 	}
 
@@ -394,65 +422,94 @@ class table
 			2. SESSION - if the user goes away and returns.
 
 		*/
-		if ($_GET["table_display_options"])
-		{
-			log_debug("table", "Loading options form from $_GET");
-			
-			$this->columns		= array();
-			$this->columns_order	= array();
 
-			// load checkboxes
-			foreach (array_keys($this->structure) as $column)
+		if ($_GET["reset"] == "yes")
+		{
+			// reset the option form
+			$_SESSION["form"][$this->tablename] = NULL;
+		}
+		else
+		{
+			
+			if ($_GET["table_display_options"])
 			{
-				$column_setting = security_script_input("/^[a-z]*$/", $_GET[$column]);
+				log_debug("table", "Loading options form from $_GET");
 				
-				if ($column_setting == "on")
+				$this->columns		= array();
+				$this->columns_order	= array();
+
+				// load checkboxes
+				foreach (array_keys($this->structure) as $column)
 				{
-					$this->columns[] = $column;
+					$column_setting = security_script_input("/^[a-z]*$/", $_GET[$column]);
+					
+					if ($column_setting == "on")
+					{
+						$this->columns[] = $column;
+					}
+				}
+
+				// load orderby options
+				$num_cols = count(array_keys($this->structure));
+				for ($i=0; $i < $num_cols; $i++)
+				{
+					if ($_GET["order_$i"])
+					{
+						$this->columns_order[] = security_script_input("/^\S*$/", $_GET["order_$i"]);
+					}
+				}
+
+				// load filterby option
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					// switch to handle the different input types
+					// TODO: find a good way to merge this code and the code in the security_form_input_predefined
+					// into a single function to reduce reuse and complexity.
+					switch ($this->filter[$fieldname]["type"])
+					{
+						case "date":
+							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
+
+							if ($this->filter[$fieldname]["defaultvalue"] == "--")
+								$this->filter[$fieldname]["defaultvalue"] = "";
+						break;
+
+						default:
+							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^\S*$/", $_GET[$fieldname]);
+						break;
+					}
+
+					// just blank input if it's in error
+					if ($this->filter[$fieldname]["defaultvalue"] == "error")
+						$this->filter[$fieldname]["defaultvalue"] = "";
+				}
+
+			}
+			elseif ($_SESSION["form"][$this->tablename]["columns"])
+			{
+				log_debug("table", "Loading options form from session data");
+				
+				// load checkboxes
+				$this->columns		= $_SESSION["form"][$this->tablename]["columns"];
+
+				// load orderby options
+				$this->columns_order	= $_SESSION["form"][$this->tablename]["columns_order"];
+
+				// load filterby options
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->tablename]["filters"][$fieldname];
 				}
 			}
 
-			// load orderby options
-			$num_cols = count(array_keys($this->structure));
-			for ($i=0; $i < $num_cols; $i++)
-			{
-				if ($_GET["order_$i"])
-				{
-					$this->columns_order[] = security_script_input("/^\S*$/", $_GET["order_$i"]);
-				}
-			}
-
-			// load filterby option
-			foreach (array_keys($this->filter) as $fieldname)
-			{
-				$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^\S*$/", $_GET["filter_$fieldname"]);
-			}
-
-		}
-		elseif ($_SESSION["form"][$this->tablename]["columns"])
-		{
-			log_debug("table", "Loading options form from session data");
+			// save options to session data
+			$_SESSION["form"][$this->tablename]["columns"]		= $this->columns;
+			$_SESSION["form"][$this->tablename]["columns_order"]	= $this->columns_order;
 			
-			// load checkboxes
-			$this->columns		= $_SESSION["form"][$this->tablename]["columns"];
-
-			// load orderby options
-			$this->columns_order	= $_SESSION["form"][$this->tablename]["columns_order"];
-
-			// load filterby options
 			foreach (array_keys($this->filter) as $fieldname)
 			{
-				$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->tablename]["filters"][$fieldname];
+				$_SESSION["form"][$this->tablename]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
 			}
-		}
-
-		// save options to session data
-		$_SESSION["form"][$this->tablename]["columns"]		= $this->columns;
-		$_SESSION["form"][$this->tablename]["columns_order"]	= $this->columns_order;
-		
-		foreach (array_keys($this->filter) as $fieldname)
-		{
-			$_SESSION["form"][$this->tablename]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
 		}
 
 		return 1;
@@ -515,6 +572,17 @@ class table
 	}
 
 
+	/*
+		prepare_sql_addgroupby($fieldname)
+	
+		Add a field to the groupby statement
+	*/
+	function prepare_sql_addgroupby($sqlquery)
+	{
+		log_debug("table", "Executing prepare_sql_addgroupby($sqlquery)");
+
+		$this->sql_structure["groupby"][] = $sqlquery;
+	}
 
 
 
@@ -568,6 +636,17 @@ class table
 				else
 				{
 					$result = $this->data[$row][$column];
+				}
+			break;
+
+			case "timestamp":
+				if ($this->data[$row][$column])
+				{
+					$result = date("Y-m-d H:i:s", $this->data[$row][$column]);
+				}
+				else
+				{
+					$result = "---";
 				}
 			break;
 
@@ -784,8 +863,12 @@ class table
 			Submit Row
 		*/
 		print "<tr>";
-		print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+		print "<td colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
 	
+			print "<table>";
+			print "<tr><td>";
+			
+			// submit button	
 			$structure = NULL;
 			$structure["fieldname"]		= "submit";
 			$structure["type"]		= "submit";
@@ -793,13 +876,79 @@ class table
 			$form->add_input($structure);
 
 			$form->render_field("submit");
+
+			print "</form>";
+			print "</td>";
+
+
+			print "<td>";
+
+
+			/*
+				Include a reset button - this reset button is an independent form
+				which passes any required fixed options and also a reset option back to the page.
+
+				The load_options_form function then detects this reset value and erases the session
+				data for the options belonging to this table, resetting the options form to the original
+				defaults.
+			*/
+
+			// start the form
+			print "<form method=\"get\" class=\"form_standard\">";
+			
+			$form = New form_input;
+			$form->formname = "reset";
+			$form->language = $this->language;
+
+			// include page name
+			$structure = NULL;
+			$structure["fieldname"] 	= "page";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $_GET["page"];
+			$form->add_input($structure);
+			$form->render_field("page");
+
+			// include any other fixed options
+			foreach (array_keys($this->option) as $fieldname)
+			{
+				$structure = NULL;
+				$structure["fieldname"]		= $fieldname;
+				$structure["type"]		= "hidden";
+				$structure["defaultvalue"]	= $this->option[$fieldname];
+				$form->add_input($structure);
+				$form->render_field($fieldname);
+			}
+
+
+			// flag as the reset form
+			$structure = NULL;
+			$structure["fieldname"] 	= "reset";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= "yes";
+			$form->add_input($structure);
+			$form->render_field("reset");
+		
+			$structure = NULL;
+			$structure["fieldname"]		= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Reset Options";
+			$form->add_input($structure);
+
+			$form->render_field("submit");
+
+			
+			print "</form></td>";
+			print "</tr></table>";
+
+				
 		print "</td>";
+		print "</tr>";
+
+
 
 
 		// end of structure table
-		print "</tr></table><br><br>";
-		
-		print "</form>";
+		print "</table><br><br>";
 	}
 
 
@@ -878,14 +1027,25 @@ class table
 			// optional: links column
 			if ($this->links)
 			{
-				print "<td>";
+				print "<td align=\"right\">";
 
 				foreach (array_keys($this->links) as $link)
 				{
 					$linkname = language_translate_string($this->language, $link);
 
 					// link to page
-					print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
+					// There are two ways:
+					// 1. (default) Link to index.php
+					// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+					if ($this->links[$link]["options"]["full_link"] == "yes")
+					{
+						print "<a href=\"". $this->links[$link]["page"] ."?libfiller=n";
+					}
+					else
+					{
+						print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
+					}
 
 					// add each option
 					foreach (array_keys($this->links[$link]["options"]) as $getfield)

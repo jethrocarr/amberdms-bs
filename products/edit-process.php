@@ -88,11 +88,13 @@ if (user_permissions_get('products_write'))
 	{	
 		if ($mode == "edit")
 		{
+			$_SESSION["error"]["form"]["product_view"] = "failed";
 			header("Location: ../index.php?page=products/view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
+			$_SESSION["error"]["form"]["product_add"] = "failed";
 			header("Location: ../index.php?page=products/add.php");
 			exit(0);
 		}

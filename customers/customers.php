@@ -19,7 +19,6 @@ if (user_permissions_get('customers_view'))
 		$customer_list->sql_table	= "customers";
 
 		// define all the columns and structure
-		$customer_list->add_column("standard", "id_customer", "id");
 		$customer_list->add_column("standard", "name_customer", "");
 		$customer_list->add_column("standard", "name_contact", "");
 		$customer_list->add_column("standard", "contact_phone", "");
@@ -38,6 +37,26 @@ if (user_permissions_get('customers_view'))
 
 		// custom SQL stuff
 		$customer_list->prepare_sql_addfield("id", "");
+
+		// acceptable filter options
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date >= 'value'";
+		$customer_list->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date <= 'value'";
+		$customer_list->add_filter($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$customer_list->add_filter($structure);
+
 
 
 		// heading

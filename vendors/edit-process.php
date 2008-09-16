@@ -88,11 +88,13 @@ if (user_permissions_get('vendors_write'))
 	{	
 		if ($mode == "edit")
 		{
+			$_SESSION["error"]["form"]["vendor_view"] = "failed";
 			header("Location: ../index.php?page=vendors/view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
+			$_SESSION["error"]["form"]["vendor_add"] = "failed";
 			header("Location: ../index.php?page=vendors/add.php");
 			exit(0);
 		}

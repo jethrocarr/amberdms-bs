@@ -19,7 +19,6 @@ if (user_permissions_get('projects_view'))
 		$project_list->sql_table	= "projects";
 
 		// define all the columns and structure
-		$project_list->add_column("standard", "id_project", "id");
 		$project_list->add_column("standard", "code_project", "");
 		$project_list->add_column("standard", "name_project", "");
 		$project_list->add_column("date", "date_start", "");
@@ -31,6 +30,30 @@ if (user_permissions_get('projects_view'))
 
 		// custom SQL stuff
 		$project_list->prepare_sql_addfield("id", "");
+
+		// filter options
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date >= 'value'";
+		$project_list->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date <= 'value'";
+		$project_list->add_filter($structure);
+			
+		$structure = NULL;
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "code_project LIKE '%value%' OR name_project LIKE '%value%'";
+		$project_list->add_filter($structure);
+			
+
+
+
+
 
 
 		// heading

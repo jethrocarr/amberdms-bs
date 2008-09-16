@@ -19,7 +19,6 @@ if (user_permissions_get('staff_view'))
 		$staff_list->sql_table	= "staff";
 
 		// define all the columns and structure
-		$staff_list->add_column("standard", "id_staff", "id");
 		$staff_list->add_column("standard", "staff_code", "staff_code");
 		$staff_list->add_column("standard", "name_staff", "name_staff");
 		$staff_list->add_column("standard", "staff_position", "staff_position");
@@ -36,6 +35,27 @@ if (user_permissions_get('staff_view'))
 
 		// custom SQL stuff
 		$staff_list->prepare_sql_addfield("id", "");
+
+
+		// acceptable filter options
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date >= 'value'";
+		$staff_list->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date <= 'value'";
+		$staff_list->add_filter($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "searchbox";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "staff_code LIKE '%value%' OR name_staff LIKE '%value%' OR staff_position LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$staff_list->add_filter($structure);
+
 
 
 		// heading

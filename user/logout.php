@@ -18,7 +18,7 @@ function page_render()
 
 		/////////////////////////
 	
-		print "<h2>USER LOGOUT:</h2>";
+		print "<h3>USER LOGOUT:</h3>";
 		print "<p>Click below to logout. Remember: You must never leave a logged in session unattended!</p>";
 	
 		print "<form method=\"POST\" action=\"user/logout-process.php\">

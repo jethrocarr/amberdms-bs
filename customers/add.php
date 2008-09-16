@@ -24,7 +24,7 @@ if (user_permissions_get('customers_write'))
 			Define form structure
 		*/
 		$form = New form_input;
-		$form->formname = "customer_view";
+		$form->formname = "customer_add";
 		$form->language = $_SESSION["user"]["lang"];
 
 		$form->action = "customers/edit-process.php";
@@ -159,6 +159,9 @@ if (user_permissions_get('customers_write'))
 		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$form->subforms["submit"]		= array("submit");
 		
+		// load any data returned due to errors
+		$form->load_data_error();
+
 		// display the form
 		$form->render_form();
 

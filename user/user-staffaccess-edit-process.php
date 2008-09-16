@@ -1,10 +1,14 @@
 <?php
 /*
-	user/user-permissions-process.php
+	user/user-staffaccess-edit-process.php
 
 	Access: admin users only
 
-	Updates a user account's permissions.
+	Updates access permissions to an employee for a specific user.
+
+	TODO: This code is very simular to the code in the user/user-permissions-process function. It might
+	be worthwhile looking at creating functions/classes to generalise handling of these sorts of permissions
+	DB structures.
 */
 
 
@@ -17,11 +21,13 @@ if (user_permissions_get('admin'))
 {
 	////// INPUT PROCESSING ////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_user", 1, "");
+	$id		= security_form_input_predefined("int", "id_user", 1, "");
+	$staffid	= security_form_input_predefined("int", "id_staff", 1, "");
+	
 	
 	// convert all the permissions input
 	$permissions = array();
-	$mysql_perms_string	= "SELECT * FROM `permissions` ORDER BY value";
+	$mysql_perms_string	= "SELECT * FROM `permissions_staff` ORDER BY value";
 	$mysql_perms_result	= mysql_query($mysql_perms_string);
 
 	while ($mysql_perms_data = mysql_fetch_array($mysql_perms_result))
@@ -44,6 +50,15 @@ if (user_permissions_get('admin'))
 	{
 		$_SESSION["error"]["message"][] = "The user you have attempted to edit - $id - does not exist in this system.";
 	}
+	
+	// make sure the staff member exists
+	$mysql_string		= "SELECT id FROM `staff` WHERE id='$staffid'";
+	$mysql_result		= mysql_query($mysql_string);
+	$mysql_num_rows		= mysql_num_rows($mysql_result);
+	if (!$mysql_num_rows)
+	{
+		$_SESSION["error"]["message"][] = "The staff member you have attempted to set permission for - $id - does not exist in this system.";
+	}
 
 
 
@@ -52,8 +67,8 @@ if (user_permissions_get('admin'))
 
 	if ($_SESSION["error"]["message"])
 	{
-		$_SESSION["error"]["form"]["user_permissions"] = "failed";
-		header("Location: ../index.php?page=user/user-permissions.php");
+		$_SESSION["error"]["form"]["user_permissions_staff"] = "failed";
+		header("Location: ../index.php?page=user/user-staffaccess-edit.php&id=$id&staffid=$staffid");
 		exit(0);
 	}
 	else
@@ -72,7 +87,7 @@ if (user_permissions_get('admin'))
 		while ($mysql_perms_data = mysql_fetch_array($mysql_perms_result))
 		{
 			// check if any current settings exist
-			$mysql_user_string	= "SELECT id FROM `users_permissions` WHERE userid='$id' AND permid='" . $mysql_perms_data["id"] . "'";
+			$mysql_user_string	= "SELECT id FROM `users_permissions_staff` WHERE userid='$id' AND staffid='$staffid' AND permid='" . $mysql_perms_data["id"] . "'";
 			$mysql_user_result	= mysql_query($mysql_user_string);
 			$mysql_user_num_rows	= mysql_num_rows($mysql_user_result);
 
@@ -83,7 +98,7 @@ if (user_permissions_get('admin'))
 				// if the new setting is "off", delete the current setting.
 				if ($permissions[ $mysql_perms_data["value"] ] != "on")
 				{
-					$mysql_string	= "DELETE FROM `users_permissions` WHERE userid='$id' AND permid='" . $mysql_perms_data["id"] . "'";
+					$mysql_string	= "DELETE FROM `users_permissions_staff` WHERE userid='$id' AND staffid='$staffid' AND permid='" . $mysql_perms_data["id"] . "'";
 					$mysql_result = mysql_query($mysql_string);
 					if (!$mysql_result)
 					{
@@ -101,7 +116,7 @@ if (user_permissions_get('admin'))
 				// if the new setting is "on", insert a new setting
 				if ($permissions[ $mysql_perms_data["value"] ] == "on")
 				{
-					$mysql_string	= "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '" . $mysql_perms_data["id"] . "')";
+					$mysql_string	= "INSERT INTO `users_permissions_staff` (userid, staffid, permid) VALUES ('$id', '$staffid', '" . $mysql_perms_data["id"] . "')";
 					$mysql_result = mysql_query($mysql_string);
 					if (!$mysql_result)
 					{
@@ -116,10 +131,10 @@ if (user_permissions_get('admin'))
 		} // end of while
 
 		// done
-		$_SESSION["notification"]["message"][] = "User permissions have been updated, and are active immediately.";
+		$_SESSION["notification"]["message"][] = "User staff access permissions have been updated, and are active immediately.";
 
 		// goto view page
-		header("Location: ../index.php?page=user/user-permissions.php&id=$id");
+		header("Location: ../index.php?page=user/user-staffaccess.php&id=$id");
 		exit(0);
 
 

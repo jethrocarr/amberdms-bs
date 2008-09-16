@@ -14,8 +14,8 @@ function page_render()
 	// returned input from processing form
 	if ($_SESSION["error"]["message"])
 	{
-		security_script_error_input("/^[A-Za-z0-9.]*$/","username_amberdms_bs");
-		security_script_error_input("/^\S*$/", "password_amberdms_bs");
+		security_script_input("/^[A-Za-z0-9.]*$/","username_amberdms_bs");
+		security_script_input("/^\S*$/", "password_amberdms_bs");
 	}
 
 

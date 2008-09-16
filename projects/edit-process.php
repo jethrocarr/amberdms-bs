@@ -71,11 +71,13 @@ if (user_permissions_get('projects_write'))
 	{	
 		if ($mode == "edit")
 		{
+			$_SESSION["error"]["form"]["project_view"] = "failed";
 			header("Location: ../index.php?page=projects/view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
+			$_SESSION["error"]["form"]["project_add"] = "failed";
 			header("Location: ../index.php?page=projects/add.php");
 			exit(0);
 		}

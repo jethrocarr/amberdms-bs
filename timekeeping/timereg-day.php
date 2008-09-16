@@ -111,6 +111,7 @@ if (user_permissions_get('timekeeping'))
 		*/
 	
 		print "<a name=\"form\"></a><br><br>";
+		print "<table width=\"100%\" class=\"table_highlight\"><tr><td>";
 		
 		if ($editid)
 		{
@@ -161,6 +162,12 @@ if (user_permissions_get('timekeeping'))
 		$form->add_input($structure);
 
 		// get data from DB and create project/phase dropdown
+		//
+		// Note: this hasn't yet been reduced to use the form_helper_prepare_dropdownfromdb function
+		// because of the fact that it needs to merge two different fields to make the drop down label.
+		//
+		// This a pretty rare occurance, so it's likely this will be left as it is.
+		//
 		$structure = NULL;
 		$structure["fieldname"] 	= "phaseid";
 		$structure["type"]		= "dropdown";
@@ -220,6 +227,11 @@ if (user_permissions_get('timekeeping'))
 			// fetch the form data
 			$form->sql_query = "SELECT * FROM `timereg` WHERE id='$editid' LIMIT 1";
 			$form->load_data();
+		}
+		else
+		{
+			// load any data returned due to errors
+			$form->load_data_error();
 		}
 
 		// display the form
@@ -301,7 +313,7 @@ if (user_permissions_get('timekeeping'))
 			
 		}
 
-		
+		print "</td></tr></table>";
 
 	} // end page_render
 

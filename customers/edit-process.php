@@ -88,11 +88,13 @@ if (user_permissions_get('customers_write'))
 	{	
 		if ($mode == "edit")
 		{
+			$_SESSION["error"]["form"]["customer_view"] = "failed";
 			header("Location: ../index.php?page=customers/view.php&id=$id");
 			exit(0);
 		}
 		else
 		{
+			$_SESSION["error"]["form"]["customer_add"] = "failed";
 			header("Location: ../index.php?page=customers/add.php");
 			exit(0);
 		}

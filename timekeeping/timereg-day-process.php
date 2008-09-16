@@ -89,11 +89,13 @@ if (user_permissions_get('timekeeping'))
 	{	
 		if ($mode == "edit")
 		{
+			$_SESSION["error"]["form"]["timereg_day"] = "failed";
 			header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] ."&editid=$id");
 			exit(0);
 		}
 		else
 		{
+			$_SESSION["error"]["form"]["timereg_day"] = "failed";
 			header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] . "");
 			exit(0);
 		}
