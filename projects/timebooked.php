@@ -61,7 +61,6 @@ if (user_permissions_get('projects_view'))
 
 			$timereg_table->language	= $_SESSION["user"]["lang"];
 			$timereg_table->tablename	= "timereg_table";
-			$timereg_table->sql_table	= "timereg";
 
 			// define all the columns and structure
 			$timereg_table->add_column("date", "date", "timereg.date");
@@ -74,6 +73,13 @@ if (user_permissions_get('projects_view'))
 			$timereg_table->columns		= array("date", "name_phase", "name_staff", "description", "time_booked");
 			$timereg_table->columns_order	= array("date", "name_phase");
 
+			// define SQL structure
+			$timereg_table->sql_obj->prepare_sql_settable("timereg");
+			$timereg_table->sql_obj->prepare_sql_addfield("id", "timereg.id");
+			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
+			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
+			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
+			$timereg_table->sql_obj->prepare_sql_addwhere("projects.id = '$projectid'");
 			
 			
 			/// Filtering/Display Options
@@ -121,13 +127,7 @@ if (user_permissions_get('projects_view'))
 			
 
 
-			/// Generate & execute SQL query
-			$timereg_table->prepare_sql_addfield("id", "timereg.id");
-			$timereg_table->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
-			$timereg_table->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
-			$timereg_table->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
-			$timereg_table->prepare_sql_addwhere("projects.id = '$projectid'");
-			
+			// generate & execute SQL query			
 			$timereg_table->generate_sql();
 			$timereg_table->load_data_sql();
 

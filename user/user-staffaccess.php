@@ -65,7 +65,6 @@ if (user_permissions_get('admin'))
 
 			$userstaff_list->language	= $_SESSION["user"]["lang"];
 			$userstaff_list->tablename	= "userstaff_list";
-			$userstaff_list->sql_table	= "users_permissions_staff";
 
 			// define all the columns and structure
 			$userstaff_list->add_column("standard", "staff_code", "staff.staff_code");
@@ -77,13 +76,12 @@ if (user_permissions_get('admin'))
 			$userstaff_list->columns_order	= array("name_staff");
 
 
-			// additional SQL query options
-			$userstaff_list->prepare_sql_addfield("staffid", "staff.id");
-			$userstaff_list->prepare_sql_addwhere("userid = '$id'");
-
-			$userstaff_list->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = users_permissions_staff.staffid");
-			$userstaff_list->prepare_sql_addgroupby("users_permissions_staff.staffid");
-			
+			// define SQL structure
+			$userstaff_list->sql_obj->prepare_sql_settable("users_permissions_staff");
+			$userstaff_list->sql_obj->prepare_sql_addfield("staffid", "staff.id");
+			$userstaff_list->sql_obj->prepare_sql_addwhere("userid = '$id'");
+			$userstaff_list->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = users_permissions_staff.staffid");
+			$userstaff_list->sql_obj->prepare_sql_addgroupby("users_permissions_staff.staffid");
 
 			// run SQL query
 			$userstaff_list->generate_sql();

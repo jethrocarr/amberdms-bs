@@ -16,7 +16,6 @@ if (user_permissions_get('customers_view'))
 
 		$customer_list->language	= $_SESSION["user"]["lang"];
 		$customer_list->tablename	= "customer_list";
-		$customer_list->sql_table	= "customers";
 
 		// define all the columns and structure
 		$customer_list->add_column("standard", "name_customer", "");
@@ -35,8 +34,9 @@ if (user_permissions_get('customers_view'))
 		$customer_list->columns		= array("name_customer", "name_contact", "contact_phone", "contact_email");
 		$customer_list->columns_order	= array("name_customer");
 
-		// custom SQL stuff
-		$customer_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$customer_list->sql_obj->prepare_sql_settable("customers");
+		$customer_list->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure = NULL;

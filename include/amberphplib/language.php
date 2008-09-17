@@ -16,52 +16,102 @@
 
 	This function translate all the labels specified in the $label_array
 	and returns an associative array with the results.
+
+	The translations are stored in a SQL database. This means that every time
+	we want to perform a translation, we would have to execute a SQL query!
+
+	A lot of the translations are often for the same thing on one page - so to
+	reduce the number of queries, this function will cache it's in a $_SESSION
+	variable.
+
+	This data will remain caches until the PHP program finishes - so the cache will
+	not survive page loads, but will cache for all lookups at each load.
+	
 */
 function language_translate($language, $label_array)
 {
+	log_debug("language", "Executing language_translate($language, label_array)");
+	
 	if (!$language || !$label_array)
 		print "Warning: Invalid input recieved for function language_translate<br>";
 	
-	// we can't be 100% sure that every field will have a translation
-	// avaliable for it, so fill in the array with a fall back
+
+	// store labels to fetch from DB in here
+	$label_fetch_array = array();
+
+	// run through the labels - see what ones we have cached, and what ones we need to query
 	foreach ($label_array as $label)
 	{
-		$result[$label] = $label;
-	}
-
-	// prepare the SQL
-	$mysql_string = "SELECT label, translation FROM `language` WHERE language='". $language ."' AND (";
-
-	// add all the labels to the SQL query.
-	$count = 0;
-	foreach ($label_array as $label)
-	{
-		$count++;
-			
-		if ($count < count($label_array))
+		if ($_SESSION["lang_cache"][$label])
 		{
-			$mysql_string .= "label='$label' OR ";
+			$result[$label] = $_SESSION["lang_cache"][$label];
 		}
 		else
 		{
-			$mysql_string .= "label='$label'";
+			$label_fetch_array[] = $label;
 		}
 	}
 
-	$mysql_string .= ")";
 
-
-	// query
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-	if ($mysql_num_rows)
+	if ($label_fetch_array)
 	{
-		while ($mysql_data = mysql_fetch_array($mysql_result))
+		// there are some new labels for us to translate
+		// we get the information from the database and then save it to the cache
+		// to prevent future lookups.
+
+		// prepare the SQL
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='". $language ."' AND (";
+
+		// add all the labels to the SQL query.
+		$count = 0;
+		foreach ($label_fetch_array as $label)
 		{
-			$result[ $mysql_data["label"] ] = $mysql_data["translation"];
+			$count++;
+				
+			if ($count < count($label_fetch_array))
+			{
+				$sql_obj->string .= "label='$label' OR ";
+			}
+			else
+			{
+				$sql_obj->string .= "label='$label'";
+			}
+		}
+
+		$sql_obj->string .= ")";
+
+
+		// query
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+			foreach ($sql_obj->data as $data)
+			{
+				$result[ $data["label"] ]			= $data["translation"];
+				$_SESSION["lang_cache"][ $data["label"] ]	= $data["translation"];
+			}
+		}
+		
+	} // end if lookup required
+
+
+	// if no value was returned for the particular label we looked up, it means
+	// that no translation exists.
+	//
+	// In this case, just return the label as the translation and also add it to
+	// the cache to prevent extra lookups.
+	foreach ($label_array as $label)
+	{
+		if (!$result[$label])
+		{
+			$result[$label]			= $label;
+			$_SESSION["lang_cache"][$label]	= $label;
 		}
 	}
+
 
 	// return the results
 	return $result;
@@ -76,6 +126,8 @@ function language_translate($language, $label_array)
 */
 function language_translate_string($language, $label)
 {
+	log_debug("language", "Executing language_translate_string($language, $label)");
+
 	$label_array = array($label);
 
 	$result = language_translate($language, $label_array);

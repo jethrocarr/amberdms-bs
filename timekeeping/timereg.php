@@ -69,18 +69,17 @@ if (user_permissions_get('timekeeping'))
 		*/
 
 		// make sure the user actually has access to any employees
-		$mysql_string	= "SELECT id FROM `users_permissions_staff` WHERE userid='". $_SESSION["user"]["id"] ."'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `users_permissions_staff` WHERE userid='". $_SESSION["user"]["id"] ."'";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
 			// TODO: have nicer error message here? perhaps link to documentation?
 			print "<p><b>Sorry, you are currently unable to book time - you need your administrator to configure you with staff access rights.</b></p>";
 		}
 		else
 		{
-
 			/// PAGE HEADING
 
 			print "<h3>TIME REGISTRATION</h3><br><br>";
@@ -139,7 +138,7 @@ if (user_permissions_get('timekeeping'))
 
 
 			// employee selection box
-			$mysql_string = "SELECT "
+			$sql_string = "SELECT "
 					."staff.id as id, "
 					."staff.name_staff as label "
 					."FROM users_permissions_staff "
@@ -148,7 +147,7 @@ if (user_permissions_get('timekeeping'))
 					."GROUP BY users_permissions_staff.staffid "
 					."ORDER BY staff.name_staff";
 					
-			$structure = form_helper_prepare_dropdownfromdb("employeeid", $mysql_string);
+			$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_string);
 
 
 			// if there is only one employee, automatically select it if
@@ -156,7 +155,7 @@ if (user_permissions_get('timekeeping'))
 			if (!$employeeid && count($structure["values"]) == 1)
 			{
 				$sql = New sql_query;
-				$sql->string = $mysql_string;
+				$sql->string = $sql_string;
 				$sql->execute();
 				$sql->fetch_array();
 				
@@ -180,13 +179,6 @@ if (user_permissions_get('timekeeping'))
 			$structure["defaultvalue"]	= $editid;
 			$form->add_input($structure);
 			
-/*			$structure = NULL;
-			$structure["fieldname"]		= "date";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $date;
-			$form->add_input($structure);
-*/
-
 			$structure = NULL;
 			$structure["fieldname"]		= "weekofyear";
 			$structure["type"]		= "hidden";
@@ -261,7 +253,6 @@ if (user_permissions_get('timekeeping'))
 
 				$timereg_list->language	= $_SESSION["user"]["lang"];
 				$timereg_list->tablename	= "timereg_list";
-				$timereg_list->sql_table	= "timeregs";
 
 				// define all the columns and structure
 				$timereg_list->add_column("standard", "projectandphase", "");
@@ -305,6 +296,9 @@ if (user_permissions_get('timekeeping'))
 				$timereg_list->total_rows	= array("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
 
 
+				// define SQL structure
+				$timereg_list->sql_obj->prepare_sql_settable("timeregs");
+
 
 				// map dates to day of the week
 				$days[ $date_selected_daysofweek[0] ] = "monday";
@@ -330,32 +324,30 @@ if (user_permissions_get('timekeeping'))
 			
 				// 1. Fetch each phase ID for the day
 
-				// fetch the data
-				$mysql_string = "SELECT "
+				// create the query
+				$sql_obj = New sql_query;
+				$sql_obj->string = "SELECT "
 						."phaseid "
 						."FROM `timereg` "
 						."WHERE employeeid='$employeeid' "
 						."AND date >= '$date_selected_start' "
 						."AND date <= '$date_selected_end'";
 
-				log_debug("timereg", "Fetching all phase IDs for bookings in the week");
-				log_debug("timereg", "SQL: $mysql_string");
-						
-				if (!$mysql_result = mysql_query($mysql_string))
-					log_debug("timereg", "FATAL SQL: ". mysql_error());
+				// fetch the data
+				log_debug("timereg", "Fetching all phase IDs for bookings in the week");		
+				$sql_obj->execute();
 				
 
 				// process any results
-				$mysql_num_rows = mysql_num_rows($mysql_result);
-				
-				if ($mysql_num_rows)
+				if ($sql_obj->num_rows())
 				{
-					while ($mysql_data = mysql_fetch_array($mysql_result))
+					$sql_obj->fetch_array();
+					foreach ($sql_obj->data as $data)
 					{
 						// create an array of all the phase ids, without any duplicates
-						if (!in_array($mysql_data["phaseid"], $phasearray))
+						if (!in_array($data["phaseid"], $phasearray))
 						{
-							$phasearray[] = $mysql_data["phaseid"];
+							$phasearray[] = $data["phaseid"];
 						}
 					}
 				}
@@ -373,33 +365,34 @@ if (user_permissions_get('timekeeping'))
 					
 					// 2. Fetch the project and phase name values
 					
-					// fetch the data
-					$mysql_string = "SELECT "
+					// create the query
+					$sql_obj = New sql_query;
+					$sql_obj->string = "SELECT "
 							."project_phases.name_phase, "
 							."projects.name_project "
 							."FROM project_phases "
 							."LEFT JOIN projects ON project_phases.projectid = projects.id "
 							."WHERE project_phases.id='$phaseid'";
-					
+
+					// fetch the data
 					log_debug("timereg", "Fetching project and phase name values for phase $phaseid");
-					log_debug("timereg", "SQL: $mysql_string");
-
-					if (!$mysql_result = mysql_query($mysql_string))
-						log_debug("timereg", "FATAL SQL: ". mysql_error());
-
+					$sql_obj->execute();
+				
 
 					// process the name data
-					while ($mysql_data = mysql_fetch_array($mysql_result))
+					$sql_obj->fetch_array();
+					foreach ($sql_obj->data as $data)
 					{
-						$tmparray["projectandphase"] = $mysql_data["name_project"] ." - ". $mysql_data["name_phase"];
+						$tmparray["projectandphase"] = $data["name_project"] ." - ". $data["name_phase"];
 					}
 
 
 
 					// 3. Total up all time spent on that project/phase for the day
 
-					// fetch the data
-					$mysql_string = "SELECT "
+					// create the query
+					$sql_obj = New sql_query;
+					$sql_obj->string = "SELECT "
 							."date, "
 							."time_booked "
 							."FROM timereg "
@@ -407,16 +400,17 @@ if (user_permissions_get('timekeeping'))
 							."AND date >= '$date_selected_start' "
 							."AND date <= '$date_selected_end' "
 							."AND phaseid='$phaseid'";
-							
+
+					// fetch the data
 					log_debug("timereg", "Fetching all hours for phase $phaseid");
-					log_debug("timereg", "SQL: $mysql_string");
+					$sql_obj->execute();
 
-					if (!$mysql_result = mysql_query($mysql_string))
-						log_debug("timereg", "FATAL SQL: ". mysql_error());
 
-					while ($mysql_data = mysql_fetch_array($mysql_result))
+					// process the data
+					$sql_obj->fetch_array();
+					foreach ($sql_obj->data as $data)
 					{
-						$tmparray[ $days[ $mysql_data["date"] ] ] += $mysql_data["time_booked"];
+						$tmparray[ $days[ $data["date"] ] ] += $data["time_booked"];
 					}
 
 

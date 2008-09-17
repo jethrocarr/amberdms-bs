@@ -16,7 +16,6 @@ if (user_permissions_get('vendors_view'))
 
 		$vendor_list->language	= $_SESSION["user"]["lang"];
 		$vendor_list->tablename	= "vendor_list";
-		$vendor_list->sql_table	= "vendors";
 
 
 		// define all the columns and structure
@@ -36,8 +35,9 @@ if (user_permissions_get('vendors_view'))
 		$vendor_list->columns		= array("name_vendor", "name_contact", "contact_phone", "contact_email");
 		$vendor_list->columns_order	= array("name_vendor");
 
-		// custom SQL stuff
-		$vendor_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$vendor_list->sql_obj->prepare_sql_settable("vendors");
+		$vendor_list->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure = NULL;

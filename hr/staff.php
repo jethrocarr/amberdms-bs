@@ -16,7 +16,6 @@ if (user_permissions_get('staff_view'))
 
 		$staff_list->language	= $_SESSION["user"]["lang"];
 		$staff_list->tablename	= "staff_list";
-		$staff_list->sql_table	= "staff";
 
 		// define all the columns and structure
 		$staff_list->add_column("standard", "staff_code", "staff_code");
@@ -28,13 +27,13 @@ if (user_permissions_get('staff_view'))
 		$staff_list->add_column("date", "date_start", "date_start");
 		$staff_list->add_column("date", "date_end", "date_end");
 
-
 		// defaults
 		$staff_list->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
 		$staff_list->columns_order	= array("name_staff");
 
-		// custom SQL stuff
-		$staff_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$staff_list->sql_obj->prepare_sql_settable("staff");
+		$staff_list->sql_obj->prepare_sql_addfield("id", "");
 
 
 		// acceptable filter options

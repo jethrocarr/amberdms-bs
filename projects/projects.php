@@ -16,7 +16,6 @@ if (user_permissions_get('projects_view'))
 
 		$project_list->language	= $_SESSION["user"]["lang"];
 		$project_list->tablename	= "project_list";
-		$project_list->sql_table	= "projects";
 
 		// define all the columns and structure
 		$project_list->add_column("standard", "code_project", "");
@@ -28,8 +27,9 @@ if (user_permissions_get('projects_view'))
 		$project_list->columns		= array("code_project", "name_project", "date_start", "date_end");
 		$project_list->columns_order	= array("name_project");
 
-		// custom SQL stuff
-		$project_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$project_list->sql_obj->prepare_sql_settable("projects");
+		$project_list->sql_obj->prepare_sql_addfield("id", "");
 
 		// filter options
 		$structure = NULL;

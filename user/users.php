@@ -20,7 +20,6 @@ if (user_permissions_get("admin"))
 
 		$user_list->language	= $_SESSION["user"]["lang"];
 		$user_list->tablename	= "user_list";
-		$user_list->sql_table	= "users";
 
 		// define all the columns and structure
 		$user_list->add_column("standard", "username", "");
@@ -33,8 +32,9 @@ if (user_permissions_get("admin"))
 		$user_list->columns		= array("username", "realname", "contact_email", "lastlogin_time");
 		$user_list->columns_order	= array("username");
 
-		// custom SQL stuff
-		$user_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$user_list->sql_obj->prepare_sql_settable("users");
+		$user_list->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure = NULL;

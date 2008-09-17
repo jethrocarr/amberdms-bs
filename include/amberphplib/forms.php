@@ -107,33 +107,36 @@ class form_input
 	function load_data_sql()
 	{
 		log_debug("form", "Executing load_data_sql()");
-		log_debug("form", "SQL: ". $this->sql_query); 
-		
-		// execute the SQL query
-		$mysql_result		= mysql_query($this->sql_query);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
-		$this->data_num_rows	= $mysql_num_rows;
 
-		if (!$mysql_num_rows)
+		// execute the SQL query
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= $this->sql_query;
+		$sql_obj->execute();
+		
+		$this->data_num_rows = $sql_obj->num_rows();
+		if (!$this->data_num_rows)
 		{
 			return 0;
 		}
 		else
 		{
-			while ($mysql_data = mysql_fetch_array($mysql_result))
+			$sql_obj->fetch_array();
+			
+			foreach ($sql_obj->data as $data)
 			{
 				// insert the data into the structure value as the default value
 				foreach (array_keys($this->structure) as $fieldname)
 				{
-					if ($mysql_data[$fieldname])
+					if ($data[$fieldname])
 					{
-						$this->structure[$fieldname]["defaultvalue"] = $mysql_data[$fieldname];
+						$this->structure[$fieldname]["defaultvalue"] = $data[$fieldname];
 					}
 				}
 			}
 
-			return $mysql_num_rows;
+			return $this->data_num_rows;
 		}
+
 	}
 
 
@@ -507,18 +510,22 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 	$structure["fieldname"] = $fieldname;
 	$structure["type"]	= "dropdown";
 
-	if (!$mysql_result = mysql_query($sqlquery))
-		log_debug("timereg", "FATAL SQL: ". mysql_error());
-			
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-	while ($mysql_data = mysql_fetch_array($mysql_result))
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= $sqlquery;
+	
+	$sql_obj->execute();
+	
+	if ($sql_obj->num_rows())
 	{
-		// only add an option if there is an id and label for it
-		if ($mysql_data["id"] && $mysql_data["label"])
+		$sql_obj->fetch_array();
+		foreach ($sql_obj->data as $data)
 		{
-			$structure["values"][]					= $mysql_data["id"];
-			$structure["translations"][ $mysql_data["id"] ]		= $mysql_data["label"];
+			// only add an option if there is an id and label for it
+			if ($data["id"] && $data["label"])
+			{
+				$structure["values"][]					= $data["id"];
+				$structure["translations"][ $data["id"] ]		= $data["label"];
+			}
 		}
 	}
 

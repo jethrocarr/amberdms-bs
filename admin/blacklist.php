@@ -93,7 +93,6 @@ if (user_permissions_get("admin"))
 
 			$blacklist_list->language	= $_SESSION["user"]["lang"];
 			$blacklist_list->tablename	= "blacklist_list";
-			$blacklist_list->sql_table	= "users_blacklist";
 
 			// define all the columns and structure
 			$blacklist_list->add_column("timestamp", "time", "");
@@ -104,8 +103,9 @@ if (user_permissions_get("admin"))
 			$blacklist_list->columns	= array("time", "ipaddress", "failedcount");
 			$blacklist_list->columns_order	= array("time");
 
-			// custom SQL stuff
-			$blacklist_list->prepare_sql_addfield("id", "");
+			// define SQL structure
+			$blacklist_list->sql_obj->prepare_sql_settable("users_blacklist");
+			$blacklist_list->sql_obj->prepare_sql_addfield("id", "");
 
 
 

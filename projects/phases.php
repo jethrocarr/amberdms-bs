@@ -58,7 +58,6 @@ if (user_permissions_get('projects_view'))
 
 			$phase_list->language	= $_SESSION["user"]["lang"];
 			$phase_list->tablename	= "phase_list";
-			$phase_list->sql_table	= "project_phases";
 
 			// define all the columns and structure
 			$phase_list->add_column("standard", "name_phase", "");
@@ -68,10 +67,10 @@ if (user_permissions_get('projects_view'))
 			$phase_list->columns		= array("name_phase", "description");
 			$phase_list->columns_order	= array("name_phase");
 
-
-			// additional SQL query options
-			$phase_list->prepare_sql_addfield("id", "");
-			$phase_list->prepare_sql_addwhere("projectid = '$projectid'");
+			// define SQL structure
+			$phase_list->sql_obj->prepare_sql_settable("project_phases");
+			$phase_list->sql_obj->prepare_sql_addfield("id", "");
+			$phase_list->sql_obj->prepare_sql_addwhere("projectid = '$projectid'");
 
 			// run SQL query
 			$phase_list->generate_sql();

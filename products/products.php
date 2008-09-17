@@ -16,7 +16,6 @@ if (user_permissions_get('products_view'))
 
 		$product_list->language	= $_SESSION["user"]["lang"];
 		$product_list->tablename	= "product_list";
-		$product_list->sql_table	= "products";
 
 
 		// define all the columns and structure
@@ -33,8 +32,9 @@ if (user_permissions_get('products_view'))
 		$product_list->columns		= array("code_product", "name_product", "price_cost", "price_sale", "quantity_instock");
 		$product_list->columns_order	= array("code_product");
 
-		// custom SQL stuff
-		$product_list->prepare_sql_addfield("id", "");
+		// define SQL structure
+		$product_list->sql_obj->prepare_sql_settable("products");
+		$product_list->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";
