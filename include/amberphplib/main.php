@@ -29,5 +29,7 @@ include("misc.php");
 include("forms.php");
 include("tables.php");
 
+// Journal System
+include("journal.php");
 
 ?>

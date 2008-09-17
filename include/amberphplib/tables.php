@@ -34,11 +34,22 @@ class table
 	var $data;			// table content
 	var $data_num_rows;		// number of rows
 
-	var $sql_table;			// SQL table to get the data from
-	var $sql_query;			// SQL query used
-	var $sql_structure;		// array containing structure used to generate SQL queries
+	var $sql_obj;		// object used for SQL string, queries and data
+	
 
 	var $render_columns;		// human readable column names
+
+
+	/*
+		table()
+
+		Constructor Function
+	*/
+	function table()
+	{
+		// init the SQL structure
+		$this->sql_obj = New sql_query;
+	}
 
 
 	/*
@@ -167,193 +178,61 @@ class table
 	/*
 		generate_sql()
 
-		This function generates the SQL query to be used for generating the table - it can be used standalone
-		to generate a basic SQL statement, or you can can call the prepare_sql_* functions before in order
-		to customise what the SQL will generate.
+		This function automatically builds the SQL query structure using the options
+		and columns that the user has chosen.
+
+		It then used the sql_query class to produce an SQL query string, which can be used
+		by the load_data_sql() function.
 	*/
 	function generate_sql()
 	{
 		log_debug("table", "Executing generate_sql");
 
 
-		/*
-			First we generate the SQL statement in the array structure, combining
-			the automatically generated queries with any custom defined ones.
-		*/
-
-		// add column fields
+		// run through all the columns, and add their fields to the SQL structure
 		foreach ($this->columns as $column)
 		{
-			// some columns may need to be renamed when we query them.
-			if ($this->structure[$column]["dbname"])
-			{
-				$this->sql_structure["field_dbnames"][$column] = $this->structure[$column]["dbname"];
-			}
-
-			$this->sql_structure["fields"][] = "$column";
+			$this->sql_obj->prepare_sql_addfield($column, $this->structure[$column]["dbname"]);
 		}
-
 
 		// generate WHERE filters if any exist
 		if ($this->filter)
-			$this->generate_sql_filterrules();
+		{
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				// note: we only add the filter if a value has been saved to default value, otherwise
+				// we assume the SQL could break.
+				if ($this->filter[$fieldname]["defaultvalue"])
+				{
+					$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
+					$this->sql_obj->prepare_sql_addwhere($query);
+				}
+			}
+		}
 
 		// generate order by rules
 		if ($this->columns_order)
-			$this->generate_sql_orderrules();
-
-
-
-		/*
-			Now generate the SQL statement from the defined structure
-		*/
-		$this->sql_query = "SELECT ";
-
-
-		// add all select fields
-		$num_values = count($this->sql_structure["fields"]);
-
-		for ($i=0; $i < $num_values; $i++)
 		{
-			$fieldname = $this->sql_structure["fields"][$i];
-
-			if ($this->sql_structure["field_dbnames"][$fieldname])
+			foreach ($this->columns_order as $column_order)
 			{
-				$this->sql_query .= $this->sql_structure["field_dbnames"][$fieldname] ." as ";
-			}
-			
-			$this->sql_query .= $fieldname;
-			
-
-			if ($i < ($num_values - 1))
-			{
-				$this->sql_query .= ", ";
-			}
-		}
-
-		$this->sql_query .= " ";
-
-
-		// add database query
-		$this->sql_query .= "FROM `". $this->sql_table ."` ";
-
-		// add all joins
-		if ($this->sql_structure["joins"])
-		{
-			foreach ($this->sql_structure["joins"] as $sql_join)
-			{
-				$this->sql_query .= $sql_join ." ";
-			}
-		}
-
-
-		// add WHERE queries
-		if ($this->sql_structure["where"])
-		{
-			$this->sql_query .= "WHERE ";
-		
-			$num_values = count($this->sql_structure["where"]);
-	
-			for ($i=0; $i < $num_values; $i++)
-			{
-				$this->sql_query .= $this->sql_structure["where"][$i] . " ";
-
-				if ($i < ($num_values - 1))
+				if ($this->structure[$column_order]["dbname"])
 				{
-					$this->sql_query .= "AND ";
+					$this->sql_obj->prepare_sql_addorderby($this->structure[$column_order]["dbname"]);
+				}
+				else
+				{
+					$this->sql_obj->prepare_sql_addorderby($column_order);
 				}
 			}
 		}
 
-		// add groupby rules
-		if ($this->sql_structure["groupby"])
-		{
-			$this->sql_query .= "GROUP BY ";
-			
-			$num_values = count($this->sql_structure["groupby"]);
-	
-			for ($i=0; $i < $num_values; $i++)
-			{
-				$this->sql_query .= $this->sql_structure["groupby"][$i] . " ";
-
-				if ($i < ($num_values - 1))
-				{
-					$this->sql_query .= ", ";
-				}
-			}
-		}
-	
-
-		// add orderby rules
-		if ($this->sql_structure["orderby"])
-		{
-			$this->sql_query .= "ORDER BY ";
-			
-			$num_values = count($this->sql_structure["orderby"]);
-	
-			for ($i=0; $i < $num_values; $i++)
-			{
-				$this->sql_query .= $this->sql_structure["orderby"][$i] . " ";
-
-				if ($i < ($num_values - 1))
-				{
-					$this->sql_query .= ", ";
-				}
-			}
-
-			$this->sql_query .= "ASC";
-		}
+		// produce SQL statement
+		$this->sql_obj->generate_sql();
 		
 		return 1;
 	}
 
 
-
-
-	/*
-		generate_sql_filterrules()
-
-		Add where filters to the SQL statement
-	*/
-	function generate_sql_filterrules()
-	{
-		log_debug("table", "Executing generate_sql_filterrules()");
-
-		foreach (array_keys($this->filter) as $fieldname)
-		{
-			// note: we only add the filter if a value has been saved to default value, otherwise
-			// we assume the SQL could break.
-			if ($this->filter[$fieldname]["defaultvalue"])
-			{
-				$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
-				$this->sql_structure["where"][] = $query;
-			}
-		}
-	}
-
-
-	/*
-		generate_sql_orderrules()
-
-		Add order by fields to SQL structure.
-	*/
-	function generate_sql_orderrules()
-	{
-		log_debug("table", "Executing generate_sql_orderrules()");
-		
-		foreach ($this->columns_order as $column_order)
-		{
-			if ($this->structure[$column_order]["dbname"])
-			{
-				$this->sql_structure["orderby"][] = $this->structure[$column_order]["dbname"];
-			}
-			else
-			{
-				$this->sql_structure["orderby"][] = $column_order;
-			}
-		}
-	}
-		
 
 	
 
@@ -361,7 +240,16 @@ class table
 		load_data_sql()
 		
 		This function executes the SQL statement and fetches all the data from
-		MySQL into an associate array.
+		the DB into an associative array.
+
+		IMPORTANT NOTE: you *must* either:
+		
+		 a) run the generate_sql function before running this function, in order
+		    to generate the SQL statement for execution.
+
+		 b) Set the $this->sql_obj->string variable to a SQL string you want to
+		    execute. Only do this if you understand what you're doing, since you'll
+		    break all the filtering stuff.
 
 		This data can then be used directly to generate the table, or can be
 		modified by other code to produce the desired result before creating
@@ -373,13 +261,10 @@ class table
 	{
 		log_debug("table", "Executing load_data_sql()");
 
-		$sql = New sql_query;
-		$sql->string = $this->sql_query;
-		
-		if (!$sql->execute())
+		if (!$this->sql_obj->execute())
 			return 0;
 
-		$this->data_num_rows = $sql->num_rows();
+		$this->data_num_rows = $this->sql_obj->num_rows();
 
 		if (!$this->data_num_rows)
 		{
@@ -387,16 +272,16 @@ class table
 		}
 		else
 		{
-			$sql->fetch_array();
+			$this->sql_obj->fetch_array();
 			
-			foreach ($sql->data as $data)
+			foreach ($this->sql_obj->data as $data)
 			{
 				$tmparray = array();
 			
 				// run through all the fields defined in the SQL structure - we can't use the
 				// defined columns, since there are often other fields queried (such as ID) which
 				// are not included as columns but required for things such as hyperlinks.
-				foreach ($this->sql_structure["fields"] as $sqlfield)
+				foreach ($this->sql_obj->sql_structure["fields"] as $sqlfield)
 				{
 					$tmparray[$sqlfield] = $data[$sqlfield];
 				}
@@ -515,76 +400,6 @@ class table
 
 		return 1;
 	}
-
-
-	/*
-		prepare_sql_addfield($fieldname, $dbname)
-
-		Adds a SELECT field to the query - only normally used to add custom fields
-		not covered by the defined list of columns.
-	*/
-	function prepare_sql_addfield($fieldname, $dbname)
-	{
-		log_debug("table", "Executing prepare_sql_addfield($fieldname, $dbname)");
-		
-		if ($dbname)
-		{
-			$this->sql_structure["field_dbnames"][$fieldname] = $dbname;
-		}
-		
-		$this->sql_structure["fields"][] = "$fieldname";
-	}
-
-	/*
-		prepare_sql_addjoin($joinquery)
-
-		Add join queries to the SQL statement.
-	*/
-	function prepare_sql_addjoin($joinquery)
-	{
-		log_debug("table", "Executing prepare_sql_addjoin($joinquery)");
-
-		$this->sql_structure["joins"][] = $joinquery;
-	}
-
-
-	/*
-		prepare_sql_addwhere($sqlquery)
-
-		Add a WHERE statement.
-	*/
-	function prepare_sql_addwhere($sqlquery)
-	{
-		log_debug("table", "Executing prepare_sql_addwhere($sqlquery)");
-
-		$this->sql_structure["where"][] = $sqlquery;
-	}
-
-	/*
-		prepare_sql_addorderby($fieldname)
-	
-		Add a field to the orderby statement
-	*/
-	function prepare_sql_addorderby($sqlquery)
-	{
-		log_debug("table", "Executing prepare_sql_addorderby($sqlquery)");
-
-		$this->sql_structure["orderby"][] = $sqlquery;
-	}
-
-
-	/*
-		prepare_sql_addgroupby($fieldname)
-	
-		Add a field to the groupby statement
-	*/
-	function prepare_sql_addgroupby($sqlquery)
-	{
-		log_debug("table", "Executing prepare_sql_addgroupby($sqlquery)");
-
-		$this->sql_structure["groupby"][] = $sqlquery;
-	}
-
 
 
 	/*
@@ -1030,8 +845,14 @@ class table
 			{
 				print "<td align=\"right\">";
 
-				foreach (array_keys($this->links) as $link)
+				$links		= array_keys($this->links);
+				$links_count	= count($links);
+				$count		= 0;
+
+				foreach ($links as $link)
 				{
+					$count++;
+					
 					$linkname = language_translate_string($this->language, $link);
 
 					// link to page
@@ -1068,6 +889,12 @@ class table
 
 					// finish link
 					print "\">$linkname</a>";
+
+					// if required, add seporator
+					if ($count < $links_count)
+					{
+						print " || ";
+					}
 				}
 
 				print "</td>";
