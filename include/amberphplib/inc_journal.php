@@ -5,7 +5,6 @@
 	Provides classes & functions to process and render journal entries
 */
 
-//print "journal.php";
 
 
 /*
@@ -38,14 +37,31 @@ class journal_base
 	{
 		log_debug("journal_base", "Executing prepare_set_content(content)");
 
-		$this->structure["content"] = $content;
+		// make sure we perform quoting, since we will be insert
+		// these text strings into the database
+		if (get_magic_quotes_gpc() == 0)
+		{
+			$this->structure["content"] = addslashes($content);
+		}
+		else
+		{
+			$this->structure["content"] = $content;
+		}
 	}
 
 	function prepare_set_title($title)
 	{
 		log_debug("journal_base", "Executing prepare_set_title($title)");
 
-		$this->structure["title"] = $title;
+		if (get_magic_quotes_gpc() == 0)
+		{
+			$this->structure["title"] = addslashes($title);
+		}
+		else
+		{
+			$this->structure["title"] = $title;
+		}
+		
 	}
 	
 	function prepare_set_journalid($journalid)
@@ -401,7 +417,7 @@ class journal_display extends journal_base
 						print "<br><table width=\"100%\" cellpadding=\"5\" style=\"border: 1px #666666 dashed;\">";
 
 						// header
-						print "<tr id=\"journal-orange\"><td width=\"100%\"><table width=\"100%\"><tr>";
+						print "<tr class=\"journal_header\"><td width=\"100%\"><table width=\"100%\"><tr>";
 							print "<td width=\"50%\"><b>". $data["title"] ."</b> $editlink</td>";
 							print "<td width=\"50%\" align=\"right\">Posted by ". $sql_user_obj->data[0]["realname"] ." @ $post_time</td>";
 						print "</tr></table></td></tr>";
@@ -624,15 +640,15 @@ class journal_process extends journal_base
 	{
 		log_debug("journal_process", "Executing process_form_input()");
 	
-		$structure["type"]	= security_form_input_predefined("any", "type", 1, "");
-		$structure["title"]	= security_form_input_predefined("any", "title", 1, "");
-		$structure["content"]	= security_form_input_predefined("any", "content", 0, "");
-		$structure["customid"]	= security_form_input_predefined("any", "id_custom", 0, "");
-		$structure["id"]	= security_form_input_predefined("any", "id_journal", 1, "");
+		$this->structure["type"]	= security_form_input_predefined("any", "type", 1, "");
+		$this->structure["title"]	= security_form_input_predefined("any", "title", 1, "");
+		$this->structure["content"]	= security_form_input_predefined("any", "content", 0, "");
+		$this->structure["customid"]	= security_form_input_predefined("int", "id_custom", 0, "");
+		$this->structure["id"]		= security_form_input_predefined("int", "id_journal", 0, "");
 
-		if ($structure["type"] == "text")
+		if ($this->structure["type"] == "text")
 		{
-			if (!$structure["content"])
+			if (!$this->structure["content"])
 			{
 				$_SESSION["error"]["message"][]		= "You must provide some content";
 				$_SESSION["error"]["content-error"]	= 1;
@@ -654,7 +670,7 @@ class journal_process extends journal_base
 	*/
 	function action_create()
 	{
-		log_debug("journal_process", "Executing create()");
+		log_debug("journal_process", "Executing action_create()");
 
 		// insert place holder into DB
 		$sql_obj		= New sql_query;
@@ -666,7 +682,7 @@ class journal_process extends journal_base
 
 			if ($this->structure["id"])
 			{
-				$this->update();
+				return $this->action_update();
 			}
 		}
 	
@@ -686,7 +702,7 @@ class journal_process extends journal_base
 	*/
 	function action_update()
 	{
-		log_debug("journal_process", "Executing update($id)");
+		log_debug("journal_process", "Executing action_update()");
 
 		if ($this->structure["id"])
 		{
@@ -698,7 +714,7 @@ class journal_process extends journal_base
 						."timestamp='". $this->structure["timestamp"] ."', "
 						."title='". $this->structure["title"] ."', "
 						."content='". $this->structure["content"] ."' "
-						."WHERE id='$". $this->structure["id"] ."'";
+						."WHERE id='". $this->structure["id"] ."'";
 
 			// execute
 			if ($sql_obj->execute())

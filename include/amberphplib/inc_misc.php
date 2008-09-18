@@ -6,22 +6,6 @@
 */
 
 
-/* LOGGING */
-
-/*
-	log_debug($category, $content)
-
-	Function used to log debug information.
-*/
-function log_debug($category, $content)
-{
-	if ($_SESSION["user"]["debug"] == "yes")
-	{
-		$_SESSION["user"]["log_debug"][] = "[$category] --- $content";
-	}
-}
-
-
 
 /* FORMATTING/DISPLAY FUNCTIONS */
 

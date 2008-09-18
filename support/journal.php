@@ -37,6 +37,8 @@ if (user_permissions_get('support_view'))
 		print "<h3>SUPPORT TICKET JOURNAL</h3><br>";
 		print "<p>Use this journal to file all notes, attachments or other information relating to this support ticket.</p>";
 
+		print "<p><b><a href=\"index.php?page=support/journal-edit.php&id=$id\">Add new journal entry</a></b></p>";
+
 
 		// make sure the support ticket exists
 		$sql = New sql_query;

@@ -157,6 +157,28 @@ if (user_permissions_get('customers_write'))
 			}
 		}
 
+
+		// log to journal
+		$journal = New journal_process;
+		
+		$journal->prepare_set_journalname("customers");
+		$journal->prepare_set_customid($id);
+		$journal->prepare_set_type("event");
+		
+		
+		if ($mode == "edit")
+		{
+			$journal->prepare_set_title("Customer's details updated.");
+		}
+		else
+		{
+			$journal->prepare_set_title("Customer record created");
+		}
+
+		$journal->action_create();
+
+		
+
 		// display updated details
 		header("Location: ../index.php?page=customers/view.php&id=$id");
 		exit(0);

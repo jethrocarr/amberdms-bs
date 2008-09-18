@@ -223,5 +223,14 @@ a:active {
 	}
 
 
+/*
+	Journal Styling
+*/
+.journal_header {
+	background-image: url("../images/colourstrip-orange.png");
+	background-repeat: no-repeat;
+}
+
+	
 
 

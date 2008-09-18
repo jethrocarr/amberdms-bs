@@ -8,6 +8,36 @@
 	code in a propietary/commercial product, please contact sales@amberdms.com.
 */
 
+
+
+
+/*
+	CORE FUNCTIONS
+
+	These functions are required for basic operation by all major components of
+	AMBERPHPLIB, so we define them first.
+*/
+function log_debug($category, $content)
+{
+	if ($_SESSION["user"]["debug"] == "yes")
+	{
+		$_SESSION["user"]["log_debug"][] = "[$category] --- $content";
+	}
+}
+
+
+
+
+/*
+	INCLUDE MAJOR AMBERDPHPLIB COMPONENTS
+*/
+
+log_debug("start", "");
+log_debug("start", "AMBERPHPLIB STARTED");
+log_Debug("start", "Debugging for: ". $_SERVER["REQUEST_URI"] ."");
+log_debug("start", "");
+
+
 // Important that we require language first, since other functions
 // require it.
 require("inc_language.php");
