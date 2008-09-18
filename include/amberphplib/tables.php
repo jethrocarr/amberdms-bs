@@ -34,7 +34,7 @@ class table
 	var $data;			// table content
 	var $data_num_rows;		// number of rows
 
-	var $sql_obj;		// object used for SQL string, queries and data
+	var $sql_obj;			// object used for SQL string, queries and data
 	
 
 	var $render_columns;		// human readable column names

@@ -5,6 +5,8 @@
 
 	www.amberdms.com
 	Licenced under the GNU GPL version 2 only.
+
+	TODO: WTF is this page doing? Do we even need it??
 */
 
 // include the database connection file.

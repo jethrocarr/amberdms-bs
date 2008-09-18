@@ -5,6 +5,7 @@
 	Contain user management and authentication functions.
 
 	TODO: Put all information on authentication system methods here.
+	TODO: Update this page to use the new sql_query class structure for all DB queries
 */
 
 

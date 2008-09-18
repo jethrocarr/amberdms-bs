@@ -18,10 +18,10 @@ if (user_permissions_get('support_view'))
 	
 	$_SESSION["nav"]["title"][]	= "Support Ticket Details";
 	$_SESSION["nav"]["query"][]	= "page=support/view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=support/view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Support Ticket Journal";
 	$_SESSION["nav"]["query"][]	= "page=support/journal.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=support/journal.php&id=$id";
 	
 	$_SESSION["nav"]["title"][]	= "Delete Support Ticket";
 	$_SESSION["nav"]["query"][]	= "page=support/delete.php&id=$id";
@@ -34,8 +34,8 @@ if (user_permissions_get('support_view'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>SUPPORT TICKET DETAILS</h3><br>";
-		print "<p>This page allows you to view and set the general details for this support ticket. For full content of the support ticket including attached files and emails, see the journal.</p>";
+		print "<h3>SUPPORT TICKET JOURNAL</h3><br>";
+		print "<p>Use this journal to file all notes, attachments or other information relating to this support ticket.</p>";
 
 
 		// make sure the support ticket exists
@@ -50,82 +50,24 @@ if (user_permissions_get('support_view'))
 		else
 		{
 			/*
-				Define form structure
+				Define the journal structure
 			*/
-			$form = New form_input;
-			$form->formname = "support_ticket_view";
-			$form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "support_tickets/edit-process.php";
-			$form->method = "post";
+			// basic
+			$journal		= New journal_display;
+			$journal->journalname	= "support_tickets";
+
+			// define SQL structure
+			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
+
+			// process SQL			
+			$journal->generate_sql();
+			$journal->load_data();
+
+			// display			
+			$journal->render_journal();
 			
-
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "id_support";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "title";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_start";
-			$structure["type"]		= "date";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_end";
-			$structure["type"]		= "date";
-			$form->add_input($structure);
-
-			// status + priority
-			$structure = form_helper_prepare_dropdownfromdb("status", "SELECT id, value as label FROM support_tickets_status");
-			$form->add_input($structure);
-    
-			$structure = form_helper_prepare_dropdownfromdb("priority", "SELECT id, value as label FROM support_tickets_priority");
-			$form->add_input($structure);
-
-
-			// customer/product/project/service ID
-
-
-			// submit section
-			if (user_permissions_get("support_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$form->add_input($structure);
-			
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to support_ticket records.</i></p>";
-				$form->add_input($structure);
-			}
-			
-			
-			// define subforms
-			$form->subforms["support_ticket_details"]	= array("id_support_ticket", "title", "priority");
-			$form->subforms["support_ticket_status"]	= array("status", "date_start", "date_end");
-			$form->subforms["submit"]			= array("submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `support_tickets` WHERE id='$id' LIMIT 1";
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
+		
 
 		}
 

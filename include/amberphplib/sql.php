@@ -64,6 +64,30 @@ class sql_query
 
 
 	/*
+		fetch_insert_id()
+
+		Fetches the ID of the last insert statement.
+
+		Return codes:
+		0	failure
+		#	ID of last insert statement
+	*/
+	function fetch_insert_id()
+	{
+		log_debug("sql_query", "Executing fetch_insertid()");
+
+		$id = mysql_insert_id();
+
+		if ($id)
+		{
+			return $id;
+		}
+		
+		return 0;
+	}
+
+
+	/*
 		num_rows()
 
 		Returns the number of rows in the results and also saves into $this->data_num_rows.
@@ -209,26 +233,51 @@ class sql_query
 				}
 			}
 		}
+
+
+		// TODO: the orderby stuff is currently flawed, since we sort all ascending values
+		// first, then all the descending values afterwards.
+		//
+		// This needs to be fixed
+		//
 	
 
 		// add orderby rules
 		if ($this->sql_structure["orderby"])
 		{
 			$this->string .= "ORDER BY ";
-			
-			$num_values = count($this->sql_structure["orderby"]);
-	
-			for ($i=0; $i < $num_values; $i++)
-			{
-				$this->string .= $this->sql_structure["orderby"][$i] . " ";
 
-				if ($i < ($num_values - 1))
+			// ascending sorts
+			if ($this->sql_structure["orderby"]["asc"])
+			{
+				$num_values = count($this->sql_structure["orderby"]["asc"]);
+	
+				for ($i=0; $i < $num_values; $i++)
 				{
-					$this->string .= ", ";
+					$this->string .= $this->sql_structure["orderby"]["asc"][$i] . " ASC ";
+	
+					if ($i < ($num_values - 1))
+					{
+						$this->string .= ", ";
+					}
 				}
 			}
-
-			$this->string .= "ASC";
+				
+			// descending sorts
+			if ($this->sql_structure["orderby"]["desc"])
+			{
+				$num_values = count($this->sql_structure["orderby"]["desc"]);
+		
+				for ($i=0; $i < $num_values; $i++)
+				{
+					$this->string .= $this->sql_structure["orderby"]["desc"][$i] . " DESC ";
+	
+					if ($i < ($num_values - 1))
+					{
+						$this->string .= ", ";
+					}
+				}
+			}
 		}
 		
 		return 1;
@@ -296,11 +345,35 @@ class sql_query
 	
 		Add a field to the orderby statement
 	*/
-	function prepare_sql_addorderby($sqlquery)
+	function prepare_sql_addorderby($fieldname)
 	{
-		log_debug("sql_query", "Executing prepare_sql_addorderby($sqlquery)");
+		log_debug("sql_query", "Executing prepare_sql_addorderby($fieldname)");
 
-		$this->sql_structure["orderby"][] = $sqlquery;
+		$this->prepare_sql_addorderby_asc($fieldname);
+	}
+
+	/*
+		prepare_sql_addorderby_asc($fieldname)
+	
+		Add a field to the orderby statement
+	*/
+	function prepare_sql_addorderby_asc($fieldname)
+	{
+		log_debug("sql_query", "Executing prepare_sql_addorderby_asc($fieldname)");
+
+		$this->sql_structure["orderby"]["asc"][] = $fieldname;
+	}
+
+	/*
+		prepare_sql_addorderby_desc($fieldname)
+	
+		Add a field to the orderby statement in descending sort
+	*/
+	function prepare_sql_addorderby_desc($fieldname)
+	{
+		log_debug("sql_query", "Executing prepare_sql_addorderby_desc($fieldname)");
+
+		$this->sql_structure["orderby"]["desc"][] = $fieldname;
 	}
 
 
@@ -321,6 +394,47 @@ class sql_query
 
 
 } // end sql_query class
+
+
+/*
+	STANDALONE FUNCTIONS
+*/
+
+
+/*
+	sql_get_singlevalue($string)
+
+	Fetches a single value from the database and returns it.
+	(Very handy for fetching configuration values from the database)
+
+	Note: The value returned must have the label "value". You may need to make
+	the SQL statment re-write the value name in order to comply.
+
+	Return codes:
+	0	failure
+	?	data desired
+*/
+function sql_get_singlevalue($string)
+{
+	log_debug("sql", "Executing sql_get_singlevalue(SQL query)");
+
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= $string;
+
+	$sql_obj->execute();
+
+	if (!$sql_obj->num_rows())
+	{
+		return 0;
+	}
+	else
+	{
+		$sql_obj->fetch_array();
+		return $sql_obj->data[0]["value"];
+	}
+}
+
+
 
 
 ?>

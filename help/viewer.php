@@ -3,6 +3,8 @@
 	viewer.php
 
 	this page is able to display help documents
+
+	TODO: do we need to have this? either fix it up or get rid of it
 */
 
 include_once("../include/database.php");

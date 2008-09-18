@@ -22,6 +22,24 @@ function log_debug($category, $content)
 }
 
 
+
+/* FORMATTING/DISPLAY FUNCTIONS */
+
+
+/*
+	format_text_display($text)
+
+	Formats a block of text from a database into a form suitable for display as HTML by
+	replacing any \n with <br> statments
+
+	Returns the processed text.
+*/
+function format_text_display($text)
+{
+	return str_replace("\n", "<br>", $text);
+}
+
+
 /* TIME FUNCTION */
 
 /*
