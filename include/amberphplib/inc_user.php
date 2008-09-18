@@ -1,6 +1,6 @@
 <?php
 /*
-	user.php
+	inc_user.php
 
 	Contain user management and authentication functions.
 

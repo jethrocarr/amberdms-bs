@@ -10,27 +10,27 @@
 
 // Important that we include language first, since other functions
 // require it.
-include("language.php");
+include("inc_language.php");
 
 // DB SQL processing and execution
-include("sql.php");
+include("inc_sql.php");
 
 // User + Security Functions
-include("user.php");
-include("security.php");
+include("inc_user.php");
+include("inc_security.php");
 
 // Error Handling
-include("errors.php");
+include("inc_errors.php");
 
 // Misc Functions
-include("misc.php");
+include("inc_misc.php");
 
 // Functions/classes for data entry and processing
-include("forms.php");
-include("tables.php");
+include("inc_forms.php");
+include("inc_tables.php");
 
 // Journal System
-include("journal.php");
+require("inc_journal.php");
 
 
 ?>

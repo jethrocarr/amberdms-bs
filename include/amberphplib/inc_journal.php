@@ -5,7 +5,7 @@
 	Provides classes & functions to process and render journal entries
 */
 
-print "test";
+//print "journal.php";
 
 
 /*
@@ -627,7 +627,7 @@ class journal_process extends journal_base
 		$structure["type"]	= security_form_input_predefined("any", "type", 1, "");
 		$structure["title"]	= security_form_input_predefined("any", "title", 1, "");
 		$structure["content"]	= security_form_input_predefined("any", "content", 0, "");
-		$structure["customid"]	= security_form_input_predefined("any", "customid", 0, "");
+		$structure["customid"]	= security_form_input_predefined("any", "id_custom", 0, "");
 		$structure["id"]	= security_form_input_predefined("any", "id_journal", 1, "");
 
 		if ($structure["type"] == "text")
@@ -644,7 +644,7 @@ class journal_process extends journal_base
 
 
 	/*
-		create()
+		action_create()
 
 		Create a new journal entry
 
@@ -652,7 +652,7 @@ class journal_process extends journal_base
 		0	failure
 		1	success
 	*/
-	function create()
+	function action_create()
 	{
 		log_debug("journal_process", "Executing create()");
 
@@ -676,7 +676,7 @@ class journal_process extends journal_base
 
 
 	/*
-		update()
+		action_update()
 
 		Update a journal entry based on the ID in $this->structure["id"]
 
@@ -684,7 +684,7 @@ class journal_process extends journal_base
 		0	failure
 		1	success
 	*/
-	function update()
+	function action_update()
 	{
 		log_debug("journal_process", "Executing update($id)");
 
