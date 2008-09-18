@@ -8,26 +8,26 @@
 	code in a propietary/commercial product, please contact sales@amberdms.com.
 */
 
-// Important that we include language first, since other functions
+// Important that we require language first, since other functions
 // require it.
-include("inc_language.php");
+require("inc_language.php");
 
 // DB SQL processing and execution
-include("inc_sql.php");
+require("inc_sql.php");
 
 // User + Security Functions
-include("inc_user.php");
-include("inc_security.php");
+require("inc_user.php");
+require("inc_security.php");
 
 // Error Handling
-include("inc_errors.php");
+require("inc_errors.php");
 
 // Misc Functions
-include("inc_misc.php");
+require("inc_misc.php");
 
 // Functions/classes for data entry and processing
-include("inc_forms.php");
-include("inc_tables.php");
+require("inc_forms.php");
+require("inc_tables.php");
 
 // Journal System
 require("inc_journal.php");
