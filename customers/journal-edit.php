@@ -33,6 +33,7 @@ if (user_permissions_get('customers_write'))
 		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
 		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
 
 		
 		/*
@@ -61,19 +62,41 @@ if (user_permissions_get('customers_write'))
 		}
 		else
 		{
-			if ($journalid)
+			if ($type == "file")
 			{
-				print "<h3>CUSTOMER JOURNAL - ADD ENTRY</h3><br>";
-				print "<p>This page allows you to add an entry to the customer's journal.</p>";
+				// file uploader
+				if ($journalid)
+				{
+					print "<h3>CUSTOMER JOURNAL - UPLOAD FILE</h3><br>";
+					print "<p>This page allows you to attach a file to the customer's journal.</p>";
+				}
+				else
+				{
+					print "<h3>CUSTOMER JOURNAL - UPLOAD FILE</h3><br>";
+					print "<p>This page allows you to attach a file to the customer's journal.</p>";
+				}
+
+				// edit or add file
+				$journal_form->render_file_form();
 			}
 			else
 			{
-				print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
-				print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
+				// default to text
+				if ($journalid)
+				{
+					print "<h3>CUSTOMER JOURNAL - ADD ENTRY</h3><br>";
+					print "<p>This page allows you to add an entry to the customer's journal.</p>";
+				}
+				else
+				{
+					print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
+					print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
+				}
+
+				// edit or add
+				$journal_form->render_text_form();		
 			}
 			
-			// edit or add
-			$journal_form->render_text_form();		
 		}
 		
 

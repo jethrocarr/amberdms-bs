@@ -245,6 +245,8 @@ class form_input
 				submit		- submit button
 				message		- prints the defaultvalue - used for inserting message into forms
 
+				file		- file upload box
+
 			
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
@@ -407,6 +409,18 @@ class form_input
 
 			case "message":
 				print $this->structure[$fieldname]["defaultvalue"];
+			break;
+
+			case "file":
+				// get max upload size
+				$upload_maxbytes = format_size_human( sql_get_singlevalue("SELECT value FROM config WHERE name='UPLOAD_MAXBYTES'") );
+
+				// input field
+				print "<input type=\"file\" name=\"$fieldname\"> <i>Note: File must be no larger than $upload_maxbytes.</i>";
+			break;
+
+			default:
+				log_debug("form", "Error: Unknown field type of ". $this->structure["fieldname"]["type"] ."");
 			break;
 		}
 

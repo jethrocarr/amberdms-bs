@@ -41,7 +41,7 @@ if (user_permissions_get('customers_view'))
 		print "<h3>CUSTOMER JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this customer account.</p>";
 
-		print "<p><b><a href=\"index.php?page=customers/journal-edit.php&id=$id\">Add new journal entry</a></b></p>";
+		print "<p><b><a href=\"index.php?page=customers/journal-edit.php&type=text&id=$id\">Add new journal entry</a> || <a href=\"index.php?page=customers/journal-edit.php&type=file&id=$id\">Upload File</a></b></p>";
 
 
 		// make sure the customer exists
@@ -63,7 +63,9 @@ if (user_permissions_get('customers_view'))
 			$journal		= New journal_display;
 			$journal->journalname	= "customers";
 			
+			// set the pages to use for forms or file downloads
 			$journal->prepare_set_form_process_page("customers/journal-edit.php");
+			$journal->prepare_set_download_page("customers/journal-download-process.php");
 
 
 			// define SQL structure

@@ -30,10 +30,10 @@ if (user_permissions_get('customers_write'))
 
 	// make sure the customers ID submitted really exists
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM customers WHERE id='". $journal->structure["id"] ."'";
+	$sql_obj->string	= "SELECT id FROM customers WHERE id='". $journal->structure["customid"] ."'";
 	$sql_obj->execute();
 	
-	if ($sql_obj->num_rows())
+	if (!$sql_obj->num_rows())
 	{
 		$_SESSION["error"]["message"][]	= "Unable to find requested customer record to modify journal for.";
 	}

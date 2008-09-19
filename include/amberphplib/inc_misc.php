@@ -20,8 +20,35 @@
 */
 function format_text_display($text)
 {
+	log_debug("misc", "Executing format_text_display($text)");
+	
 	return str_replace("\n", "<br>", $text);
 }
+
+
+/*
+	format_size_human($bytes)
+
+	Returns a human readable size.
+*/
+function format_size_human($bytes)
+{
+	log_debug("misc", "Executing format_size_human($bytes)");
+
+	if(!$bytes)
+	{
+		// unknown - most likely the program hasn't called one one of the fetch_information_by_* functions first.
+		log_debug("file_base", "Error: Unable to determine file size - no value provided");	
+		return "unknown size";
+	}
+	else
+	{
+		$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
+		return round($bytes/pow(1024, ($i = floor(log($bytes, 1024)))), 2) . $file_size_types[$i];
+	}
+}
+
+
 
 
 /* TIME FUNCTION */
@@ -32,6 +59,8 @@ function format_text_display($text)
 */
 function time_format_hourmins($seconds)
 {
+	log_debug("misc", "Executing time_format_hourmins($seconds)");
+	
  	$minutes	= $seconds / 60;
 	$hours		= sprintf("%d",$minutes / 60);
 
@@ -49,6 +78,8 @@ function time_format_hourmins($seconds)
 */
 function time_calculate_weekstart($date_selected_weekofyear, $date_selected_year)
 {
+	log_debug("misc", "Executing time_calculate_weekstart($date_selected_weekofyear, $date_selected_year)");
+	
 	// work out the start date of the current week
 	$date_curr_weekofyear	= date("W");
 	$date_curr_year		= date("Y");
@@ -76,6 +107,8 @@ function time_calculate_weekstart($date_selected_weekofyear, $date_selected_year
 */
 function time_calculate_daysofweek($date_selected_start)
 {
+	log_debug("misc", "Executing time_calculate_daysofweek($date_selected_start)");
+
 	$days = array();
 
 	// get the start day, month + year

@@ -1,7 +1,7 @@
 DETAILS:
 
 This directory contains all uploaded files/attachments for the Amberdms Billing System
-if $_GLOBAL["data_storage_method"] has been set to "filesystem".
+if $config["data_storage_method"] has been set to "filesystem".
 
 This directory and the SQL database contain all the data that needs to be backed up.
 
