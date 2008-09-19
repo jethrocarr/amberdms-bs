@@ -28,14 +28,14 @@ if (user_permissions_get('customers_write'))
 	//// ERROR CHECKING ///////////////////////
 
 
-	// make sure the customers ticket ID submitted really exists
+	// make sure the customers ID submitted really exists
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= "SELECT id FROM customers WHERE id='". $journal->structure["id"] ."'";
 	$sql_obj->execute();
 	
 	if ($sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][]			= "The customer you have requested does not exist.";
+		$_SESSION["error"]["message"][]	= "Unable to find requested customer record to modify journal for.";
 	}
 
 
@@ -43,25 +43,47 @@ if (user_permissions_get('customers_write'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["journal_edit"] = "failed";
-		header("Location: ../index.php?page=customers/journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."");
+		header("Location: ../index.php?page=customers/journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."&action=". $journal->structure["action"] ."");
 		exit(0);
 	}
 	else
 	{
-		// create or update the journal entry
+		// what action should we take?
 		if ($journal->structure["id"])
 		{
-			if ($journal->action_update())
+			// update or delete?
+			if ($journal->structure["action"] == "delete")
 			{
-				$_SESSION["notification"]["message"][] = "Journal entry updated successfully.";
+				// DELETE
+				
+				if ($journal->action_delete())
+				{
+					$_SESSION["notification"]["message"][] = "Journal entry successfully removed.";
+				}
+				else
+				{
+					$_SESSION["error"]["message"][] = "An error occured whilst deleting the journal entry.";
+				}
 			}
 			else
 			{
-				$_SESSION["error"]["message"][] = "An error occured whilst updating the journal.";
+				// UPDATE
+			
+				if ($journal->action_update())
+				{
+					$_SESSION["notification"]["message"][] = "Journal entry updated successfully.";
+				}
+				else
+				{
+					$_SESSION["error"]["message"][] = "An error occured whilst updating the journal.";
+				}
 			}
+			
 		}
 		else
 		{
+			// CREATE
+			
 			if ($journal->action_create())
 			{
 				$_SESSION["notification"]["message"][] = "Journal entry created successfully.";

@@ -1,4 +1,17 @@
-This directory contains all user uploaded data for the Amberdms Billing System.
+DETAILS:
+
+This directory contains all uploaded files/attachments for the Amberdms Billing System
+if $_GLOBAL["data_storage_method"] has been set to "filesystem".
 
 This directory and the SQL database contain all the data that needs to be backed up.
+
+
+
+SECURITY NOTICE:
+
+File download access is controlled by the PHP scripts, however this requires that
+access to this raw data directory is restricted, otherwise a user could download any
+file they want.
+
+A .htaccess file has been included to provide this security.
 

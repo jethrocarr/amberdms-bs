@@ -105,6 +105,14 @@ class journal_base
 
 		$this->structure["form_process_page"] = $string;
 	}
+	
+	function prepare_set_download_page($string)
+	{
+		log_debug("journal_base", "Executing prepare_set_download_page($string)");
+
+		$this->structure["download_page"] = $string;
+	}
+
 
 
 	
@@ -121,13 +129,13 @@ class journal_base
 	*/
 	function verify_journalid()
 	{
-		log_debug("journal_base", "Executing prepare_verify_id()");
+		log_debug("journal_base", "Executing verify_journalid()");
 
 		if ($this->structure["id"])
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT timestamp FROM `journal` WHERE id='$id' LIMIT 1";
-			$sql_obj->execute;
+			$sql_obj->string	= "SELECT timestamp FROM `journal` WHERE id='". $this->structure["id"] ."' LIMIT 1";
+			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
 			{
@@ -136,7 +144,7 @@ class journal_base
 				
 				// the lock value is configurable, let's check if it's correct.
 				// note: if the journallock is set to 0, it means there is no locking of journal entries
-				$journallock = $sql_get_singlevalue("SELECT value FROM `config` WHERE name='JOURNAL_LOCK'");
+				$journallock = sql_get_singlevalue("SELECT value FROM `config` WHERE name='JOURNAL_LOCK'");
 
 				if ($journallock)
 				{
@@ -204,6 +212,7 @@ class journal_display extends journal_base
 
 		// content
 		$this->sql_obj->prepare_sql_addfield("id", "");
+		$this->sql_obj->prepare_sql_addfield("customid", "");
 		$this->sql_obj->prepare_sql_addfield("type", "");
 		$this->sql_obj->prepare_sql_addfield("userid", "");
 		$this->sql_obj->prepare_sql_addfield("timestamp", "");
@@ -281,73 +290,29 @@ class journal_display extends journal_base
 			$previousvalue = "";
 			foreach ($this->sql_obj->data as $data)
 			{
-
-			// TODO: sort out this stuff:
-			/*
-				// if the journal entry is less than 7 days old, it can be changed by the person who
-				// created it.
+				// resets
 				$editlink = "";
-				if ((mktime() - 604800 ) < $mysql_data["timestamp"])
+		
+				// if this journal entry was added by this user, allow it to be edited
+				if ($data["userid"] == $_SESSION["user"]["id"])
 				{
-					if ($mysql_data["userid"] == user_id())
+					// fetch the journal lock value
+					// 0 == no locking of journal entries
+					// # == number of days after creation to lock
+
+					$journallock = sql_get_singlevalue("SELECT value FROM `config` WHERE name='JOURNAL_LOCK'");
+
+					if ($journallock)
 					{
-						if (!$_SESSION["error"]["printable"])
+						if ((mktime() - (86400 * $journallock)) < $data["timestamp"])
 						{
 							// user is able to edit/delete this entry
-							$editlink .= "(<a href=\"index.php?page=cases/journal.php&id=$caseid&journalid=" . $mysql_data["id"] ."&mode=". $mysql_data["type"] ."&action=edit\">edit</a> || ";
-							$editlink .= "<a href=\"index.php?page=cases/journal.php&id=$caseid&journalid=" . $mysql_data["id"] ."&mode=". $mysql_data["type"] ."&action=delete\">delete</a>)";
+							$editlink = "(<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&action=edit\">edit</a> || ";
+							$editlink .= "<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&action=delete\">delete</a>)";
 						}
 					}
 				}
-
-
-				if ($mysql_data["type"] == "file")
-				{
-					//
-					// file event types are when a file is attached to a case.
-					//
-
-					print "<br><table width=\"100%\" cellpadding=\"5\" style=\"border: 1px #666666 dashed;\">";
-
-
-					// header
-					$post_time = date("d F Y H:i:s", $mysql_data["timestamp"]);
-					
-					print "<tr id=\"journal-orange\"><td width=\"100%\"><table width=\"100%\"><tr>";
-						print "<td width=\"50%\"><b>File: ". $mysql_data["title"] ."</b> $editlink </td>";
-						print "<td width=\"50%\" align=\"right\">Posted by <a href=\"index.php?page=usertools/view.php&id=". $mysql_data["userid"] ."\">". $mysql_user_data["firstname"] ." ". $mysql_user_data["lastname"] ."</a> @ $post_time</td>";
-					print "</tr></table></td></tr>";
-
-
-					// content
-					if ($mysql_data["content"])
-					{
-						$patterns	= "/\n/";
-						$replace	= "<br>";
-						$content	= preg_replace($patterns, $replace, $mysql_data["content"]);
-					
-						print "<tr><td width=\"100%\">$content</td></tr>";
-					}
-
-					// download link
-					$file_size_bytes = @filesize("cases/journal/". $_SESSION["user"]["cluster"] ."/". $mysql_data["id"]);
-
-					if(!$file_size_bytes)
-					{
-						$file_size_human = "unknown size";
-					}
-					else
-					{
-						$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
-						$file_size_human = round($file_size_bytes/pow(1024, ($i = floor(log($file_size_bytes, 1024)))), 2) . $file_size_types[$i];
-					}
-
-					print "<tr><td width=\"50%\"><b><a href=\"cases/journal-download.php?caseid=$caseid&journalid=". $mysql_data["id"] ."\">Download File</a></b> ($file_size_human)</td></tr>";
-
-					print "</table>";
-				
-				}
-			*/
+		
 
 
 				/*
@@ -428,6 +393,51 @@ class journal_display extends journal_base
 
 						print "</table>";
 					break;
+
+					case "file":
+						/*
+							Files attached to the journal
+
+							The journal uses the standard file uploading system to keep track of files.
+						*/
+
+						print "<br><table width=\"100%\" cellpadding=\"5\" style=\"border: 1px #666666 dashed;\">";
+
+
+						/ header
+						print "<tr id=\"journal-orange\"><td width=\"100%\"><table width=\"100%\"><tr>";
+							print "<td width=\"50%\"><b>File: ". $data["title"] ."</b> $editlink </td>";
+							print "<td width=\"50%\" align=\"right\">Posted by ". $sql_user_obj->data[0]["realname"] ." @ $post_time</td>";
+						print "</tr></table></td></tr>";
+
+
+						// content
+						// (this field is optional for attached files)
+						if ($content)
+						{
+							print "<tr><td width=\"100%\">$content</td></tr>";
+						}
+
+						// grab all the details about this file from the database
+
+						// download link
+						$file_size_bytes = @filesize("cases/journal/". $_SESSION["user"]["cluster"] ."/". $mysql_data["id"]);
+
+						if(!$file_size_bytes)
+						{
+							$file_size_human = "unknown size";
+						}
+						else
+						{
+							$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
+							$file_size_human = round($file_size_bytes/pow(1024, ($i = floor(log($file_size_bytes, 1024)))), 2) . $file_size_types[$i];
+						}
+
+						print "<tr><td width=\"50%\"><b><a href=\"cases/journal-download.php?caseid=$caseid&journalid=". $mysql_data["id"] ."\">Download File</a></b> ($file_size_human)</td></tr>";
+
+						print "</table>";
+					break;
+					
 
 					default:
 						log_debug("journal_display", "Invalid journal type of ". $data["type"] ." provided, unable to process entry ". $data["id"] ."");
@@ -564,7 +574,15 @@ class journal_input extends journal_base
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= "text";
 		$this->form_obj->add_input($structure);	
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "action";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= "delete";
+		$this->form_obj->add_input($structure);	
 
+
+		
 		
 
 		// submit button
@@ -585,7 +603,7 @@ class journal_input extends journal_base
 
 		// define subforms
 		$this->form_obj->subforms["journal_edit"]	= array("title", "content");
-		$this->form_obj->subforms["hidden"]		= array("id_journal", "id_custom", "type");
+		$this->form_obj->subforms["hidden"]		= array("id_journal", "id_custom", "type", "action");
 		$this->form_obj->subforms["submit"]		= array("submit");
 		
 		// load data
@@ -602,6 +620,119 @@ class journal_input extends journal_base
 		// display the form
 		$this->form_obj->render_form();
 	}
+
+
+
+	/*
+		render_delete_form()
+
+		Displays a form for deleting a journal entry.
+		
+		Return codes:
+		0	failure - journal id invalid or locked or some unknown problem occured
+		1	success
+	*/
+	function render_delete_form()
+	{
+		log_debug("journal_input", "Executing render_text_form()");
+
+
+		if ($this->structure["id"])
+		{
+			// check if ID is valid and exists
+			switch ($this->verify_journalid())
+			{
+				case 0:
+					print "<p><b>The selected journal id - ". $this->structure["id"] ." - is not valid.</b></p>";
+					return 0;
+				break;
+
+				case 1:
+					$mode = "edit";
+				break;
+
+				case 2:
+					print "<p><b>Sorry, you can no longer edit this journal entry, it has now been locked.</b></p>";
+					return 0;
+				break;
+
+				default:
+					log_debug("journal_input", "Unexpected output from verify_journalid function");
+				break;
+			}
+		}
+		else
+		{
+			$mode = "add";
+		}
+
+		
+
+		/*
+			Define form structure
+		*/
+		$this->form_obj->formname = "journal_delete";
+		$this->form_obj->language = $this->language;
+
+		$this->form_obj->action = $this->structure["form_process_page"];
+		$this->form_obj->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "title";
+		$structure["type"]		= "text";
+		$this->form_obj->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "content";
+		$structure["type"]		= "text";
+		$this->form_obj->add_input($structure);
+		
+
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_journal";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->structure["id"];
+		$this->form_obj->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_custom";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->structure["customid"];
+		$this->form_obj->add_input($structure);
+	
+		$structure = NULL;
+		$structure["fieldname"] 	= "action";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= "delete";
+		$this->form_obj->add_input($structure);	
+
+		
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Confim Deletion";
+		$this->form_obj->add_input($structure);
+		
+
+		// define subforms
+		$this->form_obj->subforms["journal_edit"]	= array("title", "content");
+		$this->form_obj->subforms["hidden"]		= array("id_journal", "id_custom", "action");
+		$this->form_obj->subforms["submit"]		= array("submit");
+		
+		// load data
+		$this->form_obj->sql_query = "SELECT title, content FROM `journal` WHERE id='". $this->structure["id"] ."'";
+		$this->form_obj->load_data();
+
+		// display the form
+		$this->form_obj->render_form();
+	}
+
+
 
 	
 
@@ -640,12 +771,14 @@ class journal_process extends journal_base
 	{
 		log_debug("journal_process", "Executing process_form_input()");
 	
-		$this->structure["type"]	= security_form_input_predefined("any", "type", 1, "");
+		$this->structure["action"]	= security_form_input_predefined("any", "action", 1, "");
 		$this->structure["title"]	= security_form_input_predefined("any", "title", 1, "");
 		$this->structure["content"]	= security_form_input_predefined("any", "content", 0, "");
 		$this->structure["customid"]	= security_form_input_predefined("int", "id_custom", 0, "");
 		$this->structure["id"]		= security_form_input_predefined("int", "id_journal", 0, "");
 
+
+		// only need content for text journal entries
 		if ($this->structure["type"] == "text")
 		{
 			if (!$this->structure["content"])
@@ -654,6 +787,13 @@ class journal_process extends journal_base
 				$_SESSION["error"]["content-error"]	= 1;
 			}
 		}
+
+		// only need type field for create/update
+		if ($this->structure["action"] != "delete")
+		{
+			$this->structure["type"] = security_form_input_predefined("any", "type", 1, "");
+		}
+		
 	}
 
 
@@ -674,7 +814,7 @@ class journal_process extends journal_base
 
 		// insert place holder into DB
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `journal` (journalname, type) VALUES ('". $this->journalname ."', '". $this->structure["type"] ."')";
+		$sql_obj->string	= "INSERT INTO `journal` (journalname, type, timestamp) VALUES ('". $this->journalname ."', '". $this->structure["type"] ."', '". $this->structure["timestamp"] ."')";
 
 		if ($sql_obj->execute())
 		{
@@ -706,6 +846,37 @@ class journal_process extends journal_base
 
 		if ($this->structure["id"])
 		{
+			// make sure the user is permitted to adjust the journal entry
+			if ($this->structure["userid"] != $_SESSION["user"]["id"])
+			{
+				$_SESSION["error"]["message"][] = "You do not have permissions to update this journal entry";
+				return 0;
+			}
+
+			// make sure the journal entry is valid and is not locked
+			switch ($this->verify_journalid())
+			{
+				case 0:
+					$_SESSION["error"]["message"][] = "The requested journal entry is invalid";
+					return 0;
+				break;
+
+				case 1:
+					// acceptable
+				break;
+
+				case 2:
+					$_SESSION["error"]["message"][] = "The requested journal entry is now locked, and can not be updated.";
+					return 0;
+				break;
+
+				default:
+					log_debug("journal_input", "Unexpected output from verify_journalid function");
+					$_SESSION["error"]["message"][] = "Unexpected error with verify_journalid function.";
+					return 0;
+				break;
+			}
+
 			// prepare SQL
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `journal` SET "
@@ -730,6 +901,76 @@ class journal_process extends journal_base
 
 		return 0;
 	}
+
+
+	/*
+		action_delete()
+
+		Deletes a journal entry based on the ID in $this->structure["id"]
+
+		Return codes:
+		0	failure
+		1	success
+	*/
+	function action_delete()
+	{
+		log_debug("journal_process", "Executing action_delete()");
+
+		if ($this->structure["id"])
+		{
+			// make sure the user is permitted to adjust the journal entry
+			if ($this->structure["userid"] != $_SESSION["user"]["id"])
+			{
+				$_SESSION["error"]["message"][] = "You do not have permissions to deleted this journal entry";
+				return 0;
+			}
+
+			// make sure the journal entry is valid and is not locked
+			switch ($this->verify_journalid())
+			{
+				case 0:
+					$_SESSION["error"]["message"][] = "The requested journal entry is invalid";
+					return 0;
+				break;
+
+				case 1:
+					// acceptable
+				break;
+
+				case 2:
+					$_SESSION["error"]["message"][] = "The requested journal entry is now locked, and can not be deleted.";
+					return 0;
+				break;
+
+				default:
+					log_debug("journal_input", "Unexpected output from verify_journalid function");
+					$_SESSION["error"]["message"][] = "Unexpected error with verify_journalid function.";
+					return 0;
+				break;
+			}
+
+			// prepare SQL
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "DELETE FROM `journal` WHERE id='". $this->structure["id"] ."'";
+
+			// execute
+			if ($sql_obj->execute())
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			log_debug("journal_process", "Unable to delete journal entry, due to no ID being supplied");
+		}
+
+
+
+		return 0;
+	}
+	
+
+	
 
 } // end of the journal_process class
 

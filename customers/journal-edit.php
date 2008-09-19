@@ -32,19 +32,15 @@ if (user_permissions_get('customers_write'))
 	{
 		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>CUSTOMER JOURNAL</h3><br>";
-		print "<p>This page allows you to add or adjust an entry to the customer's journal.</p>";
-
-
-		/*
-			Edit/Add journal form
-		*/
-		$journal_form = New journal_input;
 		
+		/*
+			Journal Forms
+		*/
+
+		$journal_form = New journal_input;
+			
 		// basic details of this entry
 		$journal_form->prepare_set_journalname("customers");
 		$journal_form->prepare_set_journalid($journalid);
@@ -53,8 +49,32 @@ if (user_permissions_get('customers_write'))
 		// set the processing form
 		$journal_form->prepare_set_form_process_page("customers/journal-edit-process.php");
 
-		// draw text entry form
-		$journal_form->render_text_form();		
+		
+		if ($action == "delete")
+		{
+			print "<h3>CUSTOMER JOURNAL - DELETE ENTRY</h3><br>";
+			print "<p>This page allows you to delete an entry from the cutomer's journal.</p>";
+
+			// render delete form
+			$journal_form->render_delete_form();		
+
+		}
+		else
+		{
+			if ($journalid)
+			{
+				print "<h3>CUSTOMER JOURNAL - ADD ENTRY</h3><br>";
+				print "<p>This page allows you to add an entry to the customer's journal.</p>";
+			}
+			else
+			{
+				print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
+				print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
+			}
+			
+			// edit or add
+			$journal_form->render_text_form();		
+		}
 		
 
 

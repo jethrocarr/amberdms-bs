@@ -58,6 +58,7 @@ require("inc_misc.php");
 // Functions/classes for data entry and processing
 require("inc_forms.php");
 require("inc_tables.php");
+require("inc_file_uploads.php");
 
 // Journal System
 require("inc_journal.php");

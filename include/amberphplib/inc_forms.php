@@ -244,7 +244,7 @@ class form_input
 
 				submit		- submit button
 				message		- prints the defaultvalue - used for inserting message into forms
-				
+
 			
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
@@ -438,7 +438,7 @@ class form_input
 
 
 		// start form
-		print "<form method=\"". $this->method ."\" action=\"". $this->action ."\" class=\"form_standard\">";
+		print "<form enctype=\"multipart/form-data\" method=\"". $this->method ."\" action=\"". $this->action ."\" class=\"form_standard\">";
 
 
 		// draw each sub form

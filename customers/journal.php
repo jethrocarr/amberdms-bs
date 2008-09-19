@@ -62,6 +62,9 @@ if (user_permissions_get('customers_view'))
 			// basic
 			$journal		= New journal_display;
 			$journal->journalname	= "customers";
+			
+			$journal->prepare_set_form_process_page("customers/journal-edit.php");
+
 
 			// define SQL structure
 			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
