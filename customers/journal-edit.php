@@ -84,13 +84,13 @@ if (user_permissions_get('customers_write'))
 				// default to text
 				if ($journalid)
 				{
-					print "<h3>CUSTOMER JOURNAL - ADD ENTRY</h3><br>";
-					print "<p>This page allows you to add an entry to the customer's journal.</p>";
+					print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
+					print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
 				}
 				else
 				{
-					print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
-					print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
+					print "<h3>CUSTOMER JOURNAL - ADD ENTRY</h3><br>";
+					print "<p>This page allows you to add an entry to the customer's journal.</p>";
 				}
 
 				// edit or add

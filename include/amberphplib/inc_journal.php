@@ -18,6 +18,91 @@ class journal_base
 	var $language = "en_us";	// language to use for the labels
 	
 	var $structure;			// used to hold the structure of the journal entry selected
+	var $sql_obj;			// object used for SQL string, queries and data
+
+
+	/*
+		journal_base()
+
+		Class Contructor
+	*/
+	function journal_base()
+	{
+		// init the SQL structure
+		$this->sql_obj = New sql_query;	
+	}
+	
+
+
+	/*
+		generate_sql()
+
+		This function automatically builds the SQL query structure and will include
+		any custom defined fields, where or orderby statements.
+
+		It then uses the sql_query class to produce an SQL query string, which can be used
+		by the load_data_sql() function.
+	*/
+	function generate_sql()
+	{
+		log_debug("journal_base", "Executing generate_sql()");
+
+		// table name
+		$this->sql_obj->prepare_sql_settable("journal");
+
+		// content
+		$this->sql_obj->prepare_sql_addfield("id", "");
+		$this->sql_obj->prepare_sql_addfield("customid", "");
+		$this->sql_obj->prepare_sql_addfield("type", "");
+		$this->sql_obj->prepare_sql_addfield("userid", "");
+		$this->sql_obj->prepare_sql_addfield("timestamp", "");
+		$this->sql_obj->prepare_sql_addfield("title", "");
+		$this->sql_obj->prepare_sql_addfield("content", "");
+
+		// select for this journal only
+		$this->sql_obj->prepare_sql_addwhere("journalname='". $this->journalname ."'");
+
+		// order by
+		$this->sql_obj->prepare_sql_addorderby_desc("timestamp");
+
+		// produce SQL statement
+		$this->sql_obj->generate_sql();
+		
+		return 1;
+	}
+	
+
+
+
+	/*
+		load_data();
+
+		This function executes the SQL statement and fetches all the data from
+		the DB into an associative array.
+
+		IMPORTANT NOTE: you *must* run the generate_sql function before running
+		this function, in order to generate the SQL statement for execution.
+	*/
+	function load_data()
+	{
+		log_debug("journal_base", "Executing load_data_sql()");
+
+		if (!$this->sql_obj->execute())
+			return 0;
+
+		if (!$this->sql_obj->num_rows())
+		{
+			return 0;
+		}
+		else
+		{
+			$this->sql_obj->fetch_array();
+				
+			return $this->sql_obj->data_num_rows;
+		}
+	}
+
+
 
 
 	/*
@@ -178,92 +263,6 @@ class journal_base
 class journal_display extends journal_base
 {
 	
-	var $sql_obj;		// object used for SQL string, queries and data
-
-
-	/*
-		journal_display()
-
-		Class Contructor
-	*/
-	function journal_display()
-	{
-		// init the SQL structure
-		$this->sql_obj = New sql_query;	
-	}
-	
-
-
-	/*
-		generate_sql()
-
-		This function automatically builds the SQL query structure and will include
-		any custom defined fields, where or orderby statements.
-
-		It then uses the sql_query class to produce an SQL query string, which can be used
-		by the load_data_sql() function.
-	*/
-	function generate_sql()
-	{
-		log_debug("journal_display", "Executing generate_sql()");
-
-		// table name
-		$this->sql_obj->prepare_sql_settable("journal");
-
-		// content
-		$this->sql_obj->prepare_sql_addfield("id", "");
-		$this->sql_obj->prepare_sql_addfield("customid", "");
-		$this->sql_obj->prepare_sql_addfield("type", "");
-		$this->sql_obj->prepare_sql_addfield("userid", "");
-		$this->sql_obj->prepare_sql_addfield("timestamp", "");
-		$this->sql_obj->prepare_sql_addfield("title", "");
-		$this->sql_obj->prepare_sql_addfield("content", "");
-
-		// select for this journal only
-		$this->sql_obj->prepare_sql_addwhere("journalname='". $this->journalname ."'");
-
-		// order by
-		$this->sql_obj->prepare_sql_addorderby_desc("timestamp");
-
-		// produce SQL statement
-		$this->sql_obj->generate_sql();
-		
-		return 1;
-	}
-
-
-
-	/*
-		load_data();
-
-		This function executes the SQL statement and fetches all the data from
-		the DB into an associative array.
-
-		IMPORTANT NOTE: you *must* run the generate_sql function before running
-		this function, in order to generate the SQL statement for execution.
-	*/
-	function load_data()
-	{
-		log_debug("journal_display", "Executing load_data_sql()");
-
-		if (!$this->sql_obj->execute())
-			return 0;
-
-		if (!$this->sql_obj->num_rows())
-		{
-			return 0;
-		}
-		else
-		{
-			$this->sql_obj->fetch_array();
-				
-			return $this->sql_obj->data_num_rows;
-		}
-	}
-
-
-
-
 	/*
 		render_journal();
 
@@ -740,7 +739,7 @@ class journal_input extends journal_base
 		// load data
 		if ($mode == "edit")
 		{
-			$this->form_obj->sql_query = "SELECT title, content as notes FROM `journal` WHERE id='". $this->structure["id"] ."'";
+			$this->form_obj->sql_query = "SELECT content FROM `journal` WHERE id='". $this->structure["id"] ."'";
 			$this->form_obj->load_data();
 		}
 		else
@@ -887,6 +886,9 @@ class journal_process extends journal_base
 	*/
 	function journal_process()
 	{
+		// sql query
+		$this->sql_obj = New sql_query;	
+
 		// defaults
 		$this->structure["userid"]	= $_SESSION["user"]["id"];
 		$this->structure["timestamp"]	= mktime();
@@ -1132,10 +1134,15 @@ class journal_process extends journal_base
 
 		if ($this->structure["id"])
 		{
+			// get the journal entry information
+			$this->sql_obj->prepare_sql_addwhere("id='". $this->structure["id"] . "'");
+			$this->generate_sql();
+			$this->load_data();
+		
 			// make sure the user is permitted to adjust the journal entry
 			if ($this->structure["userid"] != $_SESSION["user"]["id"])
 			{
-				$_SESSION["error"]["message"][] = "You do not have permissions to deleted this journal entry";
+				$_SESSION["error"]["message"][] = "You do not have permissions to delete this journal entry";
 				return 0;
 			}
 
@@ -1163,6 +1170,17 @@ class journal_process extends journal_base
 				break;
 			}
 
+			
+			if ($this->structure["type"] == "file")
+			{
+				$file_obj = New file_process;
+				$file_obj->fetch_information_by_type("journal", $this->structure["id"]);
+				
+				if (!$file_obj->process_delete())
+					return 0;
+			}
+
+
 			// prepare SQL
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "DELETE FROM `journal` WHERE id='". $this->structure["id"] ."'";
@@ -1170,16 +1188,6 @@ class journal_process extends journal_base
 			// execute
 			if ($sql_obj->execute())
 			{
-				// if the journal entry was a file, we need to remove the file
-				if ($this->structure["type"] == "file")
-				{
-					$file_obj = New file_process;
-					$file_obj->fetch_information_by_type("journal", $this->structure["customid"]);
-
-					if (!$file_obj->process_delete())
-						return 0;
-				}
-
 				// successful deletion
 				return 1;
 			}
