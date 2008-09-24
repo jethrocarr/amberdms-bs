@@ -11,6 +11,23 @@
 
 if (user_permissions_get('products_view'))
 {
+	$id = $_GET["id"];
+	
+	// nav bar options.
+	$_SESSION["nav"]["active"]	= 1;
+	
+	$_SESSION["nav"]["title"][]	= "Product Details";
+	$_SESSION["nav"]["query"][]	= "page=products/view.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=products/view.php&id=$id";
+
+	$_SESSION["nav"]["title"][]	= "Product Journal";
+	$_SESSION["nav"]["query"][]	= "page=products/journal.php&id=$id";
+
+	$_SESSION["nav"]["title"][]	= "Delete Product";
+	$_SESSION["nav"]["query"][]	= "page=products/delete.php&id=$id";
+
+
+
 	function page_render()
 	{
 		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
