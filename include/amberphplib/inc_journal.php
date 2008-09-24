@@ -838,7 +838,7 @@ class journal_input extends journal_base
 		$structure = NULL;
 		$structure["fieldname"] 	= "type";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= "file";
+		$structure["defaultvalue"]	= $this->structure["type"];
 		$this->form_obj->add_input($structure);	
 		
 
@@ -856,7 +856,7 @@ class journal_input extends journal_base
 		$this->form_obj->subforms["submit"]		= array("submit");
 		
 		// load data
-		$this->form_obj->sql_query = "SELECT title, content FROM `journal` WHERE id='". $this->structure["id"] ."'";
+		$this->form_obj->sql_query = "SELECT type, title, content FROM `journal` WHERE id='". $this->structure["id"] ."'";
 		$this->form_obj->load_data();
 
 		// display the form
@@ -913,7 +913,7 @@ class journal_process extends journal_base
 		$this->structure["id"]		= security_form_input_predefined("int", "id_journal", 0, "");
 
 
-		if ($this->structure["type"] == "text")
+		if ($this->structure["type"] == "text" && $this->structure["action"] != "delete")
 		{
 			// need title field for text entries
 			if (!$this->structure["title"])
@@ -1076,7 +1076,7 @@ class journal_process extends journal_base
 					$file_obj = New file_process;
 					
 					// see if a file already exists
-					if ($file_obj->fetch_information_by_type("journal", $this->structure["customid"]))
+					if ($file_obj->fetch_information_by_type("journal", $this->structure["id"]))
 					{
 						log_debug("journal_process", "Old file exists, will overwrite.");
 					}

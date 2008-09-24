@@ -199,6 +199,9 @@ class file_process extends file_base
 		// upload the data to the location chosen by the configuration
 		if ($this->config["data_storage_method"] == "filesystem")
 		{
+			/*
+				Upload file to configured location on filesystem
+			*/
 			$uploadname = $this->config["data_storage_location"] ."/". $this->data["id"];
 			
 			// move uploaded file to storage location
@@ -214,11 +217,53 @@ class file_process extends file_base
 		}
 		elseif ($this->config["data_storage_method"])
 		{
-			// upload file to DB
-			// will need to split the file into multiple chunks for memory reasons -blob field only allow max 64kb data IIRC
-			// good write up and example code here: http://www.dreamwerx.net/phpforum/?id=1
+			/*
+				Upload file to database
+
+				We need to split the file into 64kb chunks, and add a new row to the file_upload_data table for	each chunk.
+			*/
+
+			if (!file_exists($_FILES[$fieldname]["tmp_name"]))
+			{
+				log_debug("file_process", "Uploaded file ". $_FILES[$fieldname]["tmp_name"] ." was not found and could not be loaded into the database");
+				return 0;
+			}
+			else
+			{
+
+				// delete any existing files from the database
+				$sql_obj = New sql_query;
+				$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->data["id"] ."'";
+				$sql_obj->execute();
 			
-			// TODO: implement this.
+				
+				// open the file - read only & binary
+        			$file_handle = fopen($_FILES[$fieldname]["tmp_name"], "rb");
+
+			    	while (!feof($file_handle))
+			   	{
+					// make the data safe for MySQL, we don't want any
+					// SQL injections from file uploads!
+		        
+					$binarydata = addslashes(fread($file_handle, 65535));
+
+
+					// upload the row
+					// note that the ID of the rows will increase, so if we sort the rows
+					// in ascenting order, we will recieve the correct data.
+					$sql_obj->string = "INSERT INTO file_upload_data (fileid, data) values ('". $this->data["id"] ."', '". $binarydata ."')";
+					
+					if (!$sql_obj->execute())
+					{
+						log_debug("file_process", "Error: Unable to insert binary data row.");
+						return 0;
+					}
+				}
+
+				// close the file
+				fclose($file_handle);
+			}
+			
 
 			$this->data["file_location"] = "db";
 		}
@@ -269,12 +314,14 @@ class file_process extends file_base
 		
 		if ($this->data["file_location"] == "db")
 		{
-			// TODO: write me
-			// get delete file from the database
+			// delete file from the database
+			$sql_obj = New sql_query;
+			$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->data["id"] ."'";
+			$sql_obj->execute();
 		}
 		else
 		{
-			// get file from filesystem
+			// delete file from the filesystem
 			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
 			@unlink($file_path);
 		}
@@ -373,12 +420,46 @@ class file_process extends file_base
 		
 		if ($this->data["file_location"] == "db")
 		{
-			// TODO: write me
-			// get file from the database
-			//print sql_get_singlevalue("SELECT data as value WHERE id='". $this->data["id"] ."'");
+			/*
+				Fetch file data from database
+			*/
+		
+			// fetch a list of all the rows with file data from the file_upload_data directory
+			$sql_obj = New sql_query;
+			$sql_obj->string = "SELECT id FROM file_upload_data WHERE fileid='". $this->data["id"] ."' ORDER BY id";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				die("No data found for file". $this->data["id"] ."");
+			}
+
+			$sql_obj->fetch_array();
+
+			// create an array of all the IDs
+			$file_data_ids = array();
+			foreach ($sql_obj->data as $data)
+			{
+				$file_data_ids[] = $data["id"];
+			}
+
+			
+			// fetch the data for each ID
+			foreach ($file_data_ids as $id)
+			{
+				$sql_obj = New sql_query;
+				$sql_obj->string = "SELECT data FROM file_upload_data WHERE id='$id' LIMIT 1";
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+
+				print $sql_obj->data[0]["data"];
+			}
 		}
 		else
 		{
+			/*
+				Output data from filesystem
+			*/
 			// get file from filesystem
 			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
 			
@@ -388,7 +469,7 @@ class file_process extends file_base
 			}
 			else
 			{
-				print "FATAL ERROR: File ". $this->data["id"] . " $file_path is missing or inaccessible.";
+				die("FATAL ERROR: File ". $this->data["id"] . " $file_path is missing or inaccessible.");
 			}
 		}
 	}
@@ -399,9 +480,4 @@ class file_process extends file_base
 
 
 
-
-
-
-
-	
 ?>

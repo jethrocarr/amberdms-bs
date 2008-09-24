@@ -49,7 +49,15 @@ class sql_query
 	function execute()
 	{
 		log_debug("sql_query", "Executing execute()");
-		log_debug("sql_query", "SQL:". $this->string);
+
+		if (strlen($this->string) < 255)
+		{
+			log_debug("sql_query", "SQL:". $this->string);
+		}
+		else
+		{
+			log_debug("sql_query", "SQL query too long to display for debug.");
+		}
 		
 		if (!$this->query_result = mysql_query($this->string))
 		{
