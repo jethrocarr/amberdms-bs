@@ -1,13 +1,13 @@
 <?php
 /*
-	support_tickets/journal.php
+	support/journal.php
 	
-	access: support_tickets_view (read-only)
-		support_tickets_write (write access)
+	access: support_view (read-only)
+		support_write (write access)
 
-	The support ticket system uses the standard journal system in order
-	to record all the events going on.
+	Standard journal for support records and audit trail.
 */
+
 
 if (user_permissions_get('support_view'))
 {
@@ -27,6 +27,7 @@ if (user_permissions_get('support_view'))
 	$_SESSION["nav"]["query"][]	= "page=support/delete.php&id=$id";
 
 
+
 	function page_render()
 	{
 		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -34,20 +35,20 @@ if (user_permissions_get('support_view'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>SUPPORT TICKET JOURNAL</h3><br>";
+		print "<h3>SUPPORT JOURNAL</h3><br>";
+		
 		print "<p>Use this journal to file all notes, attachments or other information relating to this support ticket.</p>";
+		print "<p><b><a href=\"index.php?page=support/journal-edit.php&type=text&id=$id\">Add new journal entry</a> || <a href=\"index.php?page=support/journal-edit.php&type=file&id=$id\">Upload File</a></b></p>";
 
-		print "<p><b><a href=\"index.php?page=support/journal-edit.php&id=$id\">Add new journal entry</a></b></p>";
 
-
-		// make sure the support ticket exists
+		// make sure the support exists
 		$sql = New sql_query;
 		$sql->string = "SELECT id FROM `support_tickets` WHERE id='$id'";
 		$sql->execute();
 		
 		if (!$sql->num_rows())
 		{
-			print "<p><b>Error: The requested support_ticket does not exist. <a href=\"index.php?page=support_tickets/support_tickets.php\">Try looking for your support_ticket on the support_ticket list page.</a></b></p>";
+			print "<p><b>Error: The requested support  does not exist. <a href=\"index.php?page=support/support.php\">Try looking for your support on the support list page.</a></b></p>";
 		}
 		else
 		{
@@ -58,6 +59,11 @@ if (user_permissions_get('support_view'))
 			// basic
 			$journal		= New journal_display;
 			$journal->journalname	= "support_tickets";
+			
+			// set the pages to use for forms or file downloads
+			$journal->prepare_set_form_process_page("support/journal-edit.php");
+			$journal->prepare_set_download_page("support/journal-download-process.php");
+
 
 			// define SQL structure
 			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
@@ -69,8 +75,6 @@ if (user_permissions_get('support_view'))
 			// display			
 			$journal->render_journal();
 			
-		
-
 		}
 
 	} // end page_render
