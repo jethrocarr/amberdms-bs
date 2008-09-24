@@ -54,7 +54,7 @@ if (user_permissions_get('customers_write'))
 		if ($action == "delete")
 		{
 			print "<h3>CUSTOMER JOURNAL - DELETE ENTRY</h3><br>";
-			print "<p>This page allows you to delete an entry from the cutomer's journal.</p>";
+			print "<p>This page allows you to delete an entry from the customer's journal.</p>";
 
 			// render delete form
 			$journal_form->render_delete_form();		
