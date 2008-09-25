@@ -1209,4 +1209,35 @@ class journal_process extends journal_base
 
 
 
+/*
+	FUNCTIONS
+*/
+
+
+/*
+	journal_quickadd_event($journalname, $customid, $message)
+
+	Allows the simple addition of event journal messages - this function is used
+	by most of the processing files to log changes.
+
+	Return codes:
+	0	failure
+	1	success
+*/
+function journal_quickadd_event($journalname, $customid, $message)
+{
+	// log to journal
+	$journal = New journal_process;
+		
+	$journal->prepare_set_journalname($journalname);
+	$journal->prepare_set_customid($customid);
+	$journal->prepare_set_type("event");
+		
+	$journal->prepare_set_title($message);
+
+	return $journal->action_create();
+}
+	
+
+
 ?>

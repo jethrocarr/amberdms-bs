@@ -127,6 +127,7 @@ if (user_permissions_get('admin'))
 				else
 				{
 					$_SESSION["notification"]["message"][] = "Successfully created user account. Note that the user is disabled by default, you will need to use the User Permissions page to assign them access rights.";
+					journal_quickadd_event("users", $id, "Created user account.");
 				}
 			}
 			else
@@ -163,6 +164,7 @@ if (user_permissions_get('admin'))
 			else
 			{
 				$_SESSION["notification"]["message"][] = "The user's details have been updated successfully.";
+				journal_quickadd_event("users", $id, "Updated user's details.");
 			}
 		}
 

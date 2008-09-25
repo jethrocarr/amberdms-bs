@@ -117,6 +117,7 @@ if (user_permissions_get('admin'))
 
 		// done
 		$_SESSION["notification"]["message"][] = "User permissions have been updated, and are active immediately.";
+		journal_quickadd_event("users", $id, "Adjusted user permissions.");
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-permissions.php&id=$id");

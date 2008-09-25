@@ -132,6 +132,7 @@ if (user_permissions_get('admin'))
 
 		// done
 		$_SESSION["notification"]["message"][] = "User staff access permissions have been updated, and are active immediately.";
+		journal_quickadd_event("users", $id, "Adjusted user's staffaccess rights.");
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-staffaccess.php&id=$id");

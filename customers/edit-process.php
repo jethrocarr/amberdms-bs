@@ -147,37 +147,20 @@ if (user_permissions_get('customers_write'))
 			{
 				if ($mode == "add")
 				{
+					// message + journal entry
 					$_SESSION["notification"]["message"][] = "Customer successfully created.";
+					journal_quickadd_event("customers", $id, "Customer account created");
 				}
 				else
 				{
+					// message + journal entry
 					$_SESSION["notification"]["message"][] = "Customer successfully updated.";
+					journal_quickadd_event("customers", $id, "Customer's details updated");
 				}
 				
 			}
 		}
 
-
-		// log to journal
-		$journal = New journal_process;
-		
-		$journal->prepare_set_journalname("customers");
-		$journal->prepare_set_customid($id);
-		$journal->prepare_set_type("event");
-		
-		
-		if ($mode == "edit")
-		{
-			$journal->prepare_set_title("Customer's details updated.");
-		}
-		else
-		{
-			$journal->prepare_set_title("Customer record created");
-		}
-
-		$journal->action_create();
-
-		
 
 		// display updated details
 		header("Location: ../index.php?page=customers/view.php&id=$id");

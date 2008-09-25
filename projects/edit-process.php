@@ -116,10 +116,12 @@ if (user_permissions_get('projects_write'))
 				if ($mode == "add")
 				{
 					$_SESSION["notification"]["message"][] = "Project successfully created.";
+					journal_quickadd_event("projects", $id, "Project successfully created.");
 				}
 				else
 				{
 					$_SESSION["notification"]["message"][] = "Project successfully updated.";
+					journal_quickadd_event("projects", $id, "Project successfully created.");
 				}
 				
 			}

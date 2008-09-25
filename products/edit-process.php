@@ -136,10 +136,12 @@ if (user_permissions_get('products_write'))
 				if ($mode == "add")
 				{
 					$_SESSION["notification"]["message"][] = "Product successfully created.";
+					journal_quickadd_event("products", $id, "Product successfully created.");
 				}
 				else
 				{
 					$_SESSION["notification"]["message"][] = "Product successfully updated.";
+					journal_quickadd_event("products", $id, "Product successfully updated.");
 				}
 			}
 		}

@@ -117,7 +117,16 @@ if (user_permissions_get('staff_write'))
 			}
 			else
 			{
-				$_SESSION["notification"]["message"][] = "Customer record successfully updated.";
+				if ($mode == "add")
+				{
+					$_SESSION["notification"]["message"][] = "Employee successfully created.";
+					journal_quickadd_event("staff", $id, "Employee successfully created.");
+				}
+				else
+				{
+					$_SESSION["notification"]["message"][] = "Employee successfully adjusted.";
+					journal_quickadd_event("staff", $id, "Employee successfully adjusted.");
+				}
 			}
 		}
 
