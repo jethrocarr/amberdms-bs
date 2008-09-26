@@ -18,10 +18,10 @@ if (user_permissions_get('accounts_charts_view'))
 		$chart_list->tablename	= "account_charts";
 
 		// define all the columns and structure
-		$chart_list->add_column("standard", "code_chart", "");
-		$chart_list->add_column("standard", "description", "");
-		$chart_list->add_column("standard", "chart_type", "");
-		$chart_list->add_column("standard", "chart_category", "");
+		$chart_list->add_column("standard", "code_chart", "account_charts.code_chart");
+		$chart_list->add_column("standard", "description", "account_charts.description");
+		$chart_list->add_column("standard", "chart_type", "account_chart_type.value");
+		$chart_list->add_column("standard", "chart_category", "account_charts.chart_category");
 
 		// defaults
 		$chart_list->columns		= array("code_chart", "description", "chart_type", "chart_category");
@@ -29,7 +29,8 @@ if (user_permissions_get('accounts_charts_view'))
 
 		// define SQL structure
 		$chart_list->sql_obj->prepare_sql_settable("account_charts");
-		$chart_list->sql_obj->prepare_sql_addfield("id", "");
+		$chart_list->sql_obj->prepare_sql_addfield("id", "account_charts.id");
+		$chart_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
 
 /*
 		// acceptable filter options

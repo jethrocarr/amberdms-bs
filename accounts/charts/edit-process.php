@@ -20,7 +20,7 @@ if (user_permissions_get('accounts_charts_write'))
 	
 	$data["code_chart"]		= security_form_input_predefined("int", "code_chart", 1, "A chart code must be supplied and can only consist of numbers.");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "");
-	$data["chart_type"]		= security_form_input_predefined("any", "chart_type", 1, "");
+	$data["chart_type"]		= security_form_input_predefined("int", "chart_type", 1, "");
 	$data["chart_category"]		= security_form_input_predefined("any", "chart_category", 1, "");
 	
 

@@ -44,12 +44,10 @@ if (user_permissions_get('accounts_charts_write'))
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 		
-		$structure = NULL;
-		$structure["fieldname"] 	= "chart_type";
-		$structure["type"]		= "input";
+		$structure = form_helper_prepare_radiofromdb("chart_type", "SELECT id, value as label FROM account_chart_type");
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
-	
+
 		$structure = NULL;
 		$structure["fieldname"] 	= "chart_category";
 		$structure["type"]		= "input";
