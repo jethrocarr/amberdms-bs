@@ -50,7 +50,7 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing execute()");
 
-		if (strlen($this->string) < 255)
+		if (strlen($this->string) < 1000)
 		{
 			log_debug("sql_query", "SQL:". $this->string);
 		}

@@ -195,8 +195,6 @@ a:active {
 
 	.form_standard textarea {
 		border: 1px #333333 solid;
-		width: 600px;
-		height: 60px;
 	}
 
 
@@ -207,7 +205,6 @@ a:active {
 .form_table {
 	border-spacing: 0px;
 }
-
 	.form_table .header {
 		background-color: #2580a2;
 		color: #ffffff;

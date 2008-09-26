@@ -252,8 +252,8 @@ class form_input
 			$option_array["options"]
 						["req"]		Set to "yes" to mark the field as being required
 						["max_length"]	Max length for input/password types
-						["rows"]	Num of rows for textarea
-						["cols"]	Num of cols for textarea
+						["width"]	Width of field object.
+						["height"]	Height of field object.
 						["label"]	Label field for checkboxes to use instead of a translation
 		
 			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
@@ -286,9 +286,17 @@ class form_input
 			break;
 
 			case "textarea":
+				
+				// set default size
+				if (!$this->structure[$fieldname]["options"]["width"])
+					$this->structure[$fieldname]["options"]["width"] = 300;
+					
+				if (!$this->structure[$fieldname]["options"]["height"])
+					$this->structure[$fieldname]["options"]["height"] = 35;
+			
+				// display
 				print "<textarea name=\"$fieldname\" ";
-				print "rows=\"". $this->structure[$fieldname]["options"]["rows"] ."\" ";
-				print "cols=\"". $this->structure[$fieldname]["options"]["cols"] ."\" ";
+				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px; height: ". $this->structure[$fieldname]["options"]["height"] ."px;\" ";
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea></td>";
 			break;
 
@@ -328,7 +336,43 @@ class form_input
 				
 
 			case "radio":
-				// TODO: write me
+				/*
+					there are two ways to draw radio form entries
+					
+					1. Just pass it the array of values, and the code will translate them using the language DB
+
+					2. Pass it an array of translation values with the array keys matching the value names. This
+					   is useful when you want to populate the radio with data from a different table.
+				*/
+
+				
+				if ($this->structure[$fieldname]["translations"])
+				{
+					$translations = $this->structure[$fieldname]["translations"];
+				}
+				else
+				{
+					// get translation for all options
+					$translations = language_translate($this->language, $this->structure[$fieldname]["values"]);
+				}
+
+
+				// display all the radios buttons
+				foreach ($this->structure[$fieldname]["values"] as $value)
+				{
+					// is the current row, the one that is in use? If so, add the 'selected' tag to it
+					if ($value == $this->structure[$fieldname]["defaultvalue"])
+					{
+						print "<input checked ";
+					}
+					else
+					{
+						print "<input ";
+					}
+					
+					print "type=\"radio\" name=\"$fieldname\" value=\"$value\">" . $translations[$value] ."<br>";
+				}
+				
 			break;
 
 			case "checkbox":
@@ -359,6 +403,11 @@ class form_input
 					   is useful when you want to populate a dropdown with data from a different table.
 				*/
 
+				
+				// set default size
+				if (!$this->structure[$fieldname]["options"]["width"])
+					$this->structure[$fieldname]["options"]["width"] = 250;
+			
 
 				if ($this->structure[$fieldname]["translations"])
 				{
@@ -372,7 +421,7 @@ class form_input
 
 
 				// start dropdown/select box
-				print "<select name=\"$fieldname\" size=\"1\">";
+				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"> ";
 
 				// if there is no current entry, add a select entry as default
 				if (!$this->structure[$fieldname]["defaultname"])
@@ -426,6 +475,7 @@ class form_input
 
 		return 1;
 	}
+
 
 
 	/*
@@ -509,21 +559,79 @@ class form_input
 	This function generates the relevent structure needed to add a drop down
 	to a form (or the option form for a table) based on the values provided from
 	the SQL statement.
-	
-	All the SQL statement needs todo, is to provide 2 different values, labeled "id" and "label"
-	and the function will do the rest.
+
+	Please refer to the form_helper_prepare_valuesfromdb for details about what
+	format and options can be provided to the sqlquery.
 
 	Returns the structure array, which can then be passed directly to form::add_input($structure_array);
 */
 
 function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 {
-	log_debug("form", "Executing form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)");
+	log_debug("form", "Executing form_helper_prepare_dropdownfromdb($fieldname, sqlquery)");
 	
-	$structure = NULL;
+	
+	// get all the values from the DB.
+	$structure = form_helper_prepare_valuesfromdb($sqlquery);
+
+	// set basic options
 	$structure["fieldname"] = $fieldname;
 	$structure["type"]	= "dropdown";
 
+	// return the structure
+	return $structure;
+}
+
+
+
+/*
+	form_helper_prepare_radiofromdb($fieldname, $sqlquery)
+
+	This function generates the relevent structure needed to add a radio selection
+	to the form based on the values provided from the SQL statement.
+
+	Please refer to the form_helper_prepare_valuesfromdb for details about what
+	format and options can be provided to the sqlquery.
+
+	Returns the structure array, which can then be passed directly to form::add_input($structure_array);
+*/
+
+function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
+{
+	log_debug("form", "Executing form_helper_prepare_radiofromdb($fieldname, sqlquery)");
+	
+	// get all the values from the DB.
+	$structure = form_helper_prepare_valuesfromdb($sqlquery);
+
+	// set basic options
+	$structure["fieldname"] = $fieldname;
+	$structure["type"]	= "radio";
+
+	// return the structure
+	return $structure;
+}
+
+
+
+/*
+	form_helper_prepare_valuesfromdb($sqlquery)
+
+	Used by the other form_helper_prepare functions for generating array structures. Used by:
+	* form_helper_prepare_dropdownfromdb
+	* from_helper_prepare_radiofromdb
+
+	All the SQL statement needs todo, is to provide 2 different values, labeled "id" and "label"
+	and the function will do the rest.
+
+	If you need to merge multiple fields into a single label, pull the additional values
+	down as label#. The system will merge all the fields into a single label using "-".
+
+	Returns the structure
+*/
+function form_helper_prepare_valuesfromdb($sqlquery)
+{
+	log_debug("form", "Executing form_helper_prepare_valuesfromdb($sqlquery)");
+	
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= $sqlquery;
 	
@@ -538,7 +646,21 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 			if ($data["id"] && $data["label"])
 			{
 				$structure["values"][]					= $data["id"];
-				$structure["translations"][ $data["id"] ]		= $data["label"];
+
+				/*
+					Merge multiple labels into a single label and return it.
+				*/
+				$label = $data["label"];
+
+				for ($i=0; $i < count(array_keys($data)); $i++)
+				{
+					if ($data["label$i"])
+					{
+						$label .= " - ". $data["label$i"];
+					}
+				}
+				
+				$structure["translations"][ $data["id"] ] = $label;
 			}
 		}
 	}

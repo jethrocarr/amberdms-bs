@@ -623,6 +623,9 @@ class table
 			{
 				foreach (array_keys($this->filter) as $fieldname)
 				{
+					if ($this->filter[$fieldname]["type"] == "dropdown")
+						$this->filter[$fieldname]["options"]["width"] = 150;
+
 					$form->add_input($this->filter[$fieldname]);
 					$form->render_row($fieldname);
 				}
@@ -655,6 +658,7 @@ class table
 				$structure = NULL;
 				$structure["fieldname"]		= "order_$i";
 				$structure["type"]		= "dropdown";
+				$structure["options"]["width"]	= 150;
 				
 				if ($this->columns_order[$i])
 					$structure["defaultvalue"] = $this->columns_order[$i];
