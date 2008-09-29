@@ -48,25 +48,17 @@ if (user_permissions_get('accounts_charts_write'))
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 
-		$structure = NULL;
-		$structure["fieldname"] 	= "chart_category";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
-
-		
-		
 
 		// submit button
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Create Customer";
+		$structure["defaultvalue"]	= "Create Chart";
 		$form->add_input($structure);
 		
 
 		// define subforms
-		$form->subforms["general"]	= array("code_chart", "description", "chart_type", "chart_category");
+		$form->subforms["general"]	= array("code_chart", "description", "chart_type");
 		$form->subforms["submit"]	= array("submit");
 		
 		// load any data returned due to errors

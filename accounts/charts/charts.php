@@ -21,10 +21,9 @@ if (user_permissions_get('accounts_charts_view'))
 		$chart_list->add_column("standard", "code_chart", "account_charts.code_chart");
 		$chart_list->add_column("standard", "description", "account_charts.description");
 		$chart_list->add_column("standard", "chart_type", "account_chart_type.value");
-		$chart_list->add_column("standard", "chart_category", "account_charts.chart_category");
 
 		// defaults
-		$chart_list->columns		= array("code_chart", "description", "chart_type", "chart_category");
+		$chart_list->columns		= array("code_chart", "description", "chart_type");
 		$chart_list->columns_order	= array("code_chart");
 
 		// define SQL structure

@@ -73,11 +73,49 @@ if (user_permissions_get('accounts_charts_view'))
 			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
 		
-			$structure = NULL;
-			$structure["fieldname"] 	= "chart_category";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
+			$form->subforms["general"]	= array("code_chart", "description", "chart_type");
+
+
+			// menu configuration
+			$sql_obj = New sql_query;
+			$sql_obj->string = "SELECT groupname FROM account_chart_menu GROUP BY groupname";
+			$sql_obj->execute();
+			
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					// get all the menu entries for this group
+					$sql_obj_menu = New sql_query;
+					$sql_obj_menu->string = "SELECT id, value, description FROM account_chart_menu WHERE groupname='". $data["groupname"] ."'";
+					$sql_obj_menu->execute();
+					$sql_obj_menu->fetch_array();
+
+					foreach ($sql_obj_menu->data as $data_menu)
+					{
+						// define checkbox
+						$structure = NULL;
+						$structure["fieldname"]		= $data_menu["value"];
+						$structure["type"]		= "checkbox";
+						$structure["options"]["label"]	= $data_menu["description"];
+
+						// checkbox - checked or unchecked
+						$sql_obj_checked = New sql_query;
+						$sql_obj_checked->string = "SELECT id FROM account_charts_menus WHERE chartid='". $id ."' AND menuid='". $data_menu["id"] ."'";
+						$sql_obj_checked->execute();
+
+						if ($sql_obj_checked->num_rows())
+							$structure["defaultvalue"] = "enabled";
+
+						// add checkbox to group subform
+						$form->add_input($structure);
+						$form->subforms[$data["groupname"] ." Menu Options"][] = $data_menu["value"];
+					}
+					
+				}
+			}
 
 
 			// hidden
@@ -110,7 +148,6 @@ if (user_permissions_get('accounts_charts_view'))
 			
 			
 			// define subforms
-			$form->subforms["general"]	= array("code_chart", "description", "chart_type", "chart_category");
 			$form->subforms["hidden"]	= array("id_chart");
 			$form->subforms["submit"]	= array("submit");
 

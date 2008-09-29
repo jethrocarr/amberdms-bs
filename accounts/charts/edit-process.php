@@ -17,11 +17,25 @@ if (user_permissions_get('accounts_charts_write'))
 	/////////////////////////
 
 	$id				= security_form_input_predefined("int", "id_chart", 0, "");
-	
+
+	// general details
 	$data["code_chart"]		= security_form_input_predefined("int", "code_chart", 1, "A chart code must be supplied and can only consist of numbers.");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "");
 	$data["chart_type"]		= security_form_input_predefined("int", "chart_type", 1, "");
-	$data["chart_category"]		= security_form_input_predefined("any", "chart_category", 1, "");
+	
+	// menu selection options
+	$menu_options = array();
+	$sql_obj_menu = New sql_query;
+	$sql_obj_menu->string = "SELECT id, value FROM `account_chart_menu`";
+	$sql_obj_menu->execute();
+	$sql_obj_menu->fetch_array();
+
+	foreach ($sql_obj_menu->data as $data_menu)
+	{
+		$menu_options[ $data_menu["value"] ] = security_form_input_predefined("any", $data_menu["value"], 0, "Form provided invalid input!");
+	}
+
+	
 	
 
 	// are we editing an existing account or adding a new one?
@@ -81,6 +95,7 @@ if (user_permissions_get('accounts_charts_write'))
 	}
 	else
 	{
+		// APPLY GENERAL OPTIONS
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
@@ -99,8 +114,7 @@ if (user_permissions_get('accounts_charts_write'))
 			$mysql_string = "UPDATE `account_charts` SET "
 						."code_chart='". $data["code_chart"] ."', "
 						."description='". $data["description"] ."', "
-						."chart_type='". $data["chart_type"] ."', "
-						."chart_category='". $data["chart_category"] ."' "
+						."chart_type='". $data["chart_type"] ."' "
 						."WHERE id='$id'";
 						
 			if (!mysql_query($mysql_string))
@@ -119,8 +133,56 @@ if (user_permissions_get('accounts_charts_write'))
 				}
 				
 			}
-		}
 
+			/*
+				APPLY MENU SELECTION OPTIONS
+		
+				This takes quite a few mysql calls, as we need to remove old permissions
+				and add new ones on a one-by-one basis.
+
+				TODO: This code could be optimised to be a bit more efficent with it's SQL queries.
+			*/
+
+			foreach ($sql_obj_menu->data as $data_menu)
+			{
+				// check if any current settings exist
+				$sql_obj = New sql_query;
+				$sql_obj->string = "SELECT id FROM account_charts_menus WHERE chartid='$id' AND menuid='". $data_menu["id"] ."'";
+				$sql_obj->execute();
+
+				
+				if ($sql_obj->num_rows())
+				{
+					// chart has this menu option set
+
+					// if the new setting is "off", delete the current setting.
+					if ($menu_options[ $data_menu["value"] ] != "on")
+					{
+						$sql_obj = New sql_query;
+						$sql_obj->string = "DELETE FROM account_charts_menus WHERE chartid='$id' AND menuid='". $data_menu["id"] ."'";
+						$sql_obj->execute();
+					}
+
+					// if new setting is "on", we don't need todo anything.
+
+				}
+				else
+				{	// no current option exists
+
+					// if the new option is "on", insert a new entry
+					if ($menu_options[ $data_menu["value"] ] == "on")
+					{
+						$sql_obj = New sql_query;
+						$sql_obj->string = "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('$id', '". $data_menu["id"] ."')";
+						$sql_obj->execute();
+					}
+
+					// if new option is "off", we don't need todo anything.
+				}
+				
+			} // end of loop through menu items
+
+		}
 
 		// display updated details
 		header("Location: ../../index.php?page=accounts/charts/view.php&id=$id");
