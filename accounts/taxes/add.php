@@ -7,6 +7,11 @@
 	Form to add a new tax to the database.
 */
 
+
+// custom includes
+require("include/accounts/inc_charts.php");
+
+
 if (user_permissions_get('accounts_taxes_write'))
 {
 	function page_render()
@@ -48,6 +53,18 @@ if (user_permissions_get('accounts_taxes_write'))
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
+
+		// tax account selection
+		$structure = charts_form_prepare_acccountdropdown("chartid", "3");
+
+		if (!$structure["values"])
+		{
+			$structure["type"]		= "text";
+			$structure["defaultvalue"]	= "<b>You need to add some tax accounts for this tax to belong to, before you can use this tax</b>";
+		}
+		$form->add_input($structure);
+
+
 	
 		
 		// submit button
@@ -59,7 +76,7 @@ if (user_permissions_get('accounts_taxes_write'))
 		
 
 		// define subforms
-		$form->subforms["general"]	= array("name_tax", "taxrate", "description");
+		$form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "description");
 		$form->subforms["submit"]	= array("submit");
 		
 		// load any data returned due to errors

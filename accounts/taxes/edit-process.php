@@ -20,6 +20,7 @@ if (user_permissions_get('accounts_taxes_write'))
 	
 	$data["name_tax"]		= security_form_input_predefined("any", "name_tax", 1, "");
 	$data["taxrate"]		= security_form_input_predefined("any", "taxrate", 1, "");
+	$data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "");
 	
 
@@ -62,6 +63,18 @@ if (user_permissions_get('accounts_taxes_write'))
 	}
 
 
+	// make sure the selected chart exists
+	$sql_obj = New sql_query;
+	$sql_obj->string = "SELECT id FROM account_charts WHERE id='". $data["chartid"] ."'";
+	$sql_obj->execute();
+
+	if (!$sql_obj->num_rows())
+	{
+		$_SESSION["error"]["message"][] = "The requested chart ID does not exist";
+		$_SESSION["error"]["chartid-error"] = 1;
+	}
+
+
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
@@ -98,6 +111,7 @@ if (user_permissions_get('accounts_taxes_write'))
 			$mysql_string = "UPDATE `account_taxes` SET "
 						."name_tax='". $data["name_tax"] ."', "
 						."taxrate='". $data["taxrate"] ."', "
+						."chartid='". $data["chartid"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id'";
 						

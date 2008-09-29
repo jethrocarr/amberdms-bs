@@ -9,6 +9,11 @@
 	permissions allows the tax to be updated.
 */
 
+
+// custom includes
+require("include/accounts/inc_charts.php");
+
+
 if (user_permissions_get('accounts_taxes_view'))
 {
 	$id = $_GET["id"];
@@ -74,7 +79,17 @@ if (user_permissions_get('accounts_taxes_view'))
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
-		
+
+			// tax account selection
+			$structure = charts_form_prepare_acccountdropdown("chartid", "3");
+
+			if (!$structure["values"])
+			{
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= "<b>You need to add some tax accounts for this tax to belong to, before you can use this tax</b>";
+			}
+			$form->add_input($structure);
+
 
 			// hidden
 			$structure = NULL;
@@ -106,7 +121,7 @@ if (user_permissions_get('accounts_taxes_view'))
 			
 			
 			// define subforms
-			$form->subforms["general"]	= array("name_tax", "description", "taxrate");
+			$form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "description");
 			$form->subforms["hidden"]	= array("id_tax");
 			$form->subforms["submit"]	= array("submit");
 

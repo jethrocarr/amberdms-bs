@@ -18,17 +18,19 @@ if (user_permissions_get('accounts_taxes_view'))
 		$tax_list->tablename	= "account_taxes";
 
 		// define all the columns and structure
-		$tax_list->add_column("standard", "name_tax", "");
-		$tax_list->add_column("standard", "taxrate", "");
-		$tax_list->add_column("standard", "description", "");
+		$tax_list->add_column("standard", "name_tax", "account_taxes.name_tax");
+		$tax_list->add_column("standard", "taxrate", "account_taxes.taxrate");
+		$tax_list->add_column("standard", "chartid", "account_charts.code_chart");
+		$tax_list->add_column("standard", "description", "account_taxes.description");
 
 		// defaults
-		$tax_list->columns		= array("name_tax", "taxrate", "description");
+		$tax_list->columns		= array("name_tax", "taxrate", "chartid", "description");
 		$tax_list->columns_order	= array("name_tax");
 
 		// define SQL structure
 		$tax_list->sql_obj->prepare_sql_settable("account_taxes");
-		$tax_list->sql_obj->prepare_sql_addfield("id", "");
+		$tax_list->sql_obj->prepare_sql_addfield("id", "account_taxes.id");
+		$tax_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid");
 
 /*
 		// acceptable filter options
