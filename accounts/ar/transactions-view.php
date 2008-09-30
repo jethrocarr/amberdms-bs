@@ -19,7 +19,7 @@ require("include/accounts/inc_transactions.php");
 require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_ar_write'))
+if (user_permissions_get('accounts_ar_view'))
 {
 	function page_render()
 	{
@@ -32,7 +32,7 @@ if (user_permissions_get('accounts_ar_write'))
 		print "<h3>VIEW TRANSACTION</h3><br>";
 		print "<p>This page allows you to view or edit a transaction.</p>";
 
-		transaction_render_form("ar", $id);
+		transaction_form_details_render("ar", $id, "accounts/ar/transactions-edit-process.php");
 
 
 	} // end page_render
