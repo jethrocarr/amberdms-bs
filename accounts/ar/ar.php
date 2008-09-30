@@ -5,7 +5,7 @@
 	Summary/Link page for other AR sections
 */
 
-if (user_online())
+if (user_permissions_get("accounts_ar_view"))
 {
 	function page_render()
 	{

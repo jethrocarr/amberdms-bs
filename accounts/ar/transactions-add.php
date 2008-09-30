@@ -16,14 +16,15 @@
 
 // custom includes
 require("include/accounts/inc_transactions.php");
+require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_charts_write'))
+if (user_permissions_get('accounts_ar_write'))
 {
 	function page_render()
 	{
 		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$num_trans	= security_script_input('/^[0-9]*$/', $_GET["numtrans"]);
+		$num_trans	= security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"]);
 
 		if (!$num_trans)
 			$num_trans = 1;
@@ -41,16 +42,15 @@ if (user_permissions_get('accounts_charts_write'))
 		$form->formname = "ar_transaction_add";
 		$form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "accounts/ar/edit-transaction-process.php";
-		$form->method = "post";
-
 
 
 		// basic details
 		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
+		$structure["options"]["width"]	= 300;
 		$form->add_input($structure);
 		
 		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
+		$structure["options"]["width"]	= 300;
 		$form->add_input($structure);
 
 		$structure = NULL;
@@ -67,6 +67,14 @@ if (user_permissions_get('accounts_charts_write'))
 		$structure["fieldname"] 	= "code_ponumber";
 		$structure["type"]		= "input";
 		$form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "notes";
+		$structure["type"]		= "textarea";
+		$structure["options"]["height"]	= "60";
+		$structure["options"]["width"]	= 300;
+		$form->add_input($structure);
+
 
 
 		// dates
@@ -83,8 +91,91 @@ if (user_permissions_get('accounts_charts_write'))
 		$form->add_input($structure);
 
 
+		// transaction rows
+		for ($i = 0; $i < $num_trans; $i++)
+		{
+			// amount field
+			$structure = NULL;
+			$structure["fieldname"] 	= "trans_". $i ."_amount";
+			$structure["type"]		= "input";
+			$structure["options"]["width"]	= "80";
+			$form->add_input($structure);
+				
+			// account
+			$structure = charts_form_prepare_acccountdropdown("trans_". $i ."_account", 2);
+			$form->add_input($structure);
+				
+			// description
+			$structure = NULL;
+			$structure["fieldname"] 	= "trans_". $i ."_description";
+			$structure["type"]		= "textarea";
+			$form->add_input($structure);
+		}
+
+		// tax amount
+		$structure = NULL;
+		$structure["fieldname"] 		= "tax_amount";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= "80";
+		$form->add_input($structure);
+		
+		// tax enable/disable
+		$structure = NULL;
+		$structure["fieldname"] 		= "tax_enable";
+		$structure["type"]			= "checkbox";
+		$structure["defaultvalue"]		= "enabled";
+		$structure["options"]["label"]		= " ";
+		$form->add_input($structure);
+		
+		
+		// tax account dropdown
+		$structure = form_helper_prepare_dropdownfromdb("tax_id", "SELECT id, name_tax as label FROM account_taxes");
+
+		if (count(array_keys($structure["values"])) == 1)
+		{
+			// if there is only 1 tax option avaliable, select it as the default
+			$structure["options"]["noselectoption"] = "yes";
+		}
+		
+		$form->add_input($structure);
+		
+
+		
+		// destination account
+		$structure = charts_form_prepare_acccountdropdown("dest_account", 1);
+
+		if (count(array_keys($structure["values"])) == 1)
+		{
+			// if there is only 1 tax option avaliable, select it as the default
+			$structure["options"]["noselectoption"] = "yes";
+		}
+		
+		$form->add_input($structure);
+		
+
+
+		// hidden fields
+		$structure = NULL;
+		$structure["fieldname"] 	= "num_trans";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $num_trans;
+		$form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "tax_amount_orig";
+		$structure["type"]		= "hidden";
+		$form->add_input($structure);
+
+
+
 		// load any data returned due to errors
 		$form->load_data_error();
+
+
+
+
+
+
 
 
 		/*
@@ -92,7 +183,7 @@ if (user_permissions_get('accounts_charts_write'))
 		*/
 
 		// start form/table structure
-		print "<form method=\"post\" action=\"accounts/ar/edit-transaction-process.php\" class=\"form_standard\">";
+		print "<form method=\"post\" action=\"accounts/ar/transactions-edit-process.php\" class=\"form_standard\">";
 		print "<table class=\"form_table\" width=\"100%\">";
 
 		// form header
@@ -115,6 +206,7 @@ if (user_permissions_get('accounts_charts_write'))
 			print "<table>";
 			$form->render_row("customerid");
 			$form->render_row("employeeid");
+			$form->render_row("notes");
 			print "</table>";
 			
 		print "</td>";
@@ -169,14 +261,9 @@ if (user_permissions_get('accounts_charts_write'))
 			*/
 			for ($i = 0; $i < $num_trans; $i++)
 			{
-				print "<tr>";
+				print "<tr class=\"table_highlight\">";
 
 				// amount field
-				$structure = NULL;
-				$structure["fieldname"] 	= "trans_". $i ."_amount";
-				$structure["type"]		= "input";
-				$form->add_input($structure);
-				
 				print "<td width=\"10%\" valign=\"top\">";
 				$form->render_field("trans_". $i ."_amount");
 				print "</td>";
@@ -187,28 +274,18 @@ if (user_permissions_get('accounts_charts_write'))
 
 
 				// account
-				$structure = form_helper_prepare_dropdownfromdb("trans_". $i ."_account", "SELECT id, code_chart as label, description as label1 FROM account_charts");
-				$form->add_input($structure);
-				
 				print "<td width=\"35%\" valign=\"top\">";
 				$form->render_field("trans_". $i ."_account");
 				print "</td>";
 
 
-
 				// description
-				$structure = NULL;
-				$structure["fieldname"] 	= "trans_". $i ."_description";
-				$structure["type"]		= "textarea";
-				$form->add_input($structure);
-				
 				print "<td width=\"50%\" valign=\"top\">";
 				$form->render_field("trans_". $i ."_description");
 				print "</td>";
 
 			
 				print "</tr>";
-				
 			}
 
 
@@ -225,33 +302,18 @@ if (user_permissions_get('accounts_charts_write'))
 		
 		
 			// amount of tax
-			$structure = NULL;
-			$structure["fieldname"] 	= "tax_amount";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-				
 			print "<td width=\"10%\" valign=\"top\">";
 			$form->render_field("tax_amount");
 			print "</td>";
 
 
 			// checkbox - enable/disable tax
-			$structure = NULL;
-			$structure["fieldname"] 	= "tax_enable";
-			$structure["type"]		= "checkbox";
-			$structure["defaultvalue"]	= "enabled";
-			$structure["options"]["label"]	= " ";
-			$form->add_input($structure);
-				
 			print "<td width=\"5%\" valign=\"top\">";
 			$form->render_field("tax_enable");
 			print "</td>";
 
 
 			// tax selection dropdown
-			$structure = form_helper_prepare_dropdownfromdb("tax_id", "SELECT id, name_tax as label FROM account_taxes");
-			$form->add_input($structure);
-			
 			print "<td width=\"35%\" valign=\"top\">";
 			$form->render_field("tax_id");
 			print "</td>";
@@ -268,11 +330,18 @@ if (user_permissions_get('accounts_charts_write'))
 				Totals Display
 			*/
 			
-			print "<tr>";
+			print "<tr class=\"table_highlight\">";
 
 			// total amount of transaction
-			if ($_SESSION["form"]["ar_transaction_add"])
-				$amount = "$". $_SESSION["form"]["ar_transaction_add"];
+			if ($_SESSION["error"]["amount"])
+			{
+				$amount = "$". $_SESSION["error"]["amount"];
+			}
+			else
+			{
+				$amount = "---";
+			}
+				
 			
 			print "<td width=\"10%\"><b>". $amount ."</b></td>";
 			
@@ -280,9 +349,6 @@ if (user_permissions_get('accounts_charts_write'))
 			print "<td width=\"5%\">to</td>";
 			
 			// destination account (usually always accounts recivable)
-			$structure = form_helper_prepare_dropdownfromdb("dest_account", "SELECT id, code_chart as label, description as label1 FROM account_charts");
-			$form->add_input($structure);
-
 			print "<td width=\"35%\">";
 			$form->render_field("dest_account");
 			print "</td>";
@@ -301,6 +367,11 @@ if (user_permissions_get('accounts_charts_write'))
 
 
 
+		// hidden fields
+		$form->render_field("num_trans");
+		$form->render_field("tax_amount_orig");
+
+
 		// form submit
 		print "<tr class=\"header\">";
 		print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "transaction_add_submit") ."</b></td>";
@@ -308,9 +379,9 @@ if (user_permissions_get('accounts_charts_write'))
 
 		print "<tr>";
 		print "<td colspan=\"2\">";
-		print "<input type=\"submit\" value=\"Update\"> <i>Will re-calculate totals and allow you to enter additional rows to the transactions section.</i><br>";
+		print "<input type=\"submit\" name=\"action\" value=\"update\"> <i>Will re-calculate totals and allow you to enter additional rows to the transactions section.</i><br>";
 		print "<br>";
-		print "<input type=\"submit\" value=\"Save\"> <i>Will create the transaction</i>";
+		print "<input type=\"submit\" name=\"action\" value=\"save\"> <i>Will create the transaction</i>";
 		print "</td>";
 		print "</tr>";
 
