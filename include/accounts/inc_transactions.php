@@ -861,10 +861,12 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 					if ($mode == "add")
 					{
 						$_SESSION["notification"]["message"][] = "Transaction successfully created.";
+						journal_quickadd_event("account_$type", $id, "Transaction successfully created");
 					}
 					else
 					{
 						$_SESSION["notification"]["message"][] = "Transaction successfully updated.";
+						journal_quickadd_event("account_$type", $id, "Transaction successfully updated");
 					}
 					
 				}

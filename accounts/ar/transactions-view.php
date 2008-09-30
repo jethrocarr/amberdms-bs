@@ -21,6 +21,23 @@ require("include/accounts/inc_charts.php");
 
 if (user_permissions_get('accounts_ar_view'))
 {
+	$id = $_GET["id"];
+
+	// nav bar options.
+	$_SESSION["nav"]["active"]	= 1;
+	
+	$_SESSION["nav"]["title"][]	= "Customer's Details";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=accounts/ar/transactions-view.php&id=$id";
+
+	$_SESSION["nav"]["title"][]	= "Customer's Journal";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
+
+	$_SESSION["nav"]["title"][]	= "Delete Transaction";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-delete.php&id=$id";
+
+
+
 	function page_render()
 	{
 		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);

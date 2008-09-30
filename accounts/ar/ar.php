@@ -36,7 +36,7 @@ if (user_permissions_get('accounts_ar_view'))
 
 		
 		// defaults
-		$transaction_list->columns		= array("name_customer", "code_invoice", "date_transaction", "amount_tax", "amount", "amount_total", "amount_paid");
+		$transaction_list->columns		= array("name_customer", "code_invoice", "date_transaction", "amount_total", "amount_paid");
 		$transaction_list->columns_order	= array("code_invoice");
 
 		// define SQL structure
