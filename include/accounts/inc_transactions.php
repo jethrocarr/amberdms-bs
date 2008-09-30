@@ -24,6 +24,8 @@
 */
 function transaction_calc_duedate($date)
 {
+	log_debug("inc_transactions", "Executing transaction_calc_duedate($date)");
+	
 	// get the terms
 	$terms = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_TERMS_DAYS'");
 
@@ -51,6 +53,8 @@ function transaction_calc_duedate($date)
 */
 function transaction_generate_ar_invoiceid()
 {
+	log_debug("inc_transactions", "Executing transaction_generate_ar_invoiceid()");
+	
 	$invoiceid	= 0;
 	$invoicenum	= sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_AR_INVOICENUM'");
 
@@ -87,7 +91,7 @@ function transaction_generate_ar_invoiceid()
 
 
 /*
-	transaction_render_form($type, $id)
+	transaction_form_details_render($type, $id, $processpage)
 
 	Displays a transaction form. This is used by:
 	- adding AR + AP transactions
@@ -96,13 +100,15 @@ function transaction_generate_ar_invoiceid()
 	Values
 	type		Either "ar" or "ap"
 	id		If editing/viewing an existing transaction, provide the ID
+	processpage	Page to submit the form too
 
 	Return Codes
 	0	failure
 	1	success
 */
-function transaction_render_form($type, $id)
+function transaction_form_details_render($type, $id, $processpage)
 {
+	log_debug("inc_transactions", "Executing transaction_form_details_render($type, $id, $processpage)");
 
 	if ($id)
 	{
@@ -321,7 +327,7 @@ function transaction_render_form($type, $id)
 	*/
 
 	// start form/table structure
-	print "<form method=\"post\" action=\"accounts/$type/transactions-$mode-process.php\" class=\"form_standard\">";
+	print "<form method=\"post\" action=\"$processpage\" class=\"form_standard\">";
 	print "<table class=\"form_table\" width=\"100%\">";
 
 	// form header
@@ -477,7 +483,7 @@ function transaction_render_form($type, $id)
 		print "<tr class=\"table_highlight\">";
 
 		// total amount of transaction
-		print "<td width=\"10%\"><b>";
+		print "<td width=\"10%\"><b>$";
 		$form->render_field("amount_total");
 		print "</b></td>";
 		
@@ -516,9 +522,18 @@ function transaction_render_form($type, $id)
 
 	print "<tr>";
 	print "<td colspan=\"2\">";
-	print "<input type=\"submit\" name=\"action\" value=\"update\"> <i>Will re-calculate totals and allow you to enter additional rows to the transactions section.</i><br>";
-	print "<br>";
-	print "<input type=\"submit\" name=\"action\" value=\"save\"> <i>Will create the transaction</i>";
+
+	if (user_permissions_get("accounts_". $type ."_write"))
+	{
+		print "<input type=\"submit\" name=\"action\" value=\"update\"> <i>Will re-calculate totals and allow you to enter additional rows to the transactions section.</i><br>";
+		print "<br>";
+		print "<input type=\"submit\" name=\"action\" value=\"save\"> <i>Will create the transaction</i>";
+	}
+	else
+	{
+		print "<p><i>You do not have permissions to save changes to this transaction</i></p>";
+	}
+	
 	print "</td>";
 	print "</tr>";
 
@@ -533,6 +548,378 @@ function transaction_render_form($type, $id)
 
 
 
+
+/*
+	transaction_form_details_process($type, $mode, $returnpage_error, $returnpage_success)
+
+	Form for processing transaction form results
+
+	Values
+	type			"ar" or "ap" transaction
+	mode			"edit" or "add" for the action to perform
+	returnpage_error	Page to return to in event of errors or updates
+	returnpage_success	Page to return to if successful.
+*/
+function transaction_form_details_process($type, $mode, $returnpage_error, $returnpage_success)
+{
+	log_debug("inc_transactions", "Executing transaction_form_details_process($type, $mode, $returnpage_error, $returnpage_success)");
+
+	
+	/*
+		Fetch all form data
+	*/
+
+
+	// get the ID for an edit
+	if ($mode == "edit")
+	{
+		$id = security_form_input_predefined("int", "id_transaction", 1, "");
+	}
+	else
+	{
+		$id = NULL;
+	}
+	
+
+	// action type
+	$data["action"]			= security_form_input_predefined("any", "action", 1, "");
+
+
+	// we only require input when we do a save, for an update we just want to query
+	if ($data["action"] == "save")
+	{
+		$required = 1;
+	}
+	else
+	{
+		$required = 0;
+	}
+
+
+	// general details
+	$data["customerid"]		= security_form_input_predefined("int", "customerid", $required, "");
+	$data["employeeid"]		= security_form_input_predefined("int", "employeeid", $required, "");
+	$data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
+	
+	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
+	$data["code_ordernumber"]	= security_form_input_predefined("any", "code_ordernumber", 0, "");
+	$data["code_ponumber"]		= security_form_input_predefined("any", "code_ponumber", 0, "");
+	$data["date_transaction"]	= security_form_input_predefined("date", "date_transaction", $required, "");
+	$data["date_due"]		= security_form_input_predefined("date", "date_due", $required, "");
+
+	// transaction(s)
+	$data["num_trans"]		= security_form_input_predefined("int", "num_trans", $required, "");
+
+	for ($i = 0; $i < $data["num_trans"]; $i++)
+	{
+		$data["trans"][$i]["account"]		= security_form_input_predefined("int", "trans_". $i ."_account", 0, "");
+		$data["trans"][$i]["amount"]		= security_form_input_predefined("any", "trans_". $i ."_amount", 0, "");
+		$data["trans"][$i]["description"]	= security_form_input_predefined("any", "trans_". $i ."_description", 0, "");
+
+		if ($data["trans"][$i]["amount"])
+			$_SESSION["error"]["trans_". $i ."_amount"] = sprintf("%0.2f", $data["trans"][$i]["amount"]);
+
+		// make sure both and an amount have been supplied together
+		if ($required)
+		{
+			if ($data["trans"][$i]["account"] && !$data["trans"][$i]["amount"])
+			{
+				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["trans_". $i ."-error"] = 1;
+			}
+
+			if ($data["trans"][$i]["amount"] && !$data["trans"][$i]["account"])
+			{
+				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["trans_". $i ."-error"] = 1;
+			}
+		}
+	}
+
+	// tax
+	$data["amount_tax"]		= security_form_input_predefined("any", "amount_tax", 0, "");
+	$data["amount_tax_orig"]	= security_form_input_predefined("any", "amount_tax_orig", 0, "");
+	$data["tax_enable"]		= security_form_input_predefined("any", "tax_enable", 0, "");
+	$data["tax_id"]			= security_form_input_predefined("int", "tax_id", 0, "");
+
+	// other
+	$data["dest_account"]		= security_form_input_predefined("int", "dest_account", $required, "");
+
+
+
+	/*
+		Calculate total information
+	*/
+
+	// add transactions
+	for ($i = 0; $i < $data["num_trans"]; $i++)
+	{
+		$data["amount"] += $data["trans"][$i]["amount"];
+	}
+
+	// apply tax
+	if ($data["tax_enable"])
+	{
+		if ($data["tax_id"])
+		{
+			/*
+				Tax can be calculated in two ways:
+				1. Calculate the tax from the taxrate
+				2. Let the user over-ride the tax field with their own value
+
+					The amount_tax_orig form field allows us to detect if the user
+					has tried to over-write the field with their own values.
+			*/
+			if ($data["amount_tax_orig"] && ($data["amount_tax"] != $data["amount_tax_orig"]))
+			{				
+				// user has over-ridden the amount to charge for tax.
+				$data["amount_total"] = $data["amount"] + $data["amount_tax"];
+			}
+			else
+			{
+				// need to calculate tax value
+				$taxrate = sql_get_singlevalue("SELECT taxrate as value FROM account_taxes WHERE id='". $data["tax_id"] ."'");
+	
+				$data["amount_tax"]	= $data["amount"] * ($taxrate / 100);
+				$data["amount_total"]	= $data["amount"] + $data["amount_tax"];
+
+				// set tax_amount_orig value
+				$data["amount_tax_orig"] = $data["amount_tax"];
+			}
+			
+			
+		}
+		else
+		{
+			$_SESSION["error"]["message"][] = "Tax has been enabled, but no tax type has been selected - please select a valid tax type, or disable tax on this transaction";
+		}
+	}
+	else
+	{
+		$data["amount_total"] = $data["amount"];
+	}
+	
+	// pad values
+	$data["amount_total"]			= sprintf("%0.2f", $data["amount_total"]);
+	$data["amount_tax"]			= sprintf("%0.2f", $data["amount_tax"]);
+	$data["amount_tax_orig"]		= sprintf("%0.2f", $data["amount_tax_orig"]);
+	$data["amount"]				= sprintf("%0.2f", $data["amount"]);
+
+	// set returns
+	$_SESSION["error"]["amount_total"]	= $data["amount_total"];
+	$_SESSION["error"]["amount_tax"]	= $data["amount_tax"];
+	$_SESSION["error"]["amount_tax_orig"]	= $data["amount_tax_orig"];
+	$_SESSION["error"]["amount"]		= $data["amount"];
+
+
+
+	// are we editing an existing transaction or adding a new one?
+	if ($id)
+	{
+		$mode = "edit";
+
+		// make sure the account actually exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `account_$type` WHERE id='$id'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			$_SESSION["error"]["message"][] = "The transaction you have attempted to edit - $id - does not exist in this system.";
+		}
+	}
+	else
+	{
+		$mode = "add";
+	}
+
+
+	//// ERROR CHECKING ///////////////////////
+
+
+	// make sure we don't choose a transaction invoice number that is already in use
+	if ($data["code_invoice"])
+	{
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `account_ar` WHERE code_invoice='". $data["code_invoice"] ."'";
+		if ($id)
+			$sql_obj->string .= " AND id!='$id'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$_SESSION["error"]["message"][]		= "This invoice number is already in use by another invoice. Please choose a unique number, or leave it blank to recieve an automatically generated number.";
+			$_SESSION["error"]["name_chart-error"]	= 1;
+		}
+	}
+
+
+	/// if there was an error, go back to the entry page
+	if ($_SESSION["error"]["message"])
+	{	
+		$_SESSION["error"]["form"][$type ."_transaction_". $mode] = "failed";
+		header("Location: ../../index.php?page=$returnpage_error&id=$id");
+		exit(0);
+	}
+	else
+	{
+		/*
+			PROCESS ACTION
+
+			There are two actions that can be performed:
+			* update	Updates the calculations and returns to the main invoice page
+			* save		Saves the invoice
+		*/
+
+
+		if ($data["action"] == "update")
+		{
+			// add 1 more transaction row if the user has filled
+			// all the current rows
+			$count = 0;
+			for ($i = 0; $i < $data["num_trans"]; $i++)
+			{
+				if ($data["trans"][$i]["amount"])
+				{
+					$count++;
+				}
+			}
+
+			if ($count == $data["num_trans"])
+			{
+				$data["num_trans"]++;
+			}
+			elseif ($count < $data["num_trans"])
+			{
+				$data["num_trans"] = $count + 1;
+			}
+
+			$_SESSION["error"]["num_trans"] = $data["num_trans"];
+
+			
+			// return to the form
+			$_SESSION["error"]["form"][$type ."_transaction_". $mode] = "update";
+			header("Location: ../../index.php?page=$returnpage_error&id=$id");
+			exit(0);
+		}
+		else
+		{
+		
+			// GENERATE INVOICE ID
+			// if no invoice ID has been supplied, we now need to generate a unique invoice id
+			if (!$data["code_invoice"])
+				$data["code_invoice"] = transaction_generate_ar_invoiceid();
+
+		
+			// APPLY GENERAL OPTIONS
+			if ($mode == "add")
+			{
+				/*
+					Create new transaction
+				*/
+				
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO `account_$type` (code_invoice) VALUES ('".$data["code_invoice"]."')";
+				if (!$sql_obj->execute())
+				{
+					$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create transaction";
+				}
+
+				$id = $sql_obj->fetch_insert_id();
+			}
+
+			if ($id)
+			{
+				/*
+					Update general transaction details
+				*/
+				
+				$sql_obj = New sql_query;
+				
+				$sql_obj->string = "UPDATE `account_$type` SET "
+							."customerid='". $data["customerid"] ."', "
+							."employeeid='". $data["employeeid"] ."', "
+							."notes='". $data["notes"] ."', "
+							."code_invoice='". $data["code_invoice"] ."', "
+							."code_ordernumber='". $data["code_ordernumber"] ."', "
+							."code_ponumber='". $data["code_ponumber"] ."', "
+							."date_transaction='". $data["date_transaction"] ."', "
+							."date_due='". $data["date_due"] ."', "
+							."taxid='". $data["tax_id"] ."', "
+							."dest_account='". $data["dest_account"] ."', "
+							."amount_total='". $data["amount_total"] ."', "
+							."amount_tax='". $data["amount_tax"] ."', "
+							."amount='". $data["amount"] ."' "
+							."WHERE id='$id'";
+							
+				if (!$sql_obj->execute())
+				{
+					$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";
+				}
+				else
+				{
+					if ($mode == "add")
+					{
+						$_SESSION["notification"]["message"][] = "Transaction successfully created.";
+					}
+					else
+					{
+						$_SESSION["notification"]["message"][] = "Transaction successfully updated.";
+					}
+					
+				}
+
+
+
+
+				/*
+					Create items for each transaction in the DB
+				*/
+
+				// delete the existing transaction items
+				if ($mode == "edit")
+				{
+					$sql_obj = New sql_query;
+					$sql_obj->string = "DELETE FROM account_trans WHERE type='$type' AND customid='$id'";
+					$sql_obj->execute();
+				}
+
+				// create all the transaction items
+				for ($i = 0; $i < $data["num_trans"]; $i++)
+				{
+					if ($data["trans"][$i]["amount"])
+					{
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT "
+									."INTO account_trans ("
+									."type, "
+									."customid, "
+									."chartid, "
+									."amount, "
+									."memo "
+									.") VALUES ("
+									."'$type', "
+									."'$id', "
+									."'". $data["trans"][$i]["account"] ."', "
+									."'". $data["trans"][$i]["amount"] ."', "
+									."'". $data["trans"][$i]["description"] ."' "
+									.")";
+						$sql_obj->execute();
+					}
+				}
+
+			}
+
+			// display updated details
+			header("Location: ../../index.php?page=$returnpage_success&id=$id");
+			exit(0);
+			
+		} // end action response
+
+	} // end if passed tests
+
+
+} // end if transaction_form_details_process
 
 
 ?>
