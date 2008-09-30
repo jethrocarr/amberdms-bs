@@ -1,18 +1,18 @@
 <?php
 /*
-	customers/journal-download-process.php
+	accounts/ar/journal-download-process.php
 	
-	access: customers_view (read-only)
+	access: accounts_ar_view (read-only)
 
 	Allows the download of a file attached to the journal.
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
 
 
-if (user_permissions_get('customers_view'))
+if (user_permissions_get('accounts_ar_view'))
 {
 	$journalid	= security_script_input('/^[0-9]*$/', $_GET["customid"]);
 	$fileid 	= security_script_input('/^[0-9]*$/', $_GET["fileid"]);
@@ -31,10 +31,10 @@ if (user_permissions_get('customers_view'))
 
 	/*
 		Now we verify that the file belongs to a valid journal, and that the journal
-		does belong to a customer.
+		does belong to an invoice
 
 		This prevent a malicious user from using this page to fetch other files
-		belonging to other journals or customers.
+		belonging to other journals or invoices.
 	*/
 
 	// get the ID of the journal from the file ID
@@ -54,12 +54,12 @@ if (user_permissions_get('customers_view'))
 		}
 		else
 		{
-			// make sure the journal entry belongs to a customer
-			$customerid = sql_get_singlevalue("SELECT customid as value FROM journal WHERE journalname='customers' AND id='$journalid'");
+			// make sure the journal entry belongs to an invoice
+			$invoiceid = sql_get_singlevalue("SELECT customid as value FROM journal WHERE journalname='account_ar' AND id='$journalid'");
 
-			if (!$customerid)
+			if (!$invoiceid)
 			{
-				$_SESSION["error"]["message"][] = "Unable to match the provided journal entry to a customer journal.";
+				$_SESSION["error"]["message"][] = "Unable to match the provided journal entry to an invoice/transaction journal.";
 			}
 		}
 	}
@@ -72,7 +72,7 @@ if (user_permissions_get('customers_view'))
 	*/
 	if ($_SESSION["error"]["message"])
 	{
-		header("Location: ../index.php?page=message.php");
+		header("Location: ../../index.php?page=message.php");
 		exit(0);
 	}
 	else
@@ -89,7 +89,7 @@ if (user_permissions_get('customers_view'))
 else
 {
 	error_render_noperms();
-	header("Location: ../index.php?page=message.php");
+	header("Location: ../../index.php?page=message.php");
 	exit(0);
 }
 

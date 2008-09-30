@@ -16,14 +16,14 @@ if (user_permissions_get('accounts_ar_view'))
 	// nav bar options.
 	$_SESSION["nav"]["active"]	= 1;
 	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
+	$_SESSION["nav"]["title"][]	= "Invoice Details";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
+	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/ar/journal.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Transaction";
+	$_SESSION["nav"]["title"][]	= "Delete Invoice";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-delete.php&id=$id";
 
 
@@ -61,8 +61,8 @@ if (user_permissions_get('accounts_ar_view'))
 			$journal->journalname	= "account_ar";
 			
 			// set the pages to use for forms or file downloads
-			$journal->prepare_set_form_process_page("ar/accounts/journal-edit.php");
-			$journal->prepare_set_download_page("ar/accounts/journal-download-process.php");
+			$journal->prepare_set_form_process_page("accounts/ar/journal-edit.php");
+			$journal->prepare_set_download_page("accounts/ar/journal-download-process.php");
 
 
 			// define SQL structure

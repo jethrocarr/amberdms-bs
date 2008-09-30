@@ -14,14 +14,14 @@ if (user_permissions_get('accounts_ar_write'))
 	// nav bar options.
 	$_SESSION["nav"]["active"]	= 1;
 	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
+	$_SESSION["nav"]["title"][]	= "Invoice Details";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
+	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/ar/journal.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Transaction";
+	$_SESSION["nav"]["title"][]	= "Delete Invoice";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-delete.php&id=$id";
 
 
