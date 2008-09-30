@@ -114,7 +114,7 @@ if (user_permissions_get('accounts_ar_write'))
 
 		// tax amount
 		$structure = NULL;
-		$structure["fieldname"] 		= "tax_amount";
+		$structure["fieldname"] 		= "amount_tax";
 		$structure["type"]			= "input";
 		$structure["options"]["width"]		= "80";
 		$form->add_input($structure);
@@ -162,7 +162,7 @@ if (user_permissions_get('accounts_ar_write'))
 		$form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] 	= "tax_amount_orig";
+		$structure["fieldname"] 	= "amount_tax_orig";
 		$structure["type"]		= "hidden";
 		$form->add_input($structure);
 
@@ -261,7 +261,15 @@ if (user_permissions_get('accounts_ar_write'))
 			*/
 			for ($i = 0; $i < $num_trans; $i++)
 			{
-				print "<tr class=\"table_highlight\">";
+				if ($_SESSION["error"]["trans_". $i ."-error"])
+				{
+					print "<tr class=\"form_error\">";
+				}
+				else
+				{
+					print "<tr class=\"table_highlight\">";
+				}
+
 
 				// amount field
 				print "<td width=\"10%\" valign=\"top\">";
@@ -303,7 +311,7 @@ if (user_permissions_get('accounts_ar_write'))
 		
 			// amount of tax
 			print "<td width=\"10%\" valign=\"top\">";
-			$form->render_field("tax_amount");
+			$form->render_field("amount_tax");
 			print "</td>";
 
 
@@ -333,9 +341,9 @@ if (user_permissions_get('accounts_ar_write'))
 			print "<tr class=\"table_highlight\">";
 
 			// total amount of transaction
-			if ($_SESSION["error"]["amount"])
+			if ($_SESSION["error"]["amount_total"])
 			{
-				$amount = "$". $_SESSION["error"]["amount"];
+				$amount = "$". $_SESSION["error"]["amount_total"];
 			}
 			else
 			{
@@ -369,7 +377,7 @@ if (user_permissions_get('accounts_ar_write'))
 
 		// hidden fields
 		$form->render_field("num_trans");
-		$form->render_field("tax_amount_orig");
+		$form->render_field("amount_tax_orig");
 
 
 		// form submit

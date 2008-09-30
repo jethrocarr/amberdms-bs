@@ -71,18 +71,20 @@ if (user_permissions_get('accounts_ar_write'))
 			if ($data["trans"][$i]["account"] && !$data["trans"][$i]["amount"])
 			{
 				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["trans_". $i ."-error"] = 1;
 			}
 
 			if ($data["trans"][$i]["amount"] && !$data["trans"][$i]["account"])
 			{
 				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["trans_". $i ."-error"] = 1;
 			}
 		}
 	}
 
 	// tax
-	$data["tax_amount"]		= security_form_input_predefined("any", "tax_amount", 0, "");
-	$data["tax_amount_orig"]	= security_form_input_predefined("any", "tax_amount_orig", 0, "");
+	$data["amount_tax"]		= security_form_input_predefined("any", "amount_tax", 0, "");
+	$data["amount_tax_orig"]	= security_form_input_predefined("any", "amount_tax_orig", 0, "");
 	$data["tax_enable"]		= security_form_input_predefined("any", "tax_enable", 0, "");
 	$data["tax_id"]			= security_form_input_predefined("int", "tax_id", 0, "");
 
@@ -111,24 +113,26 @@ if (user_permissions_get('accounts_ar_write'))
 				1. Calculate the tax from the taxrate
 				2. Let the user over-ride the tax field with their own value
 
-					The tax_amount_orig form field allows us to detect if the user
+					The amount_tax_orig form field allows us to detect if the user
 					has tried to over-write the field with their own values.
 			*/
-			if ($data["tax_amount_orig"] && ($data["tax_amount"] != $data["tax_amount_orig"]))
+			if ($data["amount_tax_orig"] && ($data["amount_tax"] != $data["amount_tax_orig"]))
 			{				
 				// user has over-ridden the amount to charge for tax.
-				$data["amount_total"] = $data["amount"] + $data["tax_amount"];
+				$data["amount_total"] = $data["amount"] + $data["amount_tax"];
 			}
 			else
 			{
 				// need to calculate tax value
 				$taxrate = sql_get_singlevalue("SELECT taxrate as value FROM account_taxes WHERE id='". $data["tax_id"] ."'");
 	
-				$data["tax_amount"]	= $data["amount"] * ($taxrate / 100);
-				$data["amount_total"]	= $data["amount"] + $data["tax_amount"];
+				$data["amount_tax"]	= $data["amount"] * ($taxrate / 100);
+				$data["amount_total"]	= $data["amount"] + $data["amount_tax"];
+
+				// set tax_amount_orig value
+				$data["amount_tax_orig"] = $data["amount_tax"];
 			}
 			
-			$_SESSION["error"]["tax_amount"] = sprintf("%0.2f", $data["tax_amount"]);
 			
 		}
 		else
@@ -143,10 +147,14 @@ if (user_permissions_get('accounts_ar_write'))
 	
 	// pad values
 	$data["amount_total"]			= sprintf("%0.2f", $data["amount_total"]);
+	$data["amount_tax"]			= sprintf("%0.2f", $data["amount_tax"]);
+	$data["amount_tax_orig"]		= sprintf("%0.2f", $data["amount_tax_orig"]);
 	$data["amount"]				= sprintf("%0.2f", $data["amount"]);
 
 	// set returns
 	$_SESSION["error"]["amount_total"]	= $data["amount_total"];
+	$_SESSION["error"]["amount_tax"]	= $data["amount_tax"];
+	$_SESSION["error"]["amount_tax_orig"]	= $data["amount_tax_orig"];
 	$_SESSION["error"]["amount"]		= $data["amount"];
 
 
@@ -172,7 +180,6 @@ if (user_permissions_get('accounts_ar_write'))
 	}
 
 
-		
 	//// ERROR CHECKING ///////////////////////
 
 
@@ -198,7 +205,7 @@ if (user_permissions_get('accounts_ar_write'))
 	{	
 		if ($mode == "edit")
 		{
-			$_SESSION["error"]["form"]["ar_transaction_view"] = "failed";
+			$_SESSION["error"]["form"]["ar_transaction_edit"] = "failed";
 			header("Location: ../../index.php?page=accounts/ar/transactions-view.php&id=$id");
 			exit(0);
 		}
@@ -248,7 +255,7 @@ if (user_permissions_get('accounts_ar_write'))
 			// return to the form
 			if ($mode == "edit")
 			{
-				$_SESSION["error"]["form"]["ar_transaction_view"] = "update";
+				$_SESSION["error"]["form"]["ar_transaction_edit"] = "update";
 				header("Location: ../../index.php?page=accounts/ar/transactions-view.php&id=$id");
 				exit(0);
 			}
@@ -304,7 +311,7 @@ if (user_permissions_get('accounts_ar_write'))
 							."taxid='". $data["tax_id"] ."', "
 							."dest_account='". $data["dest_account"] ."', "
 							."amount_total='". $data["amount_total"] ."', "
-							."amount_tax='". $data["tax_amount"] ."', "
+							."amount_tax='". $data["amount_tax"] ."', "
 							."amount='". $data["amount"] ."' "
 							."WHERE id='$id'";
 							
@@ -358,7 +365,7 @@ if (user_permissions_get('accounts_ar_write'))
 									."'$id', "
 									."'". $data["trans"][$i]["account"] ."', "
 									."'". $data["trans"][$i]["amount"] ."', "
-									."'". $data["trans"][$i]["memo"] ."' "
+									."'". $data["trans"][$i]["description"] ."' "
 									.")";
 						$sql_obj->execute();
 					}
