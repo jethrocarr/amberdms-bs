@@ -360,7 +360,8 @@ class form_input
 				print "<input name=\"". $fieldname ."_hh\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_hours\"> hours ";
 				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_mins\"> mins";
 				
-
+			break;
+			
 			case "radio":
 				/*
 					there are two ways to draw radio form entries
