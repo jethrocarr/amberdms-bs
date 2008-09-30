@@ -470,7 +470,7 @@ class table
 				// TODO: in future, have currency field here
 
 				// for now, just add a $ symbol to the field.
-				$result = "$". $this->data[$row][$column];
+				$result = "$". sprintf("%0.2f", $this->data[$row][$column]);
 			break;
 
 			case "hourmins":

@@ -78,14 +78,27 @@ class form_input
 
 			foreach (array_keys($this->structure) as $fieldname)
 			{
-				// make sure we don't import any data for non-user editable fields
-				// since these fields
+				/*
+					We now import the data returned by the field for any editable fields
+					and also for any text/message/hidden fields which have recieved data
+					from the form.
+
+					If the field is a text/submit/message/hidden field with no data returned, we
+					just ignore it.
+				*/
 				if ($this->structure[$fieldname]["type"] != "submit" 
 					&& $this->structure[$fieldname]["type"] != "message" 
 					&& $this->structure[$fieldname]["type"] != "text"
 					&& $this->structure[$fieldname]["type"] != "hidden")
 				{
 					$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+				}
+				else
+				{
+					if ($_SESSION["error"]["$fieldname"])
+					{
+						$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+					}
 				}
 			}
 		}
@@ -250,11 +263,13 @@ class form_input
 			
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
-						["req"]		Set to "yes" to mark the field as being required
-						["max_length"]	Max length for input/password types
-						["width"]	Width of field object.
-						["height"]	Height of field object.
-						["label"]	Label field for checkboxes to use instead of a translation
+						["req"]			Set to "yes" to mark the field as being required
+						["max_length"]		Max length for input/password types
+						["width"]		Width of field object.
+						["height"]		Height of field object.
+						["label"]		Label field for checkboxes to use instead of a translation
+						["noselectoption"]	Set to yes to prevent the display of a "select:" heading in dropdowns
+									and to automatically select the first entry in the list
 		
 			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();	Associate array used for labeling the values in radio or dropdown type fields
@@ -267,11 +282,22 @@ class form_input
 		switch ($this->structure[$fieldname]["type"])
 		{
 			case "input":
-				print "<input name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\"";
+				// set default size
+				if (!$this->structure[$fieldname]["options"]["width"])
+					$this->structure[$fieldname]["options"]["width"] = 250;
+		
+				// display
+				print "<input name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 			break;
 
 			case "password":
-				print "<input type=\"password\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\">";
+				
+				// set default size
+				if (!$this->structure[$fieldname]["options"]["width"])
+					$this->structure[$fieldname]["options"]["width"] = 250;
+		
+				// display
+				print "<input type=\"password\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 			break;
 			
 			case "hidden":
@@ -424,7 +450,7 @@ class form_input
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"> ";
 
 				// if there is no current entry, add a select entry as default
-				if (!$this->structure[$fieldname]["defaultname"])
+				if (!$this->structure[$fieldname]["defaultname"] && !$this->structure[$fieldname]["options"]["noselectoption"])
 				{
 					print "<option selected value=\"\">-- select --</option>";
 				}
