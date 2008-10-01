@@ -189,7 +189,7 @@ function transaction_form_details_render($type, $id, $processpage)
 	if (!$_SESSION["error"]["form"][$form->formname])
 	{
 		$sql_trans_obj		= New sql_query;
-		$sql_trans_obj->string	= "SELECT * FROM `account_trans` WHERE type='$type' AND customid='$id'";
+		$sql_trans_obj->string	= "SELECT amount, chartid, memo FROM `account_trans` WHERE type='$type' AND customid='$id' AND amount >= 0";
 		$sql_trans_obj->execute();
 		
 		if ($sql_trans_obj->num_rows())
@@ -891,6 +891,17 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 				{
 					if ($data["trans"][$i]["amount"])
 					{
+						/*
+							Double entry accounting requires two entries for any financial transaction
+							1. Credit the source of the transaction (eg: withdrawl funds from current account)
+							2. Debit the destination (eg: pay an expense account)
+
+							For AR/AP transactions, we credit the summary account choosen by the user
+							and debit the various accounts for all the items.
+						*/
+
+						
+						// insert debit transaction
 						$sql_obj		= New sql_query;
 						$sql_obj->string	= "INSERT "
 									."INTO account_trans ("
@@ -907,6 +918,27 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."'". $data["trans"][$i]["description"] ."' "
 									.")";
 						$sql_obj->execute();
+
+
+						// insert credit transaction
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT "
+									."INTO account_trans ("
+									."type, "
+									."customid, "
+									."chartid, "
+									."amount, "
+									."memo "
+									.") VALUES ("
+									."'$type', "
+									."'$id', "
+									."'". $data["dest_account"] ."', "
+									."'-". $data["trans"][$i]["amount"] ."', "
+									."'". $data["trans"][$i]["description"] ."' "
+									.")";
+						$sql_obj->execute();
+
+
 					}
 				}
 
