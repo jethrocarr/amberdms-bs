@@ -189,7 +189,7 @@ function transaction_form_details_render($type, $id, $processpage)
 	if (!$_SESSION["error"]["form"][$form->formname])
 	{
 		$sql_trans_obj		= New sql_query;
-		$sql_trans_obj->string	= "SELECT amount, chartid, memo FROM `account_trans` WHERE type='$type' AND customid='$id' AND amount >= 0";
+		$sql_trans_obj->string	= "SELECT amount_debit, chartid, memo FROM `account_trans` WHERE type='$type' AND customid='$id' AND amount_debit > 0";
 		$sql_trans_obj->execute();
 		
 		if ($sql_trans_obj->num_rows())
@@ -224,7 +224,7 @@ function transaction_form_details_render($type, $id, $processpage)
 		// if we have data from a sql query, load it in
 		if ($sql_trans_obj->data_num_rows)
 		{
-			$form->structure["trans_". $i ."_amount"]["defaultvalue"]	= $sql_trans_obj->data[$i]["amount"];
+			$form->structure["trans_". $i ."_amount"]["defaultvalue"]	= $sql_trans_obj->data[$i]["amount_debit"];
 			$form->structure["trans_". $i ."_account"]["defaultvalue"]	= $sql_trans_obj->data[$i]["chartid"];
 			$form->structure["trans_". $i ."_description"]["defaultvalue"]	= $sql_trans_obj->data[$i]["memo"];
 		}
@@ -908,7 +908,7 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."type, "
 									."customid, "
 									."chartid, "
-									."amount, "
+									."amount_debit, "
 									."memo "
 									.") VALUES ("
 									."'$type', "
@@ -927,13 +927,13 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."type, "
 									."customid, "
 									."chartid, "
-									."amount, "
+									."amount_credit, "
 									."memo "
 									.") VALUES ("
 									."'$type', "
 									."'$id', "
 									."'". $data["dest_account"] ."', "
-									."'-". $data["trans"][$i]["amount"] ."', "
+									."'". $data["trans"][$i]["amount"] ."', "
 									."'". $data["trans"][$i]["description"] ."' "
 									.")";
 						$sql_obj->execute();
@@ -941,6 +941,68 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 
 					}
 				}
+
+
+				/*
+					Create transaction entries for tax purposes
+					credit
+				*/
+
+				// delete the existing transaction items
+				if ($mode == "edit")
+				{
+					$sql_obj = New sql_query;
+					$sql_obj->string = "DELETE FROM account_trans WHERE type='". $type ."_tax' AND customid='$id'";
+					$sql_obj->execute();
+				}
+
+
+				if ($data["tax_enable"])
+				{
+					// get the account used by the tax
+					$data["tax_chartid"] = sql_get_singlevalue("SELECT chartid as value FROM account_taxes WHERE id='". $data["tax_id"] ."'");
+
+					if (!$data["tax_chartid"])
+					{
+						$_SESSION["error"]["message"][] = "Unable to determine chart ID for tax, tax entries may be incorrect or missing. Please report this error as a bug.";
+					}
+					else
+					{
+						// insert debit transaction
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT "
+									."INTO account_trans ("
+									."type, "
+									."customid, "
+									."chartid, "
+									."amount_debit "
+									.") VALUES ("
+									."'". $type ."_tax', "
+									."'$id', "
+									."'". $data["tax_chartid"] ."', "
+									."'". $data["amount_tax"] ."' "
+									.")";
+						$sql_obj->execute();
+
+
+						// insert credit transaction
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT "
+									."INTO account_trans ("
+									."type, "
+									."customid, "
+									."chartid, "
+									."amount_credit "
+									.") VALUES ("
+									."'". $type ."_tax', "
+									."'$id', "
+									."'". $data["dest_account"] ."', "
+									."'". $data["amount_tax"] ."' "
+									.")";
+						$sql_obj->execute();
+					}
+					
+				} // end if tax enabled
 
 			}
 
