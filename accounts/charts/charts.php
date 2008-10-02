@@ -22,49 +22,60 @@ if (user_permissions_get('accounts_charts_view'))
 		$chart_list->add_column("standard", "description", "account_charts.description");
 		$chart_list->add_column("standard", "chart_type", "account_chart_type.value");
 
+		// the debit and credit columns need to be calculated by a seporate query
+		$chart_list->add_column("price", "debit", "NONE");
+		$chart_list->add_column("price", "credit", "NONE");
+
 		// defaults
-		$chart_list->columns		= array("code_chart", "description", "chart_type");
+		$chart_list->columns		= array("code_chart", "description", "chart_type", "debit", "credit");
 		$chart_list->columns_order	= array("code_chart");
+
+		// totals
+		$chart_list->total_columns	= array("debit", "credit");
 
 		// define SQL structure
 		$chart_list->sql_obj->prepare_sql_settable("account_charts");
 		$chart_list->sql_obj->prepare_sql_addfield("id", "account_charts.id");
 		$chart_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
 
-/*
-		// acceptable filter options
-		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
-		$chart_list->add_filter($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
-		$chart_list->add_filter($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "searchbox";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "name_chart LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
-		$chart_list->add_filter($structure);
-*/
 
 
 		// heading
-		print "<h3>CHART OF ACCOUNTS</h3><br><br>";
-
-
-		// options form
-		$chart_list->load_options_form();
-		$chart_list->render_options_form();
+		print "<h3>CHART OF ACCOUNTS</h3>";
+		print "<p>This page lists all the accounts which transactions are filed against and provides a basic overview of the current state of the financials.</p>";
 
 
 		// fetch all the chart information
 		$chart_list->generate_sql();
 		$chart_list->load_data_sql();
+
+
+		// fetch debit and credit summaries for all charts in advance - this
+		// is better than running a query per chart just to get all the totals
+		$sql_amount_obj		= New sql_query;
+		$sql_amount_obj->string	= "SELECT chartid, SUM(amount_credit) as credit, SUM(amount_debit) as debit FROM account_trans GROUP BY chartid";
+		$sql_amount_obj->execute();
+
+		if ($sql_amount_obj->num_rows())
+		{
+			$sql_amount_obj->fetch_array();
+
+
+			// run through all the chart rows and fill in the credit/debit fields
+			for ($i = 0; $i < count(array_keys($chart_list->data)); $i++)
+			{
+				foreach ($sql_amount_obj->data as $data_amount)
+				{
+					if ($data_amount["chartid"] == $chart_list->data[$i]["id"])
+					{
+						$chart_list->data[$i]["credit"]	= $data_amount["credit"];
+						$chart_list->data[$i]["debit"]	= $data_amount["debit"];
+					}
+				}
+			}
+		}
+	
+	
 
 		if (!count($chart_list->columns))
 		{

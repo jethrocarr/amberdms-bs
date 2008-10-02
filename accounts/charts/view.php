@@ -20,6 +20,9 @@ if (user_permissions_get('accounts_charts_view'))
 	$_SESSION["nav"]["query"][]	= "page=accounts/charts/view.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/charts/view.php&id=$id";
 
+	$_SESSION["nav"]["title"][]	= "Account Ledger";
+	$_SESSION["nav"]["query"][]	= "page=accounts/charts/ledger.php&id=$id";
+
 	$_SESSION["nav"]["title"][]	= "Delete Account";
 	$_SESSION["nav"]["query"][]	= "page=accounts/charts/delete.php&id=$id";
 
