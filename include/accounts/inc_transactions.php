@@ -119,6 +119,23 @@ function transaction_form_details_render($type, $id, $processpage)
 		$mode = "add";
 	}
 
+	
+	/*
+		Make sure transaction does exist!
+	*/
+	if ($mode == "edit")
+	{
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
+		$sql_obj->execute();
+		
+		if (!$sql_obj->num_rows())
+		{
+			print "<p><b>Error: The requested transaction does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the transaction/invoice list page.</a></b></p>";
+			return 0;
+		}
+	}
+
 
 	/*
 		Fetch important values
@@ -907,12 +924,14 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."INTO account_trans ("
 									."type, "
 									."customid, "
+									."date_trans, "
 									."chartid, "
 									."amount_debit, "
 									."memo "
 									.") VALUES ("
 									."'$type', "
 									."'$id', "
+									."'". $data["date_transaction"] ."', "
 									."'". $data["trans"][$i]["account"] ."', "
 									."'". $data["trans"][$i]["amount"] ."', "
 									."'". $data["trans"][$i]["description"] ."' "
@@ -926,12 +945,14 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."INTO account_trans ("
 									."type, "
 									."customid, "
+									."date_trans, "
 									."chartid, "
 									."amount_credit, "
 									."memo "
 									.") VALUES ("
 									."'$type', "
 									."'$id', "
+									."'". $data["date_transaction"] ."', "
 									."'". $data["dest_account"] ."', "
 									."'". $data["trans"][$i]["amount"] ."', "
 									."'". $data["trans"][$i]["description"] ."' "
@@ -974,11 +995,13 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."INTO account_trans ("
 									."type, "
 									."customid, "
+									."date_trans, "
 									."chartid, "
 									."amount_debit "
 									.") VALUES ("
 									."'". $type ."_tax', "
 									."'$id', "
+									."'". $data["date_transaction"] ."', "
 									."'". $data["tax_chartid"] ."', "
 									."'". $data["amount_tax"] ."' "
 									.")";
@@ -991,11 +1014,13 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."INTO account_trans ("
 									."type, "
 									."customid, "
+									."date_trans, "
 									."chartid, "
 									."amount_credit "
 									.") VALUES ("
 									."'". $type ."_tax', "
 									."'$id', "
+									."'". $data["date_transaction"] ."', "
 									."'". $data["dest_account"] ."', "
 									."'". $data["amount_tax"] ."' "
 									.")";
