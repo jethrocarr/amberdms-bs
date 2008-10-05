@@ -27,7 +27,24 @@ function charts_form_prepare_acccountdropdown($fieldname, $menuid)
 			."LEFT JOIN account_charts_menus ON account_charts_menus.chartid = account_charts.id "
 			."WHERE account_charts_menus.menuid='$menuid'";
 											
-	return form_helper_prepare_dropdownfromdb($fieldname, $sql_query);
+	$return = form_helper_prepare_dropdownfromdb($fieldname, $sql_query);
+
+	// if we don't get any form data returned this means no charts with the required
+	// permissions exist in the database, so we need to return a graceful error.
+	if (!$return)
+	{
+		$structure = NULL;
+		$structure["fieldname"]			= $fieldname;
+		$structure["type"]			= "text";
+		$structure["defaultvalue"]		= "No suitable charts avaliable";
+
+		return $structure;
+	}
+	else
+	{
+		return $return;
+	}
+	
 }
 
 
