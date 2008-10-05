@@ -13,6 +13,7 @@ require("../../include/amberphplib/main.php");
 
 // custom includes
 require("../../include/accounts/inc_transactions.php");
+require("../../include/accounts/inc_transactions_forms.php");
 
 
 

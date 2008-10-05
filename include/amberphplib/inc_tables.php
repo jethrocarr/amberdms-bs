@@ -16,28 +16,33 @@
 
 class table
 {
-	var $tablename;			// name of the table - used for internal purposes, not displayed
-	var $language = "en_us";	// language to use for the form labels.
+	var $tablename;				// name of the table - used for internal purposes, not displayed
+	var $language = "en_us";		// language to use for the form labels.
 	
-	var $columns;			// array containing the list of all the columns to display
-	var $columns_order;		// array containing columns to order by
+	var $columns;				// array containing the list of all the columns to display
+	var $columns_order;			// array containing columns to order by
 
-	var $total_columns;		// array of columns to create totals for
-	var $total_rows;		// array of columns to create per-row totals for
+	var $total_columns;			// array of columns to create totals for
+	var $total_rows;			// array of columns to create per-row totals for
+	var $total_rows_mode = "subtotal";	// row total modes
+						//
+						//	* subtotal	Total for just each row only (default)
+						//	* incrementing	Add each row total to the previous one
 
-	var $links;			// array of links to place in a final column
 
-	var $structure;			// contains the structure of all the defined columns.
-	var $filter = array();		// structure of the filtering
-	var $option = array();		// fixed options to add to the option form
+	var $links;				// array of links to place in a final column
 
-	var $data;			// table content
-	var $data_num_rows;		// number of rows
+	var $structure;				// contains the structure of all the defined columns.
+	var $filter = array();			// structure of the filtering
+	var $option = array();			// fixed options to add to the option form
 
-	var $sql_obj;			// object used for SQL string, queries and data
+	var $data;				// table content
+	var $data_num_rows;			// number of rows
+
+	var $sql_obj;				// object used for SQL string, queries and data
 	
 
-	var $render_columns;		// human readable column names
+	var $render_columns;			// human readable column names
 
 
 	/*
@@ -189,10 +194,14 @@ class table
 		log_debug("table", "Executing generate_sql");
 
 
-		// run through all the columns, and add their fields to the SQL structure
+		// run through all the columns, and add their fields to the SQL structure, unless
+		// the dbname is equal to NONE, in which case ignore
 		foreach ($this->columns as $column)
 		{
-			$this->sql_obj->prepare_sql_addfield($column, $this->structure[$column]["dbname"]);
+			if ($this->structure[$column]["dbname"] != "NONE")
+			{
+				$this->sql_obj->prepare_sql_addfield($column, $this->structure[$column]["dbname"]);
+			}
 		}
 
 		// generate WHERE filters if any exist
@@ -829,12 +838,23 @@ class table
 			// optional: row totals column
 			if ($this->total_rows)
 			{
-				$this->data[$i]["total"] = 0;
+				if ($this->total_rows_mode == "incrementing")
+				{
+					$this->data[$i]["total"] = $total_rows_incrementing;
+				}
+				else
+				{
+					$this->data[$i]["total"] = 0;
+				}
+				
 
 				foreach ($this->total_rows as $total_col)
 				{
 					// add to the total
 					$this->data[$i]["total"] += $this->data[$i][$total_col];
+
+					// add to row incrementing total if this feature is enabled
+					$total_rows_incrementing = $this->data[$i]["total"];
 
 					// make the type of the column the same as one of the columns to be totaled
 					$this->structure["total"]["type"] = $this->structure[$total_col]["type"];

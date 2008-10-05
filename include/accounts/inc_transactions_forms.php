@@ -129,7 +129,7 @@ function transaction_form_details_render($type, $id, $processpage)
 	if (!$_SESSION["error"]["form"][$form->formname])
 	{
 		$sql_trans_obj		= New sql_query;
-		$sql_trans_obj->string	= "SELECT amount_debit, chartid, memo FROM `account_trans` WHERE type='$type' AND customid='$id' AND amount_debit > 0";
+		$sql_trans_obj->string	= "SELECT amount_credit, chartid, memo FROM `account_trans` WHERE type='$type' AND customid='$id' AND amount_credit > 0";
 		$sql_trans_obj->execute();
 		
 		if ($sql_trans_obj->num_rows())
@@ -164,7 +164,7 @@ function transaction_form_details_render($type, $id, $processpage)
 		// if we have data from a sql query, load it in
 		if ($sql_trans_obj->data_num_rows)
 		{
-			$form->structure["trans_". $i ."_amount"]["defaultvalue"]	= $sql_trans_obj->data[$i]["amount_debit"];
+			$form->structure["trans_". $i ."_amount"]["defaultvalue"]	= $sql_trans_obj->data[$i]["amount_credit"];
 			$form->structure["trans_". $i ."_account"]["defaultvalue"]	= $sql_trans_obj->data[$i]["chartid"];
 			$form->structure["trans_". $i ."_description"]["defaultvalue"]	= $sql_trans_obj->data[$i]["memo"];
 		}
@@ -855,7 +855,7 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."'$type', "
 									."'$id', "
 									."'". $data["date_transaction"] ."', "
-									."'". $data["trans"][$i]["account"] ."', "
+									."'". $data["dest_account"] ."', "
 									."'". $data["trans"][$i]["amount"] ."', "
 									."'". $data["trans"][$i]["description"] ."' "
 									.")";
@@ -876,7 +876,7 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."'$type', "
 									."'$id', "
 									."'". $data["date_transaction"] ."', "
-									."'". $data["dest_account"] ."', "
+									."'". $data["trans"][$i]["account"] ."', "
 									."'". $data["trans"][$i]["amount"] ."', "
 									."'". $data["trans"][$i]["description"] ."' "
 									.")";
@@ -925,7 +925,7 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."'". $type ."_tax', "
 									."'$id', "
 									."'". $data["date_transaction"] ."', "
-									."'". $data["tax_chartid"] ."', "
+									."'". $data["dest_account"] ."', "
 									."'". $data["amount_tax"] ."' "
 									.")";
 						$sql_obj->execute();
@@ -944,7 +944,7 @@ function transaction_form_details_process($type, $mode, $returnpage_error, $retu
 									."'". $type ."_tax', "
 									."'$id', "
 									."'". $data["date_transaction"] ."', "
-									."'". $data["dest_account"] ."', "
+									."'". $data["tax_chartid"] ."', "
 									."'". $data["amount_tax"] ."' "
 									.")";
 						$sql_obj->execute();

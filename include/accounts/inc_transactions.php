@@ -125,20 +125,7 @@ function transaction_render_summarybox($type, $id)
 			print "<tr>";
 				print "<td>";
 				print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is closed.</b>";
-
-				print "<table>";
-				
-				print "<tr>";
-					print "<td>Total Due:</td>";
-					print "<td>$". $sql_obj->data[0]["amount_total"] ."</td>";
-				print "</tr>";
-				
-				print "<tr>";
-					print "<td>Total Paid:</td>";
-					print "<td>$". $sql_obj->data[0]["amount_paid"] ."</td>";
-				print "</tr>";
-				print "</tr></table>";
-				
+				print "<p>This invoice has been fully paid and no further action is required.</p>";
 				print "</td>";
 			print "</tr>";
 			print "</table>";
@@ -161,6 +148,16 @@ function transaction_render_summarybox($type, $id)
 					print "<td>Total Paid:</td>";
 					print "<td>$". $sql_obj->data[0]["amount_paid"] ."</td>";
 				print "</tr>";
+
+
+				$amount_due = $sql_obj->data[0]["amount_total"] - $sql_obj->data[0]["amount_paid"];
+				$amount_due = sprintf("%0.2f", $amount_due);
+
+				print "<tr>";
+					print "<td>Amount Due:</td>";
+					print "<td>$". $amount_due."</td>";
+				print "</tr>";
+				
 				print "</tr></table>";
 				
 				print "</td>";
@@ -176,4 +173,3 @@ function transaction_render_summarybox($type, $id)
 
 
 ?>
-

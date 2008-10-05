@@ -19,6 +19,9 @@ if (user_permissions_get('accounts_ar_view'))
 	$_SESSION["nav"]["title"][]	= "Invoice Details";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
 
+	$_SESSION["nav"]["title"][]	= "Invoice Payments";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-payments.php&id=$id";
+	
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/ar/journal.php&id=$id";

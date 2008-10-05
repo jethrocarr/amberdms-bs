@@ -140,6 +140,15 @@ if (user_permissions_get('accounts_charts_view'))
 							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/transactions-view.php&id=". $ledger_list->data[$i]["customid"] ."\">AR invoice $result</a>";
 						break;
 
+						case "ar_pay":
+							// for AR invoice payments fetch the invoice ID
+							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["customid"] ."'");
+							
+							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/transactions-payments.php&id=". $ledger_list->data[$i]["customid"] ."\">AR payment $result</a>";
+						break;
+
+
+
 						default:
 							$ledger_list->data[$i]["item_id"] = "unknown";
 						break;

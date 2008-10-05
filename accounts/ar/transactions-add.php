@@ -16,6 +16,7 @@
 
 // custom includes
 require("include/accounts/inc_transactions.php");
+require("include/accounts/inc_transactions_forms.php");
 require("include/accounts/inc_charts.php");
 
 

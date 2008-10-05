@@ -186,6 +186,10 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			if ($date_yyyy && (!$date_dd || !$date_mm))
 				$errormsg_tmp = "Invalid date input";
 
+			// pad dates
+			$date_dd	= sprintf("%02d", $date_dd);
+			$date_mm	= sprintf("%02d", $date_mm);
+			$date_yyyy	= sprintf("%04d", $date_yyyy);
 		
 			// join the dates
 			$date_final = "$date_yyyy-$date_mm-$date_dd";

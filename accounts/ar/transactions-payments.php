@@ -1,10 +1,10 @@
 <?php
 /*
-	accounts/ar/transactions-view.php
+	accounts/ar/transactions-payments.php
 	
 	access: account_ar_view
 
-	Form to add a new transaction to the database.
+	Form to view and add payments to an invoice.
 
 	This page is a lot more complicated than most of the other forms in this program, since
 	it needs to allow the user to "update" the form, so that the form adds additional input
@@ -16,7 +16,7 @@
 
 // custom includes
 require("include/accounts/inc_transactions.php");
-require("include/accounts/inc_transactions_forms.php");
+require("include/accounts/inc_payments_forms.php");
 require("include/accounts/inc_charts.php");
 
 
@@ -29,10 +29,10 @@ if (user_permissions_get('accounts_ar_view'))
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Details";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ar/transactions-view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Invoice Payments";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-payments.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=accounts/ar/transactions-payments.php&id=$id";
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
@@ -50,12 +50,12 @@ if (user_permissions_get('accounts_ar_view'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>VIEW TRANSACTION</h3><br>";
-		print "<p>This page allows you to view or edit a transaction.</p>";
+		print "<h3>INVOICE PAYMENTS</h3><br>";
+		print "<p>This page allows you to view or edit payments against this invoice.</p>";
 
 		transaction_render_summarybox("ar", $id);
-
-		transaction_form_details_render("ar", $id, "accounts/ar/transactions-edit-process.php");
+		
+		transaction_form_payments_render("ar", $id, "accounts/ar/transactions-payments-process.php");
 
 
 	} // end page_render

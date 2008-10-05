@@ -103,6 +103,18 @@ a:active {
 	background-color: #e7e7e7;
 }
 
+.transaction_summarybox_open {
+	padding: 4px;
+	background-color: #ff933c;
+}
+
+.transaction_summarybox_closed {
+	padding: 4px;
+	background-color: #92dd90;
+}
+
+
+
 
 
 /*
