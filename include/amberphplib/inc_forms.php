@@ -601,6 +601,9 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 	// get all the values from the DB.
 	$structure = form_helper_prepare_valuesfromdb($sqlquery);
 
+	if (!$structure)
+		return 0;
+
 	// set basic options
 	$structure["fieldname"] = $fieldname;
 	$structure["type"]	= "dropdown";
@@ -629,6 +632,9 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 	
 	// get all the values from the DB.
 	$structure = form_helper_prepare_valuesfromdb($sqlquery);
+
+	if (!$structure)
+		return 0;
 
 	// set basic options
 	$structure["fieldname"] = $fieldname;
@@ -690,10 +696,12 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 				$structure["translations"][ $data["id"] ] = $label;
 			}
 		}
+
+		// return the structure
+		return $structure;
 	}
 
-	// return the structure
-	return $structure;
+	return 0;
 }
 
 
