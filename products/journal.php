@@ -64,6 +64,14 @@ if (user_permissions_get('products_view'))
 			// set the pages to use for forms or file downloads
 			$journal->prepare_set_form_process_page("products/journal-edit.php");
 			$journal->prepare_set_download_page("products/journal-download-process.php");
+			
+			// configure options form
+			$journal->prepare_predefined_optionform();
+			$journal->add_fixed_option("id", $id);
+
+			// load + display options form
+			$journal->load_options_form();
+			$journal->render_options_form();
 
 
 			// define SQL structure

@@ -64,6 +64,14 @@ if (user_permissions_get('support_view'))
 			$journal->prepare_set_form_process_page("support/journal-edit.php");
 			$journal->prepare_set_download_page("support/journal-download-process.php");
 
+			// configure options form
+			$journal->prepare_predefined_optionform();
+			$journal->add_fixed_option("id", $id);
+
+			// load + display options form
+			$journal->load_options_form();
+			$journal->render_options_form();
+
 
 			// define SQL structure
 			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
