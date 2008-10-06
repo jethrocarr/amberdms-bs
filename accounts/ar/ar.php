@@ -70,7 +70,7 @@ if (user_permissions_get('accounts_ar_view'))
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
 		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Hide Completed Transactions";
+		$structure["options"]["label"]	= "Hide Closed Transactions";
 		$structure["defaultvalue"]	= "enabled";
 		$structure["sql"]		= "account_ar.amount_paid!=account_ar.amount_total";
 		$transaction_list->add_filter($structure);
