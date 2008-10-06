@@ -68,12 +68,22 @@ if (user_permissions_get('accounts_ar_view'))
 			$journal->prepare_set_download_page("accounts/ar/journal-download-process.php");
 
 
+			// configure options form
+			$journal->prepare_predefined_optionform();
+			$journal->add_fixed_option("id", $id);
+
+			// load + display options form
+			$journal->load_options_form();
+			$journal->render_options_form();
+
+
 			// define SQL structure
 			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");
 
 			// process SQL			
 			$journal->generate_sql();
 			$journal->load_data();
+
 
 			// display			
 			$journal->render_journal();
