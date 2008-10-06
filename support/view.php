@@ -56,13 +56,13 @@ if (user_permissions_get('support_view'))
 			$form->formname = "support_ticket_view";
 			$form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "support_tickets/edit-process.php";
+			$form->action = "support/edit-process.php";
 			$form->method = "post";
 			
 
 			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_support";
+			$structure["fieldname"] 	= "id_support_ticket";
 			$structure["type"]		= "text";
 			$structure["defaultvalue"]	= "$id";
 			$form->add_input($structure);
@@ -90,6 +90,7 @@ if (user_permissions_get('support_view'))
 
 			// status + priority
 			$structure = form_helper_prepare_dropdownfromdb("status", "SELECT id, value as label FROM support_tickets_status");
+			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
     
 			$structure = form_helper_prepare_dropdownfromdb("priority", "SELECT id, value as label FROM support_tickets_priority");
