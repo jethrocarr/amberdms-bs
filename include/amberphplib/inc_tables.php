@@ -502,7 +502,8 @@ class table
 	/*
 		render_options_form()
 		
-		Displays a list of all the avaliable columns for the user to select from.
+		Displays a list of all the avaliable columns for the user to select from, as well as various
+		filter options
 	*/
 	function render_options_form()
 	{	
