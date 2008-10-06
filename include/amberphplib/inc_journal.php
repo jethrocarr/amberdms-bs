@@ -18,6 +18,9 @@ class journal_base
 	var $language = "en_us";	// language to use for the labels
 	
 	var $structure;			// used to hold the structure of the journal entry selected
+	var $filter = array();		// structure of the filtering
+	var $option = array();		// structure for fixed filter options
+	
 	var $sql_obj;			// object used for SQL string, queries and data
 
 
@@ -62,6 +65,22 @@ class journal_base
 		// select for this journal only
 		$this->sql_obj->prepare_sql_addwhere("journalname='". $this->journalname ."'");
 
+		// generate WHERE filters if any exist
+		if ($this->filter)
+		{
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				// note: we only add the filter if a value has been saved to default value, otherwise
+				// we assume the SQL could break.
+				if ($this->filter[$fieldname]["defaultvalue"])
+				{
+					$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
+					$this->sql_obj->prepare_sql_addwhere($query);
+				}
+			}
+		}
+
+
 		// order by
 		$this->sql_obj->prepare_sql_addorderby_desc("timestamp");
 
@@ -102,6 +121,144 @@ class journal_base
 		}
 	}
 
+
+	/*
+		load_options_form()
+
+		Imports data from POST or SESSION which matches this form to be used for the options.
+	*/
+	function load_options_form()
+	{
+		log_debug("journal_base", "Executing load_options_form()");
+		
+		/*
+			Form options can be passed in two ways:
+			1. POST - this occurs when the options have been passed at the last reload
+			2. SESSION - if the user goes away and returns.
+
+		*/
+
+		if ($_GET["reset"] == "yes")
+		{
+			// reset the option form
+			$_SESSION["form"][$this->journalname] = NULL;
+		}
+		else
+		{
+			
+			if ($_GET["journal_display_options"])
+			{
+				log_debug("journal_base", "Loading options form from $_GET");
+				
+				// load filterby options
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					// switch to handle the different input types
+					// TODO: find a good way to merge this code and the code in the security_form_input_predefined
+					// into a single function to reduce reuse and complexity.
+					switch ($this->filter[$fieldname]["type"])
+					{
+						case "date":
+							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
+
+							if ($this->filter[$fieldname]["defaultvalue"] == "--")
+								$this->filter[$fieldname]["defaultvalue"] = "";
+						break;
+						
+						// convert date to timestamp
+						case "timestamp_date":
+							$date = security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
+
+							if ($date == "--")
+							{
+								$this->filter[$fieldname]["defaultvalue"] = "";
+							}
+							else
+							{
+								$this->filter[$fieldname]["defaultvalue"] = time_date_to_timestamp($date);
+							}
+						break;
+
+						default:
+							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^\S*$/", $_GET[$fieldname]);
+						break;
+					}
+
+					// just blank input if it's in error
+					if ($this->filter[$fieldname]["defaultvalue"] == "error")
+						$this->filter[$fieldname]["defaultvalue"] = "";
+				}
+
+			}
+			elseif ($_SESSION["form"][$this->journalname]["filters"])
+			{
+				log_debug("journal_base", "Loading options form from session data");
+			
+				// load filterby options
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->journalname]["filters"][$fieldname];
+				}
+			}
+
+			// save options to session data
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				$_SESSION["form"][$this->journalname]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
+			}
+		}
+
+		return 1;
+	}
+
+
+
+
+
+
+	/*
+		add_filter($option_array)
+
+		Allows the specification of filter options, which display fields such as input boxes
+		or dropdowns for search or filtering purposes.
+
+		The input to these options is then used to form SQL WHERE queries.
+
+		The structure for the $option_array is the same as for add_input for the form_input class
+		- see the form::render_field function for structure definition - with one addition:
+		
+			$option_array["sql"] = "QUERY";
+			
+			Where QUERY can be any SQL statment that goes after WHERE, with the word "value"
+			being a variable that gets replaced by the input in this option field.
+
+			eg:
+			$option_array["sql"] = "date > 'value'";
+	*/
+	function add_filter($option_array)
+	{
+		log_debug("journal_base", "Executing add_filter(option_array)");
+
+		// we append "filter_" to fieldname, to prevent the chance of the filter field
+		// having the same name as one of the column fields and breaking stuff.
+		$option_array["fieldname"] = "filter_" . $option_array["fieldname"];
+		
+		$this->filter[ $option_array["fieldname"] ] = $option_array;
+	}
+
+
+	/*
+		add_fixed_option($fieldname, $value)
+
+		Adds a fixed hidden form input to the option form - for stuff like specifiy the ID of
+		an object, etc.
+	*/
+	function add_fixed_option($fieldname, $value)
+	{
+		log_debug("table", "Executing add_fixed_option($fieldname, $value)");
+
+		$this->option[$fieldname] = $value;
+	}
 
 
 
@@ -200,6 +357,50 @@ class journal_base
 
 
 
+	/*
+		prepare_predefined_optionform()
+
+		Generates a standard option form for journals. It is unlikely that a custom journal
+		option form is ever required, since journals are all the same.
+	*/
+	function prepare_predefined_optionform()
+	{
+		log_debug("journal_base", "Executing prepare_predefined_optionform()");
+	
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "timestamp_date";
+		$structure["sql"]	= "timestamp >= 'value'";
+		$this->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "timestamp_date";
+		$structure["sql"]	= "timestamp <= 'value'";
+		$this->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "title_search";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "title LIKE '%value%'";
+		$this->add_filter($structure);
+			
+		$structure = NULL;
+		$structure["fieldname"] = "content_search";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "content LIKE '%value%'";
+		$this->add_filter($structure);
+	
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_events";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Hide Event Records";
+		$structure["defaultvalue"]	= "enabled";
+		$structure["sql"]		= "type!='event'";
+		$this->add_filter($structure);
+	}
+
+
 	
 	/*
 		verify_journalid()
@@ -249,7 +450,9 @@ class journal_base
 		
 		return 0;
 	}
-	
+
+
+
 } // end of class journal_base
 
 
@@ -280,7 +483,8 @@ class journal_display extends journal_base
 
 		if (!$this->sql_obj->data_num_rows)
 		{
-			print "<p><b>This journal is currently empty</b></p>";
+			// TODO: detect if the journal has entries which are being hidden by the filter options
+			print "<p><b>This journal is either empty or has no entries matching your filter options</b></p>";
 		}
 		else
 		{
@@ -449,7 +653,223 @@ class journal_display extends journal_base
 		} // end if journal exists			
 		
 	} // end of render_journal function
+
+
+
+
+	/*
+		render_options_form()
+		
+		Displays a list of all the avaliable columns for the user to select from, as well as various
+		filter options
+	*/
+	function render_options_form()
+	{	
+		log_debug("journal_display", "Executing render_options_form()");
+
+		
+		// start the form
+		print "<form method=\"get\" class=\"form_standard\">";
+		
+		$form = New form_input;
+		$form->formname = $this->journalname;
+		$form->language = $this->language;
+
+		// include page name
+		$structure = NULL;
+		$structure["fieldname"] 	= "page";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $_GET["page"];
+		$form->add_input($structure);
+		$form->render_field("page");
+
+		// include any other fixed options
+		foreach (array_keys($this->option) as $fieldname)
+		{
+			$structure = NULL;
+			$structure["fieldname"]		= $fieldname;
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $this->option[$fieldname];
+			$form->add_input($structure);
+			$form->render_field($fieldname);
+		}
+
+
+		// flag this form as the journal_display_options form
+		$structure = NULL;
+		$structure["fieldname"] 	= "journal_display_options";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->journalname;
+		$form->add_input($structure);
+		$form->render_field("journal_display_options");
+
+
+		print "<table width=\"100%\"><tr>";
+		
+		/*
+			Filter Options
+		*/
+		
+		print "<td width=\"100%\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+			print "<b>Filter/Search Options:</b><br><br>";
+
+			print "<table width=\"100%\">";
+
+			if ($this->filter)
+			{
+				foreach (array_keys($this->filter) as $fieldname)
+				{
+					if ($this->filter[$fieldname]["type"] == "dropdown")
+						$this->filter[$fieldname]["options"]["width"] = 150;
+
+					$form->add_input($this->filter[$fieldname]);
+					$form->render_row($fieldname);
+				}
+			}
+			
+			print "</table>";		
+		print "</td>";
+		
+
+		// new row
+		print "</tr>";
+		print "<tr>";
+
+
+		/* Order By Options 
+		print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+
+			print "<br><b>Order By:</b><br>";
+
+			// limit the number of order boxes to 4
+			$num_cols = count($columns_available);
+
+			if ($num_cols > 4)
+				$num_cols = 4;
+
+			
+			for ($i=0; $i < $num_cols; $i++)
+			{
+				// define dropdown
+				$structure = NULL;
+				$structure["fieldname"]		= "order_$i";
+				$structure["type"]		= "dropdown";
+				$structure["options"]["width"]	= 150;
+				
+				if ($this->columns_order[$i])
+					$structure["defaultvalue"] = $this->columns_order[$i];
+
+				$structure["values"] = $columns_available;
+
+				$form->add_input($structure);
+
+				// display drop down
+				$form->render_field($structure["fieldname"]);
+
+				if ($i < ($num_cols - 1))
+				{
+					print " then ";
+				}
+			}
+			
+		print "</td>";
+*/
+
+		/*
+			Submit Row
+		*/
+		print "<tr>";
+		print "<td colspan=\"1\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
 	
+			print "<table>";
+			print "<tr><td>";
+			
+			// submit button	
+			$structure = NULL;
+			$structure["fieldname"]		= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Apply Options";
+			$form->add_input($structure);
+
+			$form->render_field("submit");
+
+			print "</form>";
+			print "</td>";
+
+
+			print "<td>";
+
+
+			/*
+				Include a reset button - this reset button is an independent form
+				which passes any required fixed options and also a reset option back to the page.
+
+				The load_options_form function then detects this reset value and erases the session
+				data for the options belonging to this table, resetting the options form to the original
+				defaults.
+			*/
+
+			// start the form
+			print "<form method=\"get\" class=\"form_standard\">";
+			
+			$form = New form_input;
+			$form->formname = "reset";
+			$form->language = $this->language;
+
+			// include page name
+			$structure = NULL;
+			$structure["fieldname"] 	= "page";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $_GET["page"];
+			$form->add_input($structure);
+			$form->render_field("page");
+
+			// include any other fixed options
+			foreach (array_keys($this->option) as $fieldname)
+			{
+				$structure = NULL;
+				$structure["fieldname"]		= $fieldname;
+				$structure["type"]		= "hidden";
+				$structure["defaultvalue"]	= $this->option[$fieldname];
+				$form->add_input($structure);
+				$form->render_field($fieldname);
+			}
+
+
+			// flag as the reset form
+			$structure = NULL;
+			$structure["fieldname"] 	= "reset";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= "yes";
+			$form->add_input($structure);
+			$form->render_field("reset");
+		
+			$structure = NULL;
+			$structure["fieldname"]		= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Reset Options";
+			$form->add_input($structure);
+
+			$form->render_field("submit");
+
+			
+			print "</form></td>";
+			print "</tr></table>";
+
+				
+		print "</td>";
+		print "</tr>";
+
+
+
+		// end of structure table
+		print "</table><br><br>";
+	}
+
+
+
+
+
 	
 } // end class journal_display
 
