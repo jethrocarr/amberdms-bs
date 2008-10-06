@@ -148,10 +148,12 @@ if (user_permissions_get('vendors_write'))
 				if ($mode == "add")
 				{
 					$_SESSION["notification"]["message"][] = "Vendor successfully created.";
+					journal_quickadd_event("vendors", $id, "Vendor's successfully created");
 				}
 				else
 				{
 					$_SESSION["notification"]["message"][] = "Vendor successfully updated.";
+					journal_quickadd_event("vendors", $id, "Vendor's details updated");
 				}
 			}
 		}
