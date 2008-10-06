@@ -2,7 +2,7 @@
 /*
 	include/accounts/inc_transactions.php
 
-	Contains various help, wrapper and useful functions for working with transactions in the database.
+	Provides functions for drawing and processing forms for managing payments of invoices
 */
 
 
