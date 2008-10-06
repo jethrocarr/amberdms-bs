@@ -54,7 +54,23 @@ function format_size_human($bytes)
 /* TIME FUNCTION */
 
 /*
+	time_date_to_timestamp($date)
+
+	returns a timestamp calculated from the provided YYYY-MM-DD date
+*/
+function time_date_to_timestamp($date)
+{
+	log_debug("misc", "Executing time_date_to_timestamp($date)");
+	
+	$date_a = split("-", $date);
+
+	return mktime(0, 0, 0, $date_a[1], $date_a[2] , $date_a[0]);
+}
+
+
+/*
 	time_format_hourmins($seconds)
+	
 	returns the number of hours, and the number of minutes in the form of H:MM
 */
 function time_format_hourmins($seconds)
