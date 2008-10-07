@@ -63,7 +63,8 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	// get post data
 	$input = $_POST[$valuename];
 
-	// if there is no errormsg supplied, set default
+	// if there is no errormsg supplied, set a default one by looking
+	// up the translation of the fieldname and reporting it.
 	if ($errormsg == "")
 	{
 		$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
