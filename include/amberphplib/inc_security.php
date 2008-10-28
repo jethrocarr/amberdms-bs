@@ -125,6 +125,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	* hourmins	Take 2 fields (hours + minutes), adds them, and returns the number of seconds
 	* email		Standard email address
 	* int		Standard integer
+	* money		0.2f floating point money value - the security function will perform padding
 	* float		Floating point integer
 	* ipv4		XXX.XXX.XXX.XXX IPv4 syntax
 
@@ -244,6 +245,30 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 
 		case "int":
 			$expression = "/^[0-9]*$/";
+		break;
+
+		case "money":
+
+			// verify as a floating point number
+			$expression = "/^[0-9]*.[0-9]*$/";
+			$value = security_form_input($expression, $valuename, $numchar, $errormsg);
+
+			// perform padding
+			if ($value != "error")
+			{
+				$value = sprintf("%0.2f", $value);
+			}
+
+			// trigger error if value is 0.00
+			if ($numchar && $value == "0.00")
+			{
+				$_SESSION["error"]["message"][]			= $errormsg;
+				$_SESSION["error"]["". $valuename . "-error"]	= 1;
+				$_SESSION["error"][$valuename]			= 0;
+			}
+
+			return $value;
+			
 		break;
 
 		case "float":

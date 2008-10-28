@@ -15,14 +15,14 @@ if (user_permissions_get('accounts_ar_write'))
 	$_SESSION["nav"]["active"]	= 1;
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/ar/journal.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Delete Invoice";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-delete.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
 
 
 
@@ -52,7 +52,7 @@ if (user_permissions_get('accounts_ar_write'))
 		if ($action == "delete")
 		{
 			print "<h3>INVOICE JOURNAL - DELETE ENTRY</h3><br>";
-			print "<p>This page allows you to delete an entry from the invoice/transaction journal.</p>";
+			print "<p>This page allows you to delete an entry from the invoice/invoice journal.</p>";
 
 			// render delete form
 			$journal_form->render_delete_form();		

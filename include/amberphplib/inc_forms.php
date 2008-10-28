@@ -25,6 +25,16 @@ class form_input
 	var $subforms;			// associative array of sub form titles and contents
 	var $structure;			// array structure of all variables and options
 
+	var $sessionform;		// If this value is set, the value is the name of the session variable
+					// holding form information, which can then be manipulated by multiple
+					// different forms.
+					//
+					// This enables a whole bunch of features for handling session forms in
+					// the form functions.
+					//
+					// For full details about developing session-based forms, please refer
+					// to the developers guide.
+
 
 	/*
 		add_input ($option_array)
@@ -47,20 +57,41 @@ class form_input
 	/*
 		load_data()
 
-		Wrapper function that decided whether or not to call the load_data_sql or the load_data_error functions.
+		Wrapper function which decides upon the suitable way to fill
+		the form with data from one of 3 options:
+		- database
+		- error data
+		- session data (if session-based form is active)
 	*/
 	function load_data()
 	{
 		log_debug("form", "Executing load_data()");
-		
+
+		// error data has highest perference
 		if ($_SESSION["error"]["form"][$this->formname])
 		{
 			return $this->load_data_error();
 		}
-		else
+
+		// if enabled, and data exists, fetch information from session form
+		if ($this->sessionform)
+		{
+			if ($_SESSION["form"][$this->sessionform])
+			{
+				return $this->load_data_session();
+			}
+		}
+	
+		// if a SQL query has been provided, fetch information from SQL DB
+		if ($this->sql_query)
 		{
 			return $this->load_data_sql();
 		}
+
+
+		// failure
+		log_debug("form", "Error: No valid data avaliable from any method for load_data() function");
+		return 0;
 	}
 
 
@@ -85,20 +116,32 @@ class form_input
 
 					If the field is a text/submit/message/hidden field with no data returned, we
 					just ignore it.
+
+					We always ignore submit buttons.
 				*/
-				if ($this->structure[$fieldname]["type"] != "submit" 
-					&& $this->structure[$fieldname]["type"] != "message" 
-					&& $this->structure[$fieldname]["type"] != "text"
-					&& $this->structure[$fieldname]["type"] != "hidden")
+
+				switch ($this->structure[$fieldname]["type"])
 				{
-					$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
-				}
-				else
-				{
-					if ($_SESSION["error"]["$fieldname"])
-					{
+					case "submit":
+						// do nothing for submit buttons
+					break;
+
+					case "message":
+					case "text":
+					case "hidden":
+
+						// only set the field if a value has been provided - ie: don't set to blank for any reason
+						if ($_SESSION["error"]["$fieldname"])
+						{
+							$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+						}
+					
+					break;
+
+					default:
+						// set the default value
 						$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
-					}
+					break;
 				}
 			}
 		}
@@ -109,6 +152,64 @@ class form_input
 	
 		return 1;
 	}
+	
+	/*
+		load_data_session()
+
+		Imports data from the session arrays into the form structure. This is used by session-based forms.
+	*/
+	function load_data_session()
+	{
+		log_debug("form", "Executing load_data_session()");
+	
+		if ($_SESSION["form"][$this->sessionform])
+		{
+			foreach (array_keys($this->structure) as $fieldname)
+			{
+				/*
+					We now import the data returned by the field for any editable fields
+					and also for any text/message/hidden fields which have recieved data
+					from the form.
+
+					If the field is a text/submit/message/hidden field with no data returned, we
+					just ignore it.
+
+					We always ignore submit buttons.
+				*/
+
+				switch ($this->structure[$fieldname]["type"])
+				{
+					case "submit":
+						// do nothing for submit buttons
+					break;
+
+					case "message":
+					case "text":
+					case "hidden":
+
+						// only set the field if a value has been provided - ie: don't set to blank for any reason
+						if ($_SESSION["form"][$this->sessionform]["$fieldname"])
+						{
+							$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["form"][$this->sessionform][$fieldname]);
+						}
+					
+					break;
+
+					default:
+						// set the default value
+						$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["form"][$this->sessionform][$fieldname]);
+					break;
+				}
+			}
+		}
+		else
+		{
+			log_debug("form", "No session data to import.");
+		}
+	
+		return 1;
+	}
+
 
 	/*
 		load_data_sql()
@@ -151,6 +252,29 @@ class form_input
 		}
 
 	}
+
+
+
+	/*
+		render_sessionform_messagebox()
+
+		Displays a message box informing the user about unsaved information in the session form, and
+		create a erase button.
+	*/
+	function render_sessionform_messagebox()
+	{
+		log_debug("form", "Executing render_sessionform_messagebox()");
+		
+		// display message box about the form
+		print "<table width=\"100%\" class=\"table_highlight_red\">";
+		print "<tr>";
+		print "<td colspan=\"2\"><p>You have unsaved changes to this form. Either save them using the buttons at the bottom of the form, or use the clear button to reset the form.</p></td>";
+		print "</tr><tr>";
+		print "<td><input type=\"submit\" name=\"action\" value=\"Clear Form\"></td>";
+		print "</tr>";
+		print "</table><br>";
+	}
+
 
 
 
@@ -499,7 +623,7 @@ class form_input
 			case "submit":
 				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
 
-				print "<input type=\"submit\" value=\"$translation\">";
+				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\">";
 			break;
 
 			case "message":
@@ -549,6 +673,12 @@ class form_input
 
 		// start form
 		print "<form enctype=\"multipart/form-data\" method=\"". $this->method ."\" action=\"". $this->action ."\" class=\"form_standard\">";
+
+		// draw session form box
+		if ($this->sessionform)
+		{
+			$this->render_sessionform_messagebox();
+		}
 
 
 		// draw each sub form

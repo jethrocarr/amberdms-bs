@@ -5,7 +5,7 @@
 	access: accounts_ar_view (read-only)
 		accounts_ar_write (write access)
 
-	Standard journal for transaction/invoice records and journal trail.
+	Standard journal for invoice/invoice records and journal trail.
 */
 
 
@@ -17,17 +17,17 @@ if (user_permissions_get('accounts_ar_view'))
 	$_SESSION["nav"]["active"]	= 1;
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-view.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Invoice Payments";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-payments.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-payments.php&id=$id";
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/ar/journal.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Delete Invoice";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/transactions-delete.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
 
 
 
@@ -44,14 +44,14 @@ if (user_permissions_get('accounts_ar_view'))
 		print "<p><b><a href=\"index.php?page=accounts/ar/journal-edit.php&type=text&id=$id\">Add new journal entry</a> || <a href=\"index.php?page=accounts/ar/journal-edit.php&type=file&id=$id\">Upload File</a></b></p>";
 
 
-		// make sure the transaction exists
+		// make sure the invoice exists
 		$sql = New sql_query;
 		$sql->string = "SELECT id FROM `account_ar` WHERE id='$id'";
 		$sql->execute();
 		
 		if (!$sql->num_rows())
 		{
-			print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/ar.php\">Try looking for your transaction on the invoice list page.</a></b></p>";
+			print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/ar.php\">Try looking for your invoice on the invoice list page.</a></b></p>";
 		}
 		else
 		{

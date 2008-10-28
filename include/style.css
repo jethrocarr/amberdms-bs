@@ -103,12 +103,17 @@ a:active {
 	background-color: #e7e7e7;
 }
 
-.transaction_summarybox_open {
+.table_highlight_red {
 	padding: 4px;
 	background-color: #ff933c;
 }
 
-.transaction_summarybox_closed {
+.invoice_summarybox_open {
+	padding: 4px;
+	background-color: #ff933c;
+}
+
+.invoice_summarybox_closed {
 	padding: 4px;
 	background-color: #92dd90;
 }

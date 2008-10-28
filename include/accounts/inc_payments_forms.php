@@ -1,6 +1,6 @@
 <?php
 /*
-	include/accounts/inc_transactions.php
+	include/accounts/inc_payments_forms.php
 
 	Provides functions for drawing and processing forms for managing payments of invoices
 */
@@ -12,26 +12,26 @@
 
 
 /*
-	transaction_form_payments_render($type, $id, $processpage)
+	invoice_form_payments_render($type, $id, $processpage)
 
-	Displays a form for making payments against AR or AP transactions.
+	Displays a form for making payments against AR or AP invoices.
 	
 	Values
 	type		Either "ar" or "ap"
-	id		ID of the transaction
+	id		ID of the invoice
 	processpage	Page to submit the form too
 
 	Return Codes
 	0	failure
 	1	success
 */
-function transaction_form_payments_render($type, $id, $processpage)
+function invoice_form_payments_render($type, $id, $processpage)
 {
-	log_debug("inc_payments_forms", "Executing transaction_form_payments_render($type, $id, $processpage)");
+	log_debug("inc_payments_forms", "Executing invoice_form_payments_render($type, $id, $processpage)");
 
 	
 	/*
-		Make sure transaction does exist!
+		Make sure invoice does exist!
 	*/
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
@@ -39,7 +39,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 		
 	if (!$sql_obj->num_rows())
 	{
-		print "<p><b>Error: The requested transaction does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the transaction/invoice list page.</a></b></p>";
+		print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
 		return 0;
 	}
 
@@ -62,7 +62,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 
 
 	// unless there has been error data returned, fetch all the payments
-	// from the DB, and work out the number of transaction rows
+	// from the DB, and work out the number of invoice rows
 	if (!$_SESSION["error"]["form"][$form->formname])
 	{
 		$sql_trans_obj		= New sql_query;
@@ -78,7 +78,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 	}
 
 
-	// transaction rows
+	// invoice rows
 	for ($i = 0; $i < $num_trans; $i++)
 	{
 		// date
@@ -163,7 +163,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 
 
 	$structure = NULL;
-	$structure["fieldname"] 	= "id_transaction";
+	$structure["fieldname"] 	= "id_invoice";
 	$structure["type"]		= "hidden";
 	$structure["defaultvalue"]	= $id;
 	$form->add_input($structure);
@@ -208,12 +208,12 @@ function transaction_form_payments_render($type, $id, $processpage)
 		This section is the most complex part of the form, where we add new rows to the form
 		for payments.
 
-		To generate totals or new transaction rows, the user needs to click the update button, however
+		To generate totals or new invoice rows, the user needs to click the update button, however
 		in future this could be extended with javascript so the user only has to use the update button if
 		their browser is not javascript capable.
 	*/
 	print "<tr class=\"header\">";
-	print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "transaction_". $mode ."_payment") ."</b></td>";
+	print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "invoice_". $mode ."_payment") ."</b></td>";
 	print "</tr>";
 
 		print "<tr>";
@@ -234,7 +234,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 		/*
 			Transaction Rows
 			
-			There can be any number of transactions (minimum/default is 1) that we need
+			There can be any number of invoices (minimum/default is 1) that we need
 			to display.
 		*/
 		for ($i = 0; $i < $num_trans; $i++)
@@ -310,14 +310,14 @@ function transaction_form_payments_render($type, $id, $processpage)
 
 
 	// hidden fields
-	$form->render_field("id_transaction");
+	$form->render_field("id_invoice");
 	$form->render_field("num_trans");
 	$form->render_field("amount_tax_orig");
 
 
 	// form submit
 	print "<tr class=\"header\">";
-	print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "transaction_". $mode ."_submit") ."</b></td>";
+	print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "invoice_". $mode ."_submit") ."</b></td>";
 	print "</tr>";
 
 	print "<tr>";
@@ -331,7 +331,7 @@ function transaction_form_payments_render($type, $id, $processpage)
 	}
 	else
 	{
-		print "<p><i>You do not have permissions to save changes to this transaction</i></p>";
+		print "<p><i>You do not have permissions to save changes to this invoice</i></p>";
 	}
 	
 	print "</td>";
@@ -351,19 +351,19 @@ function transaction_form_payments_render($type, $id, $processpage)
 
 
 /*
-	transaction_form_payments_process($type, $mode, $returnpage_error, $returnpage_success)
+	invoice_form_payments_process($type, $mode, $returnpage_error, $returnpage_success)
 
-	Form for processing payments form results - the payment form will return a number of transactions
+	Form for processing payments form results - the payment form will return a number of invoices
 	which we need to process and add to the DB.
 
 	Values
-	type			"ar" or "ap" transaction
+	type			"ar" or "ap" invoice
 	returnpage_error	Page to return to in event of errors or updates
 	returnpage_success	Page to return to if successful.
 */
-function transaction_form_details_process($type, $returnpage_error, $returnpage_success)
+function invoice_form_payments_process($type, $returnpage_error, $returnpage_success)
 {
-	log_debug("inc_payments_forms", "Executing transaction_form_details_process($type, $mode, $returnpage_error, $returnpage_success)");
+	log_debug("inc_payments_forms", "Executing invoice_form_details_process($type, $mode, $returnpage_error, $returnpage_success)");
 
 	
 	/*
@@ -371,8 +371,8 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 	*/
 
 
-	// get the transaction id
-	$id = security_form_input_predefined("int", "id_transaction", 1, "");
+	// get the invoice id
+	$id = security_form_input_predefined("int", "id_invoice", 1, "");
 
 
 	// action type
@@ -390,7 +390,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 	}
 
 
-	// transaction(s)
+	// invoice(s)
 	$data["num_trans"]		= security_form_input_predefined("int", "num_trans", $required, "");
 
 	for ($i = 0; $i < $data["num_trans"]; $i++)
@@ -411,13 +411,13 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 			// make sure both and an amount have been supplied together
 			if ($data["trans"][$i]["account"] && !$data["trans"][$i]["amount"])
 			{
-				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each invoice row";
 				$_SESSION["error"]["trans_". $i ."-error"] = 1;
 			}
 
 			if ($data["trans"][$i]["amount"] && !$data["trans"][$i]["account"])
 			{
-				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each transaction row";
+				$_SESSION["error"]["message"][] = "You must supply both an amount and select an account for each invoice row";
 				$_SESSION["error"]["trans_". $i ."-error"] = 1;
 			}
 			
@@ -438,7 +438,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 		Calculate total information
 	*/
 
-	// add transactions
+	// add invoices
 	for ($i = 0; $i < $data["num_trans"]; $i++)
 	{
 		$data["amount_paid"] += $data["trans"][$i]["amount"];
@@ -452,18 +452,18 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 
 
 
-	// make sure the transaction does actually exist
+	// make sure the invoice does actually exist
 	$sql_trans_obj		= New sql_query;
 	$sql_trans_obj->string	= "SELECT id, dest_account FROM `account_$type` WHERE id='$id'";
 	$sql_trans_obj->execute();
 
 	if (!$sql_trans_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The transaction you have attempted to edit - $id - does not exist in this system.";
+		$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - $id - does not exist in this system.";
 	}
 	else
 	{
-		// we need some information from the transaction such as the dest account
+		// we need some information from the invoice such as the dest account
 		$sql_trans_obj->fetch_array();
 	}
 
@@ -491,7 +491,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 
 		if ($data["action"] == "update")
 		{
-			// add 1 more transaction row if the user has filled
+			// add 1 more invoice row if the user has filled
 			// all the current rows
 			$count = 0;
 			for ($i = 0; $i < $data["num_trans"]; $i++)
@@ -526,31 +526,31 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 				Manage Payment Transactions
 			*/
 
-			// delete the existing transaction items
+			// delete the existing invoice items
 			$sql_obj = New sql_query;
 			$sql_obj->string = "DELETE FROM account_trans WHERE type='". $type ."_pay' AND customid='$id'";
 			$sql_obj->execute();
 			
 
-			// create all the transaction items
+			// create all the invoice items
 			for ($i = 0; $i < $data["num_trans"]; $i++)
 			{
 				if ($data["trans"][$i]["amount"])
 				{
 					/*
-						Double entry accounting requires two entries for any financial transaction
+						Double entry accounting requires two entries for any financial invoice
 						
-						1. Credit the source of the transaction (eg: withdrawl funds from current account)
+						1. Credit the source of the invoice (eg: withdrawl funds from current account)
 						2. Debit the destination (eg: pay an expense account)
 
-						For AR/AP transactions, we credit the summary account choosen by the user
+						For AR/AP invoices, we credit the summary account choosen by the user
 						and debit the various accounts for all the items.
 					*/
 
-					// TODO: add better error checking of transaction items here
+					// TODO: add better error checking of invoice items here
 
 					
-					// insert debit transaction
+					// insert debit invoice
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT "
 								."INTO account_trans ("
@@ -573,7 +573,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 					$sql_obj->execute();
 
 
-					// insert credit transaction
+					// insert credit invoice
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT "
 								."INTO account_trans ("
@@ -598,7 +598,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 
 				}
 
-			} // end of transaction item loop
+			} // end of invoice item loop
 
 
 
@@ -625,7 +625,7 @@ function transaction_form_details_process($type, $returnpage_error, $returnpage_
 	} // end if passed tests
 
 
-} // end if transaction_form_details_process
+} // end if invoice_form_payments_process
 
 
 
