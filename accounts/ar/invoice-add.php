@@ -16,7 +16,7 @@
 
 // custom includes
 require("include/accounts/inc_invoices.php");
-require("include/accounts/inc_invoices_forms.php");
+require("include/accounts/inc_invoices_details.php");
 require("include/accounts/inc_charts.php");
 
 
@@ -30,7 +30,7 @@ if (user_permissions_get('accounts_ar_write'))
 		print "<h3>ADD INVOICE</h3><br>";
 		print "<p>This page provides features to allow you to add new invoices to the system.</p>";
 
-		invoice_form_render("ar", 0, "accounts/ar/invoice-edit-process.php");
+		invoice_form_details_render("ar", 0, "accounts/ar/invoice-edit-process.php");
 
 
 	} // end page_render

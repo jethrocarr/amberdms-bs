@@ -65,7 +65,8 @@ class table
 				standard
 				date		- YYYY-MM-DD format date field
 				timestamp	- UNIX style timestamp field
-				price		- displays a price field correctly
+				money		- displays a financial value correctly
+				price		- legacy use - just calls money
 				hourmins	- input is a number of seconds, display as H:MM
 				
 		name	- name/label of the column for display purposes
@@ -91,6 +92,10 @@ class table
 		$options_array is used to specifiy get values, and has the following structure:
 		$options_array["get_field_name"]["value"]	= "value";
 		$options_array["get_field_name"]["column"]	= "columnname";
+
+
+		To force the code to not add the index.php?page to the link, set the following option:
+		$options_array["full_link"] = yes
 
 		If the value option is specified, a GET field will be added with the specified value,
 		otherwise if the column option is
@@ -476,6 +481,7 @@ class table
 			break;
 
 			case "price":
+			case "money":
 				// TODO: in future, have currency field here
 
 				// for now, just add a $ symbol to the field.
