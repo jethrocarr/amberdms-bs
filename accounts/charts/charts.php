@@ -92,6 +92,12 @@ if (user_permissions_get('accounts_charts_view'))
 			$structure["id"]["column"]	= "id";
 			$chart_list->add_link("view", "accounts/charts/view.php", $structure);
 
+			// ledger link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$chart_list->add_link("ledger", "accounts/charts/ledger.php", $structure);
+
+
 			// display the table
 			$chart_list->render_table();
 
