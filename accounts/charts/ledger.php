@@ -137,14 +137,14 @@ if (user_permissions_get('accounts_charts_view'))
 							// for AR invoices/transaction fetch the invoice ID
 							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["customid"] ."'");
 							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/transactions-view.php&id=". $ledger_list->data[$i]["customid"] ."\">AR invoice $result</a>";
+							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $ledger_list->data[$i]["customid"] ."\">AR invoice $result</a>";
 						break;
 
 						case "ar_pay":
 							// for AR invoice payments fetch the invoice ID
 							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["customid"] ."'");
 							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/transactions-payments.php&id=". $ledger_list->data[$i]["customid"] ."\">AR payment $result</a>";
+							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=". $ledger_list->data[$i]["customid"] ."\">AR payment $result</a>";
 						break;
 
 
