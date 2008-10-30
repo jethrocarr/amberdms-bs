@@ -298,7 +298,7 @@ function invoice_form_items_render($type, $id, $processpage)
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure = charts_form_prepare_acccountdropdown("chartid", 5);
+			$structure = charts_form_prepare_acccountdropdown("chartid", 2);
 			$form->add_input($structure);
 				
 			$structure = NULL;
@@ -983,17 +983,39 @@ function invoice_items_update_tax($id, $type)
 					Fetch taxrate information, calculate new tax amount and update the item
 				*/
 			
-				// fetch taxrate
-				$taxrate = sql_get_singlevalue("SELECT taxrate AS value FROM account_taxes WHERE id='". $data["customid"] ."' LIMIT 1");
+				// fetch required information
+				$sql_tax_obj		= New sql_query;
+				$sql_tax_obj->string	= "SELECT taxrate, chartid FROM account_taxes WHERE id='". $data["customid"] ."' LIMIT 1";
+				$sql_tax_obj->execute();
+
+				if ($sql_tax_obj->num_rows())
+				{
+					$sql_tax_obj->fetch_array();
+				}
+
 			
 				// calculate taxable amount
-				$price = $amount * ($taxrate / 100);
+				$price = $amount * ($sql_tax_obj->data[0]["taxrate"] / 100);
 				$price = sprintf("%0.2f", $price);
 
 				// update the item with the new amount
 				$sql_obj		= New sql_query;
 				$sql_obj->string	= "UPDATE account_items SET price='$price' WHERE id='". $data["id"] ."'";
 				$sql_obj->execute();
+
+				// update the ledger with the new amount
+				//
+				// we need to update both the credit and debit entries, which we can tell between since the credit entries
+				// have the chart of the tax and the debit entries have an AR/AP chart
+				//
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE account_trans SET amount_credit='$price' WHERE type='". $type ."_tax' AND customid='$id' AND source='". $data["id"] ."' AND chartid='". $sql_tax_obj->data[0]["chartid"] ."'";
+				$sql_obj->execute();
+
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE account_trans SET amount_debit='$price' WHERE type='". $type ."_tax' AND customid='$id' AND source='". $data["id"] ."' AND chartid!='". $sql_tax_obj->data[0]["chartid"] ."'";
+				$sql_obj->execute();
+				
 			}
 		}
 	}
