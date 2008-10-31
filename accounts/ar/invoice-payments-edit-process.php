@@ -1,10 +1,10 @@
 <?php
 /*
-	accounts/ar/invoices-payments-process.php
+	accounts/ar/invoice-payments-edit-process.php
 
 	access: accounts_invoices_write
 
-	Allows payments to be added/deleted from an invoice
+	Allows a user to adjust or create new invoice payments.
 */
 
 // includes
@@ -13,20 +13,20 @@ require("../../include/amberphplib/main.php");
 
 // custom includes
 require("../../include/accounts/inc_invoices.php");
-require("../../include/accounts/inc_payments_forms.php");
+require("../../include/accounts/inc_invoices_items.php");
 
 
 
 if (user_permissions_get('accounts_ar_write'))
 {
 	/*
-		Let the payment functions do all the work for us
+		Let the invoices functions do all the work for us
 	*/
 
-	$returnpage_error	= "accounts/ar/invoice-payments.php";
-	$returnpage_success	= "accounts/ar/invoice-view.php";
+	$returnpage_error	= "accounts/ar/invoice-payments-edit.php";
+	$returnpage_success	= "accounts/ar/invoice-payments.php";
 
-	invoice_form_payments_process("ar", $returnpage_error, $returnpage_success);
+	invoice_form_items_process("ar", $returnpage_error, $returnpage_success);
 }
 else
 {

@@ -79,6 +79,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
+		$item_list->sql_obj->prepare_sql_addwhere("type!='payment'");
 
 		// run SQL query
 		$item_list->generate_sql();
@@ -157,6 +158,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		}
 		else
 		{
+			
 			// edit link
 			$structure = NULL;
 			$structure["id"]["value"]	= "$id";
@@ -186,6 +188,139 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 	return 1;
 	
 } // end of invoice_list_items()
+
+
+
+/*
+	invoice_list_items_payments($type, $id, $viewpage, $deletepage);
+
+	This function lists all payments items and provided links to add/edit/delete them.
+
+	Values
+	type		Either "ar" or "ap"
+	id		If editing/viewing an existing invoice, provide the ID
+	viewpage	Page for viewing/editing invoice items
+	deletepage	Processing page for deleting invoice items
+	
+	Return Codes
+	0	failure
+	1	success
+*/
+function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
+{
+	log_debug("inc_invoice_items", "Executing invoice_list_items_payments($type, $id, $viewpage, $deletepage)");
+
+	/*
+		Make sure invoice does exist!
+	*/
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
+	$sql_obj->execute();
+		
+	if (!$sql_obj->num_rows())
+	{
+		print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
+		return 0;
+	}
+	else
+	{
+		/*
+			Generate table of all the items
+		*/
+
+		// establish a new table object
+		$item_list = New table;
+
+		$item_list->language	= $_SESSION["user"]["lang"];
+		$item_list->tablename	= "item_list";
+
+		// define all the columns and structure
+		$item_list->add_column("date", "date_trans", "NONE");
+		$item_list->add_column("money", "amount", "account_items.price");
+		$item_list->add_column("standard", "account", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
+		$item_list->add_column("standard", "source", "NONE");
+		$item_list->add_column("standard", "description", "account_items.description");
+
+		// defaults
+		$item_list->columns		= array("date_trans", "amount", "account", "source", "description");
+		$item_list->columns_order	= array("account");
+
+		// totals
+		$item_list->total_columns	= array("amount");
+
+		// define SQL structure
+		$item_list->sql_obj->prepare_sql_settable("account_items");
+		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
+		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
+		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
+		$item_list->sql_obj->prepare_sql_addwhere("type='payment'");
+
+		// run SQL query
+		$item_list->generate_sql();
+		$item_list->load_data_sql();
+
+		if (!$item_list->data_num_rows)
+		{
+			print "<p><i>No payments have been made against this invoice.</i></p>";
+		}
+		else
+		{
+			// fetch date_trans and source values from DB
+			for ($i=0; $i < $item_list->data_num_rows; $i++)
+			{
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT option_name, option_value FROM account_items_options WHERE itemid='". $item_list->data[$i]["id"] ."'";
+				$sql_obj->execute();
+
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					if ($data["option_name"] == "SOURCE")
+						$item_list->data[$i]["source"] = $data["option_value"];
+
+
+					if ($data["option_name"] == "DATE_TRANS")
+						$item_list->data[$i]["date_trans"] = $data["option_value"];
+				}
+			
+			}
+
+
+		
+			// edit link
+			$structure = NULL;
+			$structure["id"]["value"]	= "$id";
+			$structure["id"]["action"]	= "edit";
+			$structure["itemid"]["column"]	= "id";
+			
+			$item_list->add_link("edit", $viewpage, $structure);
+
+			
+			// delete link
+			$structure = NULL;
+			$structure["id"]["value"]	= "$id";
+			$structure["itemid"]["column"]	= "id";
+			$structure["full_link"]		= "yes";
+			
+			$item_list->add_link("delete", $deletepage, $structure);
+
+			// display the table
+			$item_list->render_table();	
+		}
+		
+		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=payment\">Add Payment</a></b></p>";
+
+
+	} // end if invoice exists
+
+	return 1;
+	
+} // end of invoice_list_items_payments()
+
+
+
+
 
 
 
@@ -370,6 +505,60 @@ function invoice_form_items_render($type, $id, $processpage)
 		break;
 
 
+		case "payment":
+			/*
+				PAYMENT
+
+				Payments against invoices are also items
+			*/
+			
+			$structure = NULL;
+			$structure["fieldname"] 	= "date_trans";
+			$structure["type"]		= "date";
+			$structure["defaultvalue"]	= date("Y-m-d");
+			$form->add_input($structure);
+			
+			$structure = NULL;
+			$structure["fieldname"] 	= "amount";
+			$structure["type"]		= "input";
+			$form->add_input($structure);
+
+			$structure = NULL;
+			$structure = charts_form_prepare_acccountdropdown("chartid", 6);
+			
+			if (count(array_keys($structure["values"])) == 1)
+			{
+				// if there is only 1 account avaliable, select it as the default
+				$structure["options"]["noselectoption"] = "yes";
+			}
+			
+			$form->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] 	= "source";
+			$structure["type"]		= "input";
+			$form->add_input($structure);
+				
+			$structure = NULL;
+			$structure["fieldname"] 	= "description";
+			$structure["type"]		= "textarea";
+			$structure["options"]["height"]	= "50";
+			$structure["options"]["width"]	= 500;
+			$form->add_input($structure);
+			
+	
+			// define form layout
+			$form->subforms[$type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
+
+			// SQL query
+			$form->sql_query = "SELECT price as amount, description, chartid FROM account_items WHERE id='$itemid'";
+
+
+			
+
+		break;
+
+
 		default:
 			print "<p><b>Error: Unknown type passed to render form.</b></p>";
 		break;
@@ -409,21 +598,37 @@ function invoice_form_items_render($type, $id, $processpage)
 	// load data
 	$form->load_data();
 
-	// custom loads for tax items
-	if ($item_type == "tax" && $itemid)
+	// custom loads for different item type
+	if ($itemid)
 	{
-		// check if the tax is to be calculated manually or calculated
-		// automatically.
-		
-		$mode = sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TAX_CALC_MODE' LIMIT 1");
-		
-		if ($mode == "manual")
+		switch ($item_type)
 		{
-			$form->structure["manual_option"]["defaultvalue"] = "on";
-		}
-		else
-		{
-			$form->structure["manual_amount"]["defaultvalue"] = "";
+			case "tax":
+
+				// check if the tax is to be calculated manually or calculated
+				// automatically.
+				
+				$mode = sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TAX_CALC_MODE' LIMIT 1");
+				
+				if ($mode == "manual")
+				{
+					$form->structure["manual_option"]["defaultvalue"] = "on";
+				}
+				else
+				{
+					$form->structure["manual_amount"]["defaultvalue"] = "";
+				}
+
+			break;
+
+
+			case "payment":
+
+				// fetch payment date_trans and source fields.
+				$form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='DATE_TRANS' LIMIT 1");
+				$form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='SOURCE' LIMIT 1");
+			
+			break;
 		}
 	}
 
@@ -478,20 +683,24 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	}
 	
 	
-	/*
-		Verify that the invoice exists, and fetch some required information from it.
-	*/
-	$sql_inv_obj		= New sql_query;
-	$sql_inv_obj->string	= "SELECT id, dest_account, date_trans FROM account_$type WHERE id='$id' LIMIT 1";
-	$sql_inv_obj->execute();
 	
-	if (!$sql_inv_obj->num_rows())
+	//// ERROR CHECKING ///////////////////////
+	
+	
+	/*
+		Verify that the invoice exists
+	*/
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id' LIMIT 1";
+	$sql_obj->execute();
+	
+	if (!$sql_obj->num_rows())
 	{
 		$_SESSION["error"]["message"][] = "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
 	}
 	else
 	{
-		$sql_inv_obj->fetch_array();
+		$sql_obj->fetch_array();
 	}
 
 
@@ -520,9 +729,6 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 				STANDARD ITEMS
 			*/
 
-			// configure the type label to use for the account_trans entry
-			$trans_type = $type;
-
 			// fetch information from form
 			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
@@ -537,9 +743,6 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 				We need to either use the manual amounts provided, or calculate the tax amount.
 			*/
-
-			// configure the type label to use for the account_trans entry
-			$trans_type = $type ."_tax";
 
 			// fetch key information from form
 			$data["customid"]	= security_form_input_predefined("int", "tax_id", 1, "");
@@ -594,6 +797,21 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		break;
 
 
+		case "payment":
+			/*
+				PAYMENT ITEM
+			*/
+
+			// fetch information from form
+			$data["date_trans"]	= security_form_input_predefined("date", "date_trans", 1, "");
+			$data["price"]		= security_form_input_predefined("money", "amount", 1, "");
+			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
+			$data["source"]		= security_form_input_predefined("any", "source", 1, "");
+			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			
+		break;
+
+
 		default:
 			$_SESSION["error"]["message"][] = "Unknown item type passed to processing form.";
 		break;
@@ -601,7 +819,6 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	
 	
 
-	//// ERROR CHECKING ///////////////////////
 
 
 	/// if there was an error, go back to the entry page
@@ -678,6 +895,43 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 				$sql_obj->execute();
 			}
 
+			// create options for payments
+			if ($item_type == "payment")
+			{
+				// source
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('$itemid', 'SOURCE', '". $data["source"] ."')";
+				$sql_obj->execute();
+
+				// date_trans
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('$itemid', 'DATE_TRANS', '". $data["date_trans"] ."')";
+				$sql_obj->execute();
+			}
+
+			
+			
+			/*
+				Update Tax Items
+
+				re-generate the tax calculations for this invoice
+				(exclude tax and payment items since they don't affect the taxable totals)
+			*/
+			
+			if ($item_type != "tax" && $item != "payment")
+			{
+				invoice_items_update_tax($id, $type);
+			}
+
+
+			/*
+				Update Invoice Totals
+
+				Update the summary totals on the invoice.
+			*/
+
+			invoice_items_update_total($id, $type);
+
 
 
 			/*
@@ -685,30 +939,9 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 			*/
 
-			// remove all the old ledger entries belonging to this item
-			// (items are identified using the values in the source field)
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "DELETE FROM `account_trans` WHERE type='$type' AND customid='$id' AND source='$itemid'";
-			$sql_obj->execute();
+			invoice_items_update_ledger($id, $type);
 
-			// re-generate the tax calculations for this invoice
-			//
-			// (unless we are adding a tax item, in which case this would be
-			//  pointless, since the taxable totals have not changed)
-			if ($item_type != "tax")
-			{
-				invoice_items_update_tax($id, $type);
-			}
-			
-			// We need to debit the AR account and then credit the item's account.
-			ledger_trans_add("debit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $price, $data["description"], "$itemid");
-			ledger_trans_add("credit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $data["chartid"], $price, $data["description"], "$itemid");
-
-
-			// update the total on the invoice.
-			invoice_items_update_total($id, $type);
-
-
+		
 
 			/*
 				Return to success page
@@ -830,23 +1063,27 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		}
 
 
-		// remove the ledger entries belonging to this item
-		// (items are identified using the values in the source field)
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM `account_trans` WHERE type='$type' AND customid='$id' AND source='$itemid'";
+
+		/*
+			Update taxes
+		*/
 		
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "Error: Unable to delete ledger entries belonging to deleted item $itemid";
-		}
-
-
-		// update taxes and totals
-		//
-		// TODO: add some smarts here to not bother to regenerate taxes when
-		// the user has only deleted a tax item
-		//
 		invoice_items_update_tax($id, $type);	
+
+
+
+		/*
+			Update ledger
+		*/
+		
+		invoice_items_update_ledger($id, $type);
+
+
+
+		/*
+			Update invoice summary
+		*/
+		
 		invoice_items_update_total($id, $type);
 
 
@@ -896,8 +1133,9 @@ function invoice_items_update_total($id, $type)
 
 
 	// calculate totals from the DB
-	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax'");
+	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
 	$amount_tax	= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type='tax'");
+	$amount_paid	= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type='payment'");
 
 	// final totals
 	$amount_total	= $amount + $amount_tax;
@@ -905,6 +1143,7 @@ function invoice_items_update_total($id, $type)
 	$amount		= sprintf("%0.2f", $amount);
 	$amount_tax	= sprintf("%0.2f", $amount_tax);
 	$amount_total	= sprintf("%0.2f", $amount_total);
+	$amount_paid	= sprintf("%0.2f", $amount_paid);
 
 
 	/*
@@ -915,7 +1154,8 @@ function invoice_items_update_total($id, $type)
 	$sql_obj->string = "UPDATE `account_$type` SET "
 				."amount='". $amount ."', "
 				."amount_tax='". $amount_tax ."', "
-				."amount_total='". $amount_total ."' "
+				."amount_total='". $amount_total ."', "
+				."amount_paid='". $amount_paid ."' "
 				."WHERE id='$id'";
 	
 	if (!$sql_obj->execute())
@@ -938,8 +1178,10 @@ function invoice_items_update_total($id, $type)
 
 	This function regenerates the taxes for any auto-matically calculated tax items on this invoice.
 
-	Note that it does NOT update the tax totals on the invoice itself, so invoice_items_update_totals should
-	always be run after running this function.
+	Note that it does NOT update the tax totals on the invoice itself or the ledger, so you MUST run
+	the following functions afterwards:
+	* invoice_items_update_totals
+	* invoice_items_update_ledger
 	
 
 	Values
@@ -956,7 +1198,7 @@ function invoice_items_update_tax($id, $type)
 
 
 	// fetch taxable amount
-	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax'");
+	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
 
 
 	/*
@@ -1003,19 +1245,9 @@ function invoice_items_update_tax($id, $type)
 				$sql_obj->string	= "UPDATE account_items SET price='$price' WHERE id='". $data["id"] ."'";
 				$sql_obj->execute();
 
-				// update the ledger with the new amount
-				//
-				// we need to update both the credit and debit entries, which we can tell between since the credit entries
-				// have the chart of the tax and the debit entries have an AR/AP chart
-				//
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "UPDATE account_trans SET amount_credit='$price' WHERE type='". $type ."_tax' AND customid='$id' AND source='". $data["id"] ."' AND chartid='". $sql_tax_obj->data[0]["chartid"] ."'";
-				$sql_obj->execute();
 
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "UPDATE account_trans SET amount_debit='$price' WHERE type='". $type ."_tax' AND customid='$id' AND source='". $data["id"] ."' AND chartid!='". $sql_tax_obj->data[0]["chartid"] ."'";
-				$sql_obj->execute();
-				
+				// note - the invoice_items_update ledger function should now be called to update the ledger
+
 			}
 		}
 	}
@@ -1029,6 +1261,142 @@ function invoice_items_update_tax($id, $type)
 	return 1;
 
 } // end of invoice_items_update_tax
+
+
+
+
+/*
+	invoice_items_update_ledger
+
+	This function updates the ledger based on the data in the account_items table. This function needs to be
+	run after making any changes to any item on the invoice, including payments.
+
+	Values
+	id		ID of the invoice to update
+	type		Type of invoice - AR or AP
+
+	Return Codes
+	0		failure
+	1		success
+*/
+function invoice_items_update_ledger($id, $type)
+{
+	log_debug("inc_invoices_items", "Executing invoice_items_update_ledger($id, $type)");
+
+
+	// fetch key information from invoice
+	$sql_inv_obj		= New sql_query;
+	$sql_inv_obj->string	= "SELECT id, dest_account, date_trans FROM account_$type WHERE id='$id' LIMIT 1";
+	$sql_inv_obj->execute();
+	$sql_inv_obj->fetch_array();
+
+
+	// remove all the old ledger entries belonging to this invoice
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "DELETE FROM `account_trans` WHERE customid='$id'";
+	$sql_obj->execute();
+
+
+	/*
+		PROCESS NON-PAYMENT ITEMS
+
+		For all normal items, we want to aggregate the totals per chart then add ledger entries
+		per-invoice, not per-item.
+
+		Then we create the following in the ledger:
+		* A single debit from the AR account
+		* A single credit to each different account for the items.
+
+		Payment items need to be handled differently - see code further down.
+	*/
+	
+	// add up the total for the AR entry
+	$amount = 0;
+
+	// Fetch totals per chart from the items table.
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT chartid, type, SUM(price) as price FROM `account_items` WHERE invoiceid='$id' AND type!='payment' GROUP BY chartid";
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
+	{
+		$sql_obj->fetch_array();
+
+		foreach ($sql_obj->data as $item_data)
+		{
+			// set trans type
+			if ($item_data["type"] == "tax")
+			{
+				$trans_type = $type ."_tax";
+			}
+			else
+			{
+				$trans_type = $type;
+			}
+		
+			// create ledger entry for this account
+			ledger_trans_add("credit", $trans_type, $id, 0, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+
+			// add up the total for the AR entry.
+			$amount += $item_data["price"];
+		}
+
+		// create debit to AR account
+		ledger_trans_add("debit", $type, $id, 0, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+	}
+
+
+
+
+	/*
+		PROCESS PAYMENT ITEMS
+
+		Payment entries are different to other items, in that we need to add stand alone
+		entries for each payment item, since payments can be made on different dates, so therefore
+		can not be aggregated.
+	*/
+
+	// run though each payment item
+	$sql_item_obj		= New sql_query;
+	$sql_item_obj->string	= "SELECT id, chartid, price, description FROM `account_items` WHERE invoiceid='$id' AND type='payment'";
+	$sql_item_obj->execute();
+
+	if ($sql_item_obj->num_rows())
+	{
+		$sql_item_obj->fetch_array();
+
+		foreach ($sql_item_obj->data as $data)
+		{
+			// fetch information from options
+			$sql_option_obj		= New sql_query;
+			$sql_option_obj->string	= "SELECT option_name, option_value FROM account_items_options WHERE itemid='". $data["id"] ."'";
+			$sql_option_obj->execute();
+
+			$sql_option_obj->fetch_array();
+
+			foreach ($sql_option_obj->data as $option_data)
+			{
+				if ($option_data["option_name"] == "SOURCE")
+					$data["source"] = $option_data["option_value"];
+
+				if ($option_data["option_name"] == "DATE_TRANS")
+					$data["date_trans"] = $option_data["option_value"];
+			}
+			
+
+				
+			// we need to debit the destination account for the payment to go into and credit the AR account
+			ledger_trans_add("debit", $type ."_pay", $id, 0, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
+			ledger_trans_add("credit", $type ."_pay", $id, 0, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+		}
+	}
+
+
+	return 1;
+
+} // end of invoice_items_update_ledger
+
+
 
 
 
