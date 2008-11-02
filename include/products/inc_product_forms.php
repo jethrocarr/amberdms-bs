@@ -38,7 +38,7 @@ function products_form_details_render($productid, $mode)
 	$form->formname = "product_$mode";
 	$form->language = $_SESSION["user"]["lang"];
 
-	$form->action = "products/$mode-process.php";
+	$form->action = "products/edit-process.php";
 	$form->method = "post";
 
 	// general
