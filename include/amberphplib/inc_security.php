@@ -68,7 +68,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	if ($errormsg == "")
 	{
 		$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
-		$errormsg	= "Invalid $translation supplied, please correct.<br>";
+		$errormsg	= "Invalid $translation supplied, please correct.";
 	}
 	
 
