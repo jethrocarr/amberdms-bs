@@ -19,9 +19,9 @@ if (user_permissions_get('products_view'))
 
 
 		// define all the columns and structure
-		$product_list->add_column("standard", "id_product", "id");
 		$product_list->add_column("standard", "code_product", "");
 		$product_list->add_column("standard", "name_product", "");
+		$product_list->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$product_list->add_column("price", "price_cost", "");
 		$product_list->add_column("price", "price_sale", "");
 		$product_list->add_column("date", "date_current", "");
@@ -29,12 +29,13 @@ if (user_permissions_get('products_view'))
 		$product_list->add_column("standard", "quantity_vendor", "");
 
 		// defaults
-		$product_list->columns		= array("code_product", "name_product", "price_cost", "price_sale", "quantity_instock");
+		$product_list->columns		= array("code_product", "name_product", "account_sales", "price_cost", "price_sale");
 		$product_list->columns_order	= array("code_product");
 
 		// define SQL structure
 		$product_list->sql_obj->prepare_sql_settable("products");
-		$product_list->sql_obj->prepare_sql_addfield("id", "");
+		$product_list->sql_obj->prepare_sql_addfield("id", "products.id");
+		$product_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = products.account_sales");
 
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";

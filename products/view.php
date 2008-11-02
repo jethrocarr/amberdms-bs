@@ -9,6 +9,12 @@
 	allows the product to be updated.
 */
 
+
+// include form functions
+require("include/products/inc_product_forms.php");
+
+
+
 if (user_permissions_get('products_view'))
 {
 	$id = $_GET["id"];
@@ -49,106 +55,10 @@ if (user_permissions_get('products_view'))
 		else
 		{
 			/*
-				Define form structure
+				Render details form
 			*/
-			$form = New form_input;
-			$form->formname = "product_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "products/edit-process.php";
-			$form->method = "post";
 			
-
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "id_product";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_product";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_product";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "details";
-			$structure["type"]		= "textarea";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"]		= "date_current";
-			$structure["type"]		= "date";
-			$form->add_input($structure);
-
-
-			
-			// pricing			
-			$structure = NULL;
-			$structure["fieldname"]		= "price_cost";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"]		= "price_sale";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			// quantity
-			$structure = NULL;
-			$structure["fieldname"]		= "quantity_instock";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"]		= "quantity_vendor";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-
-
-
-			
-			// submit section
-			if (user_permissions_get("products_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$form->add_input($structure);
-			
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to product records.</i></p>";
-				$form->add_input($structure);
-			}
-			
-			
-			// define subforms
-			$form->subforms["product_view"]		= array("id_product", "code_product", "name_product", "date_current", "details");
-			$form->subforms["product_pricing"]	= array("price_cost", "price_sale");
-			$form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
-			$form->subforms["submit"]		= array("submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `products` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
+			products_form_details_render($id, "edit");
 
 		}
 

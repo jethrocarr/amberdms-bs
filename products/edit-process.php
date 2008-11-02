@@ -18,8 +18,9 @@ if (user_permissions_get('products_write'))
 
 	$id				= security_form_input_predefined("int", "id_product", 0, "");
 	
-	$data["code_product"]		= security_form_input_predefined("any", "code_product", 1, "You must specify a product code");
-	$data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "You must specify a product name");
+	$data["code_product"]		= security_form_input_predefined("any", "code_product", 1, "");
+	$data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
+	$data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
 
 	$data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
 	$data["details"]		= security_form_input_predefined("any", "details", 0, "");
@@ -29,6 +30,10 @@ if (user_permissions_get('products_write'))
 	
 	$data["quantity_instock"]	= security_form_input_predefined("int", "quantity_instock", 0, "");
 	$data["quantity_vendor"]	= security_form_input_predefined("int", "quantity_vendor", 0, "");
+
+
+	$data["vendorid"]		= security_form_input_predefined("int", "vendorid", 0, "");
+	$data["code_product_vendor"]	= security_form_input_predefined("any", "code_product_vendor", 0, "");
 
 
 	// are we editing an existing product or adding a new one?
@@ -64,7 +69,7 @@ if (user_permissions_get('products_write'))
 
 	if ($mysql_num_rows)
 	{
-		$_SESSION["error"]["message"][] = "This product code is already used for another product - please choose a unique name.";
+		$_SESSION["error"]["message"][] = "This product code is already used for another product - please choose a unique identifier.";
 		$_SESSION["error"]["code_product-error"] = 1;
 	}
 
@@ -119,12 +124,15 @@ if (user_permissions_get('products_write'))
 			$mysql_string = "UPDATE `products` SET "
 						."name_product='". $data["name_product"] ."', "
 						."code_product='". $data["code_product"] ."', "
+						."account_sales='". $data["account_sales"] ."', "
 						."date_current='". $data["date_current"] ."', "
 						."details='". $data["details"] ."', "
 						."price_cost='". $data["price_cost"] ."', "
 						."price_sale='". $data["price_sale"] ."', "
 						."quantity_instock='". $data["quantity_instock"] ."', "
-						."quantity_vendor='". $data["quantity_vendor"] ."' "
+						."quantity_vendor='". $data["quantity_vendor"] ."', "
+						."vendorid='". $data["vendorid"] ."', "
+						."code_product_vendor='". $data["code_product_vendor"] ."' "
 						."WHERE id='$id'";
 						
 			if (!mysql_query($mysql_string))
