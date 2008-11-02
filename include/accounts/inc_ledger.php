@@ -133,7 +133,7 @@ class ledger_account_list
 		
 		// configure the table
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= $ledgername;
+		$this->obj_table->tablename	= $this->ledgername;
 
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date_trans", "account_trans.date_trans");
@@ -141,15 +141,17 @@ class ledger_account_list
 //		$this->obj_table->add_column("standard", "dest_name_chart", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$this->obj_table->add_column("price", "debit", "account_trans.amount_debit");
 		$this->obj_table->add_column("price", "credit", "account_trans.amount_credit");
+		$this->obj_table->add_column("standard", "source", "account_trans.source");
+		$this->obj_table->add_column("standard", "memo", "account_trans.memo");
 
 		// total rows
-		$this->obj_table->total_columns	= array("credit", "debit");
+		$this->obj_table->total_columns		= array("credit", "debit");
 		$this->obj_table->total_rows		= array("credit", "debit");
 		$this->obj_table->total_rows_mode	= "incrementing";
 		
 		// defaults
 		$this->obj_table->columns		= array("date_trans", "item_id", "debit", "credit");
-		$this->obj_table->columns_order	= array("date_trans");
+		$this->obj_table->columns_order		= array("date_trans");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_trans");
@@ -210,7 +212,7 @@ class ledger_account_list
 		log_debug("ledger_account_list", "Executing render_options_form()");
 		
 		// acceptable filter options
-		$this->obj_table->add_fixed_option("id", $id);
+		$this->obj_table->add_fixed_option("id", $this->chartid);
 			
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
