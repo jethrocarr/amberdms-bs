@@ -9,6 +9,10 @@
 	and other filter options.
 */
 
+// include ledger functions
+require("include/accounts/inc_ledger.php");
+
+
 if (user_permissions_get('accounts_charts_view'))
 {
 	if ($_GET["id"])
@@ -56,139 +60,35 @@ if (user_permissions_get('accounts_charts_view'))
 		}
 		else
 		{
-
-
-			// establish a new table object
-			$ledger_list = New table;
-
-			$ledger_list->language	= $_SESSION["user"]["lang"];
-			$ledger_list->tablename	= "account_ledger";
-
-			// define all the columns and structure
-			$ledger_list->add_column("date", "date_trans", "account_trans.date_trans");
-			$ledger_list->add_column("standard", "item_id", "account_trans.customid");
-	//		$ledger_list->add_column("standard", "dest_name_chart", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
-			$ledger_list->add_column("price", "debit", "account_trans.amount_debit");
-			$ledger_list->add_column("price", "credit", "account_trans.amount_credit");
-
-			// total rows
-			$ledger_list->total_columns		= array("credit", "debit");
-			$ledger_list->total_rows		= array("credit", "debit");
-			$ledger_list->total_rows_mode		= "incrementing";
-
-			// defaults
-			$ledger_list->columns		= array("date_trans", "item_id", "debit", "credit");
-			$ledger_list->columns_order	= array("date_trans");
-
-			// define SQL structure
-			$ledger_list->sql_obj->prepare_sql_settable("account_trans");
-			$ledger_list->sql_obj->prepare_sql_addfield("id", "account_trans.id");
-			$ledger_list->sql_obj->prepare_sql_addfield("type", "account_trans.type");
-#			$ledger_list->sql_obj->prepare_sql_addfield("item_id", "account_trans.customid");
-			$ledger_list->sql_obj->prepare_sql_addwhere("chartid='$id'");
-			$ledger_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
-
-
-			// acceptable filter options
-			$ledger_list->add_fixed_option("id", $id);
 			
-			$structure = NULL;
-			$structure["fieldname"] = "date_start";
-			$structure["type"]	= "date";
-			$structure["sql"]	= "account_trans.date_trans >= 'value'";
-			$ledger_list->add_filter($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "date_end";
-			$structure["type"]	= "date";
-			$structure["sql"]	= "account_trans.date_trans <= 'value'";
-			$ledger_list->add_filter($structure);
-			
-
-
-			// heading
-			print "<h3>CHART LEDGERS</h3><br><br>";
-
-
-			// options form
-			$ledger_list->load_options_form();
-			$ledger_list->render_options_form();
-
-
-			// add ID orderby rule to make sure if a payment and invoice item have the same date,
-			// that the invoice will come first.
-			//
-			// TODO: This isn't a perfect solution, look into a better solution
-			//
-			$ledger_list->sql_obj->prepare_sql_addorderby("account_trans.id");
-
-
-			// fetch all the ledger information
-			$ledger_list->generate_sql();
-			$ledger_list->load_data_sql();
+			/*
+				Page Heading
+			*/
+			print "<h3>ACCOUNT LEDGER</h3>";
+			print "<p>This page displays a list of transactions for the selected account. You can use the filter options to define dates and other search/filtering criteria.</p>";
 
 			/*
-				Label the items the transaction belongs to
-
-				Because there are range of different items types (ar, ap, general ledger, etc) we need
-				to check the type of the ledger entry, then display the correct title and link
+				Display Ledger
 			*/
-			if ($ledger_list->data_num_rows)
-			{
-				for ($i=0; $i < count(array_keys($ledger_list->data)); $i++)
-				{
-					switch ($ledger_list->data[$i]["type"])
-					{
-						case "ar":
-						case "ar_tax":
 
-							// for AR invoices/transaction fetch the invoice ID
-							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["item_id"] ."'");
-							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $ledger_list->data[$i]["item_id"] ."\">AR invoice $result</a>";
-						break;
+			// define ledger
+			$ledger			= New ledger_account_list;
+			$ledger->ledgername	= "account_ledger";
+			$ledger->chartid	= $id;
 
-						case "ar_pay":
-							// for AR invoice payments fetch the invoice ID
-							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["item_id"] ."'");
-							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=". $ledger_list->data[$i]["item_id"] ."\">AR payment $result</a>";
-						break;
+			$ledger->prepare_ledger();
 
+			// display options form
+			$ledger->render_options_form();
 
+			// define SQL structure
+			$ledger->prepare_generate_sql();
 
-						default:
-							$ledger_list->data[$i]["item_id"] = "unknown";
-						break;
-					}
-					
-				}
-			}
+			// load data
+			$ledger->prepare_load_data();
 
-
-			if (!count($ledger_list->columns))
-			{
-				print "<p><b>Please select some valid options to display.</b></p>";
-			}
-			elseif (!$ledger_list->data_num_rows)
-			{
-				print "<p><b>No transactions belong to this chart which match your search criteria.</b></p>";
-			}
-			else
-			{
-	/*
-				TODO: the links are going to depend on the type of transaction
-	// view link
-				$structure = NULL;
-				$structure["id"]["column"]	= "id";
-				$ledger_list->add_link("view", "ar/accounts/view.php", $structure);
-	*/
-
-				// display the table
-				$ledger_list->render_table();
-
-				// TODO: display CSV download link
-			}
+			// render
+			$ledger->render_table_html();
 
 		} // end if chart/account exists
 
