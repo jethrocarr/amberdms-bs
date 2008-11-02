@@ -82,10 +82,17 @@ if (user_permissions_get('accounts_taxes_view'))
 			$structure["id"]["column"]	= "id";
 			$tax_list->add_link("view", "accounts/taxes/view.php", $structure);
 
-			// ledger link
+			// tax collected link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$tax_list->add_link("ledger", "accounts/taxes/ledger.php", $structure);
+			$tax_list->add_link("collected", "accounts/taxes/tax_collected.php", $structure);
+
+			// tax paid link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$tax_list->add_link("paid", "accounts/taxes/tax_paid.php", $structure);
+
+
 
 			// display the table
 			$tax_list->render_table();

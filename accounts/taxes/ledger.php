@@ -78,12 +78,12 @@ if (user_permissions_get('accounts_charts_view'))
 
 			print "<br><p>";
 			print "<b>2. Tax Collected Report</b><br><br>";
-			print "Generate reports on the amount of tax collected either on an invoice or cash basis from accounts recievables using the <a href=\"index.php?page=accounts/ar/tax_collected.php\">AR tax collected report</a>.<br>";
+			print "Generate reports on the amount of tax collected either on an invoice or cash basis from accounts recievables using the <a href=\"index.php?page=accounts/taxes/tax_collected.php&id=$id\">AR tax collected report</a>.<br>";
 			print "</p>";
 
 			print "<br><p>";
 			print "<b>3. Tax Paid Report</b><br><br>";
-			print "Generate reports on the amount of tax paid either on an invoice or cash basis from accounts payable using the <a href=\"index.php?page=accounts/ap/tax_paid.php\">AP tax paid report</a>.<br>";
+			print "Generate reports on the amount of tax paid either on an invoice or cash basis from accounts payable using the <a href=\"index.php?page=accounts/taxes/tax_paid.php&id=$id\">AP tax paid report</a>.<br>";
 			print "</p>";
 		
 		} // end if tax exists
