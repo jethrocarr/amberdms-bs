@@ -25,7 +25,6 @@ if (user_permissions_get('accounts_ar_view'))
 		$invoice_list->add_column("standard", "code_ponumber", "account_ar.code_ponumber");
 		$invoice_list->add_column("date", "date_trans", "account_ar.date_trans");
 		$invoice_list->add_column("date", "date_due", "account_ar.date_due");
-		$invoice_list->add_column("date", "date_paid", "account_ar.date_paid");
 		$invoice_list->add_column("price", "amount_tax", "account_ar.amount_tax");
 		$invoice_list->add_column("price", "amount", "account_ar.amount");
 		$invoice_list->add_column("price", "amount_total", "account_ar.amount_total");
