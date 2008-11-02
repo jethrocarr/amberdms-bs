@@ -66,7 +66,7 @@ if (user_permissions_get('accounts_charts_view'))
 
 			// define all the columns and structure
 			$ledger_list->add_column("date", "date_trans", "account_trans.date_trans");
-			$ledger_list->add_column("standard", "item_id", "NONE");
+			$ledger_list->add_column("standard", "item_id", "account_trans.customid");
 	//		$ledger_list->add_column("standard", "dest_name_chart", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 			$ledger_list->add_column("price", "debit", "account_trans.amount_debit");
 			$ledger_list->add_column("price", "credit", "account_trans.amount_credit");
@@ -84,7 +84,7 @@ if (user_permissions_get('accounts_charts_view'))
 			$ledger_list->sql_obj->prepare_sql_settable("account_trans");
 			$ledger_list->sql_obj->prepare_sql_addfield("id", "account_trans.id");
 			$ledger_list->sql_obj->prepare_sql_addfield("type", "account_trans.type");
-			$ledger_list->sql_obj->prepare_sql_addfield("customid", "account_trans.customid");
+#			$ledger_list->sql_obj->prepare_sql_addfield("item_id", "account_trans.customid");
 			$ledger_list->sql_obj->prepare_sql_addwhere("chartid='$id'");
 			$ledger_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
 
@@ -115,6 +115,14 @@ if (user_permissions_get('accounts_charts_view'))
 			$ledger_list->render_options_form();
 
 
+			// add ID orderby rule to make sure if a payment and invoice item have the same date,
+			// that the invoice will come first.
+			//
+			// TODO: This isn't a perfect solution, look into a better solution
+			//
+			$ledger_list->sql_obj->prepare_sql_addorderby("account_trans.id");
+
+
 			// fetch all the ledger information
 			$ledger_list->generate_sql();
 			$ledger_list->load_data_sql();
@@ -135,16 +143,16 @@ if (user_permissions_get('accounts_charts_view'))
 						case "ar_tax":
 
 							// for AR invoices/transaction fetch the invoice ID
-							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["customid"] ."'");
+							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["item_id"] ."'");
 							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $ledger_list->data[$i]["customid"] ."\">AR invoice $result</a>";
+							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $ledger_list->data[$i]["item_id"] ."\">AR invoice $result</a>";
 						break;
 
 						case "ar_pay":
 							// for AR invoice payments fetch the invoice ID
-							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["customid"] ."'");
+							$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $ledger_list->data[$i]["item_id"] ."'");
 							
-							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=". $ledger_list->data[$i]["customid"] ."\">AR payment $result</a>";
+							$ledger_list->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=". $ledger_list->data[$i]["item_id"] ."\">AR payment $result</a>";
 						break;
 
 
