@@ -62,7 +62,7 @@ function invoice_generate_invoiceid($type)
 	$type_uc = strtoupper($type);
 	
 	$invoiceid	= 0;
-	$invoicenum	= sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_". $type_uc "._INVOICENUM'");
+	$invoicenum	= sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_". $type_uc ."._INVOICENUM'");
 
 	if (!$invoicenum)
 		die("Unable to fetch ACCOUNTS_". $type_uc ."_INVOICENUM value from config database");
