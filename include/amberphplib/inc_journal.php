@@ -1657,7 +1657,50 @@ function journal_quickadd_event($journalname, $customid, $message)
 
 	return $journal->action_create();
 }
+
+
+
+/*
+	journal_delete_entire($journalname, $customid)
+
+	Deletes all entries for the provided journal with the matching customid - this function
+	us used when users delete items which have a journal belonging to them (eg: customers, invoices, etc)
+*/
+function journal_delete_entire($journalname, $customid)
+{
+	log_debug("inc_journal", "Executing journal_delete_entire($journalname, $customid)");
 	
+
+	/*
+		Run though the journal items and delete any attached files
+	*/
+
+	$sql_journal_obj		= New sql_query;
+	$sql_journal_obj->string	= "SELECT id, type FROM journal WHERE journalname='$journalname' AND customid='$customid' AND type='file'";
+	$sql_journal_obj->execute();
+
+	if ($sql_journal_obj->num_rows())
+	{
+		$sql_journal_obj->fetch_array();
+
+		foreach ($sql_journal_obj->data as $data)
+		{
+			$file_obj = New file_process;
+			$file_obj->fetch_information_by_type("journal", $data["id"]);
+			$file_obj->process_delete();
+		}
+	}
+
+
+	/*
+		Run delete on all the journal entries
+	*/
+
+	$sql_journal_obj		= New sql_query;
+	$sql_journal_obj->string	= "DELETE FROM journal WHERE journalname='$journalname' AND customid='$customid'";
+	$sql_journal_obj->execute();
+
+}
 
 
 ?>
