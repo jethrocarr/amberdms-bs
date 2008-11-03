@@ -33,9 +33,11 @@ if (user_permissions_get('accounts_ar_view'))
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Invoice";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
-
+	if (user_permissions_get('accounts_ar_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Invoice";
+		$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
+	}
 
 
 	function page_render()

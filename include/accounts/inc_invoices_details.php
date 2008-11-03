@@ -285,7 +285,7 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			*/
 			
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO `account_$type` (code_invoice) VALUES ('".$data["code_invoice"]."')";
+			$sql_obj->string	= "INSERT INTO `account_$type` (code_invoice, date_create) VALUES ('".$data["code_invoice"]."', '". date("Y-m-d") ."')";
 			if (!$sql_obj->execute())
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create invoice";
