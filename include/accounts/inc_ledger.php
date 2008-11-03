@@ -194,7 +194,7 @@ class ledger_account_list
 		
 		// execute the SQL command to import the data into
 		// the table structure
-		$this->obj_table->load_data_sql();
+		$this->obj_table->load_data_sql();		
 	}
 
 

@@ -68,8 +68,27 @@ if (user_permissions_get('accounts_charts_view'))
 				{
 					if ($data_amount["chartid"] == $chart_list->data[$i]["id"])
 					{
-						$chart_list->data[$i]["credit"]	= $data_amount["credit"];
-						$chart_list->data[$i]["debit"]	= $data_amount["debit"];
+						/*
+							we only want to show financial difference in the columns - for example, if
+							debit == $100 and credit == $200, we just show credit as $100 and leave debit
+							blank
+						*/
+
+						if ($data_amount["credit"] == $data_amount["debit"])
+						{
+							$chart_list->data[$i]["debit"]	= "";
+							$chart_list->data[$i]["credit"]	= "";
+						}
+						elseif ($data_amount["debit"] > $data_amount["credit"])
+						{
+							$chart_list->data[$i]["debit"]	= $data_amount["debit"] - $data_amount["credit"];
+							$chart_list->data[$i]["credit"]	= "";
+						}
+						elseif ($data_amount["debit"] < $data_amount["credit"])
+						{
+							$chart_list->data[$i]["debit"]	= "";
+							$chart_list->data[$i]["credit"]	= $data_amount["credit"] - $data_amount["debit"];
+						}
 					}
 				}
 			}
