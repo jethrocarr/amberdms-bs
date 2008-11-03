@@ -493,10 +493,18 @@ class table
 
 			case "price":
 			case "money":
-				// TODO: in future, have currency field here
 
-				// for now, just add a $ symbol to the field.
-				$result = "$". sprintf("%0.2f", $this->data[$row][$column]);
+				if ($this->data[$row][$column] == 0)
+				{
+					// instead of 0.00, make blank.
+					$result = "";
+				}
+				else
+				{
+					// TODO: in future, have currency field here
+					// for now, just add a $ symbol to the field.
+					$result = "$". sprintf("%0.2f", $this->data[$row][$column]);
+				}
 			break;
 
 			case "hourmins":
