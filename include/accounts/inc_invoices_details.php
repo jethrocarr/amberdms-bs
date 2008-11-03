@@ -77,17 +77,33 @@ function invoice_form_details_render($type, $id, $processpage)
 	*/
 	
 	// basic details
-	$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
-	$form->add_input($structure);
+	if ($type == "ap")
+	{
+		$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors");
+		$structure["options"]["req"]	= "yes";
+		$form->add_input($structure);
+	}
+	else
+	{
+		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
+		$structure["options"]["req"]	= "yes";
+		$form->add_input($structure);
+	}
 		
 	$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
+	$structure["options"]["req"]	= "yes";
 	$form->add_input($structure);
 
 	$structure = NULL;
 	$structure["fieldname"] 	= "code_invoice";
 	$structure["type"]		= "input";
+
+	if ($mode == "edit")
+		$structure["options"]["req"] = "yes";
+
 	$form->add_input($structure);
-	
+
+
 	$structure = NULL;
 	$structure["fieldname"] 	= "code_ordernumber";
 	$structure["type"]		= "input";
@@ -122,14 +138,25 @@ function invoice_form_details_render($type, $id, $processpage)
 
 
 	// destination account
-	$structure = charts_form_prepare_acccountdropdown("dest_account", 1);
-
-	if (count(array_keys($structure["values"])) == 1)
+	if ($type == "ap")
 	{
-		// if there is only 1 tax option avaliable, select it as the default
-		$structure["options"]["noselectoption"] = "yes";
+		$structure = charts_form_prepare_acccountdropdown("dest_account", "ap_summary_account");
+	}
+	else
+	{
+		$structure = charts_form_prepare_acccountdropdown("dest_account", "ar_summary_account");
+	}
+		
+	if ($structure["values"])
+	{
+		if (count(array_keys($structure["values"])) == 1)
+		{
+			// if there is only 1 tax option avaliable, select it as the default
+			$structure["options"]["noselectoption"] = "yes";
+		}
 	}
 	
+	$structure["options"]["req"]	= "yes";
 	$form->add_input($structure);
 
 
@@ -152,15 +179,32 @@ function invoice_form_details_render($type, $id, $processpage)
 
 
 	// load data
-	$form->sql_query = "SELECT customerid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due FROM account_$type WHERE id='$id'";
+	if ($type == "ap")
+	{
+		$form->sql_query = "SELECT vendorid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due FROM account_$type WHERE id='$id'";
+	}
+	else
+	{
+		$form->sql_query = "SELECT customerid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due FROM account_$type WHERE id='$id'";
+	}
+	
 	$form->load_data();
+
 
 
 	/*
 		Display Form
 	*/
 	
-	$form->subforms[$type ."_invoice_details"]	= array("customerid", "employeeid", "code_invoice", "code_ordernumber", "code_ponumber", "date_trans", "date_due");
+	if ($type == "ap")
+	{
+		$form->subforms[$type ."_invoice_details"]	= array("vendorid", "employeeid", "code_invoice", "code_ordernumber", "code_ponumber", "date_trans", "date_due");
+	}
+	else
+	{
+		$form->subforms[$type ."_invoice_details"]	= array("customerid", "employeeid", "code_invoice", "code_ordernumber", "code_ponumber", "date_trans", "date_due");
+	}
+	
 	$form->subforms[$type ."_invoice_financials"]	= array("dest_account");
 	$form->subforms[$type ."_invoice_other"]	= array("notes");
 
@@ -208,11 +252,18 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	
 
 	// general details
-	$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
+	if ($type == "ap")
+	{
+		$data["vendorid"]		= security_form_input_predefined("int", "vendorid", 1, "");
+	}
+	else
+	{
+		$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
+	}
+	
 	$data["employeeid"]		= security_form_input_predefined("int", "employeeid", 1, "");
 	$data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
 	
-	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
 	$data["code_ordernumber"]	= security_form_input_predefined("any", "code_ordernumber", 0, "");
 	$data["code_ponumber"]		= security_form_input_predefined("any", "code_ponumber", 0, "");
 	$data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
@@ -243,6 +294,16 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	}
 
 
+	// invoice must be provided by edit page, but not by add invoice, since we can just generate a new one
+	if ($mode == "add")
+	{
+		$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
+	}
+	else
+	{
+		$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
+	}
+
 	//// ERROR CHECKING ///////////////////////
 
 
@@ -250,9 +311,16 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	if ($data["code_invoice"])
 	{
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `account_ar` WHERE code_invoice='". $data["code_invoice"] ."'";
+		$sql_obj->string	= "SELECT id FROM `account_$type` WHERE code_invoice='". $data["code_invoice"] ."'";
+		
 		if ($id)
 			$sql_obj->string .= " AND id!='$id'";
+	
+		// for AP invoices, the ID only need to be unique for the particular vendor we are working with, since
+		// it's almost guaranteed that different vendors will use the same numbering scheme for their invoices
+		if ($type == "ap")
+			$sql_obj->string .= " AND vendorid='". $data["vendorid"] ."'";
+			
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -275,7 +343,7 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 		// GENERATE INVOICE ID
 		// if no invoice ID has been supplied, we now need to generate a unique invoice id
 		if (!$data["code_invoice"])
-			$data["code_invoice"] = invoice_generate_ar_invoiceid();
+			$data["code_invoice"] = invoice_generate_invoiceid($type);
 
 		// APPLY GENERAL OPTIONS
 		if ($mode == "add")
@@ -302,18 +370,35 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			
 			$sql_obj = New sql_query;
 			
-			$sql_obj->string = "UPDATE `account_$type` SET "
-						."customerid='". $data["customerid"] ."', "
-						."employeeid='". $data["employeeid"] ."', "
-						."notes='". $data["notes"] ."', "
-						."code_invoice='". $data["code_invoice"] ."', "
-						."code_ordernumber='". $data["code_ordernumber"] ."', "
-						."code_ponumber='". $data["code_ponumber"] ."', "
-						."date_trans='". $data["date_trans"] ."', "
-						."date_due='". $data["date_due"] ."', "
-						."dest_account='". $data["dest_account"] ."' "
-						."WHERE id='$id'";
-						
+			if ($type == "ap")
+			{
+				$sql_obj->string = "UPDATE `account_$type` SET "
+							."vendorid='". $data["vendorid"] ."', "
+							."employeeid='". $data["employeeid"] ."', "
+							."notes='". $data["notes"] ."', "
+							."code_invoice='". $data["code_invoice"] ."', "
+							."code_ordernumber='". $data["code_ordernumber"] ."', "
+							."code_ponumber='". $data["code_ponumber"] ."', "
+							."date_trans='". $data["date_trans"] ."', "
+							."date_due='". $data["date_due"] ."', "
+							."dest_account='". $data["dest_account"] ."' "
+							."WHERE id='$id'";
+			}
+			else
+			{
+				$sql_obj->string = "UPDATE `account_$type` SET "
+							."customerid='". $data["customerid"] ."', "
+							."employeeid='". $data["employeeid"] ."', "
+							."notes='". $data["notes"] ."', "
+							."code_invoice='". $data["code_invoice"] ."', "
+							."code_ordernumber='". $data["code_ordernumber"] ."', "
+							."code_ponumber='". $data["code_ponumber"] ."', "
+							."date_trans='". $data["date_trans"] ."', "
+							."date_due='". $data["date_due"] ."', "
+							."dest_account='". $data["dest_account"] ."' "
+							."WHERE id='$id'";
+			}
+			
 			if (!$sql_obj->execute())
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";

@@ -433,7 +433,15 @@ function invoice_form_items_render($type, $id, $processpage)
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure = charts_form_prepare_acccountdropdown("chartid", 2);
+
+			if ($type == "ap")
+			{
+				$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
+			}
+			else
+			{
+				$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
+			}
 			$form->add_input($structure);
 				
 			$structure = NULL;
@@ -1304,8 +1312,14 @@ function invoice_items_update_ledger($id, $type)
 		per-invoice, not per-item.
 
 		Then we create the following in the ledger:
-		* A single debit from the AR account
-		* A single credit to each different account for the items.
+
+			AR INVOICES
+			* A single debit from the AR account
+			* A single credit to each different account for the items.
+
+			AP INVOICES
+			* A single credit to the AP account
+			* A single debit to each different account for the items
 
 		Payment items need to be handled differently - see code further down.
 	*/
@@ -1335,14 +1349,29 @@ function invoice_items_update_ledger($id, $type)
 			}
 		
 			// create ledger entry for this account
-			ledger_trans_add("credit", $trans_type, $id, 0, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+			if ($type == "ap")
+			{
+				ledger_trans_add("debit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+			}
+			else
+			{
+				ledger_trans_add("credit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+			}
 
 			// add up the total for the AR entry.
 			$amount += $item_data["price"];
 		}
 
-		// create debit to AR account
-		ledger_trans_add("debit", $type, $id, 0, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+		if ($type == "ap")
+		{
+			// create credit from AP account
+			ledger_trans_add("credit", $type, $id, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+		}
+		else
+		{
+			// create debit to AR account
+			ledger_trans_add("debit", $type, $id, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+		}
 	}
 
 
@@ -1384,10 +1413,18 @@ function invoice_items_update_ledger($id, $type)
 			}
 			
 
-				
-			// we need to debit the destination account for the payment to go into and credit the AR account
-			ledger_trans_add("debit", $type ."_pay", $id, 0, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
-			ledger_trans_add("credit", $type ."_pay", $id, 0, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+			if ($type == "ap")
+			{
+				// we need to credit the destination account for the payment to come from and debit the AP account
+				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
+				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+			}
+			else
+			{
+				// we need to debit the destination account for the payment to go into and credit the AR account
+				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
+				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+			}
 		}
 	}
 

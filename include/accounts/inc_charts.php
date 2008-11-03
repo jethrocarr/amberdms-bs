@@ -12,13 +12,35 @@
 
 
 /*
-	charts_form_prepare_acccountdropdown($fieldname, $menuid)
+	charts_form_prepare_acccountdropdown($fieldname, $menuname)
 
 	Returns a structure for creating a form drop down of charts with suitable menu configurations.
-*/
-function charts_form_prepare_acccountdropdown($fieldname, $menuid)
-{
 
+	Values
+	fieldname		Name of the form dropdown
+	menuid/menuname		Either the ID or name (value) of the menu item. It is recommended
+				to use the name for clarity of code and the ID will probably be phased out eventually.
+*/
+function charts_form_prepare_acccountdropdown($fieldname, $menu_name)
+{
+	log_debug("inc_charts", "Executing charts_form_prepare_accountdropdown($fieldname, $menu_name)");
+
+
+	// see if we need to fetch the ID for the name
+	// (see function comments - this will be phased out eventually)
+	if (is_int($menu_name))
+	{
+		log_debug("inc_charts", "Obsolete: Use of menu ID rather than menu name");
+
+		$menuid = $menu_name;
+	}
+	else
+	{
+		$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='$menu_name'");
+	}
+
+
+	// fetch list of suitable charts belonging to the menu requested.
 	$sql_query	= "SELECT "
 			."account_charts.id as id, "
 			."account_charts.code_chart as label, "

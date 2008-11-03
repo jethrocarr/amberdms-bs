@@ -50,13 +50,21 @@ function taxes_report_transactions($mode, $taxid)
 
 	// configure the table
 	$tax_table->language	= $_SESSION["user"]["lang"];
-	$tax_table->tablename	= "tax_report";
+	$tax_table->tablename	= "tax_report_$type";
 
 	// define all the columns and structure
 	$tax_table->add_column("date", "date_trans", "account_$type.date_trans");
 	
 	$tax_table->add_column("standard", "code_invoice", "account_$type.code_invoice");
-	$tax_table->add_column("standard", "name_customer", "customers.name_customer");
+
+	if ($type == "ap")
+	{
+		$tax_table->add_column("standard", "name_vendor", "vendors.name_vendor");
+	}
+	else
+	{
+		$tax_table->add_column("standard", "name_customer", "customers.name_customer");
+	}
 		
 	$tax_table->add_column("money", "amount", "account_$type.amount");
 	$tax_table->add_column("money", "amount_tax", "NONE");
@@ -67,13 +75,31 @@ function taxes_report_transactions($mode, $taxid)
 	$tax_table->total_rows		= array("amount", "amount_tax");
 
 	// defaults
-	$tax_table->columns		= array("date_trans", "code_invoice", "name_customer", "amount", "amount_tax");
-	$tax_table->columns_order	= array("date_trans", "name_customer");
+	if ($type == "ap")
+	{
+		$tax_table->columns		= array("date_trans", "code_invoice", "name_vendor", "amount", "amount_tax");
+		$tax_table->columns_order	= array("date_trans", "name_vendor");
+	}
+	else
+	{
+		$tax_table->columns		= array("date_trans", "code_invoice", "name_customer", "amount", "amount_tax");
+		$tax_table->columns_order	= array("date_trans", "name_customer");
+	}
 
 	// define SQL structure
 	$tax_table->sql_obj->prepare_sql_settable("account_$type");
-	$tax_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON account_$type.customerid = customers.id");
+
+	if ($type == "ap")
+	{
+		$tax_table->sql_obj->prepare_sql_addjoin("LEFT JOIN vendors ON account_$type.vendorid = vendors.id");
+	}
+	else
+	{
+		$tax_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON account_$type.customerid = customers.id");
+	}
+	
 	$tax_table->sql_obj->prepare_sql_addfield("id", "account_$type.id");
+
 
 
 	/*

@@ -78,7 +78,7 @@ if (user_permissions_get('accounts_ar_view'))
 
 
 		// heading
-		print "<h3>LIST OF TRANSACTIONS</h3><br><br>";
+		print "<h3>LIST OF ACCOUNTS RECEIVABLES INVOICES</h3><br><br>";
 
 
 		// options form
