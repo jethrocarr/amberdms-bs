@@ -32,7 +32,6 @@
 	mode		"credit" or "debit" - the direction of the transaction
 	type		Value for type field
 	customid	custom linking ID
-	customid2	customid2 linking ID
 	date_trans	date in YYYY-MM-DD format
 	chartid		ID of the chart/account
 	amount		financial amount
@@ -43,9 +42,9 @@
 	0		failure
 	1		success
 */	
-function ledger_trans_add($mode, $type, $customid, $customid2, $date_trans, $chartid, $amount, $source, $memo)
+function ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amount, $source, $memo)
 {
-	log_debug("inc_ledger", "ledger_trans_add($mode, $type, $customid, $customid2, $date_trans, $chartid, $amount, $source, $memo)");
+	log_debug("inc_ledger", "ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amount, $source, $memo)");
 
 	
 	// insert transaction
@@ -54,7 +53,6 @@ function ledger_trans_add($mode, $type, $customid, $customid2, $date_trans, $cha
 				."INTO account_trans ("
 				."type, "
 				."customid, "
-				."customid2, "
 				."date_trans, "
 				."chartid, "
 				."amount_$mode, "
@@ -63,7 +61,6 @@ function ledger_trans_add($mode, $type, $customid, $customid2, $date_trans, $cha
 				.") VALUES ("
 				."'$type', "
 				."'$customid', "
-				."'$customid2', "
 				."'". $date_trans ."', "
 				."'". $chartid ."', "
 				."'". $amount ."', "
