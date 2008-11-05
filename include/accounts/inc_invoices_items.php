@@ -62,20 +62,25 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->tablename	= "item_list";
 
 		// define all the columns and structure
-		$item_list->add_column("money", "price", "account_items.price");
+		$item_list->add_column("money", "amount", "account_items.amount");
 		$item_list->add_column("standard", "account", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
+		$item_list->add_column("money", "price", "account_items.price");
+		$item_list->add_column("standard", "units", "account_items.units");
+		$item_list->add_column("standard", "qnty", "account_items.quantity");
 		$item_list->add_column("standard", "description", "account_items.description");
 
 		// defaults
-		$item_list->columns		= array("price", "account", "description");
+		$item_list->columns		= array("amount", "account", "price", "qnty", "units", "description");
 		$item_list->columns_order	= array("account");
 
 		// totals
-		$item_list->total_columns	= array("price");
+		$item_list->total_columns	= array("amount");
 
 		// define SQL structure
 		$item_list->sql_obj->prepare_sql_settable("account_items");
 		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
+		$item_list->sql_obj->prepare_sql_addfield("type", "account_items.type");
+		$item_list->sql_obj->prepare_sql_addfield("customid", "account_items.customid");
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
@@ -91,6 +96,31 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		}
 		else
 		{
+			/*
+				Perform custom processing for item types
+			*/
+			for ($i=0; $i < $item_list->data_num_rows; $i++)
+			{
+				// product types
+				if ($item_list->data[$i]["type"] == "product")
+				{
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $item_list->data[$i]["customid"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					$sql_obj->fetch_array();
+					$item_list->data[$i]["account"] = $sql_obj->data[0]["name_product"];
+				}	
+				else
+				{
+					// blank out a few fields
+					$item_list->data[$i]["qnty"] = "";
+				}
+					
+			}
+
+
+		
 			// edit link
 			$structure = NULL;
 			$structure["id"]["value"]	= "$id";
@@ -113,6 +143,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		}
 		
 		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=standard\">Add standard transaction item</a></b></p>";
+		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=product\">Add product item</a></b></p>";
 
 
 
@@ -129,16 +160,16 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->tablename	= "item_list";
 
 		// define all the columns and structure
-		$item_list->add_column("money", "price", "account_items.price");
+		$item_list->add_column("money", "amount", "account_items.amount");
 		$item_list->add_column("standard", "name_tax", "CONCAT_WS(' -- ',account_taxes.name_tax,account_taxes.description)");
 		$item_list->add_column("standard", "description", "account_items.description");
 
 		// defaults
-		$item_list->columns		= array("price", "name_tax", "description");
+		$item_list->columns		= array("amount", "name_tax", "description");
 		$item_list->columns_order	= array("name_tax");
 
 		// totals
-		$item_list->total_columns	= array("price");
+		$item_list->total_columns	= array("amount");
 
 		// define SQL structure
 		$item_list->sql_obj->prepare_sql_settable("account_items");
@@ -236,7 +267,7 @@ function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
 
 		// define all the columns and structure
 		$item_list->add_column("date", "date_trans", "NONE");
-		$item_list->add_column("money", "amount", "account_items.price");
+		$item_list->add_column("money", "amount", "account_items.amount");
 		$item_list->add_column("standard", "account", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$item_list->add_column("standard", "source", "NONE");
 		$item_list->add_column("standard", "description", "account_items.description");
@@ -428,7 +459,7 @@ function invoice_form_items_render($type, $id, $processpage)
 			
 			// basic details
 			$structure = NULL;
-			$structure["fieldname"] 	= "price";
+			$structure["fieldname"] 	= "amount";
 			$structure["type"]		= "input";
 			$form->add_input($structure);
 
@@ -453,13 +484,69 @@ function invoice_form_items_render($type, $id, $processpage)
 
 	
 			// define form layout
-			$form->subforms[$type ."_invoice_item"]		= array("price", "chartid", "description");
+			$form->subforms[$type ."_invoice_item"]		= array("amount", "chartid", "description");
 
 			// SQL query
-			$form->sql_query = "SELECT price, description, chartid FROM account_items WHERE id='$itemid'";
+			$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='$itemid'";
 
 		break;
 
+
+		/*
+			PRODUCT
+
+			Product item - selection of a product from the DB, and specify quantity, unit and amount.
+		*/
+
+		case "product":
+
+			// basic details
+			$structure = NULL;
+			$structure["fieldname"] 	= "price";
+			$structure["type"]		= "input";
+			$form->add_input($structure);
+
+			// quantity
+			$structure = NULL;
+			$structure["fieldname"] 	= "quantity";
+			$structure["type"]		= "input";
+			$structure["options"]["width"]	= 50;
+			$form->add_input($structure);
+
+
+			// units
+			$structure = NULL;
+			$structure["fieldname"] 		= "units";
+			$structure["type"]			= "input";
+			$structure["options"]["width"]		= 50;
+			$structure["options"]["max_length"]	= 10;
+			$form->add_input($structure);
+
+
+
+			// product id
+			$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+			$form->add_input($structure);
+
+
+			// description
+			$structure = NULL;
+			$structure["fieldname"] 	= "description";
+			$structure["type"]		= "textarea";
+			$structure["options"]["height"]	= "50";
+			$structure["options"]["width"]	= 500;
+			$form->add_input($structure);
+
+	
+			// define form layout
+			$form->subforms[$type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description");
+
+			// SQL query
+			$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='$itemid'";
+
+
+		
+		break;
 
 		case "tax":
 		
@@ -508,7 +595,7 @@ function invoice_form_items_render($type, $id, $processpage)
 			$form->subforms[$type ."_invoice_item"]		= array("tax_id", "manual_option", "manual_amount");
 
 			// SQL query
-			$form->sql_query = "SELECT price as manual_amount FROM account_items WHERE id='$itemid'";
+			$form->sql_query = "SELECT customid as tax_id, amount as manual_amount FROM account_items WHERE id='$itemid'";
 
 		break;
 
@@ -559,7 +646,7 @@ function invoice_form_items_render($type, $id, $processpage)
 			$form->subforms[$type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
 
 			// SQL query
-			$form->sql_query = "SELECT price as amount, description, chartid FROM account_items WHERE id='$itemid'";
+			$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='$itemid'";
 
 
 			
@@ -616,14 +703,18 @@ function invoice_form_items_render($type, $id, $processpage)
 				// check if the tax is to be calculated manually or calculated
 				// automatically.
 				
-				$mode = sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TAX_CALC_MODE' LIMIT 1");
-				
-				if ($mode == "manual")
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TAX_CALC_MODE' LIMIT 1";
+				$sql_obj->execute();
+
+				if ($sql_obj->num_rows())
 				{
 					$form->structure["manual_option"]["defaultvalue"] = "on";
+					$form->structure["manual_amount"]["defaultvalue"] = "";
 				}
 				else
 				{
+					$form->structure["manual_option"]["defaultvalue"] = "";
 					$form->structure["manual_amount"]["defaultvalue"] = "";
 				}
 
@@ -738,10 +829,47 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 
 			// fetch information from form
-			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
+			$data["amount"]		= security_form_input_predefined("money", "amount", 1, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
 			
+		break;
+
+
+		case "product":
+			/*
+				PRODUCT ITEMS
+			*/
+			
+			// fetch information from form
+			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
+			$data["quantity"]	= security_form_input_predefined("int", "quantity", 1, "");
+			$data["units"]		= security_form_input_predefined("any", "units", 0, "");
+			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
+			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+
+			// calculate the total amount
+			$data["amount"] = $data["price"] * $data["quantity"];
+
+			// get the chart for the product
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT account_sales FROM products WHERE id='". $data["customid"] ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				$data["chartid"] = $sql_obj->data[0]["account_sales"];
+			}
+			else
+			{
+				if (!$_SESSION["error"]["productid-error"])
+				{
+					$_SESSION["error"]["message"][] = "The requested product does not exist!";
+					$_SESSION["error"]["productid-error"] = 1;
+				}
+			}
 		break;
 
 
@@ -782,7 +910,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			if ($data["manual_option"])
 			{
 				// fetch manual value from the form
-				$data["price"]	= security_form_input_predefined("money", "manual_amount", 1, "You must enter a value if you choose to calculate the tax amount manually.");
+				$data["amount"]	= security_form_input_predefined("money", "manual_amount", 1, "You must enter a value if you choose to calculate the tax amount manually.");
 
 				// label it for the ledgers
 				$data["description"] = "Manual tax calculation";
@@ -790,12 +918,12 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			else
 			{
 				// fetch total of billable items
-				$amount	= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax'");
+				$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax'");
 
 				// calculate taxable amount
-				$data["price"] = $amount * ($data["taxrate"] / 100);
+				$data["amount"] = $amount * ($data["taxrate"] / 100);
 				
-				$data["price"] = sprintf("%0.2f", $data["price"]);
+				$data["amount"] = sprintf("%0.2f", $data["amount"]);
 
 				
 				// label it for the ledgers
@@ -812,7 +940,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 			// fetch information from form
 			$data["date_trans"]	= security_form_input_predefined("date", "date_trans", 1, "");
-			$data["price"]		= security_form_input_predefined("money", "amount", 1, "");
+			$data["amount"]		= security_form_input_predefined("money", "amount", 1, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
 			$data["source"]		= security_form_input_predefined("any", "source", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
@@ -870,9 +998,12 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			
 			$sql_obj->string = "UPDATE `account_items` SET "
 						."type='$item_type', "
+						."amount='". $data["amount"] ."', "
 						."price='". $data["price"] ."', "
 						."chartid='". $data["chartid"] ."', "
 						."customid='". $data["customid"] ."', "
+						."quantity='". $data["quantity"] ."', "
+						."units='". $data["units"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$itemid'";
 						
@@ -1141,9 +1272,9 @@ function invoice_items_update_total($id, $type)
 
 
 	// calculate totals from the DB
-	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
-	$amount_tax	= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type='tax'");
-	$amount_paid	= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type='payment'");
+	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
+	$amount_tax	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type='tax'");
+	$amount_paid	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type='payment'");
 
 	// final totals
 	$amount_total	= $amount + $amount_tax;
@@ -1206,14 +1337,14 @@ function invoice_items_update_tax($id, $type)
 
 
 	// fetch taxable amount
-	$amount		= sql_get_singlevalue("SELECT sum(price) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
+	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
 
 
 	/*
 		Run though all the tax items on this invoice
 	*/
 	$sql_items_obj		= New sql_query;
-	$sql_items_obj->string	= "SELECT id, customid, price FROM account_items WHERE invoiceid='$id' AND type='tax'";
+	$sql_items_obj->string	= "SELECT id, customid, amount FROM account_items WHERE invoiceid='$id' AND type='tax'";
 	$sql_items_obj->execute();
 
 	if ($sql_items_obj->num_rows())
@@ -1245,12 +1376,12 @@ function invoice_items_update_tax($id, $type)
 
 			
 				// calculate taxable amount
-				$price = $amount * ($sql_tax_obj->data[0]["taxrate"] / 100);
-				$price = sprintf("%0.2f", $price);
+				$amount = $amount * ($sql_tax_obj->data[0]["taxrate"] / 100);
+				$amount = sprintf("%0.2f", $amount);
 
 				// update the item with the new amount
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "UPDATE account_items SET price='$price' WHERE id='". $data["id"] ."'";
+				$sql_obj->string	= "UPDATE account_items SET amount='$amount' WHERE id='". $data["id"] ."'";
 				$sql_obj->execute();
 
 
@@ -1329,7 +1460,7 @@ function invoice_items_update_ledger($id, $type)
 
 	// Fetch totals per chart from the items table.
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT chartid, type, SUM(price) as price FROM `account_items` WHERE invoiceid='$id' AND type!='payment' GROUP BY chartid";
+	$sql_obj->string	= "SELECT chartid, type, SUM(amount) as amount FROM `account_items` WHERE invoiceid='$id' AND type!='payment' GROUP BY chartid";
 	$sql_obj->execute();
 
 	if ($sql_obj->num_rows())
@@ -1351,15 +1482,15 @@ function invoice_items_update_ledger($id, $type)
 			// create ledger entry for this account
 			if ($type == "ap")
 			{
-				ledger_trans_add("debit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+				ledger_trans_add("debit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
 			}
 			else
 			{
-				ledger_trans_add("credit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["price"], "", "");
+				ledger_trans_add("credit", $trans_type, $id, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
 			}
 
 			// add up the total for the AR entry.
-			$amount += $item_data["price"];
+			$amount += $item_data["amount"];
 		}
 
 		if ($type == "ap")
@@ -1387,7 +1518,7 @@ function invoice_items_update_ledger($id, $type)
 
 	// run though each payment item
 	$sql_item_obj		= New sql_query;
-	$sql_item_obj->string	= "SELECT id, chartid, price, description FROM `account_items` WHERE invoiceid='$id' AND type='payment'";
+	$sql_item_obj->string	= "SELECT id, chartid, amount, description FROM `account_items` WHERE invoiceid='$id' AND type='payment'";
 	$sql_item_obj->execute();
 
 	if ($sql_item_obj->num_rows())
@@ -1416,14 +1547,14 @@ function invoice_items_update_ledger($id, $type)
 			if ($type == "ap")
 			{
 				// we need to credit the destination account for the payment to come from and debit the AP account
-				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
-				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["amount"], $data["source"], $data["description"]);
+				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["amount"], $data["source"], $data["description"]);
 			}
 			else
 			{
 				// we need to debit the destination account for the payment to go into and credit the AR account
-				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["price"], $data["source"], $data["description"]);
-				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["price"], $data["source"], $data["description"]);
+				ledger_trans_add("debit", $type ."_pay", $id, $data["date_trans"], $data["chartid"], $data["amount"], $data["source"], $data["description"]);
+				ledger_trans_add("credit", $type ."_pay", $id, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["amount"], $data["source"], $data["description"]);
 			}
 		}
 	}
