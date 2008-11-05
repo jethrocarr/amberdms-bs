@@ -134,7 +134,22 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 {
 	$expression = NULL;
+
+	// if there is no errormsg supplied, set a default one by looking
+	// up the translation of the fieldname and reporting it.
+	//
+	// Note that the security_form_input function will also do this if
+	// required, however we check here first since some of the input types
+	// do processing in this function.
+	//
+	if ($errormsg == "")
+	{
+		$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+		$errormsg	= "Invalid $translation supplied, please correct.";
+	}
 	
+	
+	// run through the actions for each item type
 	switch ($type)
 	{
 		case "any":
