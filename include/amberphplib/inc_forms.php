@@ -389,7 +389,7 @@ class form_input
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
 						["req"]			Set to "yes" to mark the field as being required
-						["max_length"]		Max length for input/password types
+						["max_length"]		Max length for input types
 						["width"]		Width of field object.
 						["height"]		Height of field object.
 						["label"]		Label field for checkboxes to use instead of a translation
@@ -412,7 +412,14 @@ class form_input
 					$this->structure[$fieldname]["options"]["width"] = 250;
 		
 				// display
-				print "<input name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
+				print "<input name=\"$fieldname\" ";
+				print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
+
+				if ($this->structure[$fieldname]["options"]["max_length"])
+					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
+				
+				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
+
 			break;
 
 			case "password":
