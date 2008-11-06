@@ -1,10 +1,10 @@
 <?php
 /*
-	timebooked.php
+	timebilled.php
 	
 	access: "projects_view" group members
 
-	Displays all the time recorded against the selected project and all it's phases.
+	Displays groups of time for invoicing purposes.
 */
 
 if (user_permissions_get('projects_view'))
@@ -22,11 +22,11 @@ if (user_permissions_get('projects_view'))
 	
 	$_SESSION["nav"]["title"][]	= "Timebooked";
 	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$projectid";
-	$_SESSION["nav"]["current"]	= "page=projects/timebooked.php&id=$projectid";
-
+	
 	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
 	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$projectid";
-
+	$_SESSION["nav"]["current"]	= "page=projects/timebilled.php&id=$projectid";
+	
 	$_SESSION["nav"]["title"][]	= "Project Journal";
 	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$projectid";
 
@@ -52,9 +52,10 @@ if (user_permissions_get('projects_view'))
 			$mysql_data = mysql_fetch_array($mysql_result);
 			
 			// heading
-			print "<h3>TIME BOOKED TO PROJECT</h3>";
+			print "<h3>TIME BILLED/GROUPED</h3>";
 
-			print "<p>This page shows all the time that has been booked to the ". $mysql_data["name_project"] ." project.</p>";
+			// TODO: add more details explaining how to use time grouping
+			print "<p>This page shows all the time that has been grouped and invoiced for the ". $mysql_data["name_project"] ." project.</p>";
 		
 		
 			/// Basic Table Structure
@@ -63,26 +64,25 @@ if (user_permissions_get('projects_view'))
 			$timereg_table = New table;
 
 			$timereg_table->language	= $_SESSION["user"]["lang"];
-			$timereg_table->tablename	= "timereg_table";
+			$timereg_table->tablename	= "time_billed";
 
 			// define all the columns and structure
-			$timereg_table->add_column("date", "date", "timereg.date");
-			$timereg_table->add_column("standard", "name_phase", "project_phases.name_phase");
-			$timereg_table->add_column("standard", "name_staff", "staff.name_staff");
-			$timereg_table->add_column("standard", "description", "timereg.description");
-			$timereg_table->add_column("hourmins", "time_booked", "timereg.time_booked");
+			$timereg_table->add_column("standard", "name_group", "time_groups.name_group");
+			$timereg_table->add_column("standard", "name_customer", "customers.name_customer");
+			$timereg_table->add_column("standard", "status", "time_groups.status");
+			$timereg_table->add_column("standard", "description", "time_groups.description");
+			$timereg_table->add_column("hourmins", "time_billed", "NONE");
+			$timereg_table->add_column("hourmins", "time_not_billed", "NONE");
 
 			// defaults
-			$timereg_table->columns		= array("date", "name_phase", "name_staff", "description", "time_booked");
-			$timereg_table->columns_order	= array("date", "name_phase");
+			$timereg_table->columns		= array("name_group", "name_customer", "status", "description", "time_billed", "time_not_billed");
+			$timereg_table->columns_order	= array("name_customer", "name_group");
 
 			// define SQL structure
-			$timereg_table->sql_obj->prepare_sql_settable("timereg");
-			$timereg_table->sql_obj->prepare_sql_addfield("id", "timereg.id");
-			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
-			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
-			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
-			$timereg_table->sql_obj->prepare_sql_addwhere("projects.id = '$projectid'");
+			$timereg_table->sql_obj->prepare_sql_settable("time_groups");
+			$timereg_table->sql_obj->prepare_sql_addfield("id", "time_groups.id");
+			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON time_groups.customerid = customers.id");
+			$timereg_table->sql_obj->prepare_sql_addwhere("time_groups.projectid = '$projectid'");
 			
 			
 			/// Filtering/Display Options
@@ -104,18 +104,14 @@ if (user_permissions_get('projects_view'))
 			$structure["sql"]	= "date <= 'value'";
 			$timereg_table->add_filter($structure);
 			
-			$structure		= form_helper_prepare_dropdownfromdb("phaseid", "SELECT id, name_phase as label FROM project_phases WHERE projectid='$projectid' ORDER BY name_phase ASC");
-			$structure["sql"]	= "project_phases.id='value'";
-			$timereg_table->add_filter($structure);
-
-			$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
-			$structure["sql"]	= "timereg.employeeid='value'";
+			$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
+			$structure["sql"]	= "time_groups.customerid='value'";
 			$timereg_table->add_filter($structure);
 
 			$structure = NULL;
 			$structure["fieldname"] = "searchbox";
 			$structure["type"]	= "input";
-			$structure["sql"]	= "timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%'";
+			$structure["sql"]	= "time_groups.description LIKE '%value%' OR time_groups.name_group LIKE '%value%'";
 			$timereg_table->add_filter($structure);
 
 
@@ -143,16 +139,44 @@ if (user_permissions_get('projects_view'))
 			}
 			else
 			{
+				// fetch the time totals
+				// (because we have to do two different sums, we can't use a join)
+				for ($i=0; $i < $timereg_table->data_num_rows; $i++)
+				{
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT time_booked, billable FROM timereg WHERE groupid='". $timereg_table->data[$i]["id"] ."'";
+					$sql_obj->execute();
+					
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+
+						foreach ($sql_obj->data as $data)
+						{
+							if ($data["billable"] == 0)
+							{
+								$timereg_table->data[$i]["time_not_billed"] += $data["time_booked"];
+							}
+							else
+							{
+								$timereg_table->data[$i]["time_billed"] += $data["time_booked"];
+							}
+						}
+					}
+				}
+				
+			
+				// add view/edit link
 				$structure = NULL;
-				$structure["editid"]["column"]	= "id";
-				$structure["date"]["column"]	= "date";
-				$timereg_table->add_link("view/edit", "timekeeping/timereg-day.php", $structure);
+				$structure["projectid"]["value"]	= "$projectid";
+				$structure["groupid"]["column"]		= "id";
+				$timereg_table->add_link("view/edit", "projects/timebilled-edit.php", $structure);
 
 				$timereg_table->render_table();
 			}
 
 
-
+			print "<p><b><a href=\"index.php?page=projects/timebilled-edit.php&projectid=$projectid\">Add new time group.</a></b></p>";
 
 
 

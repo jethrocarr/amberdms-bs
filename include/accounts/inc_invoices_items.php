@@ -62,29 +62,32 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->tablename	= "item_list";
 
 		// define all the columns and structure
-		$item_list->add_column("money", "amount", "account_items.amount");
-		$item_list->add_column("standard", "account", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
-		$item_list->add_column("money", "price", "account_items.price");
-		$item_list->add_column("standard", "units", "account_items.units");
-		$item_list->add_column("standard", "qnty", "account_items.quantity");
-		$item_list->add_column("standard", "description", "account_items.description");
+		$item_list->add_column("money", "amount", "");
+		$item_list->add_column("standard", "item_info", "NONE");
+		$item_list->add_column("money", "price", "");
+		$item_list->add_column("standard", "units", "");
+		$item_list->add_column("standard", "qnty", "quantity");
+		$item_list->add_column("standard", "description", "");
 
 		// defaults
-		$item_list->columns		= array("amount", "account", "price", "qnty", "units", "description");
-		$item_list->columns_order	= array("account");
+		$item_list->columns		= array("amount", "item_info", "price", "qnty", "units", "description");
 
 		// totals
 		$item_list->total_columns	= array("amount");
 
 		// define SQL structure
 		$item_list->sql_obj->prepare_sql_settable("account_items");
-		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
-		$item_list->sql_obj->prepare_sql_addfield("type", "account_items.type");
-		$item_list->sql_obj->prepare_sql_addfield("customid", "account_items.customid");
-		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
+		
+		$item_list->sql_obj->prepare_sql_addfield("id", "");
+		$item_list->sql_obj->prepare_sql_addfield("type", "");
+		$item_list->sql_obj->prepare_sql_addfield("customid", "");
+		$item_list->sql_obj->prepare_sql_addfield("chartid", "");
+		
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='payment'");
+		
+		$item_list->sql_obj->prepare_sql_addorderby("type");
 
 		// run SQL query
 		$item_list->generate_sql();
@@ -101,24 +104,37 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 			*/
 			for ($i=0; $i < $item_list->data_num_rows; $i++)
 			{
-				// product types
-				if ($item_list->data[$i]["type"] == "product")
+				switch ($item_list->data[$i]["type"])
 				{
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $item_list->data[$i]["customid"] ."' LIMIT 1";
-					$sql_obj->execute();
+					case "product":
+						/*
+							Fetch product name
+						*/
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $item_list->data[$i]["customid"] ."' LIMIT 1";
+						$sql_obj->execute();
 
-					$sql_obj->fetch_array();
-					$item_list->data[$i]["account"] = $sql_obj->data[0]["name_product"];
-				}	
-				else
-				{
-					// blank out a few fields
-					$item_list->data[$i]["qnty"] = "";
-				}
+						$sql_obj->fetch_array();
+						$item_list->data[$i]["item_info"] = $sql_obj->data[0]["name_product"];
+					break;
+
+
+					case "standard":
+						/*
+							Fetch account name and blank a few fields
+						*/
+
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $item_list->data[$i]["chartid"] ."' LIMIT 1";
+						$sql_obj->execute();
+
+						$sql_obj->fetch_array();
+						$item_list->data[$i]["item_info"] = $sql_obj->data[0]["name_account"];
 					
+						$item_list->data[$i]["qnty"] = "";
+					break;
+				}
 			}
-
 
 		
 			// edit link
@@ -547,6 +563,65 @@ function invoice_form_items_render($type, $id, $processpage)
 
 		
 		break;
+
+
+		/*
+			TIME (AR only)
+
+			Before time can be added to an invoice, the time entries need to be grouped together
+			using the form under projects.
+
+			The user can then select a group of time below to add to the invoice. This methods makes
+			it easier to add time to invoices, and also means that the time grouping could be done
+			by someone without access to invoicing itself.
+		*/
+		case "time":
+
+			if ($type == "ar")
+			{
+				$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_$type WHERE id='$id' LIMIT 1");
+				
+				// list of avaliable time groups
+				$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' ORDER BY name_group");
+				$form->add_input($structure);
+
+			
+				// price field
+				// TODO: this should auto-update from the product price
+				$structure = NULL;
+				$structure["fieldname"] 	= "price";
+				$structure["type"]		= "input";
+				$form->add_input($structure);
+
+				// product id
+				$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+				$form->add_input($structure);
+
+
+				// description
+				$structure = NULL;
+				$structure["fieldname"] 	= "description";
+				$structure["type"]		= "textarea";
+				$structure["options"]["height"]	= "50";
+				$structure["options"]["width"]	= 500;
+				$form->add_input($structure);
+
+		
+				// define form layout
+				$form->subforms[$type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description");
+
+				// SQL query
+				$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='$itemid'";
+				
+			
+			}
+			else
+			{
+				print "<p><i>Error: Time items are only avaliable for AR invoices.</i></p>";
+			}
+
+		break;
+		
 
 		case "tax":
 		

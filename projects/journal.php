@@ -24,6 +24,9 @@ if (user_permissions_get('projects_view'))
 	
 	$_SESSION["nav"]["title"][]	= "Timebooked";
 	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
+
+	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
+	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$projectid";
 	
 	$_SESSION["nav"]["title"][]	= "Project Journal";
 	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
