@@ -69,13 +69,13 @@ if (user_permissions_get('projects_view'))
 			// define all the columns and structure
 			$timereg_table->add_column("standard", "name_group", "time_groups.name_group");
 			$timereg_table->add_column("standard", "name_customer", "customers.name_customer");
-			$timereg_table->add_column("standard", "status", "time_groups.status");
+			$timereg_table->add_column("standard", "invoiceid", "time_groups.invoiceid");
 			$timereg_table->add_column("standard", "description", "time_groups.description");
 			$timereg_table->add_column("hourmins", "time_billed", "NONE");
 			$timereg_table->add_column("hourmins", "time_not_billed", "NONE");
 
 			// defaults
-			$timereg_table->columns		= array("name_group", "name_customer", "status", "description", "time_billed", "time_not_billed");
+			$timereg_table->columns		= array("name_group", "name_customer", "invoiceid", "description", "time_billed", "time_not_billed");
 			$timereg_table->columns_order	= array("name_customer", "name_group");
 
 			// define SQL structure

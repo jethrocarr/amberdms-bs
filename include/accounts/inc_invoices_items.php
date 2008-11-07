@@ -119,6 +119,17 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 					break;
 
 
+					case "time":
+						/*
+							Fetch time group ID
+						*/
+
+						$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $item_list->data[$i]["id"] ."' AND option_name='TIMEGROUPID'");
+
+						$item_list->data[$i]["item_info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+					break;
+
+
 					case "standard":
 						/*
 							Fetch account name and blank a few fields
@@ -160,6 +171,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		
 		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=standard\">Add standard transaction item</a></b></p>";
 		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=product\">Add product item</a></b></p>";
+		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=time\">Add time item</a></b></p>";
 
 
 
@@ -579,10 +591,23 @@ function invoice_form_items_render($type, $id, $processpage)
 
 			if ($type == "ar")
 			{
+				// fetch the customer ID for this invoice, so we can create
+				// a list of the time groups can be added.
 				$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_$type WHERE id='$id' LIMIT 1");
 				
 				// list of avaliable time groups
-				$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' ORDER BY name_group");
+				$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND locked='0' ORDER BY name_group");
+				$structure["options"]["width"] = "400";
+	
+				if ($structure["values"])
+				{
+					if (count(array_keys($structure["values"])) == 1)
+					{
+						// if there is only 1 time group avaliable, select it by default
+						$structure["options"]["noselectoption"] = "yes";
+					}
+				}
+				
 				$form->add_input($structure);
 
 			
@@ -595,6 +620,7 @@ function invoice_form_items_render($type, $id, $processpage)
 
 				// product id
 				$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+				$structure["options"]["width"] = "400";
 				$form->add_input($structure);
 
 
@@ -796,6 +822,14 @@ function invoice_form_items_render($type, $id, $processpage)
 			break;
 
 
+			case "time":
+
+				// fetch the time group ID
+				$form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TIMEGROUPID' LIMIT 1");
+				
+			break;
+
+
 			case "payment":
 
 				// fetch payment date_trans and source fields.
@@ -946,6 +980,86 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 				}
 			}
 		break;
+
+
+		case "time":
+			/*
+				TIME ITEMS
+
+				We need to get the number of billable hours, then calculate
+				the total charge for the item.
+
+				The supplied price is the cost per hour, and the supplied productid
+				provides the information for where the time should be billed to.
+			*/
+		
+			// a time item can only be added to an AR transactions
+			if ($type != "ar")
+			{
+				$_SESSION["error"]["message"][] = "You can only add time invoice items to AR invoices.";
+			}
+
+		
+			// fetch information from form
+			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
+			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
+			$data["timegroupid"]	= security_form_input_predefined("int", "timegroupid", 1, "");
+			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			$data["units"]		= "hours";
+
+			// fetch the number of billable hours for the supplied timegroupid
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT SUM(time_booked) as time_billable FROM timereg WHERE groupid='". $data["timegroupid"] ."'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				// work out the number of hours and excess minutes
+				$sql_obj->fetch_array();
+	
+			 	$minutes	= $sql_obj->data[0]["time_billable"] / 60;
+				$hours		= sprintf("%d",$minutes / 60);
+				
+				$excess_minutes = sprintf("%02d", $minutes - ($hours * 60));
+				
+				// convert minutes to base-10 numbering systems
+				// eg: 15mins becomes 0.25
+				$excess_minutes = $excess_minutes / 60;
+				
+				// set the quantity
+				$data["quantity"] = $hours + $excess_minutes;
+			}
+			else
+			{
+				$_SESSION["error"]["message"][] = "Invalid time group supplied!";
+			}
+			
+			
+			// calculate the total amount
+			$data["amount"] = $data["price"] * $data["quantity"];
+
+			// get the chart for the product
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT account_sales FROM products WHERE id='". $data["customid"] ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				$data["chartid"] = $sql_obj->data[0]["account_sales"];
+			}
+			else
+			{
+				if (!$_SESSION["error"]["productid-error"])
+				{
+					$_SESSION["error"]["message"][] = "The requested product does not exist!";
+					$_SESSION["error"]["productid-error"] = 1;
+				}
+			}
+		break;
+
+
 
 
 		case "tax":
@@ -1123,7 +1237,22 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 				$sql_obj->execute();
 			}
 
-			
+
+			// options for time items
+			if ($item_type == "time")
+			{
+				// create options entry for the timegroupid
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('$itemid', 'TIMEGROUPID', '". $data["timegroupid"] ."')";
+				$sql_obj->execute();
+
+				// update the time_group with the status, invoiceid and itemid
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE time_groups SET invoiceid='$id', invoiceitemid='$itemid', locked='1' WHERE id='". $data["timegroupid"] ."'";
+				$sql_obj->execute();
+			}
+
+		
 			
 			/*
 				Update Tax Items
@@ -1241,12 +1370,18 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	if ($mode == "edit")
 	{
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE id='$itemid' AND invoiceid='$id' LIMIT 1";
+		$sql_obj->string	= "SELECT id, type FROM account_items WHERE id='$itemid' AND invoiceid='$id' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
 			$_SESSION["error"]["message"][] = "<p><b>Error: The requested item/invoice combination does not exist. Are you trying to use a link to a deleted invoice?</b></p>";
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			$item_type = $sql_obj->data[0]["type"];
 		}
 	}
 	
@@ -1262,6 +1397,28 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	}
 	else
 	{
+		/*
+			Unlock time_groups if required
+		*/
+		if ($item_type == "time")
+		{
+			$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='$itemid' AND option_name='TIMEGROUPID'");
+		
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='0' WHERE id='$groupid'";
+			$sql_obj->execute();
+		}
+	
+	
+		/*
+			Delete the invoice item options
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='$itemid'";
+		$sql_obj->execute();
+
+	
 		/*
 			Delete the invoice item
 		*/
