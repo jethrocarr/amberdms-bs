@@ -766,7 +766,7 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No options avaliable.";
+		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
 	}
 	else
 	{
@@ -808,7 +808,7 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No options avaliable.";
+		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
 	}
 	else
 	{
