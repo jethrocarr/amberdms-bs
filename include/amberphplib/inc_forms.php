@@ -757,13 +757,25 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 	// get all the values from the DB.
 	$structure = form_helper_prepare_valuesfromdb($sqlquery);
 
+	
+	
+	// set type and any error messaes
 	if (!$structure)
-		return 0;
+	{
+		// no valid data found
+		$structure = array();
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "text";
+		$structure["defaultvalue"]	= "No options avaliable.";
+	}
+	else
+	{
+		// valid dropdown
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "dropdown";
+	}
 
-	// set basic options
-	$structure["fieldname"] = $fieldname;
-	$structure["type"]	= "dropdown";
-
+	
 	// return the structure
 	return $structure;
 }
@@ -788,13 +800,23 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 	
 	// get all the values from the DB.
 	$structure = form_helper_prepare_valuesfromdb($sqlquery);
-
+	
+	// set type and any error messaes
 	if (!$structure)
-		return 0;
+	{
+		// no valid data found
+		$structure = array();
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "text";
+		$structure["defaultvalue"]	= "No options avaliable.";
+	}
+	else
+	{
+		// valid radio button
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "text";
+	}
 
-	// set basic options
-	$structure["fieldname"] = $fieldname;
-	$structure["type"]	= "radio";
 
 	// return the structure
 	return $structure;
