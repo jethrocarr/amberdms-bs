@@ -21,6 +21,7 @@ if (user_permissions_get('projects_write'))
 	
 	$data["name_group"]		= security_form_input_predefined("any", "name_group", 1, "");
 	$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
+	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
 
 
@@ -211,7 +212,7 @@ if (user_permissions_get('projects_write'))
 						{
 							// the user has removed this entry from the group
 							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0' WHERE id='". $entries_data["id"] ."'";
+							$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='0' WHERE id='". $entries_data["id"] ."'";
 							$sql_obj->execute();
 						}
 					}
@@ -221,7 +222,7 @@ if (user_permissions_get('projects_write'))
 						{
 							// the entry has been added to the group.
 							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."' WHERE id='". $entries_data["id"] ."'";
+							$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='1' WHERE id='". $entries_data["id"] ."'";
 							$sql_obj->execute();
 						}
 					}

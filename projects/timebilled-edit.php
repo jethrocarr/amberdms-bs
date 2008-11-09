@@ -46,34 +46,35 @@ if (user_permissions_get('projects_write'))
 		$error = 0;
 		
 		// check that the specified project actually exists
-		$mysql_string	= "SELECT id FROM `projects` WHERE id='$projectid'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		
+		$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid'";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
 			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
 			$error = 1;
 		}
 		else
 		{
-			if ($phaseid)
+			if ($groupid)
 			{
 				// are we editing an existing group? make sure it exists and belongs to this project
-				$mysql_string	= "SELECT projectid FROM time_groups WHERE id='$groupid'";
-				$mysql_result	= mysql_query($mysql_string);
-				$mysql_num_rows	= mysql_num_rows($mysql_result);
+				$sql_group_obj		= New sql_query;
+				$sql_group_obj->string	= "SELECT projectid, locked FROM time_groups WHERE id='$groupid' LIMIT 1";
+				$sql_group_obj->execute();
 
-				if (!$mysql_num_rows)
+				if (!$sql_group_obj->num_rows())
 				{
 					print "<p><b>Error: The requested time group does not exist.</b></p>";
 					$error = 1;
 				}
 				else
 				{
-					$mysql_data = mysql_fetch_array($mysql_result);
+					$sql_group_obj->fetch_array();
 
-					if ($mysql_data["projectid"] != $projectid)
+					if ($sql_group_obj->data[0]["projectid"] != $projectid)
 					{
 						print "<p><b>Error: The requested time group does not match the provided project ID. Potential application bug?</b></p>";
 						$error = 1;
@@ -127,6 +128,11 @@ if (user_permissions_get('projects_write'))
 			$form->add_input($structure);
 
 			$structure = NULL;
+			$structure["fieldname"] 	= "code_invoice";
+			$structure["type"]		= "text";
+			$form->add_input($structure);
+
+			$structure = NULL;
 			$structure["fieldname"] 	= "description";
 			$structure["type"]		= "textarea";
 			$form->add_input($structure);
@@ -139,11 +145,12 @@ if (user_permissions_get('projects_write'))
 			$structure["defaultvalue"]	= $projectid;
 			$form->add_input($structure);
 			
-			$structure = NULL;
+			$structure = null;
 			$structure["fieldname"]		= "groupid";
 			$structure["type"]		= "hidden";
 			$structure["defaultvalue"]	= $groupid;
 			$form->add_input($structure);
+		
 			
 
 			/*
@@ -217,22 +224,35 @@ if (user_permissions_get('projects_write'))
 			// submit button
 			$structure = NULL;
 			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			if ($groupid)
+
+			if ($sql_group_obj->data[0]["locked"])
 			{
-				$structure["defaultvalue"]	= "Save Changes";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
 			}
 			else
 			{
-				$structure["defaultvalue"]	= "Create Time Group";
+				$structure["type"]		= "submit";
+				
+				if ($groupid)
+				{
+					$structure["defaultvalue"]	= "Save Changes";
+				}
+				else
+				{
+					$structure["defaultvalue"]	= "Create Time Group";
+				}
 			}
+			
 			$form->add_input($structure);
+
+			
 
 
 			// fetch the form data if editing
 			if ($groupid)
 			{
-				$form->sql_query = "SELECT * FROM time_groups WHERE id='$groupid' LIMIT 1";
+				$form->sql_query = "SELECT time_groups.name_group, time_groups.customerid, time_groups.description, account_ar.code_invoice FROM time_groups LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='$groupid' LIMIT 1";
 				$form->load_data();
 			}
 			else
@@ -267,6 +287,7 @@ if (user_permissions_get('projects_write'))
 			// display all the rows
 			$form->render_row("name_group");
 			$form->render_row("customerid");
+			$form->render_row("code_invoice");
 			$form->render_row("description");
 
 

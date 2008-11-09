@@ -69,19 +69,21 @@ if (user_permissions_get('projects_view'))
 			// define all the columns and structure
 			$timereg_table->add_column("standard", "name_group", "time_groups.name_group");
 			$timereg_table->add_column("standard", "name_customer", "customers.name_customer");
-			$timereg_table->add_column("standard", "invoiceid", "time_groups.invoiceid");
+			$timereg_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
 			$timereg_table->add_column("standard", "description", "time_groups.description");
 			$timereg_table->add_column("hourmins", "time_billed", "NONE");
 			$timereg_table->add_column("hourmins", "time_not_billed", "NONE");
 
 			// defaults
-			$timereg_table->columns		= array("name_group", "name_customer", "invoiceid", "description", "time_billed", "time_not_billed");
+			$timereg_table->columns		= array("name_group", "name_customer", "code_invoice", "description", "time_billed", "time_not_billed");
 			$timereg_table->columns_order	= array("name_customer", "name_group");
 
 			// define SQL structure
 			$timereg_table->sql_obj->prepare_sql_settable("time_groups");
 			$timereg_table->sql_obj->prepare_sql_addfield("id", "time_groups.id");
+			$timereg_table->sql_obj->prepare_sql_addfield("invoiceid", "time_groups.invoiceid");
 			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON time_groups.customerid = customers.id");
+			$timereg_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_ar ON time_groups.invoiceid = account_ar.id");
 			$timereg_table->sql_obj->prepare_sql_addwhere("time_groups.projectid = '$projectid'");
 			
 			
@@ -116,8 +118,7 @@ if (user_permissions_get('projects_view'))
 
 
 
-			// create totals
-			$timereg_table->total_columns	= array("time_booked");
+			$timereg_table->total_columns	= array("time_billed", "time_not_billed");
 	
 	
 			// options form
@@ -139,10 +140,17 @@ if (user_permissions_get('projects_view'))
 			}
 			else
 			{
-				// fetch the time totals
-				// (because we have to do two different sums, we can't use a join)
+				// run through all the data rows to make custom changes
 				for ($i=0; $i < $timereg_table->data_num_rows; $i++)
 				{
+					if ($timereg_table->data[$i]["code_invoice"])
+					{
+						$timereg_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $timereg_table->data[$i]["invoiceid"] ."\">AR ". $timereg_table->data[$i]["code_invoice"] ."</a>";
+					}
+					
+
+					// fetch the time totals
+					// (because we have to do two different sums, we can't use a join)
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "SELECT time_booked, billable FROM timereg WHERE groupid='". $timereg_table->data[$i]["id"] ."'";
 					$sql_obj->execute();
@@ -171,6 +179,13 @@ if (user_permissions_get('projects_view'))
 				$structure["projectid"]["value"]	= "$projectid";
 				$structure["groupid"]["column"]		= "id";
 				$timereg_table->add_link("view/edit", "projects/timebilled-edit.php", $structure);
+
+
+				// add delete link
+				$structure = NULL;
+				$structure["projectid"]["value"]	= "$projectid";
+				$structure["groupid"]["column"]		= "id";
+				$timereg_table->add_link("delete", "projects/timebilled-delete.php", $structure);
 
 				$timereg_table->render_table();
 			}
