@@ -62,6 +62,11 @@ if (user_permissions_get('projects_write'))
 				{
 					$_SESSION["error"]["message"][] = "The requested time group does not match the provided project ID. Potential application bug?";
 				}
+
+				if ($mysql_data["locked"])
+				{
+					$_SESSION["error"]["message"][] = "This time group can not be adjusted since it has now been locked.";
+				}
 				
 			}
 		}
