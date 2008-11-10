@@ -63,7 +63,7 @@ if (user_permissions_get('admin'))
 		}
 		else
 		{		
-			$_SESSION["notification"]["message"][] = "Customer has been successfully deleted.";
+			$_SESSION["notification"]["message"][] = "User has been successfully deleted.";
 		}
 
 
