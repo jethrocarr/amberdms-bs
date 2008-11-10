@@ -23,6 +23,13 @@ if (user_permissions_get('staff_view'))
 	$_SESSION["nav"]["title"][]	= "Employee's Journal";
 	$_SESSION["nav"]["query"][]	= "page=hr/staff-journal.php&id=$id";
 
+	if (user_permissions_get('staff_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Employee";
+		$_SESSION["nav"]["query"][]	= "page=hr/staff-delete.php&id=$id";
+	}
+
+
 
 	function page_render()
 	{
