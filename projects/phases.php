@@ -90,6 +90,13 @@ if (user_permissions_get('projects_view'))
 				$structure["projectid"]["value"]	= $projectid;
 				$structure["phaseid"]["column"]		= "id";
 				$phase_list->add_link("edit", "projects/phase-edit.php", $structure);
+				
+				// delete link
+				$structure = NULL;
+				$structure["projectid"]["value"]	= $projectid;
+				$structure["phaseid"]["column"]		= "id";
+				$phase_list->add_link("delete", "projects/phase-delete.php", $structure);
+
 
 				// display the table
 				$phase_list->render_table();
