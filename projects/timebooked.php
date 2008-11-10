@@ -115,6 +115,13 @@ if (user_permissions_get('projects_view'))
 			$timereg_table->add_filter($structure);
 
 			$structure = NULL;
+			$structure["fieldname"]	= "no_group";
+			$structure["type"]	= "checkbox";
+			$structure["sql"]	= "groupid='0'";
+			$structure["options"]["label"] = "Only show unprocessed time";
+			$timereg_table->add_filter($structure);
+
+			$structure = NULL;
 			$structure["fieldname"] = "searchbox";
 			$structure["type"]	= "input";
 			$structure["sql"]	= "timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%'";
