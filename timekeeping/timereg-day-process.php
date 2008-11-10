@@ -36,7 +36,7 @@ if (user_permissions_get('timekeeping'))
 		$mode = "edit";
 
 		// make sure the time entry actually exists
-		$mysql_string		= "SELECT id FROM `timereg` WHERE id='$id'";
+		$mysql_string		= "SELECT id, locked FROM `timereg` WHERE id='$id' LIMIT 1";
 		$mysql_result		= mysql_query($mysql_string);
 		$mysql_num_rows		= mysql_num_rows($mysql_result);
 
@@ -44,6 +44,14 @@ if (user_permissions_get('timekeeping'))
 		{
 			$_SESSION["error"]["message"][] = "The time entry you have attempted to edit - $id - does not exist in this system.";
 		}
+		else
+		{
+			$mysql_data = mysql_fetch_array($mysql_result);
+
+			if ($mysql_data["locked"])
+			{
+				$_SESSION["error"]["message"][] = "This time entry has been locked and can not be adjusted.";
+			}
 	}
 	else
 	{

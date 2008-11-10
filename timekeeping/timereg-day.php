@@ -291,6 +291,8 @@ if (user_permissions_get('timekeeping'))
 				$form->add_input($structure);
 
 
+				// TODO: Update this to use the new helper functions
+
 				// get data from DB and create project/phase dropdown
 				//
 				// Note: this hasn't yet been reduced to use the form_helper_prepare_dropdownfromdb function
@@ -332,13 +334,27 @@ if (user_permissions_get('timekeeping'))
 						
 				$form->add_input($structure);
 				
+				
+				if ($editid)
+				{
+					$locked = sql_get_singlevalue("SELECT locked as value FROM `timereg` WHERE id='$editid' LIMIT 1");
+				}
 
 							
 				// submit section
 				$structure = NULL;
 				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
+
+				if ($locked)
+				{
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "This time record is locked and can no-longer be adjusted.";
+				}
+				else
+				{
+					$structure["type"]		= "submit";
+					$structure["defaultvalue"]	= "Save Changes";
+				}
 				$form->add_input($structure);
 				
 				
@@ -423,10 +439,22 @@ if (user_permissions_get('timekeeping'))
 					// submit section
 					$structure = NULL;
 					$structure["fieldname"] 	= "submit";
-					$structure["type"]		= "submit";
-					$structure["defaultvalue"]	= "Delete Time Entry";
-					$form_del->add_input($structure);
+
+					if ($locked)
+					{
+						$structure["type"]		= "message";
+						$structure["defaultvalue"]	= "This time record is locked and can no-longer be adjusted.";
+					}
+					else
+					{
+						$structure["type"]		= "submit";
+						$structure["defaultvalue"]	= "Delete Time Entry";
+					}
 					
+					$form_del->add_input($structure);
+				
+
+				
 					
 					// define subforms
 					$form_del->subforms["hidden"]		= array("id_timereg", "id_employee", "date");
