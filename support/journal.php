@@ -23,8 +23,11 @@ if (user_permissions_get('support_view'))
 	$_SESSION["nav"]["query"][]	= "page=support/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=support/journal.php&id=$id";
 	
-	$_SESSION["nav"]["title"][]	= "Delete Support Ticket";
-	$_SESSION["nav"]["query"][]	= "page=support/delete.php&id=$id";
+	if (user_permissions_get('support_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Support Ticket";
+		$_SESSION["nav"]["query"][]	= "page=support/delete.php&id=$id";
+	}
 
 
 
