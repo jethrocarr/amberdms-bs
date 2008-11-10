@@ -4,11 +4,10 @@
 	
 	access:	customers_write
 
-	Displays all the details for the customer and if the user has correct
-	permissions allows the customer to be updated.
+	Allows an unwanted customer to be deleted.
 */
 
-if (user_permissions_get('customers_view'))
+if (user_permissions_get('customers_write'))
 {
 	$id = $_GET["id"];
 	
