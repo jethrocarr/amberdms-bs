@@ -84,7 +84,8 @@ if (user_permissions_get('accounts_taxes_view'))
 			$form->add_input($structure);
 
 			// tax account selection
-			$structure = charts_form_prepare_acccountdropdown("chartid", "3");
+			$structure = charts_form_prepare_acccountdropdown("chartid", "tax_summary_account");
+			$structure["options"]["req"]	= "yes";
 
 			if (!$structure["values"])
 			{
