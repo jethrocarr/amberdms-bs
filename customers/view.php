@@ -26,8 +26,11 @@ if (user_permissions_get('customers_view'))
 	$_SESSION["nav"]["title"][]	= "Customer's Services";
 	$_SESSION["nav"]["query"][]	= "page=account/services/services.php&customer_id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Customer";
-	$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
+	if (user_permissions_get('customers_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Customer";
+		$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
+	}
 
 
 	function page_render()
