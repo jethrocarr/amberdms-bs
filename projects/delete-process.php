@@ -103,6 +103,42 @@ if (user_permissions_get('projects_write'))
 			$_SESSION["notification"]["message"][] = "Project has been successfully deleted.";
 		}
 
+
+
+		/*
+			Delete Phases
+		*/
+		
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM project_phases WHERE projectid='$id'";
+			
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the project phases";
+		}
+
+
+
+		/*
+			Delete Time Groups
+		*/
+		
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM time_groups WHERE projectid='$id'";
+			
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete time groups belonging to the project";
+		}
+
+
+
+		/*
+			Delete Project Journal
+		*/
+		journal_delete_entire("projects", $id);
+
+		
 		// display updated details
 		header("Location: ../index.php?page=projects/projects.php");
 		exit(0);
