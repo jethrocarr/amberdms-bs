@@ -814,7 +814,7 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 	{
 		// valid radio button
 		$structure["fieldname"] 	= $fieldname;
-		$structure["type"]		= "text";
+		$structure["type"]		= "radio";
 	}
 
 
