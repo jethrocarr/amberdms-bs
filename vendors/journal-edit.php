@@ -21,6 +21,13 @@ if (user_permissions_get('vendors_write'))
 	$_SESSION["nav"]["query"][]	= "page=vendors/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=vendors/journal.php&id=$id";
 
+	if (user_permissions_get('vendors_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Vendor";
+		$_SESSION["nav"]["query"][]	= "page=vendors/delete.php&id=$id";
+	}
+
+
 
 	function page_render()
 	{
