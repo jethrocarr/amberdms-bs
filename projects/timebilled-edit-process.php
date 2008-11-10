@@ -209,7 +209,7 @@ if (user_permissions_get('projects_write'))
 							{
 								// the billable status of this entry has changed.
 								$sql_obj		= New sql_query;
-								$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."' WHERE id='". $entries_data["id"] ."'";
+								$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='1' WHERE id='". $entries_data["id"] ."'";
 								$sql_obj->execute();
 							}
 						}
