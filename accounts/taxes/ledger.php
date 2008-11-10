@@ -33,8 +33,11 @@ if (user_permissions_get('accounts_charts_view'))
 	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/ledger.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=accounts/taxes/ledger.php&id=$id";
 	
-	$_SESSION["nav"]["title"][]	= "Delete Tax";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
+	if (user_permissions_get('accounts_taxes_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Tax";
+		$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
+	}
 
 
 

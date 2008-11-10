@@ -27,9 +27,12 @@ if (user_permissions_get('accounts_taxes_view'))
 
 	$_SESSION["nav"]["title"][]	= "Tax Ledger";
 	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/ledger.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Delete Tax";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
+
+	if (user_permissions_get('accounts_taxes_write'))
+	{
+		$_SESSION["nav"]["title"][]	= "Delete Tax";
+		$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
+	}
 
 
 	function page_render()
