@@ -1,6 +1,6 @@
 <?php
 /*
-	products/delete-process.php
+	customers/delete-process.php
 
 	access: customers_write
 
@@ -99,7 +99,7 @@ if (user_permissions_get('customers_write'))
 
 
 
-		// return to products list
+		// return to customers list
 		header("Location: ../index.php?page=customers/customers.php");
 		exit(0);
 	}
