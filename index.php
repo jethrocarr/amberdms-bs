@@ -11,6 +11,8 @@
 include("include/config.php");
 include("include/amberphplib/main.php");
 
+log_debug("index", "Starting index.php");
+
 
 // get the page to display
 $page = $_GET["page"];
@@ -113,8 +115,6 @@ function obj_show(obj)
 	/*
 		Here we draw the menu. All pages have the top menu displayed, then differing numbers of sub menus, depending
 		on the page currently open.
-
-		In future, this should be replaced with a more fancy javascript solution with roll over features, etc.
 	*/
 
 	if (user_online())
@@ -127,132 +127,163 @@ function obj_show(obj)
 
 			log_debug("index", "Generating Menu Structure");
 
-			$parents = array();
 
+			/*
+				Fetch data for the entire menu from the database
 
-			// get the menu item for this page
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT parent FROM `menu` WHERE link='$page' ORDER BY priority DESC LIMIT 1";
+				We fetch all the data at once, then run though it following the parent value as we run though
+				all the items to determine what menu items need to be shown and in what order.
 
-			$sql_obj->execute();
+				We know that the single loop will match all the menu items correctly, since the menu items are ordered
+				so we run though the order in the same direction. This saves us from having to do heaps of unnessacary loops. :-)
+			*/
 
-			if ($sql_obj->num_rows())
+			$sql_menu_obj		= New sql_query;
+			$sql_menu_obj->string	= "SELECT link, topic, permid, parent FROM menu ORDER BY priority DESC";
+			$sql_menu_obj->execute();
+
+			if ($sql_menu_obj->num_rows())
 			{
-				$sql_obj->fetch_array();
+				$sql_menu_obj->fetch_array();
+
+
+				// array to store the order of the menu items
+				$menu_order = array();
 				
-				$parents[]	= $sql_obj->data[0]["parent"];
-				$lastparent	= $sql_obj->data[0]["parent"];
+				// keep track of the topic we are looking for
+				$target_topic = "";
 
-				// now get the all the other parents
-				// we use the data_num_rows value to keep looping until we have finally queried
-				// all the menu items we can get.
-				$data_num_rows = 1;
-				
-				while ($data_num_rows == 1)
+
+				// loop though the 
+				foreach ($sql_menu_obj->data as $data)
 				{
-					$sql_menu_obj = New sql_query;
-					$sql_menu_obj->string = "SELECT parent FROM `menu` WHERE topic='$lastparent' ORDER BY priority DESC";
-					
-					$sql_menu_obj->execute();
-					$data_num_rows = $sql_menu_obj->num_rows();
-
-					if ($data_num_rows)
+					if ($target_topic != "top")
 					{
-						$sql_menu_obj->fetch_array();
-						
-						$parents[]	= $sql_menu_obj->data[0]["parent"];
-						$lastparent	= $sql_menu_obj->data[0]["parent"];
-					}
-				}
-
-				// we now sort the array, and end up with all the menu
-				// levels in order
-				$parents = array_reverse($parents);
-			}
-		}
-
-
-		// if we have no sub-menu information, just display the top menu.
-		if (!$parents)
-		{
-			$parents[] = "top";
-		}
-
-
-		/*
-			get an array of all the permissions this user has
-		*/
-		log_debug("index", "Generate array of all the permissions the user has for displaying the menu");
-		
-		$user_permissions	= array();
-
-		$sql_obj 		= New sql_query;
-		$sql_obj->string	= "SELECT permid FROM `users_permissions` WHERE userid='". $_SESSION["user"]["id"] ."'";
-
-		$sql_obj->execute();
-		$sql_obj->fetch_array();
-			
-		foreach ($sql_obj->data as $data)
-		{
-			$user_permissions[] = $data["permid"];
-		}
-
-
-
-		/*
-			Now we display all the menus.
-
-			Note that the "top" menu has the addition of a second column to the right
-			for the user perferences/administration box.
-		*/
-		log_debug("index", "Drawing Menu");
-
-		for ($i = 0; $i <= count($parents); $i++)
-		{
-			print "<tr>";
-			print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
-			print "<ul id=\"menu\">";
-
-
-			
-			// get the data for this menu
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT link, topic, permid FROM `menu` WHERE parent='$parents[$i]' ORDER BY priority";
-
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				$sql_obj->fetch_array();
-				foreach ($sql_obj->data as $data)
-				{
-					// check that the user has permissions to display this link
-					if (in_array($data["permid"], $user_permissions) || $data["permid"] == 0)
-					{
-						// if this entry has no topic, it only exists for the purpose of getting a parent
-						// link highlighted. In this case, ignore the current entry.
-
-						if ($data["topic"])
+						if (!$target_topic)
 						{
-							// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-							if ($parents[$i + 1] == $data["topic"] || $data["link"] == $page)
+							// use the page link to find the first target
+							if ($data["link"] == "$page")
 							{
-								print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". $data["topic"] .">". $data["topic"] ."</a></li>";
+								$target_topic = $data["parent"];
+								$menu_order[] = $data["parent"];
 							}
-							else
+						}
+						else
+						{
+							// check the topic type
+							if ($data["topic"] == $target_topic)
 							{
-								print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". $data["topic"] .">". $data["topic"] ."</a></li>";
+								$target_topic = $data["parent"];
+								$menu_order[] = $data["parent"];
 							}
 						}
 					}
 				}
-			}
 
-			print "</ul>";
-			print "</td>";
-			print "</tr>";
-		}
-	
+
+				// now we reverse the order array, so we can
+				// render the menus in the correct order
+				if ($menu_order)
+				{
+					$menu_order = array_reverse($menu_order);
+				}
+				else
+				{
+					// if we have no sub-menu information, just set
+					// to display the top menu only
+					$menu_order = array("top");
+				}
+
+				
+
+
+				/*
+					get an array of all the permissions this user has
+				*/
+				log_debug("index", "Fetching array of all the permissions the user has for displaying the menu");
+				
+				$user_permissions	= array();
+
+				$sql_obj 		= New sql_query;
+				$sql_obj->string	= "SELECT permid FROM `users_permissions` WHERE userid='". $_SESSION["user"]["id"] ."'";
+
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+					
+				foreach ($sql_obj->data as $data)
+				{
+					$user_permissions[] = $data["permid"];
+				}
+
+
+				
+
+
+				/*
+					Now we display all the menus.
+
+					Note that the "top" menu has the addition of a second column to the right
+					for the user perferences/administration box.
+				*/
+				log_debug("index", "Drawing Menu");
+
+
+				// sort the data in the opposite direction for correct rendering
+				$tmp_data = array_reverse($sql_menu_obj->data);
+				
+				for ($i = 0; $i <= count($menu_order); $i++)
+				{
+					print "<tr>";
+					print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+					print "<ul id=\"menu\">";
+
+
+					// loop though the menu data
+					foreach ($tmp_data as $data)
+					{
+						if ($data["parent"] == $menu_order[$i])
+						{
+							// check that the user has permissions to display this link
+							if (in_array($data["permid"], $user_permissions) || $data["permid"] == 0)
+							{
+								// if this entry has no topic, it only exists for the purpose of getting a parent
+								// link highlighted. In this case, ignore the current entry.
+
+								if ($data["topic"])
+								{
+									// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+									if ($menu_order[$i + 1] == $data["topic"] || $data["link"] == $page)
+									{
+										print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". $data["topic"] .">". $data["topic"] ."</a></li>";
+									}
+									else
+									{
+										print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". $data["topic"] .">". $data["topic"] ."</a></li>";
+									}
+								}
+							}
+						}
+						
+					} // end of loop though menu data
+
+					print "</ul>";
+					print "</td>";
+					print "</tr>";
+				}
+		
+			} // end if menu items exist
+			
+
+			// free up memory taken by menu data
+			unset($sql_menu_obj);
+			unset($menu_order);
+			unset($tmp_data);
+			unset($user_permissions);
+
+			log_debug("index", "Menu Complete");
+
+		} // end if page valid
+			
 	} // end if user is online
 	?>
 
@@ -416,12 +447,10 @@ if ($_SESSION["user"]["log_debug"])
 {
 	print "<tr>";
 	print "<td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed;\">";
-	print "<p><b>Debug Output:</b></p>";
-	
-	foreach ($_SESSION["user"]["log_debug"] as $log)
-	{
-		print "$log<br>";
-	}
+
+
+	debug_log_render();
+
 
 	print "</td>";
 	print "</tr>";
