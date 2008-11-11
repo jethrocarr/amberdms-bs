@@ -154,7 +154,7 @@ function obj_show(obj)
 				$target_topic = "";
 
 
-				// loop though the 
+				// loop though the menu items 
 				foreach ($sql_menu_obj->data as $data)
 				{
 					if ($target_topic != "top")
@@ -217,7 +217,6 @@ function obj_show(obj)
 
 
 				
-
 
 				/*
 					Now we display all the menus.
@@ -303,6 +302,7 @@ function obj_show(obj)
 	// LOAD THE PAGE AND PROCESS HEADER CODE
 	if ($page_valid == 1)
 	{
+		log_debug("index", "Including page $page");
 		include($page);
 	}
 
@@ -399,6 +399,7 @@ function obj_show(obj)
         // DISPLAY THE PAGE (PROVIDING THAT ONE WAS LOADED)
         if ($_SESSION["error"]["pagestate"] && $page_valid)
         {
+		log_debug("index", "Executing page_render() function");
 
 		// display the page
 		print "<td valign=\"top\" style=\"padding: 5px;\">";
