@@ -155,4 +155,46 @@ function helplink($id)
 
 
 
+/* DEBUG FUNCTIONS */
+
+/*
+	debug_log_render()
+
+	Displays the debugging log
+*/
+
+function debug_log_render()
+{
+	log_debug("inc_misc", "Executing debug_log_render()");
+
+
+	print "<p><b>Debug Output:</b></p>";
+	print "<p><i>Please be aware that debugging will cause some impact on performance and should be turned off in production.</i></p>";
+	
+	
+	// table header
+	print "<table class=\"table_content\" width=\"100%\">";
+	
+	print "<tr class=\"header\">";
+		print "<td nowrap><b>Time</b></td>";
+		print "<td nowrap><b>Memory</b></td>";
+		print "<td nowrap><b>Category</b></td>";
+		print "<td><b>Message/Content</b></td>";
+	print "</tr>";
+
+
+	// content
+	foreach ($_SESSION["user"]["log_debug"] as $log_record)
+	{
+		print "<tr>";
+		print "<td nowrap>". $log_record["time"] ."</td>";
+		print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
+		print "<td nowrap>". $log_record["category"] ."</td>";
+		print "<td>". $log_record["content"] ."</td>";
+		print "</tr>";
+	}
+
+	print "</table>";
+}
+
 ?>

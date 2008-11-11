@@ -21,7 +21,18 @@ function log_debug($category, $content)
 {
 	if ($_SESSION["user"]["debug"] == "yes")
 	{
-		$_SESSION["user"]["log_debug"][] = "[$category] --- $content";
+		$log_record = array();
+
+		$log_record["category"]	= $category;
+		$log_record["content"]	= $content;
+		$log_record["memory"]	= memory_get_usage();
+	
+		// this provided PHP 4 compadiblity.
+		// TODO: when upgrading to PHP 5, replace with microtime(TRUE).
+		list($usec, $sec)	= explode(" ", microtime());
+		$log_record["time"]	= ((float)$usec + (float)$sec);
+		
+		$_SESSION["user"]["log_debug"][] = $log_record;
 	}
 }
 
