@@ -7,6 +7,101 @@
 
 
 
+/*
+	CONFIGURATION FUNCTIONS 
+
+	Configuration functions perform queries against the config DB with the structure of:
+	
+	CREATE TABLE `config` (
+	  `name` varchar(255) NOT NULL default '',
+	  `value` varchar(255) NOT NULL default '',
+	  PRIMARY KEY  (`name`)
+	) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+*/
+
+
+/*
+	config_generate_uniqueid()
+
+	This function will generate a unique ID by looking up the current value of the supplied
+	name from the config database, and will then work out an avaliable value.
+
+	Once a suitable value has been determined, the code will return it and then update the 
+	value in the config table.
+
+	This function is ideal for when you need a field to be auto-incremented, but still providing
+	the user the ability to over-write it with their own value.
+
+	Values
+	config_name	Name of the configuration field to fetch the value from
+	check_sql	(optional) SQL query to check for current usage of this ID. Note that the VALUE keyword will
+			be replaced by the code ID.
+				eg: "SELECT id FROM mytable WHERE codevalue='VALUE'
+
+	Returns
+	#	unique ID to be used.
+*/
+function config_generate_uniqueid($config_name, $check_sql)
+{
+	log_debug("inc_misc", "Executing config_generate_uniqueid($config_name)");
+	
+	$config_name = strtoupper($config_name);
+	
+	$returnvalue	= 0;
+	$uniqueid	= 0;
+	
+
+	// fetch the starting ID from the config DB
+	$uniqueid	= sql_get_singlevalue("SELECT value FROM config WHERE name='$config_name'");
+
+	if (!$uniqueid)
+		die("Unable to fetch $config_name value from config database");
+
+
+	if ($check_sql)
+	{
+		// we will use the supplied SQL query to make sure this value is not currently used
+		while ($returnvalue == 0)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= str_replace("VALUE", $uniqueid, $check_sql);
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				// the ID has already been used, try incrementing
+				$uniqueid++;
+			}
+			else
+			{
+				// found an avaliable ID
+				$returnvalue = $uniqueid;
+			}
+		}
+	}
+	else
+	{
+		// conducting no DB checks.
+		$returnvalue = $uniqueid;
+	}
+	
+
+	// update the DB with the new value + 1
+	$uniqueid++;
+				
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "UPDATE config SET value='$uniqueid' WHERE name='$config_name'";
+	$sql_obj->execute();
+
+
+	return $returnvalue;
+}
+
+
+
+
+
+
 /* FORMATTING/DISPLAY FUNCTIONS */
 
 
