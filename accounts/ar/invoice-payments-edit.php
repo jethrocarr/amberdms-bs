@@ -24,11 +24,11 @@ if (user_permissions_get('accounts_ar_view'))
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Invoice Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-payments.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ar/invoice-payments.php&id=$id";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-items.php&id=$id";
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Payments";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-payments.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=accounts/ar/invoice-payments.php&id=$id";
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
