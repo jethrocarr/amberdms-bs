@@ -207,7 +207,7 @@ function taxes_report_transactions($mode, $taxid)
 			*/
 		
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT SUM(price) as amount FROM account_items WHERE type='tax' AND customid='$taxid' AND invoiceid='". $tax_table->data[$i]["id"] ."'";
+			$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='$taxid' AND invoiceid='". $tax_table->data[$i]["id"] ."'";
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 
