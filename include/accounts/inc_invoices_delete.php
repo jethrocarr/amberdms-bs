@@ -232,7 +232,7 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 
 		// delete invoice transactions
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_trans WHERE customid='$id'";
+		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='$type' || type='". $type ."_tax' || type='". $type ."_pay') AND customid='$id'";
 		$sql_obj->execute();
 		
 	
