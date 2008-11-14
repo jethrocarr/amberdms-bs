@@ -128,6 +128,15 @@ function ledger_trans_typelabel($type, $customid)
 			$result = "<a href=\"index.php?page=accounts/ap/invoice-payments.php&id=$customid\">AP payment $result</a>";
 		break;
 
+
+		case "gl":
+			// general ledger transaction
+			$result = sql_get_singlevalue("SELECT code_gl as value FROM account_gl WHERE id='$customid'");
+						
+			$result = "<a href=\"index.php?page=accounts/gl/view.php&id=$customid\">Transaction $result</a>";
+		break;
+
+		
 		
 
 		default:
