@@ -26,8 +26,12 @@ class table
 	var $total_rows;			// array of columns to create per-row totals for
 	var $total_rows_mode = "subtotal";	// row total modes
 						//
-						//	* subtotal	Total for just each row only (default)
-						//	* incrementing	Add each row total to the previous one
+						//	* subtotal		Total for just each row only (default)
+						//	* incrementing		Add each row total to the previous one
+						//	* ledger_add_debit	Like incrementing, but will add any columns
+						//				titled "debit" and subtract any titled "credit"
+						//	* ledger_add_credit	Like incrementing, but will add any columns
+						//				titled "credit" and subtract any titled "debit"
 
 
 	var $links;				// array of links to place in a final column
@@ -494,9 +498,29 @@ class table
 			case "price":
 			case "money":
 
-				if ($this->data[$row][$column] == 0)
+				// TODO: This exists here to work around a PHP bug - it seems that if
+				// we don't have it, even though $row will equal 0, it will still match
+				// the if statements below comparing it to "total".
+				//
+				// Bug was observed on PHP v4 on CentOS 4
+				//
+				$row = strval($row);
+
+
+				// check if this field is a total or not, since we only
+				// want to blank non-total spaces.
+				$total = NULL;
+				
+				if ($row == "total")
+					$total = "yes";
+
+				if ($column == "total")
+					$total = "yes";
+				
+				
+				if ($this->data[$row][$column] == 0 && !$total)
 				{
-					// instead of 0.00, make blank.
+					// instead of 0.00, make blank, as long as this field is not a total
 					$result = "";
 				}
 				else
@@ -864,27 +888,100 @@ class table
 			// optional: row totals column
 			if ($this->total_rows)
 			{
-				if ($this->total_rows_mode == "incrementing")
+				switch ($this->total_rows_mode)
 				{
-					$this->data[$i]["total"] = $total_rows_incrementing;
-				}
-				else
-				{
-					$this->data[$i]["total"] = 0;
-				}
-				
+					/*
+						SUBTOTAL
 
-				foreach ($this->total_rows as $total_col)
-				{
-					// add to the total
-					$this->data[$i]["total"] += $this->data[$i][$total_col];
+						Add all the columns for the row together, but don't increment
+						them at all.
+					*/
+					case "subtotal":
+					
+						$this->data[$i]["total"] = 0;
+	
+						foreach ($this->total_rows as $total_col)
+						{
+							// add to the total
+							$this->data[$i]["total"] += $this->data[$i][$total_col];
+						}
+					break;
 
-					// add to row incrementing total if this feature is enabled
-					$total_rows_incrementing = $this->data[$i]["total"];
 
-					// make the type of the column the same as one of the columns to be totaled
-					$this->structure["total"]["type"] = $this->structure[$total_col]["type"];
+					/*
+						INCREMENTING
+
+						We keep track of the previous row's value and add it to the total
+						for the current row.
+					*/
+					case "incrementing":
+					
+						$this->data[$i]["total"] = $total_rows_incrementing;
+
+						foreach ($this->total_rows as $total_col)
+						{
+							// add to the total
+							$this->data[$i]["total"] += $this->data[$i][$total_col];
+						}
+
+						// add to row incrementing total
+						$total_rows_incrementing = $this->data[$i]["total"];
+					break;
+
+
+					/*
+						LEDGER
+						
+						For ledger row totals, we need to total up to show the account balance. We
+						can either add credit or add debit as different modes are needed, depending
+						on the account type.
+
+						Because it's a ledger, we then set the final total row value
+						to be equal to the final total from the ledger.
+					*/
+					case "ledger_add_credit":
+					case "ledger_add_debit":
+					
+						$this->data[$i]["total"] = $total_rows_incrementing;
+						
+							
+						if ($this->total_rows_mode == "ledger_add_credit")
+						{
+							// add the credit column
+							$this->data[$i]["total"] += $this->data[$i]["credit"];
+	
+							// subtract the debit column
+							$this->data[$i]["total"] -= $this->data[$i]["debit"];
+						}
+						else
+						{
+							// add the debit column
+							$this->data[$i]["total"] += $this->data[$i]["debit"];
+	
+							// subtract the credit column
+							$this->data[$i]["total"] -= $this->data[$i]["credit"];
+						}
+
+						// add to row incrementing total
+						$total_rows_incrementing = $this->data[$i]["total"];
+
+						// set the total summary row, since it can't be incremented further on
+						// like normal totals.
+						$this->data["total"]["total"] = $total_rows_incrementing;
+						
+					break;
+
+
+					default:
+						log_debug("inc_tables", "Error: Unrecognised row total mode ". $this->total_rows_mode ."");
+					break;
 				}
+
+
+				// make the type of the column the same as one of the columns to be totaled
+				// this is assumed to be correct, since only the same type of column should ever be totaled
+				$this->structure["total"]["type"] = $this->structure[ $this->total_rows[0] ]["type"];
+
 				
 				print "<td><b>". $this->render_field("total", $i) ."</b></td>";
 			}
@@ -981,12 +1078,17 @@ class table
 			// optional: totals for rows
 			if ($this->total_rows)
 			{
-				$this->data["total"]["total"] = 0;
-
-				// total all the total columns
-				foreach ($this->total_columns as $column)
+				// we have already calculated the final total for ledger
+				// totals, so only calculate for non-ledger items.
+				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
 				{
-					$this->data["total"]["total"] += $this->data["total"][$column];
+					$this->data["total"]["total"] = 0;
+					
+					// total all the total columns
+					foreach ($this->total_columns as $column)
+					{
+						$this->data["total"]["total"] += $this->data["total"][$column];
+					}
 				}
 
 				print "<td class=\"footer\"><b>". $this->render_field("total", "total") ."</b></td>";
