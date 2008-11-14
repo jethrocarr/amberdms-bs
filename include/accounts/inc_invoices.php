@@ -50,7 +50,7 @@ function invoice_calc_duedate($date)
 	Call this function just prior to inserting a new invoice into the database.
 
 	Values
-	type	Either "ar" or "ap".
+	type	Suitable options: "ar", "ap", "gl"
 
 	Returns
 	#	invoice ID in a string.
