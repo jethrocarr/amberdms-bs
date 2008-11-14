@@ -407,13 +407,13 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			{
 				if ($mode == "add")
 				{
-					$_SESSION["notification"]["message"][] = "Transaction successfully created.";
-					journal_quickadd_event("account_$type", $id, "Transaction successfully created");
+					$_SESSION["notification"]["message"][] = "Invoice successfully created.";
+					journal_quickadd_event("account_$type", $id, "Invoice successfully created");
 				}
 				else
 				{
-					$_SESSION["notification"]["message"][] = "Transaction successfully updated.";
-					journal_quickadd_event("account_$type", $id, "Transaction successfully updated");
+					$_SESSION["notification"]["message"][] = "Invoice successfully updated.";
+					journal_quickadd_event("account_$type", $id, "Invoice successfully updated");
 				}
 				
 			}
