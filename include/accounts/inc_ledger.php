@@ -199,12 +199,10 @@ class ledger_account_list
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date_trans", "account_trans.date_trans");
 		$this->obj_table->add_column("standard", "item_id", "account_trans.customid");
-//		$this->obj_table->add_column("standard", "dest_name_chart", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$this->obj_table->add_column("standard", "source", "account_trans.source");
 		$this->obj_table->add_column("standard", "memo", "account_trans.memo");
 		$this->obj_table->add_column("money", "debit", "account_trans.amount_debit");
 		$this->obj_table->add_column("money", "credit", "account_trans.amount_credit");
-//		$this->obj_table->add_column("money", "total", "NONE");
 
 		// total rows
 		$this->obj_table->total_columns		= array("debit", "credit");
@@ -228,7 +226,6 @@ class ledger_account_list
 		$this->obj_table->sql_obj->prepare_sql_settable("account_trans");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_trans.id");
 		$this->obj_table->sql_obj->prepare_sql_addfield("type", "account_trans.type");
-//		$this->obj_table->sql_obj->prepare_sql_addfield("item_id", "account_trans.customid");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("chartid='". $this->chartid ."'");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
 	}
@@ -244,16 +241,19 @@ class ledger_account_list
 	*/
 	function prepare_generate_sql()
 	{
-		// add ID orderby rule to make sure if a payment and invoice item have the same date,
-		// that the invoice will come first.
-		//
-		// TODO: This isn't a perfect solution, look into a better solution
-		//
-		$this->obj_table->sql_obj->prepare_sql_addorderby("account_trans.id");
-
 
 		// fetch all the ledger information
 		$this->obj_table->generate_sql();
+
+
+		// append extra ordering rules to the SQL query
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ar' DESC";
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_tax' DESC";
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_pay' DESC";
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ap' DESC";
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ap_tax' DESC";
+		$this->obj_table->sql_obj->string .= ", account_trans.type='ap_pay' DESC";
+
 	}
 
 
