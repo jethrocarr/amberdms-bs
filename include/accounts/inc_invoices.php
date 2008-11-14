@@ -41,16 +41,13 @@ function invoice_calc_duedate($date)
 /*
 	invoice_generate_invoiceid($type)
 
-	This function will generate a unique invoice ID, by taking the current value from
-	ACCOUNTS_$type_INVOICENUM and then making sure it has not already been used.
-
-	Once a unique invoiceid has been determined, the system will update the ACCOUNTS_$type_INVOICENUM
-	value so that no other invoice will take it.
+	Wrapper function for config_generate_uniqueid to generate a unique, unused ID
+	for an invoice.
 
 	Call this function just prior to inserting a new invoice into the database.
 
 	Values
-	type	Suitable options: "ar", "ap", "gl"
+	type	Suitable options: "ar" or "ap"
 
 	Returns
 	#	invoice ID in a string.
@@ -60,39 +57,9 @@ function invoice_generate_invoiceid($type)
 	log_debug("inc_invoices", "Executing invoice_generate_invoiceid($type)");
 	
 	$type_uc = strtoupper($type);
-	
-	$invoiceid	= 0;
-	$invoicenum	= sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_". $type_uc ."_INVOICENUM'");
 
-	if (!$invoicenum)
-		die("Unable to fetch ACCOUNTS_". $type_uc ."_INVOICENUM value from config database");
-
-	while ($invoiceid == 0)
-	{
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_$type WHERE code_invoice='$invoicenum'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			// invoicenumber already taken, increment and rety
-			$invoicenum++;
-		}
-		else
-		{
-			// found an avaliable invoice number
-			$invoiceid = $invoicenum;
-
-
-			// update the DB
-			$invoicenum++;
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE config SET value='$invoicenum' WHERE name='ACCOUNTS_". $type_uc ."_INVOICENUM'";
-			$sql_obj->execute();
-		}
-	}
-
-	return $invoiceid;
+	// use amberphplib function to perform most of the work
+	return config_generate_uniqueid("ACCOUNTS_". $type_uc ."_INVOICENUM", "SELECT id FROM account_$type WHERE code_invoice='VALUE'");
 }
 
 
