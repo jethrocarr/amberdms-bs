@@ -243,47 +243,34 @@ class sql_query
 		}
 
 
-		// TODO: the orderby stuff is currently flawed, since we sort all ascending values
-		// first, then all the descending values afterwards.
-		//
-		// This needs to be fixed
-		//
-	
-
 		// add orderby rules
 		if ($this->sql_structure["orderby"])
 		{
 			$this->string .= "ORDER BY ";
-
-			// ascending sorts
-			if ($this->sql_structure["orderby"]["asc"])
-			{
-				$num_values = count($this->sql_structure["orderby"]["asc"]);
-	
-				for ($i=0; $i < $num_values; $i++)
-				{
-					$this->string .= $this->sql_structure["orderby"]["asc"][$i] . " ASC ";
-	
-					if ($i < ($num_values - 1))
-					{
-						$this->string .= ", ";
-					}
-				}
-			}
-				
-			// descending sorts
-			if ($this->sql_structure["orderby"]["desc"])
-			{
-				$num_values = count($this->sql_structure["orderby"]["desc"]);
 		
-				for ($i=0; $i < $num_values; $i++)
+		
+			// run through all the order by fields
+			$num_values = count($this->sql_structure["orderby"]);
+
+			for ($i=0; $i < $num_values; $i++)
+			{
+				// fieldname
+				$this->string .= $this->sql_structure["orderby"][$i]["fieldname"];
+			
+				// sort method
+				if ($this->sql_structure["orderby"][$i]["type"] == "asc")
 				{
-					$this->string .= $this->sql_structure["orderby"]["desc"][$i] . " DESC ";
-	
-					if ($i < ($num_values - 1))
-					{
-						$this->string .= ", ";
-					}
+					$this->string .= " ASC ";
+				}
+				else
+				{
+					$this->string .= " DESC ";
+				}
+
+				// add joiner
+				if ($i < ($num_values - 1))
+				{
+					$this->string .= ", ";
 				}
 			}
 		}
@@ -369,7 +356,13 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing prepare_sql_addorderby_asc($fieldname)");
 
-		$this->sql_structure["orderby"]["asc"][] = $fieldname;
+		// work out what number to use for this orderby rule
+		// (it is important that we choose a series of numbers in order so that the orderby rules
+		//  are created correctly)
+		$i = count($this->sql_structure["orderby"]);
+
+		$this->sql_structure["orderby"][$i]["fieldname"]	= $fieldname;
+		$this->sql_structure["orderby"][$i]["type"]		= "asc";
 	}
 
 	/*
@@ -381,7 +374,13 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing prepare_sql_addorderby_desc($fieldname)");
 
-		$this->sql_structure["orderby"]["desc"][] = $fieldname;
+		// work out what number to use for this orderby rule
+		// (it is important that we choose a series of numbers in order so that the orderby rules
+		//  are created correctly)
+		$i = count($this->sql_structure["orderby"]);
+
+		$this->sql_structure["orderby"][$i]["fieldname"]	= $fieldname;
+		$this->sql_structure["orderby"][$i]["type"]		= "desc";
 	}
 
 
