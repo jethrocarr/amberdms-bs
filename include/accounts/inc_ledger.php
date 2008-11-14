@@ -78,6 +78,70 @@ function ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amoun
 
 
 
+/*
+	ledger_trans_typelabel
+
+	Performs a look up based on the suppplied type, to generate a hyperlinked label
+	for use in ledgers.
+
+	Values
+	type		Transaction type (account_trans.type)
+	customid	Custom ID filed (account_trans.customid)
+
+	Return
+	string		Label to be used
+*/
+function ledger_trans_typelabel($type, $customid)
+{
+	log_debug("inc_ledger", "Executing ledger_trans_typelabel($type, $customid)");
+
+	switch ($type)
+	{
+		case "ar":
+		case "ar_tax":
+			// for AR invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
+						
+			$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$customid\">AR invoice $result</a>";
+		break;
+
+		case "ar_pay":
+			// for AR invoice payments fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
+						
+			$result = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=$customid\">AR payment $result</a>";
+		break;
+
+		
+		case "ap":
+		case "ap_tax":
+			// for AP invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
+						
+			$result = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=$customid\">AP invoice $result</a>";
+		break;
+
+		case "ap_pay":
+			// for AP invoice payments fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
+						
+			$result = "<a href=\"index.php?page=accounts/ap/invoice-payments.php&id=$customid\">AP payment $result</a>";
+		break;
+
+		
+
+		default:
+			$result = "unknown";
+		break;
+	}
+
+	return $result;
+
+} // end of ledger_trans_typelabel
+
+
+
+
 
 /*
 	CLASSES
@@ -136,15 +200,25 @@ class ledger_account_list
 		$this->obj_table->add_column("date", "date_trans", "account_trans.date_trans");
 		$this->obj_table->add_column("standard", "item_id", "account_trans.customid");
 //		$this->obj_table->add_column("standard", "dest_name_chart", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
-		$this->obj_table->add_column("price", "debit", "account_trans.amount_debit");
-		$this->obj_table->add_column("price", "credit", "account_trans.amount_credit");
 		$this->obj_table->add_column("standard", "source", "account_trans.source");
 		$this->obj_table->add_column("standard", "memo", "account_trans.memo");
+		$this->obj_table->add_column("money", "debit", "account_trans.amount_debit");
+		$this->obj_table->add_column("money", "credit", "account_trans.amount_credit");
+//		$this->obj_table->add_column("money", "total", "NONE");
 
 		// total rows
-		$this->obj_table->total_columns		= array("credit", "debit");
-		$this->obj_table->total_rows		= array("credit", "debit");
-		$this->obj_table->total_rows_mode	= "incrementing";
+		$this->obj_table->total_columns		= array("debit", "credit");
+		$this->obj_table->total_rows		= array("debit", "credit");
+
+		// determine add mode - depending on the account type, we either need to add debit or add credit
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT account_chart_type.total_mode FROM account_charts LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type WHERE account_charts.id='". $this->chartid ."' LIMIT 1";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+		
+		$this->obj_table->total_rows_mode	= "ledger_add_". $sql_obj->data[0]["total_mode"];
+
+
 		
 		// defaults
 		$this->obj_table->columns		= array("date_trans", "item_id", "debit", "credit");
@@ -186,15 +260,41 @@ class ledger_account_list
 	/*
 		prepare_load_data()
 
-		Load the data by executing the SQL query
+		Load the data by executing the SQL query and perform any custom 
+		modifications.
 	*/
 	function prepare_load_data()
 	{
 		log_debug("ledger_account_list", "Executing prepare_load_data()");
-		
-		// execute the SQL command to import the data into
-		// the table structure
+	
+		/*
+			Import the data from the SQL database
+		*/
 		$this->obj_table->load_data_sql();		
+
+
+		/*
+			Calculate the total column
+
+		if ($this->obj_table->data_num_rows)
+		{
+			$total_counter = 0;
+			
+			for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
+			{
+				if ($this->obj_table->data[$i]["debit"] > 0)
+				{
+					$total_counter = $total_counter + $this->obj_table->data[$i]["debit"];
+				}
+				else
+				{
+					$total_counter = $total_counter - $this->obj_table->data[$i]["credit"];
+				}
+
+				$this->obj_table->data[$i]["total"] = $total_counter;
+			}
+		}
+		*/
 	}
 
 
@@ -250,35 +350,16 @@ class ledger_account_list
 		{
 			for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
 			{
-				switch ($this->obj_table->data[$i]["type"])
-				{
-					case "ar":
-					case "ar_tax":
-
-						// for AR invoices/transaction fetch the invoice ID
-						$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $this->obj_table->data[$i]["item_id"] ."'");
-						
-						$this->obj_table->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["item_id"] ."\">AR invoice $result</a>";
-					break;
-
-					case "ar_pay":
-						// for AR invoice payments fetch the invoice ID
-						$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $this->obj_table->data[$i]["item_id"] ."'");
-						
-						$this->obj_table->data[$i]["item_id"] = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=". $this->obj_table->data[$i]["item_id"] ."\">AR payment $result</a>";
-					break;
-
-
-
-					default:
-						$this->obj_table->data[$i]["item_id"] = "unknown";
-					break;
-				}
-				
+				$this->obj_table->data[$i]["item_id"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["item_id"]);
 			}
 		}
 
 
+
+		/*
+			Display the table
+		*/
+		
 		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
