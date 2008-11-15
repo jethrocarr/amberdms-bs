@@ -51,6 +51,26 @@ if (user_permissions_get('admin'))
 		}
 		else
 		{
+
+			// fetch user options from the database
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='$id'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+				
+				// structure the results into a form we can then use to fill the fields in the form
+				foreach ($sql_obj->data as $data)
+				{
+					$options[ $data["name"] ] = $data["value"];
+				}
+			}
+
+
+
+		
 			/*
 				Define form structure
 			*/
@@ -117,6 +137,21 @@ if (user_permissions_get('admin'))
 			$structure["fieldname"]		= "ipaddress";
 			$structure["type"]		= "text";
 			$form->add_input($structure);
+
+
+			// options
+			$structure = form_helper_prepare_radiofromdb("option_lang", "SELECT name as id, name as label FROM language_avaliable ORDER BY name");
+			$structure["defaultvalue"] = $options["lang"];
+			$form->add_input($structure);
+			
+			$structure = NULL;
+			$structure["fieldname"]		= "option_debug";
+			$structure["type"]		= "checkbox";
+			$structure["defaultvalue"]	= $options["debug"];
+			$structure["options"]["label"]	= "Enable debug logging - this will impact performance a bit but will show a full trail of all functions and SQL queries made</i>";
+			$form->add_input($structure);
+		
+			
 		
 		
 			// submit section
@@ -131,6 +166,7 @@ if (user_permissions_get('admin'))
 			$form->subforms["user_view"]		= array("id_user", "username", "realname", "contact_email");
 			$form->subforms["user_password"]	= array("password_message", "password", "password_confirm");
 			$form->subforms["user_info"]		= array("time", "ipaddress");
+			$form->subforms["user_options"]		= array("option_lang", "option_debug");
 			
 			$form->subforms["submit"]		= array("submit");
 

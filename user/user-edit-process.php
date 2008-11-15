@@ -44,6 +44,17 @@ if (user_permissions_get('admin'))
 	}
 
 
+	// account options are for edits only
+	if ($mode == "edit")
+	{
+		$data["option_lang"]		= security_form_input_predefined("any", "option_lang", 1, "");
+		$data["option_debug"]		= security_form_input_predefined("any", "option_debug", 0, "");
+	}
+
+
+
+
+
 	///// ERROR CHECKING ///////////////////////
 
 	// make sure we don't choose a user name that has already been taken
@@ -166,6 +177,29 @@ if (user_permissions_get('admin'))
 				$_SESSION["notification"]["message"][] = "The user's details have been updated successfully.";
 				journal_quickadd_event("users", $id, "Updated user's details.");
 			}
+
+
+			/*
+				Update user options
+			*/
+
+			// remove old user options
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "DELETE FROM users_options WHERE userid='$id'";
+			$sql_obj->execute();
+
+
+			// language
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'lang', '". $data["option_lang"] ."')";
+			$sql_obj->execute();
+
+
+			// debugging
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'debug', '". $data["option_debug"] ."')";
+			$sql_obj->execute();
+			
 		}
 
 		// goto view page
