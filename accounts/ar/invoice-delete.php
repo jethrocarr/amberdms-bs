@@ -24,7 +24,6 @@ if (user_permissions_get('accounts_ar_write'))
 	
 	$_SESSION["nav"]["title"][]	= "Invoice Details";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ar/invoice-view.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Invoice Items";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-items.php&id=$id";
@@ -37,6 +36,7 @@ if (user_permissions_get('accounts_ar_write'))
 
 	$_SESSION["nav"]["title"][]	= "Delete Invoice";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=accounts/ar/invoice-delete.php&id=$id";
 
 
 
