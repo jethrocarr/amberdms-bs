@@ -52,6 +52,7 @@ if (user_permissions_get('accounts_gl_write'))
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 		
 		$structure = NULL;
