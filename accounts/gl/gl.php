@@ -81,15 +81,11 @@ if (user_permissions_get('accounts_gl_view'))
 		// fetch all the transaction information
 		$transaction_list->generate_sql();
 
-		// append extra ordering rules to the SQL query
-		$transaction_list->sql_obj->string .= ", customid DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ar' DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ar_tax' DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ar_pay' DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ap' DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ap_tax' DESC";
-		$transaction_list->sql_obj->string .= ", account_trans.type='ap_pay' DESC";
-
+		// add ordering rule to order by the ID - this causes all the transactions
+		// to be sorted by the other that they were addded to the database once they have
+		// been sorted by date. If this was not done, the accounts look odd with transactions being
+		// out of order.
+		$transaction_list->sql_obj->string .= ", id ASC";
 		
 		$transaction_list->load_data_sql();
 

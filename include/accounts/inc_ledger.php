@@ -255,15 +255,11 @@ class ledger_account_list
 		$this->obj_table->generate_sql();
 
 
-		// append extra ordering rules to the SQL query
-		$this->obj_table->sql_obj->string .= ", customid DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ar' DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_tax' DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_pay' DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ap' DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ap_tax' DESC";
-		$this->obj_table->sql_obj->string .= ", account_trans.type='ap_pay' DESC";
-
+		// add ordering rule to order by the ID - this causes all the transactions
+		// to be sorted by the other that they were addded to the database once they have
+		// been sorted by date. If this was not done, the accounts look odd with transactions being
+		// out of order.
+		$this->obj_table->sql_obj->string .= ", id ASC";
 	}
 
 
