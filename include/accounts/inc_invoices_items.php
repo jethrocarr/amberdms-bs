@@ -148,23 +148,27 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 				}
 			}
 
-		
-			// edit link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["id"]["action"]	= "edit";
-			$structure["itemid"]["column"]	= "id";
+
+			if (user_permissions_get("accounts_". $type ."_write"))
+			{
+				// edit link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["id"]["action"]	= "edit";
+				$structure["itemid"]["column"]	= "id";
 			
-			$item_list->add_link("edit", $viewpage, $structure);
+				$item_list->add_link("edit", $viewpage, $structure);
 
 			
-			// delete link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["itemid"]["column"]	= "id";
-			$structure["full_link"]		= "yes";
+				// delete link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["itemid"]["column"]	= "id";
+				$structure["full_link"]		= "yes";
 			
-			$item_list->add_link("delete", $deletepage, $structure);
+				$item_list->add_link("delete", $deletepage, $structure);
+			}
+
 
 			// display the table
 			$item_list->render_table();	
@@ -220,20 +224,23 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		else
 		{
 			
-			// edit link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["itemid"]["column"]	= "id";
+			if (user_permissions_get("accounts_". $type ."_write"))
+			{
+				// edit link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["itemid"]["column"]	= "id";
 			
-			$item_list->add_link("edit", $viewpage, $structure);
+				$item_list->add_link("edit", $viewpage, $structure);
 			
-			// delete link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["itemid"]["column"]	= "id";
-			$structure["full_link"]		= "yes";
+				// delete link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["itemid"]["column"]	= "id";
+				$structure["full_link"]		= "yes";
 
-			$item_list->add_link("delete", $deletepage, $structure);
+				$item_list->add_link("delete", $deletepage, $structure);
+			}
 
 		
 			// display the table
@@ -348,23 +355,27 @@ function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
 			}
 
 
-		
-			// edit link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["id"]["action"]	= "edit";
-			$structure["itemid"]["column"]	= "id";
-			
-			$item_list->add_link("edit", $viewpage, $structure);
 
+			if (user_permissions_get("accounts_". $type ."_write"))
+			{
+				// edit link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["id"]["action"]	= "edit";
+				$structure["itemid"]["column"]	= "id";
+				
+				$item_list->add_link("edit", $viewpage, $structure);
+
+				
+				// delete link
+				$structure = NULL;
+				$structure["id"]["value"]	= "$id";
+				$structure["itemid"]["column"]	= "id";
+				$structure["full_link"]		= "yes";
+				
+				$item_list->add_link("delete", $deletepage, $structure);
+			}
 			
-			// delete link
-			$structure = NULL;
-			$structure["id"]["value"]	= "$id";
-			$structure["itemid"]["column"]	= "id";
-			$structure["full_link"]		= "yes";
-			
-			$item_list->add_link("delete", $deletepage, $structure);
 
 			// display the table
 			$item_list->render_table();	

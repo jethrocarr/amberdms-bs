@@ -2,7 +2,7 @@
 /*
 	accounts/ap/invoices-items-edit.php
 	
-	access: account_ap_view
+	access: account_ap_write
 
 	Allows adjusting or addition of new items to an invoice.
 */
@@ -13,7 +13,7 @@ require("include/accounts/inc_invoices_items.php");
 require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_ap_view'))
+if (user_permissions_get('accounts_ap_write'))
 {
 	$id = $_GET["id"];
 
@@ -33,11 +33,8 @@ if (user_permissions_get('accounts_ap_view'))
 	$_SESSION["nav"]["title"][]	= "Invoice Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/ap/journal.php&id=$id";
 
-	if (user_permissions_get('accounts_ap_write'))
-	{
-		$_SESSION["nav"]["title"][]	= "Delete Invoice";
-		$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-delete.php&id=$id";
-	}
+	$_SESSION["nav"]["title"][]	= "Delete Invoice";
+	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-delete.php&id=$id";
 
 
 	function page_render()
