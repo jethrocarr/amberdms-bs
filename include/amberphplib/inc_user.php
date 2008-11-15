@@ -214,12 +214,22 @@ function user_login($username, $password)
 				$_SESSION["user"]["name"]	= $username;
 				$_SESSION["user"]["authkey"]	= $authkey;
 
-				// TODO: in future, allow the user to select their language
-				$_SESSION["user"]["lang"]	= "en_us";
 
+				// fetch user options from the database
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='". $mysql_data["id"] . "'";
+				$sql_obj->execute();
 
-				// TODO: currently debugging is enabled for all users
-				$_SESSION["user"]["debug"]	= "yes";
+				if ($sql_obj->num_rows())
+				{
+					$sql_obj->fetch_array();
+					
+					foreach ($sql_obj->data as $data)
+					{
+						$_SESSION["user"][ $data["name"] ] = $data["value"];
+					}
+				}
+
 
 
 				// does the user need to change their password? If they have no salt, it means the password

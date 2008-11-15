@@ -95,9 +95,7 @@ function obj_show(obj)
 
 			if ($username = user_information("username"))
 			{
-				print "<p style=\"font-size: 10px;\"><b>You are logged on as $username | <a href=\"index.php?page=user/logout.php\">logout</a></b></p>";
-
-
+				print "<p style=\"font-size: 10px;\"><b>logged on as $username | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></b></p>";
 			}
 
 			?>

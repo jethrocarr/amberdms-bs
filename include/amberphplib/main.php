@@ -19,7 +19,7 @@
 */
 function log_debug($category, $content)
 {
-	if ($_SESSION["user"]["debug"] == "yes")
+	if ($_SESSION["user"]["debug"] == "on")
 	{
 		$log_record = array();
 
