@@ -84,6 +84,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_addfield("chartid", "");
 		
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='$type'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='payment'");
 		
@@ -204,6 +205,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_taxes ON account_taxes.id = account_items.customid");
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='$type'");
 		$item_list->sql_obj->prepare_sql_addwhere("type='tax'");
 		
 
@@ -919,7 +921,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	if ($mode == "edit")
 	{
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE id='$itemid' AND invoiceid='$id' LIMIT 1";
+		$sql_obj->string	= "SELECT id FROM account_items WHERE id='$itemid' AND invoicetype='$type' AND invoiceid='$id' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -1107,7 +1109,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			else
 			{
 				// fetch total of billable items
-				$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax'");
+				$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type!='tax'");
 
 				// calculate taxable amount
 				$data["amount"] = $amount * ($data["taxrate"] / 100);
@@ -1167,7 +1169,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 	
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO `account_items` (invoiceid) VALUES ('$id')";
+			$sql_obj->string	= "INSERT INTO `account_items` (invoiceid, invoicetype) VALUES ('$id', '$type')";
 			if (!$sql_obj->execute())
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create item";
@@ -1370,7 +1372,7 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	if ($mode == "edit")
 	{
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, type FROM account_items WHERE id='$itemid' AND invoiceid='$id' LIMIT 1";
+		$sql_obj->string	= "SELECT id, type FROM account_items WHERE id='$itemid' AND invoicetype='$type' AND invoiceid='$id' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -1426,7 +1428,7 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 
 		// delete item
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_items WHERE id='$itemid'";
+		$sql_obj->string	= "DELETE FROM account_items WHERE id='$itemid' AND invoicetype='$type'";
 		
 		if (!$sql_obj->execute())
 		{
@@ -1504,9 +1506,9 @@ function invoice_items_update_total($id, $type)
 
 
 	// calculate totals from the DB
-	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
-	$amount_tax	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type='tax'");
-	$amount_paid	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type='payment'");
+	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type!='tax' AND type!='payment'");
+	$amount_tax	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type='tax'");
+	$amount_paid	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type='payment'");
 
 	// final totals
 	$amount_total	= $amount + $amount_tax;
@@ -1557,7 +1559,7 @@ function invoice_items_update_total($id, $type)
 
 	Values
 	id		ID of the invoice to update
-	type		Type of invoice - AR or AP
+	type		Type of invoice - "ar" or "ap"
 
 	Return Codes
 	0		failure
@@ -1569,14 +1571,14 @@ function invoice_items_update_tax($id, $type)
 
 
 	// fetch taxable amount
-	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoiceid='$id' AND type!='tax' AND type!='payment'");
+	$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type!='tax' AND type!='payment'");
 
 
 	/*
 		Run though all the tax items on this invoice
 	*/
 	$sql_items_obj		= New sql_query;
-	$sql_items_obj->string	= "SELECT id, customid, amount FROM account_items WHERE invoiceid='$id' AND type='tax'";
+	$sql_items_obj->string	= "SELECT id, customid, amount FROM account_items WHERE invoicetype='$type' AND invoiceid='$id' AND type='tax'";
 	$sql_items_obj->execute();
 
 	if ($sql_items_obj->num_rows())
@@ -1692,7 +1694,7 @@ function invoice_items_update_ledger($id, $type)
 
 	// Fetch totals per chart from the items table.
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT chartid, type, SUM(amount) as amount FROM `account_items` WHERE invoiceid='$id' AND type!='payment' GROUP BY chartid";
+	$sql_obj->string	= "SELECT chartid, type, SUM(amount) as amount FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type!='payment' GROUP BY chartid";
 	$sql_obj->execute();
 
 	if ($sql_obj->num_rows())
@@ -1750,7 +1752,7 @@ function invoice_items_update_ledger($id, $type)
 
 	// run though each payment item
 	$sql_item_obj		= New sql_query;
-	$sql_item_obj->string	= "SELECT id, chartid, amount, description FROM `account_items` WHERE invoiceid='$id' AND type='payment'";
+	$sql_item_obj->string	= "SELECT id, chartid, amount, description FROM `account_items` WHERE invoicetype='$type' AND invoiceid='$id' AND type='payment'";
 	$sql_item_obj->execute();
 
 	if ($sql_item_obj->num_rows())

@@ -205,7 +205,7 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 
 		// delete all the item options
 		$sql_item_obj		= New sql_query;
-		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoiceid='$id'";
+		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='$type' AND invoiceid='$id'";
 		$sql_item_obj->execute();
 
 		if ($sql_item_obj->num_rows())
@@ -223,7 +223,7 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 
 		// delete all the invoice items
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_items WHERE invoiceid='$id'";
+		$sql_obj->string	= "DELETE FROM account_items WHERE invoicetype='$type' AND invoiceid='$id'";
 		$sql_obj->execute();
 				
 		// delete invoice journal entries
