@@ -1705,7 +1705,7 @@ function invoice_items_update_ledger($id, $type)
 
 	// remove all the old ledger entries belonging to this invoice
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "DELETE FROM `account_trans` WHERE customid='$id'";
+	$sql_obj->string	= "DELETE FROM `account_trans` WHERE customid='$id' AND (type='$type' || type='". $type ."_pay' || type='". $type ."_tax')";
 	$sql_obj->execute();
 
 
