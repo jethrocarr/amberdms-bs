@@ -3,7 +3,8 @@
 	include/accounts/inc_invoices_items.php
 
 	Provides forms and processing code for listing and adjusting the items belonging
-	to an invoice. This is used by both the AR and AP pages.
+	to an invoice or quote. These functions are used by the AR, AP and quotes sections
+	of this program.
 */
 
 
@@ -23,7 +24,7 @@ include("inc_ledger.php");
 	This function lists all the items belonging to the invoice and creates links to view/edit/delete them.
 
 	Values
-	type		Either "ar" or "ap"
+	type		"ar", "ap" or "quotes"
 	id		If editing/viewing an existing invoice, provide the ID
 	viewpage	Page for viewing/editing invoice items
 	deletepage	Processing page for deleting invoice items
@@ -96,7 +97,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 
 		if (!$item_list->data_num_rows)
 		{
-			print "<p><i>There are currently no items on this invoice.</i></p>";
+			print "<p><i>There are currently no items.</i></p>";
 		}
 		else
 		{
@@ -176,7 +177,11 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		
 		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=standard\">Add standard transaction item</a></b></p>";
 		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=product\">Add product item</a></b></p>";
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=time\">Add time item</a></b></p>";
+
+		if ($type == "ar")
+		{
+			print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=time\">Add time item</a></b></p>";
+		}
 
 
 
@@ -219,7 +224,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 
 		if (!$item_list->data_num_rows)
 		{
-			print "<p><i>There are currently no taxes on this invoice.</i></p>";
+			print "<p><i>There are currently no taxes items.</i></p>";
 		}
 		else
 		{
@@ -248,7 +253,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 	
 		}
 		
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=tax\">Add new tax to Invoice</a></b></p>";
+		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=tax\">Add tax item</a></b></p>";
 
 
 	} // end if invoice exists
@@ -1293,9 +1298,15 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			/*
 				Generate ledger entries.
 
+				(Note that for quotes, we do NOT generate ledger entries, since a quote
+				should have no impact on the accounts)
+
 			*/
 
-			invoice_items_update_ledger($id, $type);
+			if ($type != "quotes")
+			{
+				invoice_items_update_ledger($id, $type);
+			}
 
 		
 
@@ -1335,7 +1346,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	Processing page to delete invoice items.
 
 	Values
-	type			"ar" or "ap" invoice
+	type			"ar", "ap" or "quotes"
 	returnpage_error	Page to return to in event of errors or updates
 	returnpage_success	Page to return to if successful.
 */
@@ -1360,10 +1371,10 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	//// ERROR CHECKING ///////////////////////
 	
 	/*
-		Verify that the invoice exists, and fetch some required information from it.
+		Verify that the invoice exists
 	*/
 	$sql_inv_obj		= New sql_query;
-	$sql_inv_obj->string	= "SELECT id, dest_account, date_trans FROM account_$type WHERE id='$id' LIMIT 1";
+	$sql_inv_obj->string	= "SELECT id FROM account_$type WHERE id='$id' LIMIT 1";
 	$sql_inv_obj->execute();
 	
 	if (!$sql_inv_obj->num_rows())
@@ -1458,9 +1469,14 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 
 		/*
 			Update ledger
+
+			(No need to do this for quotes, since they do not impact the ledger)
 		*/
 		
-		invoice_items_update_ledger($id, $type);
+		if ($type != "quotes")
+		{
+			invoice_items_update_ledger($id, $type);
+		}
 
 
 
@@ -1474,7 +1490,7 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		// return with success
 		if (!$_SESSION["error"]["message"])
 		{
-			$_SESSION["notification"]["message"][] = "Invoice item deleted successfully";
+			$_SESSION["notification"]["message"][] = "Item deleted successfully";
 			journal_quickadd_event("account_$type", $id, "Item successfully deleted");
 		}
 		
@@ -1534,14 +1550,26 @@ function invoice_items_update_total($id, $type)
 		Update the invoice
 	*/
 	$sql_obj = New sql_query;
-			
-	$sql_obj->string = "UPDATE `account_$type` SET "
+
+	if ($type == "quotes")
+	{
+		$sql_obj->string = "UPDATE `account_$type` SET "
+					."amount='". $amount ."', "
+					."amount_tax='". $amount_tax ."', "
+					."amount_total='". $amount_total ."' "
+					."WHERE id='$id'";
+	}
+	else
+	{
+		$sql_obj->string = "UPDATE `account_$type` SET "
 				."amount='". $amount ."', "
 				."amount_tax='". $amount_tax ."', "
 				."amount_total='". $amount_total ."', "
 				."amount_paid='". $amount_paid ."' "
 				."WHERE id='$id'";
+	}
 	
+
 	if (!$sql_obj->execute())
 	{
 		log_debug("inc_invoices_items", "A fatal SQL error occured whilst attempting to update invoice totals");
