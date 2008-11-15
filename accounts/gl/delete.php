@@ -1,28 +1,26 @@
 <?php
 /*
-	accounts/charts/delete.php
+	accounts/gl/delete.php
 	
-	access:	accounts_charts_write
+	access:	accounts_gl_write
 
-	Allows an unwanted chart to be deleted.
+	Allows an unwanted transaction to be deleted.
 */
 
-if (user_permissions_get('accounts_charts_write'))
+if (user_permissions_get('accounts_gl_write'))
 {
 	$id = $_GET["id"];
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
 	
-	$_SESSION["nav"]["title"][]	= "Account Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/view.php&id=$id";
+	// nav bar options.
+	$_SESSION["nav"]["active"]	= 1;	
+	
+	$_SESSION["nav"]["title"][]	= "Transaction Details";
+	$_SESSION["nav"]["query"][]	= "page=accounts/gl/view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Account Ledger";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/ledger.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Account";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/delete.php&id=$id";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/delete.php&id=$id";
+	$_SESSION["nav"]["title"][]	= "Delete Transaction";
+	$_SESSION["nav"]["query"][]	= "page=accounts/gl/delete.php&id=$id";
+	$_SESSION["nav"]["current"]	= "page=accounts/gl/delete.php&id=$id";
 
 
 
@@ -33,33 +31,37 @@ if (user_permissions_get('accounts_charts_write'))
 		/*
 			Title + Summary
 		*/
-		print "<h3>DELETE ACCOUNT</h3><br>";
-		print "<p>This page allows you to delete an unwanted account, provided that account has no transactions in it.</p>";
+		print "<h3>DELETE TRANSACTION</h3><br>";
+		print "<p>This page allows you to delete an unwanted transaction, provided that it hasn't been locked.</p>";
 
-		$mysql_string	= "SELECT id FROM `account_charts` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if (!$mysql_num_rows)
+		$sql_trans_obj		= New sql_query;
+		$sql_trans_obj->string	= "SELECT id, locked FROM `account_gl` WHERE id='$id'";
+		$sql_trans_obj->execute();
+		
+		if (!$sql_trans_obj->num_rows())
 		{
-			print "<p><b>Error: The requested account does not exist. <a href=\"index.php?page=charts/charts.php\">Try looking for your account on the chart of accounts page.</a></b></p>";
+			print "<p><b>Error: The requested transaction does not exist. <a href=\"index.php?page=accounts/gl/gl.php\">Try looking for your transaction in the general ledger.</a></b></p>";
 		}
 		else
 		{
+			// we need some of the info later on
+			$sql_trans_obj->fetch_array();
+
+			
 			/*
 				Define form structure
 			*/
 			$form = New form_input;
-			$form->formname = "chart_delete";
+			$form->formname = "transaction_delete";
 			$form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "accounts/charts/delete-process.php";
+			$form->action = "accounts/gl/delete-process.php";
 			$form->method = "post";
 			
 
 			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "code_chart";
+			$structure["fieldname"] 	= "code_gl";
 			$structure["type"]		= "text";
 			$form->add_input($structure);
 
@@ -71,7 +73,7 @@ if (user_permissions_get('accounts_charts_write'))
 
 			// hidden
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_chart";
+			$structure["fieldname"] 	= "id_transaction";
 			$structure["type"]		= "hidden";
 			$structure["defaultvalue"]	= "$id";
 			$form->add_input($structure);
@@ -81,48 +83,23 @@ if (user_permissions_get('accounts_charts_write'))
 			$structure = NULL;
 			$structure["fieldname"] 	= "delete_confirm";
 			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Yes, I wish to delete this account and realise that once deleted the data can not be recovered.";
+			$structure["options"]["label"]	= "Yes, I wish to delete this transaction and realise that once deleted the data can not be recovered.";
 			$form->add_input($structure);
 
 
 
 			/*
-				Check that the chart can be deleted
+				Check that the transaction can be deleted
 			*/
 
-			$locked = 0;
-			
-
-			// make sure chart has no transactions in it
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='$id'";
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				$locked = 1;
-			}
-			
-
-			// make sure chart has no items belonging to it
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='$id'";
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				$locked = 1;
-			}
-			
-			
 			// define submit field
 			$structure = NULL;
 			$structure["fieldname"] = "submit";
 
-			if ($locked)
+			if ($sql_trans_obj->data[0]["locked"])
 			{
 				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>This accounts can not be deleted because it has transactions or items belonging to it.</i>";
+				$structure["defaultvalue"]	= "<i>This transaction has now been locked and can not be deleted.</i>";
 			}
 			else
 			{
@@ -135,13 +112,13 @@ if (user_permissions_get('accounts_charts_write'))
 
 			
 			// define subforms
-			$form->subforms["chart_delete"]		= array("code_chart", "description");
-			$form->subforms["hidden"]		= array("id_chart");
+			$form->subforms["transaction_delete"]	= array("code_gl", "description");
+			$form->subforms["hidden"]		= array("id_transaction");
 			$form->subforms["submit"]		= array("delete_confirm", "submit");
 
 			
 			// fetch the form data
-			$form->sql_query = "SELECT code_chart, description FROM `account_charts` WHERE id='$id' LIMIT 1";
+			$form->sql_query = "SELECT code_gl, description FROM `account_gl` WHERE id='$id' LIMIT 1";
 			$form->load_data();
 
 			// display the form

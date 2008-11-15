@@ -1,10 +1,10 @@
 <?php
 /*
-	accounts/charts/delete-process.php
+	accounts/gl/delete-process.php
 
-	access: account_charts_write
+	access: account_gl_write
 
-	Deletes an account provided that the account has not been added to any invoices.
+	Deletes a transaction, provided that it has not been locked.
 */
 
 // includes
@@ -12,87 +12,93 @@ include_once("../../include/config.php");
 include_once("../../include/amberphplib/main.php");
 
 
-if (user_permissions_get('accounts_charts_write'))
+if (user_permissions_get('accounts_gl_write'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_chart", 1, "");
+	$id				= security_form_input_predefined("int", "id_transaction", 1, "");
 
 	// these exist to make error handling work right
-	$data["code_chart"]		= security_form_input_predefined("any", "code_chart", 0, "");
+	$data["code_gl"]		= security_form_input_predefined("any", "code_gl", 0, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
-	
-	// make sure the chart actually exists
+
+
+	//// ERROR CHECKING ///////////////////////
+
+
+	// make sure the transaction actually exists
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `account_charts` WHERE id='$id'";
+	$sql_obj->string	= "SELECT id, locked FROM `account_gl` WHERE id='$id' LIMIT 1";
 	$sql_obj->execute();
 	
 	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The account you have attempted to edit - $id - does not exist in this system.";
+		$_SESSION["error"]["message"][] = "The transaction you have attempted to edit - $id - does not exist in this system.";
 	}
-
-
-		
-	//// ERROR CHECKING ///////////////////////
-
-	// make sure chart has no transactions in it
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	else
 	{
-		$_SESSION["error"]["message"][] = "This account can not be deleted since it has transactions belonging to it";
-	}
-			
-	// make sure chart has no items belonging to it
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='$id'";
-	$sql_obj->execute();
+		$sql_obj->fetch_array();
 
-	if ($sql_obj->num_rows())
-	{
-		$_SESSION["error"]["message"][] = "This account can not be deleted since it has invoice items belonging to it";
+		if ($sql_obj->data[0]["locked"])
+		{
+			$_SESSION["error"]["message"][] = "This transaction can not be deleted, because it is now locked";
+		}
 	}
-			
-
 
 	
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
-		$_SESSION["error"]["form"]["chart_delete"] = "failed";
-		header("Location: ../../index.php?page=accounts/charts/delete.php&id=$id");
+		$_SESSION["error"]["form"]["transaction_delete"] = "failed";
+		header("Location: ../../index.php?page=accounts/gl/delete.php&id=$id");
 		exit(0);
 		
 	}
 	else
 	{
-
 		/*
-			Delete Account
+			Delete general ledger details
 		*/
 			
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_charts WHERE id='$id'";
+		$sql_obj->string	= "DELETE FROM account_gl WHERE id='$id'";
 			
 		if (!$sql_obj->execute())
 		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the account";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Account has been successfully deleted.";
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the transaction";
 		}
 
 
-		// return to chart of accounts
-		header("Location: ../../index.php?page=accounts/charts/charts.php");
+		/*
+			Delete transaction items
+		*/
+		
+		$sql_obj		= New sql_query();
+		$sql_obj->string	= "DELETE FROM account_trans WHERE type='gl' AND customid='$id'";
+		$sql_obj->execute();
+		
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the transaction items.";
+		}
+
+
+
+
+		/*
+			Complete
+		*/
+		
+		if (!$_SESSION["error"]["message"])
+		{
+			$_SESSION["notification"]["message"][] = "Transaction has been successfully deleted.";
+		}
+		
+		header("Location: ../../index.php?page=accounts/gl/gl.php");
 		exit(0);
 	}
 
