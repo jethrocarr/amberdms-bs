@@ -1,15 +1,17 @@
 <?php
 /*
-	accounts/quotes/quotes-delete.php
+	accounts/quotes/quotes-convert.php
 	
 	access: account_quotes_write
 
-	Form to delete a quote from the database.
+	Form to convert a quote into an invoice
 */
 
 // custom includes
+require("include/accounts/inc_invoices.php");
+require("include/accounts/inc_charts.php");
 require("include/accounts/inc_quotes.php");
-require("include/accounts/inc_quotes_delete.php");
+require("include/accounts/inc_quotes_convert.php");
 
 
 if (user_permissions_get('accounts_quotes_write'))
@@ -30,10 +32,10 @@ if (user_permissions_get('accounts_quotes_write'))
 
 	$_SESSION["nav"]["title"][]	= "Convert to Invoice";
 	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-convert.php&id=$id";
-
+	$_SESSION["nav"]["current"]	= "page=accounts/quotes/quotes-convert.php&id=$id";
+	
 	$_SESSION["nav"]["title"][]	= "Delete Quote";
 	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/quotes/quotes-delete.php&id=$id";
 	
 
 	function page_render()
@@ -45,12 +47,12 @@ if (user_permissions_get('accounts_quotes_write'))
 			Title + Summary
 		*/
 
-		print "<h3>DELETE QUOTE</h3><br>";
-		print "<p>This page allows you to delete unwanted quotes. This will also delete the journal information belonging to this quote.</p>";
+		print "<h3>CONVERT QUOTE</h3><br>";
+		print "<p>This page allows you to convert this quote into an invoice. Please note that this action can not be reversed.</p>";		
 
 		quotes_render_summarybox($id);
 
-		quotes_form_delete_render($id, "accounts/quotes/quotes-delete-process.php");
+		quotes_form_convert_render($id, "accounts/quotes/quotes-convert-process.php");
 
 
 	} // end page_render

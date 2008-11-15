@@ -30,6 +30,9 @@ if (user_permissions_get('accounts_quotes_write'))
 	$_SESSION["nav"]["title"][]	= "Quote Journal";
 	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/journal.php&id=$id";
 
+	$_SESSION["nav"]["title"][]	= "Convert to Invoice";
+	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-convert.php&id=$id";
+
 	$_SESSION["nav"]["title"][]	= "Delete Quote";
 	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-delete.php&id=$id";
 	
