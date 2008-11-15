@@ -82,6 +82,7 @@ if (user_permissions_get('accounts_gl_view'))
 		$transaction_list->generate_sql();
 
 		// append extra ordering rules to the SQL query
+		$transaction_list->sql_obj->string .= ", customid DESC";
 		$transaction_list->sql_obj->string .= ", account_trans.type='ar' DESC";
 		$transaction_list->sql_obj->string .= ", account_trans.type='ar_tax' DESC";
 		$transaction_list->sql_obj->string .= ", account_trans.type='ar_pay' DESC";
