@@ -256,6 +256,7 @@ class ledger_account_list
 
 
 		// append extra ordering rules to the SQL query
+		$this->obj_table->sql_obj->string .= ", customid DESC";
 		$this->obj_table->sql_obj->string .= ", account_trans.type='ar' DESC";
 		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_tax' DESC";
 		$this->obj_table->sql_obj->string .= ", account_trans.type='ar_pay' DESC";
