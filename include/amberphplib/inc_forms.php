@@ -394,7 +394,10 @@ class form_input
 						["height"]		Height of field object.
 						["label"]		Label field for checkboxes to use instead of a translation
 						["noselectoption"]	Set to yes to prevent the display of a "select:" heading in dropdowns
-									and to automatically select the first entry in the list
+									and to automatically select the first entry in the list.
+									^ - OBSOLETE: this option should be replaced by autoselect option		
+						["autoselect"]		Enabling this option will cause a radio or dropdown with just a single
+									entry to auto-select the single entry.
 		
 			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();	Associate array used for labeling the values in radio or dropdown type fields
@@ -534,11 +537,20 @@ class form_input
 				}
 
 
+				// if there is only 1 option avaliable, see if we should auto-select it.
+				if ($this->structure[$fieldname]["options"]["autoselect"] && $this->structure[$fieldname]["values"])
+				{
+					if (count($this->structure[$fieldname]["values"]) == 1)
+					{
+						$autoselect = 1;
+					}
+				}
+
 				// display all the radios buttons
 				foreach ($this->structure[$fieldname]["values"] as $value)
 				{
 					// is the current row, the one that is in use? If so, add the 'selected' tag to it
-					if ($value == $this->structure[$fieldname]["defaultvalue"])
+					if ($value == $this->structure[$fieldname]["defaultvalue"] || $autoselect)
 					{
 						print "<input checked ";
 					}
@@ -600,11 +612,31 @@ class form_input
 				// start dropdown/select box
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"> ";
 
+
+				// if there is only 1 option avaliable, see if we should auto-select it.
+				if ($this->structure[$fieldname]["options"]["noselectoption"])
+				{
+					$this->structure[$fieldname]["options"]["autoselect"];
+					log_debug("inc_forms", "Warning: Obsolete usage of noselectoption dropdown option for field $fieldname");
+				}
+
+				
+				if ($this->structure[$fieldname]["options"]["autoselect"] && $this->structure[$fieldname]["values"])
+				{
+					if (count($this->structure[$fieldname]["values"]) == 1)
+					{
+						$autoselect = 1;
+					}
+				}
+				
+
 				// if there is no current entry, add a select entry as default
-				if (!$this->structure[$fieldname]["defaultname"] && !$this->structure[$fieldname]["options"]["noselectoption"])
+				if (!$this->structure[$fieldname]["defaultname"] && !$autoselect)
 				{
 					print "<option selected value=\"\">-- select --</option>";
 				}
+		
+
 			
 				// add all the options
 				foreach ($this->structure[$fieldname]["values"] as $value)
