@@ -167,20 +167,21 @@ function service_form_details_process()
 
 
 	// get the ID for an edit
-	if ($mode == "edit")
+	if ($_POST["id_service"])
 	{
-		$id = security_form_input_predefined("int", "id_service", 1, "");
+		$id	= security_form_input_predefined("int", "id_service", 1, "");
+		$mode	= "edit";
 	}
 	else
 	{
-		$id = NULL;
+		$id	= NULL;
+		$mode	= "add";
 	}
 	
 
 	// general details
 	$data["name_service"]		= security_form_input_predefined("any", "name_service", 1, "");
 	$data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
-	$data["typeid"]			= security_form_input_predefined("int", "typeid", 1, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
 
 
@@ -202,6 +203,9 @@ function service_form_details_process()
 	else
 	{
 		$mode = "add";
+		
+		// only fetch the type ID when adding new services
+		$data["typeid"]	= security_form_input_predefined("int", "typeid", 1, "");
 	}
 
 
@@ -253,7 +257,7 @@ function service_form_details_process()
 			*/
 			
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO services (name_service) VALUES ('".$data["name_service"]."')";
+			$sql_obj->string	= "INSERT INTO services (name_service, typeid) VALUES ('".$data["name_service"]."', '". $data["typeid"] ."')";
 			if (!$sql_obj->execute())
 			{
 				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create service";
@@ -273,7 +277,6 @@ function service_form_details_process()
 			$sql_obj->string = "UPDATE services SET "
 						."name_service='". $data["name_service"] ."', "
 						."chartid='". $data["chartid"] ."', "
-						."typeid='". $data["typeid"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id'";
 			
