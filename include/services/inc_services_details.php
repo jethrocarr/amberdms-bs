@@ -290,18 +290,23 @@ function service_form_details_process()
 				{
 					$_SESSION["notification"]["message"][] = "Service successfully created.";
 					journal_quickadd_event("services", $id, "Service successfully created");
+					
+					// take user to plan configuration page
+					header("Location: ../index.php?page=services/plan.php&id=$id");
+					exit(0);
 				}
 				else
 				{
 					$_SESSION["notification"]["message"][] = "Service successfully updated.";
 					journal_quickadd_event("services", $id, "Service successfully updated");
+
+
+					// display updated details
+					header("Location: ../index.php?page=services/view.php&id=$id");
+					exit(0);
 				}
 				
 			}
-
-			// display updated details
-			header("Location: ../index.php?page=services/view.php&id=$id");
-			exit(0);
 			
 		} // end if ID
 
