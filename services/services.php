@@ -12,36 +12,38 @@ if (user_permissions_get('services_view'))
 	function page_render()
 	{
 		// establish a new table object
-		$product_list = New table;
+		$service_list = New table;
 
-		$product_list->language		= $_SESSION["user"]["lang"];
-		$product_list->tablename	= "services_list";
+		$service_list->language		= $_SESSION["user"]["lang"];
+		$service_list->tablename	= "services_list";
 
 
 		// define all the columns and structure
-		$product_list->add_column("standard", "name_service", "");
-		$product_list->add_column("standard", "chartid", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
-		$product_list->add_column("standard", "typeid", "service_types.name");
-		$product_list->add_column("standard", "units", "");
-		$product_list->add_column("money", "price", "");
-		$product_list->add_column("standard", "included_units", "");
-		$product_list->add_column("standard", "billing_cycle", "");
+		$service_list->add_column("standard", "name_service", "");
+		$service_list->add_column("standard", "chartid", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
+		$service_list->add_column("standard", "typeid", "service_types.name");
+		$service_list->add_column("standard", "units", "service_units.name");
+		$service_list->add_column("money", "price", "");
+		$service_list->add_column("standard", "included_units", "");
+		$service_list->add_column("standard", "billing_cycle", "billing_cycles.name");
 
 		// defaults
-		$product_list->columns		= array("name_service", "typeid", "units", "price", "included_units", "billing_cycle");
-		$product_list->columns_order	= array("name_service");
+		$service_list->columns		= array("name_service", "typeid", "units", "price", "included_units", "billing_cycle");
+		$service_list->columns_order	= array("name_service");
 
 		// define SQL structure
-		$product_list->sql_obj->prepare_sql_settable("services");
-		$product_list->sql_obj->prepare_sql_addfield("id", "services.id");
-		$product_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = services.chartid");
-		$product_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
+		$service_list->sql_obj->prepare_sql_settable("services");
+		$service_list->sql_obj->prepare_sql_addfield("id", "services.id");
+		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = services.chartid");
+		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
+		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_units ON service_units.id = services.units");
+		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
 
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "name_service LIKE '%value%' OR description LIKE '%value%'";
-		$product_list->add_filter($structure);
+		$structure["sql"]	= "services.name_service LIKE '%value%' OR services.description LIKE '%value%'";
+		$service_list->add_filter($structure);
 
 
 
@@ -51,32 +53,37 @@ if (user_permissions_get('services_view'))
 
 
 		// options form
-		$product_list->load_options_form();
-		$product_list->render_options_form();
+		$service_list->load_options_form();
+		$service_list->render_options_form();
 
 
-		// fetch all the product information
-		$product_list->generate_sql();
-		$product_list->load_data_sql();
+		// fetch all the service information
+		$service_list->generate_sql();
+		$service_list->load_data_sql();
 
-		if (!count($product_list->columns))
+		if (!count($service_list->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$product_list->data_num_rows)
+		elseif (!$service_list->data_num_rows)
 		{
 			print "<p><b>You currently have no services in your database.</b></p>";
 		}
 		else
 		{
 
-			// view link
+			// details link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$product_list->add_link("view", "services/view.php", $structure);
+			$service_list->add_link("details", "services/view.php", $structure);
+
+			// plan link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$service_list->add_link("plan", "services/plan.php", $structure);
 
 			// display the table
-			$product_list->render_table();
+			$service_list->render_table();
 
 			// TODO: display CSV download link
 
