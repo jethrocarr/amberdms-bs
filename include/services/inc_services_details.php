@@ -60,7 +60,7 @@ function services_form_details_render($serviceid, $mode)
 	// the service type can only be set at creation time.
 	if ($mode == "add")
 	{
-		$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label FROM service_types");
+		$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label FROM service_types ORDER BY name");
 		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 	}
