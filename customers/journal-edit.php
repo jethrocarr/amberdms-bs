@@ -22,7 +22,7 @@ if (user_permissions_get('customers_write'))
 	$_SESSION["nav"]["current"]	= "page=customers/journal.php&id=$id";
 
 	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=account/services/services.php&customer_id=$id";
+	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$id";
 
 	if (user_permissions_get('customers_write'))
 	{
