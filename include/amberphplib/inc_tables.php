@@ -72,6 +72,7 @@ class table
 				money		- displays a financial value correctly
 				price		- legacy use - just calls money
 				hourmins	- input is a number of seconds, display as H:MM
+				bool_tick	- interperate a bool as an image (1 == tick, 0 == cross)
 				
 		name	- name/label of the column for display purposes
 
@@ -534,6 +535,20 @@ class table
 			case "hourmins":
 				// value is a number of seconds, we need to convert into an H:MM format.
 				$result = time_format_hourmins($this->data[$row][$column]);
+			break;
+
+
+			case "bool_tick":
+				// interperate the bool as either a tick or a cross
+
+				if ($this->data[$row][$column])
+				{
+					$result = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
+				}
+				else
+				{
+					$result = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
+				}
 			break;
 
 			default:
