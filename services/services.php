@@ -22,13 +22,14 @@ if (user_permissions_get('services_view'))
 		$service_list->add_column("standard", "name_service", "");
 		$service_list->add_column("standard", "chartid", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$service_list->add_column("standard", "typeid", "service_types.name");
-		$service_list->add_column("standard", "units", "service_units.name");
-		$service_list->add_column("money", "price", "");
+		$service_list->add_column("standard", "units", "services.units");
 		$service_list->add_column("standard", "included_units", "");
+		$service_list->add_column("money", "price", "");
+		$service_list->add_column("money", "price_extraunits", "");
 		$service_list->add_column("standard", "billing_cycle", "billing_cycles.name");
 
 		// defaults
-		$service_list->columns		= array("name_service", "typeid", "units", "price", "included_units", "billing_cycle");
+		$service_list->columns		= array("name_service", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");
 		$service_list->columns_order	= array("name_service");
 
 		// define SQL structure
@@ -36,7 +37,6 @@ if (user_permissions_get('services_view'))
 		$service_list->sql_obj->prepare_sql_addfield("id", "services.id");
 		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = services.chartid");
 		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
-		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_units ON service_units.id = services.units");
 		$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
 
 		// acceptable filter options
@@ -71,6 +71,26 @@ if (user_permissions_get('services_view'))
 		}
 		else
 		{
+			// load any units from the DB
+			for ($i=0; $i < $service_list->data_num_rows; $i++)
+			{
+				// fetch name
+				if (preg_match("/^[0-9]*$/", $service_list->data[$i]["units"]))
+				{
+					$service_list->data[$i]["units"] = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $service_list->data[$i]["units"] ."'");
+				}
+
+
+				// if still 0, then just blank - not all service types
+				// have units - for example, generic_no_usage does not.
+				if ($service_list->data[$i]["units"] == "0")
+				{
+					$service_list->data[$i]["units"] = "";
+				}
+				
+			
+			}
+		
 
 			// details link
 			$structure = NULL;

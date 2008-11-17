@@ -119,11 +119,21 @@ if (user_permissions_get('customers_write'))
 
 			if ($services_customers_id)
 			{
+				// fetch service details
+				$sql_service_obj		= New sql_query;
+				$sql_service_obj->string	= "SELECT name_service, typeid, billing_cycle FROM services WHERE id='$serviceid' LIMIT 1";
+				$sql_service_obj->execute();
+				$sql_service_obj->fetch_array();
+
+				// fetch service type
+				$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_services_obj->data[0]["typeid"] ."' LIMIT 1");
+
+
 				// general
 				$structure = NULL;
 				$structure["fieldname"]		= "serviceid";
 				$structure["type"]		= "text";
-				$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name_service as value FROM services WHERE id='$serviceid' LIMIT 1");
+				$structure["defaultvalue"]	= $sql_service_obj->data[0]["name_service"];
 				$form->add_input($structure);
 
 				$structure = NULL;
@@ -131,13 +141,31 @@ if (user_permissions_get('customers_write'))
 				$structure["type"]		= "checkbox";
 				$structure["options"]["label"]	= "Service is enabled";
 				$form->add_input($structure);
+		
+	
+				// quantity field - licenses only
+				if ($service_type == "licenses")
+				{
+					$structure = NULL;
+					$structure["fieldname"] 	= "quantity_msg";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>Because this is a license service, you need to specifiy how many license in the box below. Note that this will only affect billing from the next invoice. If you wish to charge for usage between now and the next invoice, you will need to generate a manual invoice.</i>";
+					$form->add_input($structure);
+					
+					$structure = NULL;
+					$structure["fieldname"] 	= "quantity";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$form->add_input($structure);
+				}
 
 
+				
 				// billing
 				$structure = NULL;
 				$structure["fieldname"]		= "billing_cycle";
 				$structure["type"]		= "text";
-				$structure["defaultvalue"]	= sql_get_singlevalue("SELECT billing_cycles.name as value FROM services LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle WHERE services.id='$serviceid' LIMIT 1");
+				$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $sql_service_obj->data[0]["billing_cycle"] ."' LIMIT 1");
 				$form->add_input($structure);
 				
 				$structure = NULL;
@@ -211,6 +239,12 @@ if (user_permissions_get('customers_write'))
 			{
 				$form->subforms["service_edit"]		= array("serviceid", "active", "description");
 				$form->subforms["service_billing"]	= array("billing_cycle", "date_billed_first", "date_billed_last", "date_billed_next");
+
+
+				if ($service_type == "licenses")
+				{
+					$form->subforms["service_options_licenses"]	= array("quantity_msg", "quantity");
+				}
 			}
 			else
 			{
@@ -224,7 +258,7 @@ if (user_permissions_get('customers_write'))
 			// fetch the form data if editing
 			if ($services_customers_id)
 			{
-				$form->sql_query = "SELECT active, date_billed_first, date_billed_last, date_billed_next, description FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
+				$form->sql_query = "SELECT active, date_billed_first, date_billed_last, date_billed_next, quantity, description FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
 				$form->load_data();
 			}
 			else

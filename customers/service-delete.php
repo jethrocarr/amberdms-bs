@@ -9,7 +9,7 @@
 
 if (user_permissions_get('customers_write'))
 {
-	$id = $_GET["customerid"];
+	$customerid = $_GET["customerid"];
 	
 	// nav bar options.
 	$_SESSION["nav"]["active"]	= 1;

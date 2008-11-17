@@ -94,7 +94,9 @@ function services_form_plan_render($serviceid)
 			$structure["defaultvalue"]	= "<i>This section is where you define what units you wish to bill in, along with the cost of excess units. It is acceptable to leave the price for extra units set to 0.00 if you have some other method of handling excess usage (eg: rate shaping rather than billing). If you wish to create an uncapped/unlimited usage service, set both the price for extra units and the included units to 0.</i>";
 			$form->add_input($structure);
 
-			$structure = form_helper_prepare_radiofromdb("units", "SELECT id, name as label, description as label1 FROM service_units WHERE typeid='". $sql_plan_obj->data[0]["typeid"] ."' ORDER BY name");
+			$structure = NULL;
+			$structure["fieldname"]			= "units";
+			$structure["type"]			= "input";
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["autoselect"]	= "yes";	
 			$form->add_input($structure);
@@ -119,6 +121,41 @@ function services_form_plan_render($serviceid)
 			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits", "billing_mode");
 	
 		break;
+		
+		case "licenses":
+			/*
+				LICENSES
+
+			*/
+			$structure = NULL;
+			$structure["fieldname"]		= "plan_information";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<i>For licenses services, the price field and included units specify how much for the number of base licenses. The extra units price field specifies how much for additional licenses.</i>";
+			$form->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"]			= "units";
+			$structure["type"]			= "input";
+			$structure["options"]["req"]		= "yes";
+			$structure["options"]["autoselect"]	= "yes";
+			$form->add_input($structure);
+	
+			$structure = NULL;
+			$structure["fieldname"] 	= "included_units";
+			$structure["type"]		= "input";
+			$structure["options"]["req"]	= "yes";
+			$form->add_input($structure);
+			
+			$structure = NULL;
+			$structure["fieldname"] 	= "price_extraunits";
+			$structure["type"]		= "input";
+			$structure["options"]["req"]	= "yes";
+			$form->add_input($structure);
+
+			
+			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
+		break;
+
 
 		
 		case "time":
@@ -156,6 +193,7 @@ function services_form_plan_render($serviceid)
 		break;
 
 
+		case "licenses":
 		case "generic_no_usage":
 		default:
 			// no extra fields to display
@@ -268,10 +306,17 @@ function service_form_plan_process()
 	switch ($sql_plan_obj->data[0]["name"])
 	{
 		case "generic_with_usage":
-			$data["units"]			= security_form_input_predefined("int", "units", 1, "");
+			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
 			$data["billing_mode"]		= security_form_input_predefined("int", "billing_mode", 1, "");
+		break;
+
+
+		case "licenses":
+			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
+			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
+			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
 		break;
 
 		case "time":
@@ -334,6 +379,17 @@ function service_form_plan_process()
 			break;
 			
 
+			case "licenses":
+			
+				$sql_obj->string = "UPDATE services SET "
+						."price='". $data["price"] ."', "
+						."units='". $data["units"] ."', "
+						."price_extraunits='". $data["price_extraunits"] ."', "
+						."included_units='". $data["included_units"] ."', "
+						."billing_cycle='". $data["billing_cycle"] ."' "
+						."WHERE id='$id'";
+			break;
+			
 			case "generic_no_usage":
 			default:
 
