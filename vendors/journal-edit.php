@@ -21,6 +21,9 @@ if (user_permissions_get('vendors_write'))
 	$_SESSION["nav"]["query"][]	= "page=vendors/journal.php&id=$id";
 	$_SESSION["nav"]["current"]	= "page=vendors/journal.php&id=$id";
 
+	$_SESSION["nav"]["title"][]	= "Vendor's Invoices";
+	$_SESSION["nav"]["query"][]	= "page=vendors/invoices.php&id=$id";
+
 	if (user_permissions_get('vendors_write'))
 	{
 		$_SESSION["nav"]["title"][]	= "Delete Vendor";
