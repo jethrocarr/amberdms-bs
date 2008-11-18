@@ -7,7 +7,7 @@
 	Lists all the invoices belonging to the selected customer
 */
 
-if (user_permissions_get('accounts_ar_view'))
+if (user_permissions_get('customers_view'))
 {
 	$id = $_GET["id"];
 	
@@ -140,9 +140,12 @@ if (user_permissions_get('accounts_ar_view'))
 			else
 			{
 				// view link
-				$structure = NULL;
-				$structure["id"]["column"]	= "id";
-				$invoice_list->add_link("view", "accounts/ar/invoice-view.php", $structure);
+				if (user_permissions_get("account_ar_view"))
+				{
+					$structure = NULL;
+					$structure["id"]["column"]	= "id";
+					$invoice_list->add_link("view", "accounts/ar/invoice-view.php", $structure);
+				}
 
 				// display the table
 				$invoice_list->render_table();
