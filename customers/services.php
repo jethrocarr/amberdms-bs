@@ -22,6 +22,9 @@ if (user_permissions_get('customers_view'))
 	$_SESSION["nav"]["title"][]	= "Customer's Journal";
 	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$customerid";
 
+	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
+	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$customerid";
+	
 	$_SESSION["nav"]["title"][]	= "Customer's Services";
 	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$customerid";
 	$_SESSION["nav"]["current"]	= "page=customers/services.php&id=$customerid";

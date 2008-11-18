@@ -82,10 +82,22 @@ if (user_permissions_get('customers_view'))
 		}
 		else
 		{
-			// view link
+			// details link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$customer_list->add_link("view", "customers/view.php", $structure);
+			$customer_list->add_link("details", "customers/view.php", $structure);
+
+			// invoices link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$customer_list->add_link("invoices", "customers/invoices.php", $structure);
+
+			// services link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$customer_list->add_link("services", "customers/services.php", $structure);
+
+
 
 			// display the table
 			$customer_list->render_table();
