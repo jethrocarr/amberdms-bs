@@ -69,12 +69,12 @@ if (user_permissions_get('customers_view'))
 			$service_list->add_column("bool_tick", "active", "services_customers.active");
 			$service_list->add_column("standard", "typeid", "service_types.name");
 			$service_list->add_column("standard", "billing_cycles", "billing_cycles.name");
-			$service_list->add_column("date", "date_billed_next", "");
-			$service_list->add_column("date", "date_billed_last", "");
+			$service_list->add_column("date", "date_period_first", "");
+			$service_list->add_column("date", "date_period_next", "");
 			$service_list->add_column("standard", "description", "services_customers.description");
 
 			// defaults
-			$service_list->columns		= array("name_service", "active", "typeid", "date_billed_next", "date_billed_last", "description");
+			$service_list->columns		= array("name_service", "active", "typeid", "date_period_next", "description");
 			$service_list->columns_order	= array("name_service");
 
 			// define SQL structure

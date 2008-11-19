@@ -29,15 +29,12 @@ if (user_permissions_get('customers_write'))
 		if ($data["active"])
 			$data["active"]		= 1; // need to handle DB bool field
 		
-		$data["date_billed_last"]	= security_form_input_predefined("date", "date_billed_last", 0, "");
-		$data["date_billed_next"]	= security_form_input_predefined("date", "date_billed_next", 0, "");
-		
-		
 		// custom
 		$data["quantity"]		= security_form_input_predefined("int", "quantity", 0, "");
 
 		if (!$data["quantity"])
 			$data["quantity"] = 1;	// all services must have at least 1
+	
 	}
 	else
 	{
@@ -169,8 +166,6 @@ if (user_permissions_get('customers_write'))
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `services_customers` SET "
 							."active='". $data["active"] ."', "
-							."date_billed_last='". $data["date_billed_last"] ."', "
-							."date_billed_next='". $data["date_billed_next"] ."', "
 							."quantity='". $data["quantity"] ."', "
 							."description='". $data["description"] ."' "
 							."WHERE id='$services_customers_id'";

@@ -129,7 +129,7 @@ if (user_permissions_get('customers_write'))
 				$sql_service_obj->fetch_array();
 
 				// fetch service type
-				$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_services_obj->data[0]["typeid"] ."' LIMIT 1");
+				$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."' LIMIT 1");
 
 
 				// general
@@ -172,18 +172,13 @@ if (user_permissions_get('customers_write'))
 				$form->add_input($structure);
 				
 				$structure = NULL;
-				$structure["fieldname"] 	= "date_billed_first";
+				$structure["fieldname"] 	= "date_period_first";
 				$structure["type"]		= "text";
 				$form->add_input($structure);
 				
 				$structure = NULL;
-				$structure["fieldname"] 	= "date_billed_last";
-				$structure["type"]		= "date";
-				$form->add_input($structure);
-
-				$structure = NULL;
-				$structure["fieldname"] 	= "date_billed_next";
-				$structure["type"]		= "date";
+				$structure["fieldname"] 	= "date_period_next";
+				$structure["type"]		= "text";
 				$form->add_input($structure);
 			}
 			else
@@ -193,7 +188,7 @@ if (user_permissions_get('customers_write'))
 				$form->add_input($structure);
 			
 				$structure = NULL;
-				$structure["fieldname"] 	= "date_billed_first";
+				$structure["fieldname"] 	= "date_period_first";
 				$structure["type"]		= "date";
 				$structure["options"]["req"]	= "yes";
 				$structure["defaultvalue"]	= date("Y-m-d");
@@ -241,7 +236,7 @@ if (user_permissions_get('customers_write'))
 			if ($services_customers_id)
 			{
 				$form->subforms["service_edit"]		= array("serviceid", "active", "description");
-				$form->subforms["service_billing"]	= array("billing_cycle", "date_billed_first", "date_billed_last", "date_billed_next");
+				$form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
 
 
 				if ($service_type == "licenses")
@@ -251,7 +246,7 @@ if (user_permissions_get('customers_write'))
 			}
 			else
 			{
-				$form->subforms["service_add"]		= array("serviceid", "date_billed_first", "description");
+				$form->subforms["service_add"]		= array("serviceid", "date_period_first", "description");
 			}
 			
 			$form->subforms["hidden"]		= array("customerid", "services_customers_id");
@@ -261,7 +256,7 @@ if (user_permissions_get('customers_write'))
 			// fetch the form data if editing
 			if ($services_customers_id)
 			{
-				$form->sql_query = "SELECT active, date_billed_first, date_billed_last, date_billed_next, quantity, description FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
+				$form->sql_query = "SELECT active, date_period_first, date_period_next, quantity, description FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
 				$form->load_data();
 			}
 			else
