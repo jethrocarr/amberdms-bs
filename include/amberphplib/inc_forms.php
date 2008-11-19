@@ -899,7 +899,7 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 				{
 					if ($data["label$i"])
 					{
-						$label .= " - ". $data["label$i"];
+						$label .= " -- ". $data["label$i"];
 					}
 				}
 				
