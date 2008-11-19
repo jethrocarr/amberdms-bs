@@ -113,12 +113,12 @@ function services_form_plan_render($serviceid)
 			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
 
-			$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, description as label FROM service_billingmodes");
+			$structure = form_helper_prepare_radiofromdb("usage_mode", "SELECT id, description as label FROM service_usage_modes");
 			$structure["options"]["req"]		= "yes";
 			$form->add_input($structure);
 
 			
-			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits", "billing_mode");
+			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
 	
 		break;
 		
@@ -309,7 +309,7 @@ function service_form_plan_process()
 			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
-			$data["billing_mode"]		= security_form_input_predefined("int", "billing_mode", 1, "");
+			$data["usage_mode"]		= security_form_input_predefined("int", "usage_mode", 1, "");
 		break;
 
 
@@ -373,7 +373,7 @@ function service_form_plan_process()
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
-						."billing_mode='". $data["billing_mode"] ."' "
+						."usage_mode='". $data["usage_mode"] ."' "
 						."WHERE id='$id'";
 	
 			break;
