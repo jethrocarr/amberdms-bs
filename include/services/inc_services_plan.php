@@ -70,7 +70,6 @@ function services_form_plan_render($serviceid)
 	$form->add_input($structure);
 
 
-	$form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle");
 
 
 
@@ -88,6 +87,8 @@ function services_form_plan_render($serviceid)
 				could be counting the number of API requests, size of disk usage on a vhost, etc.
 			*/
 			
+
+			// custom
 			$structure = NULL;
 			$structure["fieldname"]		= "plan_information";
 			$structure["type"]		= "message";
@@ -117,8 +118,25 @@ function services_form_plan_render($serviceid)
 			$structure["options"]["req"]		= "yes";
 			$form->add_input($structure);
 
+
+			// general
+			$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+			$structure["options"]["req"]		= "yes";
+
+			// replace all the -- joiners with <br> for clarity
+			for ($i = 0; $i < count($structure["values"]); $i++)
+			{
+				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+				$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+			}
 			
-			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
+			$form->add_input($structure);
+
+
+
+			// subforms
+			$form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+			$form->subforms["service_plan_custom"]	= array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
 	
 		break;
 		
@@ -153,6 +171,23 @@ function services_form_plan_render($serviceid)
 			$form->add_input($structure);
 
 			
+			// general
+			$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes");
+			$structure["options"]["req"]		= "yes";
+			
+			// replace all the -- joiners with <br> for clarity
+			for ($i = 0; $i < count($structure["values"]); $i++)
+			{
+				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+				$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+			}
+
+			$form->add_input($structure);
+	
+
+			
+			// subforms
+			$form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
 			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
 		break;
 
@@ -187,8 +222,24 @@ function services_form_plan_render($serviceid)
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
+			
+			// general
+			$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+			$structure["options"]["req"]		= "yes";
+
+			// replace all the -- joiners with <br> for clarity
+			for ($i = 0; $i < count($structure["values"]); $i++)
+			{
+				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+				$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+			}
+	
+			$form->add_input($structure);
+
 
 			
+			// subforms
+			$form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
 			$form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
 		break;
 
@@ -197,7 +248,24 @@ function services_form_plan_render($serviceid)
 		case "generic_no_usage":
 		default:
 			// no extra fields to display
+
+			// general
+			$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes");
+			$structure["options"]["req"]		= "yes";
+			
+			// replace all the -- joiners with <br> for clarity
+			for ($i = 0; $i < count($structure["values"]); $i++)
+			{
+				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+				$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+			}
+
+			$form->add_input($structure);
+
+
 		
+			// subforms
+			$form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
 		break;
 	}
 
@@ -282,6 +350,7 @@ function service_form_plan_process()
 	// general details
 	$data["price"]			= security_form_input_predefined("money", "price", 0, "");
 	$data["billing_cycle"]		= security_form_input_predefined("int", "billing_cycle", 1, "");
+	$data["billing_mode"]		= security_form_input_predefined("int", "billing_mode", 1, "");
 
 	// needed to handle errors, but not used
 	$data["name_service"]		= security_form_input_predefined("any", "name_service", 0, "");
@@ -320,7 +389,7 @@ function service_form_plan_process()
 		break;
 
 		case "time":
-		case "data":
+		case "data_traffic":
 			$data["units"]			= security_form_input_predefined("int", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
@@ -352,14 +421,15 @@ function service_form_plan_process()
 		switch ($sql_plan_obj->data[0]["name"])
 		{
 			case "time":
-			case "data":
+			case "data_traffic":
 
 				$sql_obj->string = "UPDATE services SET "
 						."price='". $data["price"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
-						."billing_cycle='". $data["billing_cycle"] ."' "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
 	
 				
@@ -373,6 +443,7 @@ function service_form_plan_process()
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."', "
 						."usage_mode='". $data["usage_mode"] ."' "
 						."WHERE id='$id'";
 	
@@ -386,7 +457,8 @@ function service_form_plan_process()
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
-						."billing_cycle='". $data["billing_cycle"] ."' "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
 			break;
 			
@@ -395,7 +467,8 @@ function service_form_plan_process()
 
 				$sql_obj->string = "UPDATE services SET "
 						."price='". $data["price"] ."', "
-						."billing_cycle='". $data["billing_cycle"] ."' "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
 
 			break;
