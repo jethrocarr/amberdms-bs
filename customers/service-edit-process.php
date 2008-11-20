@@ -42,7 +42,7 @@ if (user_permissions_get('customers_write'))
 
 		// standard fields
 		$data["serviceid"]		= security_form_input_predefined("any", "serviceid", 1, "");
-		$data["date_billed_first"]	= security_form_input_predefined("date", "date_billed_first", 1, "");
+		$data["date_period_first"]	= security_form_input_predefined("date", "date_period_first", 1, "");
 	}
 
 
@@ -134,7 +134,7 @@ if (user_permissions_get('customers_write'))
 			*/
 			
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO `services_customers` (customerid, serviceid, date_billed_first, description) VALUES ('$customerid', '". $data["serviceid"] ."', '". $data["date_billed_first"] ."', '". $data["description"] ."')";
+			$sql_obj->string	= "INSERT INTO `services_customers` (customerid, serviceid, date_period_first, description) VALUES ('$customerid', '". $data["serviceid"] ."', '". $data["date_period_first"] ."', '". $data["description"] ."')";
 			
 			if (!$sql_obj->execute())
 			{
@@ -151,7 +151,7 @@ if (user_permissions_get('customers_write'))
 			if (!$_SESSION["error"]["message"])
 			{
 				$_SESSION["notification"]["message"][] = "New service added successfully. You now need to fill in any additional fields and activate the service.";
-				journal_quickadd_event("customers", $customerid, "New service ". $data["name_service"] ." added to account with start date of ". $data["date_billed_first"] ."");
+				journal_quickadd_event("customers", $customerid, "New service ". $data["name_service"] ." added to account with start date of ". $data["date_period_first"] ."");
 			}
 			
 			header("Location: ../index.php?page=customers/service-edit.php&customerid=$customerid&serviceid=$services_customers_id");

@@ -117,6 +117,9 @@ if (user_permissions_get('customers_view'))
 				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=$customerid\">Click here to add a new service to your customer</a>.</b></p>";
 			}
 
+			
+			print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=$customerid\">Automatically generate any new invoices</a>.</b></p>";
+
 		} // end if customer exists
 		
 	} // end page_render
