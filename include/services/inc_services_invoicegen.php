@@ -81,7 +81,7 @@ function service_periods_generate($customerid)
 
 					log_debug("inc_services_invoicegen", "Processing periodend/monthend service type");
 
-					if (time_date_to_timestamp($data["id"]) <= mktime())
+					if (time_date_to_timestamp($data["date_period_next"]) <= mktime())
 					{
 						// the latest billing period has finished, we need to generate a new time period.
 						if (!service_periods_add($data["id"], $billing_mode))
