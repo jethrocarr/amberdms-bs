@@ -159,4 +159,239 @@ function invoice_render_summarybox($type, $id)
 
 
 
+
+/*
+	CLASSES
+*/
+
+
+
+/*
+	CLASS: INVOICE
+
+	This class provides all functions for managing invoices and invoice items, including
+	adding/removing items, re-calculating taxes, creating new invoices and more.
+*/
+class invoice
+{
+	var $type;		// type of invoice - AR/QUOTE/AP
+	var $id;		// ID of invoice
+	
+	var $data;		// array for storage of all invoice data
+
+
+	/*
+		load_data
+
+		Loads the invoice data from the MySQL database.
+
+		Return Codes
+		0	failure
+		1	success
+	*/
+	function load_data()
+	{
+		log_debug("invoice", "Executing load_data()");
+		
+		// fetch invoice information from DB.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT * FROM account_". $this->type ." WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_debug("invoice", "No such invoice ". $this->id ." in account_". $this->type ."");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			// save all the data into class variables
+			$this->data = $sql_obj->data;
+
+			unset($sql_obj);
+		}
+
+		return 1;
+		
+	} // end of load_data
+
+
+
+	/*
+		prepare_code_invoice
+
+		Generate a code_invoice value for the invoice - either using one supplied to the function, or otherwise
+		by checking the DB and fetching a suitable code from there.
+
+		If a user requests to use a code_invoice that has already been allocated, the function will return failure.
+
+		Values
+		code_invoice		(optional) Request a code_invoice value to use
+
+		Results
+		0			failure
+		1			success
+	*/
+	function prepare_code_invoice($code_invoice = NULL)
+	{
+		log_debug("invoice", "Executing prepare_code_invoice($code_invoice)");
+
+
+		if ($code_invoice)
+		{
+			// user has provided a code_invoice
+			// we need to verify that it is not already in use by any other invoice.
+			
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM account_". $this->type ." WHERE code_invoice='". $code_invoice ."'";
+		
+			if ($this->data["id"])
+				$sql_obj->string .= " AND id!='". $this->data["id"] ."'";
+	
+			// for AP invoices, the ID only need to be unique for the particular vendor we are working with, since
+			// it's almost guaranteed that different vendors will use the same numbering scheme for their invoices
+			if ($this->type == "ap")
+				$sql_obj->string .= " AND vendorid='". $data["vendorid"] ."'";
+			
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				log_debug("invoice", "Warning: The requested invoice code is already in use by another invoice");
+				return 0;
+			}
+
+			unset($sql_obj);
+
+			// save code_invoice
+			$this->data["code_invoice"] = $code_invoice;
+		}
+		else
+		{
+			// generate an invoice ID using the database
+			$type_uc = strtoupper($this->type);
+			$this->data["code_invoice"] = config_generate_uniqueid("ACCOUNTS_". $type_uc ."_INVOICENUM", "SELECT id FROM account_". $this->type ." WHERE code_invoice='VALUE'");
+		}
+		
+		return 1;
+		
+	} // end of prepare_code_invoice
+
+
+
+
+
+	/*
+		action_create
+
+		Create a new invoice.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_create()
+	{
+		log_debug("invoice", "Executing action_create()");
+		
+		// create new invoice entry
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO account_". $this->type ." (code_invoice, date_create) VALUES ('".$this->data["code_invoice"]."', '". date("Y-m-d") ."')";
+		if (!$sql_obj->execute())
+		{
+			log_debug("invoice", "Failure whilst creating initial invoice entry.");
+			return 0;
+		}
+
+		$this->id = $sql_obj->fetch_insert_id();
+
+		unset($sql_obj);
+
+
+		// call the update function to process the invoice now that we have an ID for the DB row
+		if ($this->action_update())
+		{
+			log_debug("invoice", "Successfully created new invoice ". $this->id ."");
+			return 1;
+		}
+		
+		return 0;
+		
+	} // end of action_create
+
+
+
+	/*
+		action_update
+
+		Updates an existing invoice.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_update()
+	{
+		log_debug("invoice", "Executing action_update()");
+
+		// we must have an ID provided
+		if (!$this->id)
+		{
+			log_debug("invoice", "No invoice ID supplied to action_update function");
+			return 0;
+		}
+
+
+		// update the invoice details
+		$sql_obj = New sql_query;
+			
+		if ($type == "ap")
+		{
+			$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
+						."vendorid='". $this->data["vendorid"] ."', "
+						."employeeid='". $this->data["employeeid"] ."', "
+						."notes='". $this->data["notes"] ."', "
+						."code_invoice='". $this->data["code_invoice"] ."', "
+						."code_ordernumber='". $this->data["code_ordernumber"] ."', "
+						."code_ponumber='". $this->data["code_ponumber"] ."', "
+						."date_trans='". $this->data["date_trans"] ."', "
+						."date_due='". $this->data["date_due"] ."', "
+						."dest_account='". $this->data["dest_account"] ."' "
+						."WHERE id='". $this->id ."'";
+		}
+		else
+		{
+			$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
+						."customerid='". $this->data["customerid"] ."', "
+						."employeeid='". $this->data["employeeid"] ."', "
+						."notes='". $this->data["notes"] ."', "
+						."code_invoice='". $this->data["code_invoice"] ."', "
+						."code_ordernumber='". $this->data["code_ordernumber"] ."', "
+						."code_ponumber='". $this->data["code_ponumber"] ."', "
+						."date_trans='". $this->data["date_trans"] ."', "
+						."date_due='". $this->data["date_due"] ."', "
+						."dest_account='". $this->data["dest_account"] ."' "
+						."WHERE id='". $this->id ."'";
+		}
+		
+		if (!$sql_obj->execute())
+		{
+			log_debug("invoice", "An error occured whilst attempting to update the invoice");
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
+		
+	} // end of action_update
+
+
+
+} // END OF INVOICE CLASS
+
+
+
 ?>

@@ -234,6 +234,15 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 {
 	log_debug("inc_invoices_forms", "Executing invoice_form_details_process($type, $mode, $returnpage_error, $returnpage_success)");
 
+	// TODO: it seems this function requests the $mode, but then works it out itself anyway.
+	// check out what is going on here.
+
+	/*
+		Start the invoice
+	*/
+	$invoice	= New invoice;
+	$invoice->type	= $type;
+	
 	
 	/*
 		Fetch all form data
@@ -243,49 +252,45 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	// get the ID for an edit
 	if ($mode == "edit")
 	{
-		$id = security_form_input_predefined("int", "id_invoice", 1, "");
-	}
-	else
-	{
-		$id = NULL;
+		$invoice->id = security_form_input_predefined("int", "id_invoice", 1, "");
 	}
 	
 
 	// general details
 	if ($type == "ap")
 	{
-		$data["vendorid"]		= security_form_input_predefined("int", "vendorid", 1, "");
+		$invoice->data["vendorid"]	= security_form_input_predefined("int", "vendorid", 1, "");
 	}
 	else
 	{
-		$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
+		$invoice->data["customerid"]	= security_form_input_predefined("int", "customerid", 1, "");
 	}
 	
-	$data["employeeid"]		= security_form_input_predefined("int", "employeeid", 1, "");
-	$data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
+	$invoice->data["employeeid"]		= security_form_input_predefined("int", "employeeid", 1, "");
+	$invoice->data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
 	
-	$data["code_ordernumber"]	= security_form_input_predefined("any", "code_ordernumber", 0, "");
-	$data["code_ponumber"]		= security_form_input_predefined("any", "code_ponumber", 0, "");
-	$data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
-	$data["date_due"]		= security_form_input_predefined("date", "date_due", 1, "");
+	$invoice->data["code_ordernumber"]	= security_form_input_predefined("any", "code_ordernumber", 0, "");
+	$invoice->data["code_ponumber"]		= security_form_input_predefined("any", "code_ponumber", 0, "");
+	$invoice->data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
+	$invoice->data["date_due"]		= security_form_input_predefined("date", "date_due", 1, "");
 
 	// other
-	$data["dest_account"]		= security_form_input_predefined("int", "dest_account", 1, "");
+	$invoice->data["dest_account"]		= security_form_input_predefined("int", "dest_account", 1, "");
 
 
 	// are we editing an existing invoice or adding a new one?
-	if ($id)
+	if ($invoice->id)
 	{
 		$mode = "edit";
 
 		// make sure the account actually exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `account_$type` WHERE id='$id'";
+		$sql_obj->string	= "SELECT id FROM `account_". $invoice->type ."` WHERE id='". $invoice->id ."'";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - $id - does not exist in this system.";
+			$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - ". $invoice->id ." - does not exist in this system.";
 		}
 	}
 	else
@@ -297,37 +302,22 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	// invoice must be provided by edit page, but not by add invoice, since we can just generate a new one
 	if ($mode == "add")
 	{
-		$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
+		$this->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
 	}
 	else
 	{
-		$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
+		$this->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
 	}
+
+
 
 	//// ERROR CHECKING ///////////////////////
 
 
 	// make sure we don't choose a invoice invoice number that is already in use
-	if ($data["code_invoice"])
+	if ($invoice->data["code_invoice"])
 	{
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `account_$type` WHERE code_invoice='". $data["code_invoice"] ."'";
-		
-		if ($id)
-			$sql_obj->string .= " AND id!='$id'";
-	
-		// for AP invoices, the ID only need to be unique for the particular vendor we are working with, since
-		// it's almost guaranteed that different vendors will use the same numbering scheme for their invoices
-		if ($type == "ap")
-			$sql_obj->string .= " AND vendorid='". $data["vendorid"] ."'";
-			
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$_SESSION["error"]["message"][]		= "This invoice number is already in use by another invoice. Please choose a unique number, or leave it blank to recieve an automatically generated number.";
-			$_SESSION["error"]["name_chart-error"]	= 1;
-		}
+		$invoice->prepare_code_invoice($invoice->data["code_invoice"]);
 	}
 
 
@@ -335,94 +325,51 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"][$type ."_invoice_". $mode] = "failed";
-		header("Location: ../../index.php?page=$returnpage_error&id=$id");
+		header("Location: ../../index.php?page=$returnpage_error&id=". $invoice->id ."");
 		exit(0);
 	}
 	else
 	{
 		// GENERATE INVOICE ID
 		// if no invoice ID has been supplied, we now need to generate a unique invoice id
-		if (!$data["code_invoice"])
-			$data["code_invoice"] = invoice_generate_invoiceid($type);
+		if (!$invoice->data["code_invoice"])
+		{
+			$invoice->prepare_code_invoice();
+		}
 
 		// APPLY GENERAL OPTIONS
 		if ($mode == "add")
 		{
-			/*
-				Create new invoice
-			*/
-			
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO `account_$type` (code_invoice, date_create) VALUES ('".$data["code_invoice"]."', '". date("Y-m-d") ."')";
-			if (!$sql_obj->execute())
+			// create a new invoice
+			if ($invoice->action_create())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create invoice";
+				$_SESSION["notification"]["message"][] = "Invoice successfully created.";
+				journal_quickadd_event("account_". $invoice->type ."", $invoice->id, "Invoice successfully created");
 			}
-
-			$id = $sql_obj->fetch_insert_id();
+			else
+			{
+				$_SESSION["error"]["message"] = "An error occured whilst attempting to create the invoice";
+			}
+		}
+		else
+		{
+			// update an existing invoice
+			if ($invoice->action_update())
+			{
+				$_SESSION["notification"]["message"][] = "Invoice successfully updated.";
+				journal_quickadd_event("account_". $invoice->type ."", $invoice->id, "Invoice successfully updated");
+			}
+			else
+			{
+				$_SESSION["error"]["message"] = "An error occured whilst attempting to update the invoice";
+			}
 		}
 
-		if ($id)
-		{
-			/*
-				Update general invoice details
-			*/
+		
+		// display updated details
+		header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
+		exit(0);
 			
-			$sql_obj = New sql_query;
-			
-			if ($type == "ap")
-			{
-				$sql_obj->string = "UPDATE `account_$type` SET "
-							."vendorid='". $data["vendorid"] ."', "
-							."employeeid='". $data["employeeid"] ."', "
-							."notes='". $data["notes"] ."', "
-							."code_invoice='". $data["code_invoice"] ."', "
-							."code_ordernumber='". $data["code_ordernumber"] ."', "
-							."code_ponumber='". $data["code_ponumber"] ."', "
-							."date_trans='". $data["date_trans"] ."', "
-							."date_due='". $data["date_due"] ."', "
-							."dest_account='". $data["dest_account"] ."' "
-							."WHERE id='$id'";
-			}
-			else
-			{
-				$sql_obj->string = "UPDATE `account_$type` SET "
-							."customerid='". $data["customerid"] ."', "
-							."employeeid='". $data["employeeid"] ."', "
-							."notes='". $data["notes"] ."', "
-							."code_invoice='". $data["code_invoice"] ."', "
-							."code_ordernumber='". $data["code_ordernumber"] ."', "
-							."code_ponumber='". $data["code_ponumber"] ."', "
-							."date_trans='". $data["date_trans"] ."', "
-							."date_due='". $data["date_due"] ."', "
-							."dest_account='". $data["dest_account"] ."' "
-							."WHERE id='$id'";
-			}
-			
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";
-			}
-			else
-			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Invoice successfully created.";
-					journal_quickadd_event("account_$type", $id, "Invoice successfully created");
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Invoice successfully updated.";
-					journal_quickadd_event("account_$type", $id, "Invoice successfully updated");
-				}
-				
-			}
-
-			// display updated details
-			header("Location: ../../index.php?page=$returnpage_success&id=$id");
-			exit(0);
-			
-		} // end if ID
 
 	} // end if passed tests
 
