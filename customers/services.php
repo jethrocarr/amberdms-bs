@@ -97,6 +97,12 @@ if (user_permissions_get('customers_view'))
 			}
 			else
 			{
+				// history link
+				$structure = NULL;
+				$structure["customerid"]["value"]	= $customerid;
+				$structure["serviceid"]["column"]	= "id";
+				$service_list->add_link("history", "customers/service-history.php", $structure);
+				
 				// edit link
 				$structure = NULL;
 				$structure["customerid"]["value"]	= $customerid;
