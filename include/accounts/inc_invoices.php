@@ -390,6 +390,100 @@ class invoice
 
 
 
+	/*
+		action_delete
+
+		Deletes an existing invoice.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_delete()
+	{
+		log_debug("invoice", "Executing action_delete()");
+
+		// we must have an ID provided
+		if (!$this->id)
+		{
+			log_debug("invoice", "No invoice ID supplied to action_delete function");
+			return 0;
+		}
+
+
+		// track errors
+		$error = 0;
+
+	
+		// delete invoice itself
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."'";
+		
+		if (!$sql_obj->execute())
+		{
+			$error = 1;
+			log_debug("invoice", "Error: Problem occured whilst deleting invoice from acccount_". $this->type ."");
+		}
+
+		// delete all the item options
+		$sql_item_obj		= New sql_query;
+		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
+		$sql_item_obj->execute();
+		
+
+		if ($sql_item_obj->num_rows())
+		{
+			$sql_item_obj->fetch_array();
+
+			foreach ($sql_item_obj->data as $data)
+			{
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data["id"] ."'";
+				
+				if (!$sql_obj->execute())
+				{
+					$error = 1;
+					log_debug("invoice", "Error: Problem occured whilst deleting invoice item option records");
+				}
+			}
+		}
+
+
+		// delete all the invoice items
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
+		
+		if (!$sql_obj->execute())
+		{
+			$error = 1;
+			log_debug("invoice", "Error: Problem occured whilst deleting invoice item");
+		}
+		
+		// delete invoice journal entries
+		journal_delete_entire("account_". $this->type ."", $this->id);
+
+
+		// delete invoice transactions
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='". $this->type ."' || type='". $this->type ."_tax' || type='". $this->type ."_pay') AND customid='". $this->id ."'";
+		
+		if (!$sql_obj->execute())
+		{
+			$error = 1;
+			log_debug("invoice", "Error: Problem occured whilst deleting invoice transactions");
+		}
+
+
+		if ($error)
+		{
+			return 0;
+		}
+		
+		return 1;
+		
+	} // end of action_delete
+
+
 } // END OF INVOICE CLASS
 
 

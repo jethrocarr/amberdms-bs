@@ -198,44 +198,23 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 	else
 	{
 
-		// delete invoice itself
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_$type WHERE id='$id'";
-		$sql_obj->execute();
+		/*
+			Delete Invoice
+		*/
+		$invoice	= New invoice;
+		$invoice->id	= $id;
+		$invoice->type	= $type;
 
-		// delete all the item options
-		$sql_item_obj		= New sql_query;
-		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='$type' AND invoiceid='$id'";
-		$sql_item_obj->execute();
-
-		if ($sql_item_obj->num_rows())
+		if ($invoice->action_delete())
 		{
-			$sql_item_obj->fetch_array();
-
-			foreach ($sql_item_obj->data as $data)
-			{
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data["id"] ."'";
-				$sql_obj->execute();
-			}
+			$_SESSION["notification"]["message"][] = "Invoice has been successfully deleted.";
+		}
+		else
+		{
+			$_SESSION["error"]["message"][] = "Some problems were experienced while deleting the invoice.";
 		}
 
-
-		// delete all the invoice items
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_items WHERE invoicetype='$type' AND invoiceid='$id'";
-		$sql_obj->execute();
-				
-		// delete invoice journal entries
-		journal_delete_entire("account_$type", $id);
-
-
-		// delete invoice transactions
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='$type' || type='". $type ."_tax' || type='". $type ."_pay') AND customid='$id'";
-		$sql_obj->execute();
 		
-	
 		// display updated details
 		header("Location: ../../index.php?page=$returnpage_success&id=$id");
 		exit(0);
