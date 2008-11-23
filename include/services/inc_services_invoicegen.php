@@ -283,9 +283,11 @@ function service_periods_add($services_customers_id, $billing_mode)
 
 	/*
 		Add a new period
+
+		We set the date_billed value to today, so that the invoicing code will process it.
 	*/
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "INSERT INTO services_customers_periods (services_customers_id, date_start, date_end) VALUES ('$services_customers_id', '$date_period_start', '$date_period_end')";
+	$sql_obj->string	= "INSERT INTO services_customers_periods (services_customers_id, date_start, date_end, date_billed) VALUES ('$services_customers_id', '$date_period_start', '$date_period_end', '". date("Y-m-d") ."')";
 	$sql_obj->execute();
 
 			
@@ -300,6 +302,226 @@ function service_periods_add($services_customers_id, $billing_mode)
 
 	return 1;
 }
+
+
+
+
+
+
+
+/*
+	service_invoices_generate
+
+	Processes all the service periods for customers, and bills accordingly. All the calcuations to work out which
+	services need to be billed have been performed by the service_periods_generate function, so this function
+	simply needs to get a list of unbilled invoices from services_customers_periods and perform billing.
+
+	This function is smart enough to put multiple services on the same invoice if they fall on the same billing date.
+
+	Values
+	customerid		(optional) ID of the customer account to generate new period
+				information for. If blank, will execute for all customers.
+
+	Results
+	0			failure
+	1			success
+*/
+function service_invoices_generate($customerid)
+{
+	log_debug("inc_services_invoicegen", "Executing service_invoices_generate($customerid)");
+
+
+
+	/*
+		Run through all the customers
+	*/
+	$sql_customers_obj		= New sql_query;
+	$sql_customers_obj->string	= "SELECT id FROM customers";
+
+	if ($customerid)
+		$sql_customers_obj->string .= " WHERE id='$customerid'";
+
+
+	$sql_customers_obj->execute();
+
+	if ($sql_customers_obj->num_rows())
+	{
+		$sql_customers_obj->fetch_array();
+
+
+		foreach ($sql_customers_obj->data as $data)
+		{
+			/*
+				Fetch all periods belonging to this customer which need to be billed.
+			*/
+
+			$sql_periods_obj		= New sql_query;
+			$sql_periods_obj->string	= "SELECT "
+								."services_customers_periods.id, "
+								."services_customers_periods.invoiceid, "
+								."services_customers_periods.date_start, "
+								."services_customers_periods.date_end "
+								."FROM services_customers_periods "
+								."LEFT JOIN services_customers ON services_customers.id = services_customers_periods.services_customers_id "
+								."WHERE "
+								."services_customers.customerid='". $data["id"] ."' "
+								."AND invoiceid = '0' "
+								."AND date_billed <= '". date("Y-m-d")."'";
+			$sql_periods_obj->execute();
+
+			if ($sql_periods_obj->num_rows())
+			{
+				/*
+					BILL CUSTOMER
+
+					This customer has at least one service that needs to be billed. We need to create
+					a new invoice, and then process each service, adding the services to the invoice as 
+					items.
+				*/
+
+
+
+				/*
+					Create new invoice
+				*/
+				$invoice	= New invoice;
+				
+				$invoice->data["customer"]	= $data["customer"];
+
+
+				/*
+					Fetch tax requirements from customer and add to invoice
+				*/
+
+				
+
+
+				/*
+					Fetch service details and add an item to the invoice
+				*/
+				foreach ($sql_periods_obj->data as $period_data)
+				{
+					
+				}
+
+
+				/*
+					Save Invoice
+				*/
+				$invoice->action_create();
+			}
+
+
+
+		foreach ($sql_customers_obj->data as $data)
+		{
+			/*
+				Run through all the 
+
+
+		
+			/*
+				Based on the billing mode, we now need to determine what date we need to create the next plan entry
+				for the selected service.
+			*/
+
+			$billing_mode = sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $data["billing_mode"] ."'");
+			
+			switch ($billing_mode)
+			{
+				case "monthend":
+				case "periodend":
+					/*
+						PERIODEND or MONTHEND
+
+						Create a new period on the date set in services_customers.date_period_next.
+
+						Both periodend and monthend are treated the same way, the only difference is that when the new period
+						is created, the date with either be +1 month (periodend), or the last day in the following month (monthend)
+					*/
+
+					log_debug("inc_services_invoicegen", "Processing periodend/monthend service type");
+
+					if (time_date_to_timestamp($data["date_period_next"]) <= mktime())
+					{
+						// the latest billing period has finished, we need to generate a new time period.
+						if (!service_periods_add($data["id"], $billing_mode))
+						{
+							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
+							return 0;
+						}
+					}
+				
+				break;
+
+				case "periodadvance":
+				case "monthadvance":
+					/*
+						PERIODADVANCE or MONTHADVANCE
+
+						Create a new period in advance of the actual date that the period begins.
+
+						Example Scenario:
+							services_customers.date_period_next	== 28-03-2008
+							ACCOUNTS_SERVICES_ADVANCEBILLING	== 20 (days)
+
+							Date to generate new period and issue invoice will be 08-03-2008, which
+							is 20 days before the billing period begins.
+
+						If the date_period_next value is equal or less than todays date + ACCOUNTS_SERVICES_ADVANCEBILLING, then
+						we need to generate a new billing period.
+							
+					*/
+					
+					log_debug("inc_services_invoicegen", "Processing periodadvance/monthadvance service type");
+
+
+					// calculate period next date in the future
+					$date_period_next = mktime(0, 0, 0, date("m"), date("d")+$accounts_services_advancebilling, date("Y"));
+
+					if (time_date_to_timestamp($data["date_period_next"]) <= $date_period_next)
+					{
+						log_debug("inc_services_invoicegen", "Generating advance billing period for service with next billing date of $date_period_next");
+
+
+						// generate the new billing period (in advance)
+						if (!service_periods_add($data["id"], $billing_mode))
+						{
+							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
+							return 0;
+						}
+					}
+				
+				break;
+
+				default:
+					$_SESSION["error"]["message"][] = "Unknown billing mode ". $data["billing_mode"] ." provided.";
+					return 0;
+				break;
+			}
+
+		} // loop through services
+	}
+	else
+	{
+		log_debug("inc_services_invoicegen", "No services assigned to customer $customerid");
+	}
+
+
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
