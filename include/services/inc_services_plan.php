@@ -244,7 +244,6 @@ function services_form_plan_render($serviceid)
 		break;
 
 
-		case "licenses":
 		case "generic_no_usage":
 		default:
 			// no extra fields to display
