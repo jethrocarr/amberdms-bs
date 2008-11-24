@@ -137,7 +137,7 @@ if (user_permissions_get('customers_view'))
 				{
 					if ($service_list->data[$i]["code_invoice"])
 					{
-						$service_list->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $service_list->data[$i]["invoiceid"] ."\">AR ". $service_list->data[$i]["code_invoice"] ."</a>";
+						$service_list->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $service_list->data[$i]["invoiced"] ."\">AR ". $service_list->data[$i]["code_invoice"] ."</a>";
 					}
 				}
 				

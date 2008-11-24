@@ -692,6 +692,23 @@ function service_invoices_generate($customerid = NULL)
 
 					unset($invoice);
 
+
+
+					/*
+						Update period information with invoiceid
+					*/
+					
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
+					$sql_obj->execute();
+
+
+					/*
+						Send the invoice to the customer
+					*/
+					
+					// TODO: write this.
+
 					
 				} // end of processing periods
 
