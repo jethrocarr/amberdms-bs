@@ -84,7 +84,7 @@ if (user_permissions_get('vendors_write'))
 	}
 
 
-	// make sure we don't choose a customer code that has already been taken
+	// make sure we don't choose a vendor code that has already been taken
 	if ($data["code_vendor"])
 	{
 		$mysql_string	= "SELECT id FROM `vendors` WHERE code_vendor='". $data["code_vendor"] ."'";
