@@ -99,11 +99,7 @@ if (user_permissions_get('vendors_write'))
 			$_SESSION["error"]["code_vendor-error"] = 1;
 		}
 	}
-	else
-	{
-		// generate a unique vendor code
-		$data["code_vendor"] = config_generate_uniqueid("CODE_VENDOR", "SELECT id FROM vendors WHERE code_vendor='VALUE'");
-	}
+	
 
 
 
@@ -126,6 +122,14 @@ if (user_permissions_get('vendors_write'))
 	}
 	else
 	{
+
+		// generate a unique vendor code
+		if (!$data["code_vendor"])
+		{
+			$data["code_vendor"] = config_generate_uniqueid("CODE_VENDOR", "SELECT id FROM vendors WHERE code_vendor='VALUE'");
+		}
+
+	
 		if ($mode == "add")
 		{
 			// create a new entry in the DB

@@ -100,11 +100,7 @@ if (user_permissions_get('customers_write'))
 			$_SESSION["error"]["code_customer-error"] = 1;
 		}
 	}
-	else
-	{
-		// generate a unique customer code
-		$data["code_customer"] = config_generate_uniqueid("CODE_CUSTOMER", "SELECT id FROM customers WHERE code_customer='VALUE'");
-	}
+
 
 
 	/// if there was an error, go back to the entry page
@@ -125,6 +121,12 @@ if (user_permissions_get('customers_write'))
 	}
 	else
 	{
+		if (!$data["code_customer"])
+		{
+			// generate a unique customer code
+			$data["code_customer"] = config_generate_uniqueid("CODE_CUSTOMER", "SELECT id FROM customers WHERE code_customer='VALUE'");
+		}
+	
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
