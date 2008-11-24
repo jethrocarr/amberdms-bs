@@ -18,6 +18,7 @@ if (user_permissions_get('customers_view'))
 		$customer_list->tablename	= "customer_list";
 
 		// define all the columns and structure
+		$customer_list->add_column("standard", "code_customer", "");
 		$customer_list->add_column("standard", "name_customer", "");
 		$customer_list->add_column("standard", "name_contact", "");
 		$customer_list->add_column("standard", "contact_phone", "");
@@ -31,7 +32,7 @@ if (user_permissions_get('customers_view'))
 		$customer_list->add_column("standard", "address1_country", "");
 
 		// defaults
-		$customer_list->columns		= array("name_customer", "name_contact", "contact_phone", "contact_email");
+		$customer_list->columns		= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
 		$customer_list->columns_order	= array("name_customer");
 
 		// define SQL structure
@@ -54,7 +55,7 @@ if (user_permissions_get('customers_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$structure["sql"]	= "code_customer LIKE '%value%' OR name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
 		$customer_list->add_filter($structure);
 
 

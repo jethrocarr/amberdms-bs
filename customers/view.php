@@ -69,6 +69,12 @@ if (user_permissions_get('customers_view'))
 
 			// general
 			$structure = NULL;
+			$structure["fieldname"] 	= "code_customer";
+			$structure["type"]		= "input";
+			$structure["options"]["req"]	= "yes";
+			$form->add_input($structure);
+			
+			$structure = NULL;
 			$structure["fieldname"] 	= "name_customer";
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
@@ -207,12 +213,12 @@ if (user_permissions_get('customers_view'))
 						
 			
 			// define subforms
-			$form->subforms["customer_view"]	= array("name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+			$form->subforms["customer_view"]	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
 			$form->subforms["customer_taxes"]	= array("tax_number", "tax_default");
 			$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 			$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
-			$form->subforms["hidden"]	= array("id_customer");
-			$form->subforms["submit"]	= array("submit");
+			$form->subforms["hidden"]		= array("id_customer");
+			$form->subforms["submit"]		= array("submit");
 
 			
 			// fetch the form data

@@ -18,12 +18,13 @@ if (user_permissions_get('customers_write'))
 
 	$id				= security_form_input_predefined("int", "id_customer", 0, "");
 	
-	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 1, "You must set a customer name");
+	$data["code_customer"]		= security_form_input_predefined("any", "code_customer", 0, "");
+	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 1, "");
 	$data["name_contact"]		= security_form_input_predefined("any", "name_contact", 0, "");
 	
 	$data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
 	$data["contact_fax"]		= security_form_input_predefined("any", "contact_fax", 0, "");
-	$data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
+	$data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "");
 	$data["date_start"]		= security_form_input_predefined("date", "date_start", 0, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
 
@@ -84,6 +85,28 @@ if (user_permissions_get('customers_write'))
 	}
 
 
+	// make sure we don't choose a customer code that has already been taken
+	if ($data["code_customer"])
+	{
+		$mysql_string	= "SELECT id FROM `customers` WHERE code_customer='". $data["code_customer"] ."'";
+		if ($id)
+			$mysql_string .= " AND id!='$id'";
+		$mysql_result	= mysql_query($mysql_string);
+		$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+		if ($mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "This customer code is already used for another customer - please choose a unique code, or leave it blank to recieve an auto-generated field.";
+			$_SESSION["error"]["code_customer-error"] = 1;
+		}
+	}
+	else
+	{
+		// generate a unique customer code
+		$data["code_customer"] = config_generate_uniqueid("CODE_CUSTOMER", "SELECT id FROM customers WHERE code_customer='VALUE'");
+	}
+
+
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
@@ -118,6 +141,7 @@ if (user_permissions_get('customers_write'))
 		{
 			// update customer details
 			$mysql_string = "UPDATE `customers` SET "
+						."code_customer='". $data["code_customer"] ."', "
 						."name_customer='". $data["name_customer"] ."', "
 						."name_contact='". $data["name_contact"] ."', "
 						."contact_phone='". $data["contact_phone"] ."', "
