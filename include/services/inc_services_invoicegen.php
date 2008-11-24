@@ -28,7 +28,7 @@
 	0			failure
 	1			success
 */
-function service_periods_generate($customerid)
+function service_periods_generate($customerid = NULL)
 {
 	log_debug("inc_services_invoicegen", "Executing service_periods_generate($customerid)");
 
@@ -326,7 +326,7 @@ function service_periods_add($services_customers_id, $billing_mode)
 	0			failure
 	1			success
 */
-function service_invoices_generate($customerid)
+function service_invoices_generate($customerid = NULL)
 {
 	log_debug("inc_services_invoicegen", "Executing service_invoices_generate($customerid)");
 
@@ -349,7 +349,7 @@ function service_invoices_generate($customerid)
 		$sql_customers_obj->fetch_array();
 
 
-		foreach ($sql_customers_obj->data as $data)
+		foreach ($sql_customers_obj->data as $customer_data)
 		{
 			/*
 				Fetch all periods belonging to this customer which need to be billed.
@@ -360,17 +360,22 @@ function service_invoices_generate($customerid)
 								."services_customers_periods.id, "
 								."services_customers_periods.invoiceid, "
 								."services_customers_periods.date_start, "
-								."services_customers_periods.date_end "
+								."services_customers_periods.date_end, "
+								."services_customers.quantity, "
+								."services_customers.description, "
+								."services_customers.serviceid "
 								."FROM services_customers_periods "
 								."LEFT JOIN services_customers ON services_customers.id = services_customers_periods.services_customers_id "
 								."WHERE "
-								."services_customers.customerid='". $data["id"] ."' "
+								."services_customers.customerid='". $customer_data["id"] ."' "
 								."AND invoiceid = '0' "
 								."AND date_billed <= '". date("Y-m-d")."'";
 			$sql_periods_obj->execute();
 
 			if ($sql_periods_obj->num_rows())
 			{
+				$sql_periods_obj->fetch_array();
+
 				/*
 					BILL CUSTOMER
 
@@ -384,123 +389,315 @@ function service_invoices_generate($customerid)
 				/*
 					Create new invoice
 				*/
-				$invoice	= New invoice;
+				$invoice		= New invoice;
+				$invoice->type		= "ar";
 				
-				$invoice->data["customer"]	= $data["customer"];
+				$invoice->prepare_code_invoice();
+				
+				$invoice->data["customerid"]	= $customer_data["id"];
+				$invoice->data["employeeid"]	= 1;				// set employee to the default internal user
+
+
+				/*
+					TODO: Determine optimal solution for dest_account in service invoices.
+					
+					To determine the dest_account for use in the invoice, we fetch the first AR account in the list - a
+					better solution needs to be worked out, since it is possible that a user might have more than 1
+					AR summary account.
+				*/
+					
+
+				// fetch the ID of the summary type label
+				$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='ar_summary_account'");
+
+				// fetch the top AR account
+				$sql_query	= "SELECT "
+						."account_charts.id as value "
+						."FROM account_charts "
+						."LEFT JOIN account_charts_menus ON account_charts_menus.chartid = account_charts.id "
+						."WHERE account_charts_menus.menuid='$menuid' "
+						."LIMIT 1";
+								
+				$invoice->data["dest_account"]	= sql_get_singlevalue($sql_query);
+
+				if (!$invoice->data["dest_account"])
+				{
+					log_debug("services_invoicegen", "Error: No AR summary account could be found");
+					return 0;
+				}
+
+
+				if (!$invoice->action_create())
+				{
+					log_debug("services_invoicegen","Error: Unexpected problem occured whilst attempting to create invoice.");
+					return 0;
+				}
+
+				$invoiceid = $invoice->id;
+				unset($invoice);
+
 
 
 				/*
 					Fetch tax requirements from customer and add to invoice
 				*/
-
+// TODO: write this:
+// need to add tax support to customer's page
+/*
+				$invoice_item			= New invoice_items;
 				
+				$invoice_item->id_invoice	= $invoiceid;
+				
+				$invoice_item->type_invoice	= "ar";
+				$invoice_item->type_item	= "tax";
+				
+
+				$itemdata = array();
+				$itemdata["customid"]	= TAX ID
+				$invoice_item->prepare_data($itemdata);
+				$invoice_item->action_create();
+
+*/
+
 
 
 				/*
-					Fetch service details and add an item to the invoice
+					Create Service Items
+										
+					We need to create an item for basic service plan - IE: the regular fixed fee, and another item for any
+					excess usage.
 				*/
 				foreach ($sql_periods_obj->data as $period_data)
 				{
+					// fetch service details
+					$sql_service_obj		= New sql_query;
+					$sql_service_obj->string	= "SELECT * FROM services WHERE id='". $period_data["serviceid"] . "' LIMIT 1";
+					$sql_service_obj->execute();
+					$sql_service_obj->fetch_array();
+
+					// fetch service type
+					$service_type = sql_get_singlevalue("SELECT name FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."'");
 					
-				}
 
 
-				/*
-					Save Invoice
-				*/
-				$invoice->action_create();
-			}
-
-
-
-		foreach ($sql_customers_obj->data as $data)
-		{
-			/*
-				Run through all the 
-
-
-		
-			/*
-				Based on the billing mode, we now need to determine what date we need to create the next plan entry
-				for the selected service.
-			*/
-
-			$billing_mode = sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $data["billing_mode"] ."'");
-			
-			switch ($billing_mode)
-			{
-				case "monthend":
-				case "periodend":
 					/*
-						PERIODEND or MONTHEND
+						Service Base Plan Item
+					*/
+					
+					
+					// start the item
+					$invoice_item				= New invoice_items;
+					
+					$invoice_item->id_invoice		= $invoiceid;
+					
+					$invoice_item->type_invoice		= "ar";
+					$invoice_item->type_item		= "standard";
+					
+					$itemdata = array();
 
-						Create a new period on the date set in services_customers.date_period_next.
 
-						Both periodend and monthend are treated the same way, the only difference is that when the new period
-						is created, the date with either be +1 month (periodend), or the last day in the following month (monthend)
+					// chart ID
+					$itemdata["chartid"]		= $sql_service_obj->data[0]["chartid"];
+
+					// description
+					$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+					$itemdata["description"]	.= "\n\n";
+					$itemdata["description"]	.= $period_data["description"];
+
+					// amount
+					$itemdata["amount"]		= $sql_service_obj->data[0]["price"];
+
+					// create item
+					$invoice_item->prepare_data($itemdata);
+					$invoice_item->action_create();
+
+					unset($invoice_item);
+
+
+
+					/*
+						Service Usage Items
+
+						Create another item on the invoice for any usage, provided that the service type is a usage service)
 					*/
 
-					log_debug("inc_services_invoicegen", "Processing periodend/monthend service type");
-
-					if (time_date_to_timestamp($data["date_period_next"]) <= mktime())
+					if ($service_type == "generic_with_usage" || $service_type == "licenses" || $service_type == "time" || $service_type == "data_traffic")
 					{
-						// the latest billing period has finished, we need to generate a new time period.
-						if (!service_periods_add($data["id"], $billing_mode))
+	
+						// start the item
+						$invoice_item				= New invoice_items;
+					
+						$invoice_item->id_invoice		= $invoiceid;
+					
+						$invoice_item->type_invoice		= "ar";
+						$invoice_item->type_item		= "standard";
+					
+						$itemdata = array();
+
+
+						// chart ID
+						$itemdata["chartid"]		= $sql_service_obj->data[0]["chartid"];
+
+						// description
+						$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." usage from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+
+
+						
+						// calculate the amount to charge
+						switch ($service_type)
 						{
-							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
-							return 0;
-						}
-					}
-				
-				break;
+							case "generic_with_usage":
+								/*
+									GENERIC_WITH_USAGE
 
-				case "periodadvance":
-				case "monthadvance":
-					/*
-						PERIODADVANCE or MONTHADVANCE
+									This service is to be used for any non-traffic, non-time accounting service that needs to track usage. Examples of this
+									could be counting the number of API requests, size of disk usage on a vhost, etc.
+								*/
 
-						Create a new period in advance of the actual date that the period begins.
+										
 
-						Example Scenario:
-							services_customers.date_period_next	== 28-03-2008
-							ACCOUNTS_SERVICES_ADVANCEBILLING	== 20 (days)
+								// charge for data usage
+								// the datausage_get function will handle the different usage modes and return
+								// the billable amount.
+	//							$usage = datausage_get_byserviceid($sql_service_obj->data[0]["id"], $period_data["date_start"], $period_data["date_end"]);
 
-							Date to generate new period and issue invoice will be 08-03-2008, which
-							is 20 days before the billing period begins.
+								if ($usage > $sql_service_obj->data[0]["included_units"])
+								{
+									// there is excess usage that we can bill for.
+									$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
 
-						If the date_period_next value is equal or less than todays date + ACCOUNTS_SERVICES_ADVANCEBILLING, then
-						we need to generate a new billing period.
+									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
+
+									// descripton example:		Used 120 out of 50 included units.
+									//				70 additional units charged at $5.00 each
+									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
+									$itemdata["description"] .= "\nExcess usage of $usage_excess ". $sql_service_obj->data[0]["units"] ." charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per unit.";
+								}
+								else
+								{
+									// description example:		Used 10 out of 50 included units
+									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
+								}
+
+							break;
 							
+							case "licenses":
+								/*
+									LICENSES
+
+									No data usage, but there is a quantity field for the customer's account to specify the
+									quantity of licenses that they have.
+								*/
+
+								// charge for any extra licenses
+								if ($period_data["quantity"] > $sql_service_obj->data[0]["included_units"])
+								{
+									// there is excess usage that we can bill for.
+									$licenses_excess = $period_data["quantity"] - $sql_service_obj->data[0]["included_units"];
+
+									$itemdata["amount"] += ($licenses_excess * $sql_service_obj->data[0]["price_extraunits"]);
+
+									// description example:		10 licences included
+									//				2 additional licenses charged at $24.00 each
+									$itemdata["description"] .= "\n". $sql_service_obj->data[0]["included_units"] ." ". $sql_service_obj->data[0]["units"] ." included";
+									$itemdata["description"] .= "\n$licenses_excess additional ". $sql_service_obj->data[0]["units"] ." charged at ". $sql_service_obj->data[0]["price_extraunits"] ." each.";
+								}
+								else
+								{
+									// description example:		10 licenses
+									$itemdata["description"] .= "\n". $period_data["quantity"] ." ". $period_data["units"] .".";
+								}
+
+
+							break;
+
+
+							
+							case "time":
+							case "data_traffic":
+								/*
+									TIME or DATA_TRAFFIC
+
+									Simular to the generic usage type, but instead of units being a text field, units
+									is an ID to the service_units table.
+								*/
+
+								// fetch units name
+								$itemdata["units"] = sql_get_singlevalue("SELECT name FROM service_units WHERE id='". $sql_service_obj->data["units"] ."'");
+								
+
+								// charge for data usage
+								// the datausage_get function will handle the different usage modes and return
+								// the billable amount.
+	//							$usage = datausage_get_byserviceid($sql_service_obj->data[0]["id"], $period_data["date_start"], $period_data["date_end"]);
+
+								if ($usage > $sql_service_obj->data[0]["included_units"])
+								{
+									// there is excess usage that we can bill for.
+									$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
+
+									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
+
+									// description example:		Used 120 out of 50 included units.
+									//				70 additional units charged at $5.00 each
+									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $itemdata["units"] .".";
+									$itemdata["description"] .= "\nExcess usage of $usage_excess ". $itemdata["units"] ." charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per unit.";
+								}
+								else
+								{
+									// description example:		Used 10 out of 50 included units
+									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
+								}
+
+							break;
+
+
+							case "generic_no_usage":
+							default:
+								// nothing to do
+							break;
+							
+						} // end of processing usage
+
+						// create the item
+						$invoice_item->prepare_data($itemdata);
+						$invoice_item->action_create();
+
+						unset($invoice_item);
+
+
+					} // end if service is usage type
+
+
+					/*
+						Update the invoice details + Ledger
+
+						Processes:
+						- taxes
+						- ledger
+						- invoice summary
+
+						We use the invoice_items class to perform these tasks, but we don't need
+						to define an item ID for the functions being used to work.
 					*/
+
+					$invoice = New invoice_items;
 					
-					log_debug("inc_services_invoicegen", "Processing periodadvance/monthadvance service type");
+					$invoice->id_invoice	= $invoiceid;
+					$invoice->type_invoice	= "ar";
 
+					$invoice->action_update_tax();
+					$invoice->action_update_ledger();
+					$invoice->action_update_total();
 
-					// calculate period next date in the future
-					$date_period_next = mktime(0, 0, 0, date("m"), date("d")+$accounts_services_advancebilling, date("Y"));
+					unset($invoice);
 
-					if (time_date_to_timestamp($data["date_period_next"]) <= $date_period_next)
-					{
-						log_debug("inc_services_invoicegen", "Generating advance billing period for service with next billing date of $date_period_next");
+					
+				} // end of processing periods
 
+			} // end of processing customers
 
-						// generate the new billing period (in advance)
-						if (!service_periods_add($data["id"], $billing_mode))
-						{
-							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
-							return 0;
-						}
-					}
-				
-				break;
-
-				default:
-					$_SESSION["error"]["message"][] = "Unknown billing mode ". $data["billing_mode"] ." provided.";
-					return 0;
-				break;
-			}
-
-		} // loop through services
+		} // end of if customers exist
 	}
 	else
 	{
@@ -510,18 +707,6 @@ function service_invoices_generate($customerid)
 
 	return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

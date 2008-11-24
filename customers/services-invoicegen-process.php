@@ -14,6 +14,8 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 // custom includes
+include_once("../include/accounts/inc_ledger.php");
+include_once("../include/accounts/inc_invoices.php");
 include_once("../include/services/inc_services_invoicegen.php");
 
 
@@ -50,6 +52,8 @@ if (user_permissions_get('customers_write'))
 	{
 		// execute functions
 		service_periods_generate($id);
+		
+		service_invoices_generate($id);
 
 	
 		// display updated details

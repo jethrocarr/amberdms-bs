@@ -218,6 +218,38 @@ class invoice
 	} // end of load_data
 
 
+	/*
+		prepare_set_defaults
+
+		Set the default values on the invoice unless values have already been provided.
+
+		Results
+		0			failure
+		1			success
+	*/
+	function prepare_set_defaults()
+	{
+		log_debug("invoice", "Executing prepare_set_defaults");
+
+		if (!$this->data["code_invoice"])
+		{
+			$this->prepare_code_invoice();
+		}
+
+		if (!$this->data["date_trans"])
+		{
+			$this->data["date_trans"] = date("Y-m-d");
+		}
+		
+		if (!$this->data["date_due"])
+		{
+			$this->data["date_due"] = invoice_calc_duedate($this->data["date_trans"]);
+		}
+
+
+		return 1;
+	}
+
 
 	/*
 		prepare_code_invoice
@@ -295,6 +327,10 @@ class invoice
 	function action_create()
 	{
 		log_debug("invoice", "Executing action_create()");
+	
+	
+		// set any default field if they have been left blank
+		$this->prepare_set_defaults();
 		
 		// create new invoice entry
 		$sql_obj		= New sql_query;
@@ -343,6 +379,8 @@ class invoice
 			return 0;
 		}
 
+		// set any default field if they have been left blank
+		$this->prepare_set_defaults();
 
 		// update the invoice details
 		$sql_obj = New sql_query;
@@ -387,6 +425,7 @@ class invoice
 		}
 		
 	} // end of action_update
+
 
 
 
@@ -962,6 +1001,7 @@ class invoice_items
 	
 
 
+
 	/*
 		action_update_total
 
@@ -1282,6 +1322,8 @@ class invoice_items
 		return 1;
 
 	} // end of action_update_ledger
+
+
 
 
 
