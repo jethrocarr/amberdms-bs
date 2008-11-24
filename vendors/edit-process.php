@@ -84,6 +84,30 @@ if (user_permissions_get('vendors_write'))
 	}
 
 
+	// make sure we don't choose a customer code that has already been taken
+	if ($data["code_vendor"])
+	{
+		$mysql_string	= "SELECT id FROM `vendors` WHERE code_vendor='". $data["code_vendor"] ."'";
+		if ($id)
+			$mysql_string .= " AND id!='$id'";
+		$mysql_result	= mysql_query($mysql_string);
+		$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+		if ($mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "This vendor code is already used for another vendor - please choose a unique code, or leave it blank to recieve an auto-generated value.";
+			$_SESSION["error"]["code_vendor-error"] = 1;
+		}
+	}
+	else
+	{
+		// generate a unique vendor code
+		$data["code_vendor"] = config_generate_uniqueid("CODE_VENDOR", "SELECT id FROM vendors WHERE code_vendor='VALUE'");
+	}
+
+
+
+
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
@@ -118,6 +142,7 @@ if (user_permissions_get('vendors_write'))
 		{
 			// update vendor details
 			$mysql_string = "UPDATE `vendors` SET "
+						."code_vendor='". $data["code_vendor"] ."', "
 						."name_vendor='". $data["name_vendor"] ."', "
 						."name_contact='". $data["name_contact"] ."', "
 						."contact_phone='". $data["contact_phone"] ."', "

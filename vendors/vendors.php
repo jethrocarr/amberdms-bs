@@ -19,6 +19,7 @@ if (user_permissions_get('vendors_view'))
 
 
 		// define all the columns and structure
+		$vendor_list->add_column("standard", "code_vendor", "");
 		$vendor_list->add_column("standard", "name_vendor", "");
 		$vendor_list->add_column("standard", "name_contact", "");
 		$vendor_list->add_column("standard", "contact_phone", "");
@@ -32,7 +33,7 @@ if (user_permissions_get('vendors_view'))
 		$vendor_list->add_column("standard", "address1_country", "");
 
 		// defaults
-		$vendor_list->columns		= array("name_vendor", "name_contact", "contact_phone", "contact_email");
+		$vendor_list->columns		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_email");
 		$vendor_list->columns_order	= array("name_vendor");
 
 		// define SQL structure
@@ -55,7 +56,7 @@ if (user_permissions_get('vendors_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$structure["sql"]	= "code_vendor LIKE '%value%' OR name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
 		$vendor_list->add_filter($structure);
 
 
