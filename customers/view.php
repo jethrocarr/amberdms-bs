@@ -69,12 +69,6 @@ if (user_permissions_get('customers_view'))
 
 			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_customer";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			$structure = NULL;
 			$structure["fieldname"] 	= "name_customer";
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
@@ -116,15 +110,14 @@ if (user_permissions_get('customers_view'))
 			$form->add_input($structure);
 
 
-			// tax options
+			// taxes
 			$structure = NULL;
-			$structure["fieldname"] = "tax_included";
+			$structure["fieldname"] = "tax_number";
 			$structure["type"]	= "input";
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"] = "tax_number";
-			$structure["type"]	= "input";
+			$structure = form_helper_prepare_dropdownfromdb("tax_default", "SELECT id, name_tax as label FROM account_taxes");
 			$form->add_input($structure);
 
 
@@ -204,12 +197,21 @@ if (user_permissions_get('customers_view'))
 				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to customer records.</i></p>";
 				$form->add_input($structure);
 			}
-			
+
+			// hidden
+			$structure = NULL;
+			$structure["fieldname"] 	= "id_customer";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= "$id";
+			$form->add_input($structure);
+						
 			
 			// define subforms
-			$form->subforms["customer_view"]	= array("id_customer", "name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
+			$form->subforms["customer_view"]	= array("name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+			$form->subforms["customer_taxes"]	= array("tax_number", "tax_default");
 			$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 			$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+			$form->subforms["hidden"]	= array("id_customer");
 			$form->subforms["submit"]	= array("submit");
 
 			
