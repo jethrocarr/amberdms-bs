@@ -181,11 +181,11 @@ function invoice_form_details_render($type, $id, $processpage)
 	// load data
 	if ($type == "ap")
 	{
-		$form->sql_query = "SELECT vendorid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due FROM account_$type WHERE id='$id'";
+		$form->sql_query = "SELECT vendorid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due, dest_account FROM account_$type WHERE id='$id'";
 	}
 	else
 	{
-		$form->sql_query = "SELECT customerid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due FROM account_$type WHERE id='$id'";
+		$form->sql_query = "SELECT customerid, employeeid, code_invoice, code_ordernumber, code_ponumber, notes, date_trans, date_due, dest_account FROM account_$type WHERE id='$id'";
 	}
 	
 	$form->load_data();
