@@ -73,15 +73,14 @@ if (user_permissions_get('vendors_write'))
 		$form->add_input($structure);
 
 
-		// tax options
+		// taxes
 		$structure = NULL;
-		$structure["fieldname"] = "tax_included";
+		$structure["fieldname"] = "tax_number";
 		$structure["type"]	= "input";
 		$form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] = "tax_number";
-		$structure["type"]	= "input";
+		$structure = form_helper_prepare_dropdownfromdb("tax_default", "SELECT id, name_tax as label FROM account_taxes");
 		$form->add_input($structure);
 
 
@@ -153,7 +152,8 @@ if (user_permissions_get('vendors_write'))
 		
 
 		// define subforms
-		$form->subforms["vendor_view"]	= array("name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end", "tax_included", "tax_number");
+		$form->subforms["vendor_view"]		= array("name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end")
+		$form->subforms["vendor_taxes"]		= array("tax_number", "tax_default");
 		$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
 		$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$form->subforms["submit"]		= array("submit");

@@ -26,8 +26,6 @@ if (user_permissions_get('vendors_write'))
 	$data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
 	$data["date_start"]		= security_form_input_predefined("date", "date_start", 0, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
-	$data["tax_included"]		= security_form_input_predefined("any", "tax_included", 0, "");
-	$data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
 
 	$data["address1_street"]	= security_form_input_predefined("any", "address1_street", 0, "");
 	$data["address1_city"]		= security_form_input_predefined("any", "address1_city", 0, "");
@@ -43,6 +41,9 @@ if (user_permissions_get('vendors_write'))
 	$data["address2_country"]	= security_form_input_predefined("any", "address2_country", 0, "");
 	$data["address2_zipcode"]	= security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
+	$data["tax_default"]		= security_form_input_predefined("int", "tax_default", 0, "");
+	$data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
+
 
 	// are we editing an existing vendor or adding a new one?
 	if ($id)
@@ -124,7 +125,7 @@ if (user_permissions_get('vendors_write'))
 						."contact_fax='". $data["contact_fax"] ."', "
 						."date_start='". $data["date_start"] ."', "
 						."date_end='". $data["date_end"] ."', "
-						."tax_included='". $data["tax_included"] ."', "
+						."tax_default='". $data["tax_default"] ."', "
 						."tax_number='". $data["tax_number"] ."', "
 						."address1_street='". $data["address1_street"] ."', "
 						."address1_city='". $data["address1_city"] ."', "
@@ -141,7 +142,7 @@ if (user_permissions_get('vendors_write'))
 						
 			if (!mysql_query($mysql_string))
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
+				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
 			}
 			else
 			{
