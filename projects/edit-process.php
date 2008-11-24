@@ -66,6 +66,26 @@ if (user_permissions_get('projects_write'))
 	}
 
 
+	// make sure we don't choose a projet code that has already been taken
+	if ($data["code_project"])
+	{
+		$mysql_string	= "SELECT id FROM `projects` WHERE code_project='". $data["code_project"] ."'";
+		if ($id)
+			$mysql_string .= " AND id!='$id'";
+		$mysql_result	= mysql_query($mysql_string);
+		$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+		if ($mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "This project code is already used for another project - please choose a unique code, or leave it blank to recieve an auto-generated value.";
+			$_SESSION["error"]["code_project-error"] = 1;
+		}
+	}
+
+
+	
+
+
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
@@ -84,6 +104,13 @@ if (user_permissions_get('projects_write'))
 	}
 	else
 	{
+		// set a default code
+		if (!$data["code_project"])
+		{
+			$data["code_project"] = config_generate_uniqueid("CODE_PROJECT", "SELECT id FROM projects WHERE code_project='VALUE'");
+		}
+		
+	
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
