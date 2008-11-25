@@ -66,7 +66,8 @@ class table
 	
 		Defines the column structure.
 		type	- A known type of column
-				standard
+				standard	- non-processed field
+				text		- same as standard, but any \n are replaced with <br>
 				date		- YYYY-MM-DD format date field
 				timestamp	- UNIX style timestamp field
 				money		- displays a financial value correctly
@@ -551,6 +552,11 @@ class table
 				}
 			break;
 
+			case "text":
+				$result = format_text_display($this->data[$row][$column]);
+			break;
+
+			case "standard":
 			default:
 				$result = $this->data[$row][$column];
 			break;
@@ -896,7 +902,7 @@ class table
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				print "<td>". $this->render_field($columns, $i) ."</td>";
+				print "<td valign=\"top\">". $this->render_field($columns, $i) ."</td>";
 			}
 
 
