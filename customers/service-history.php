@@ -108,10 +108,11 @@ if (user_permissions_get('customers_view'))
 			$service_list->add_column("date", "date_start", "");
 			$service_list->add_column("date", "date_end", "");
 			$service_list->add_column("bool_tick", "invoiced", "invoiceid");
+			$service_list->add_column("bool_tick", "paid", "NONE");
 			$service_list->add_column("standard", "code_invoice", "account_ar.code_invoice");
 
 			// defaults
-			$service_list->columns		= array("date_start", "date_end", "invoiced", "code_invoice");
+			$service_list->columns		= array("date_start", "date_end", "invoiced", "paid", "code_invoice");
 			$service_list->columns_order	= array("date_start");
 
 			// define SQL structure
@@ -120,6 +121,8 @@ if (user_permissions_get('customers_view'))
 			$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_ar ON account_ar.id = services_customers_periods.invoiceid");
 			
 			$service_list->sql_obj->prepare_sql_addfield("id", "services_customers_periods.id");
+			$service_list->sql_obj->prepare_sql_addfield("amount_total", "account_ar.amount_total");
+			$service_list->sql_obj->prepare_sql_addfield("amount_paid", "account_ar.amount_paid");
 			$service_list->sql_obj->prepare_sql_addwhere("services_customers_id = '$services_customers_id'");
 
 			// run SQL query
@@ -135,9 +138,19 @@ if (user_permissions_get('customers_view'))
 				// run through all the data rows to make custom changes
 				for ($i=0; $i < $service_list->data_num_rows; $i++)
 				{
+					// make the invoice number a hyperlink
 					if ($service_list->data[$i]["code_invoice"])
 					{
 						$service_list->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $service_list->data[$i]["invoiced"] ."\">AR ". $service_list->data[$i]["code_invoice"] ."</a>";
+					}
+
+					// tick the paid column if the invoice has been paid off completely
+					if ($service_list->data[$i]["invoiced"])
+					{
+						if ($service_list->data[$i]["amount_total"] == $service_list->data[$i]["amount_paid"])
+						{
+							$service_list->data[$i]["paid"] = 1;
+						}
 					}
 				}
 				
