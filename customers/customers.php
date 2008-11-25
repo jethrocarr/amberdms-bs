@@ -57,7 +57,15 @@ if (user_permissions_get('customers_view'))
 		$structure["type"]	= "input";
 		$structure["sql"]	= "code_customer LIKE '%value%' OR name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
 		$customer_list->add_filter($structure);
-
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_customers";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide any customers who are no longer active";
+		$customer_list->add_filter($structure);
+		
 
 
 		// heading
