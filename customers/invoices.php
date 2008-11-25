@@ -42,7 +42,7 @@ if (user_permissions_get('customers_view'))
 
 		// heading
 		print "<h3>CUSTOMER'S INVOICES</h3>";
-		print "<p>This page lists all the invoices belonging to this customer.</p>";
+		print "<p>This page lists all the invoices belonging to this customer. <a href=\"index.php?page=accounts/ar/invoice-add.php\">Click here to add a new invoice</a></p>";
 
 
 		$mysql_string	= "SELECT id FROM `customers` WHERE id='$id'";
