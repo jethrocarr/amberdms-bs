@@ -104,15 +104,24 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing num_rows()");
 
-		if ($this->query_result)
+		if ($this->data_num_rows)
 		{
-			$this->data_num_rows = mysql_num_rows($this->query_result);
+			// have already got the num of rows
 			return $this->data_num_rows;
 		}
 		else
 		{
-			log_debug("sql_query", "Error: No DB result avaliable for use to fetch num row information.");
-			return 0;
+			// fetch the number of rows
+			if ($this->query_result)
+			{
+				$this->data_num_rows = mysql_num_rows($this->query_result);
+				return $this->data_num_rows;
+			}
+			else
+			{
+				log_debug("sql_query", "Error: No DB result avaliable for use to fetch num row information.");
+				return 0;
+			}
 		}
 	}
 			
