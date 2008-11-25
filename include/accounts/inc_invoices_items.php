@@ -68,7 +68,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->add_column("money", "price", "");
 		$item_list->add_column("standard", "units", "");
 		$item_list->add_column("standard", "qnty", "quantity");
-		$item_list->add_column("standard", "description", "");
+		$item_list->add_column("text", "description", "");
 
 		// defaults
 		$item_list->columns		= array("amount", "item_info", "price", "qnty", "units", "description");
@@ -200,7 +200,7 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		// define all the columns and structure
 		$item_list->add_column("money", "amount", "account_items.amount");
 		$item_list->add_column("standard", "name_tax", "CONCAT_WS(' -- ',account_taxes.name_tax,account_taxes.description)");
-		$item_list->add_column("standard", "description", "account_items.description");
+		$item_list->add_column("text", "description", "account_items.description");
 
 		// defaults
 		$item_list->columns		= array("amount", "name_tax", "description");
