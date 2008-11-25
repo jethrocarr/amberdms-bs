@@ -8,6 +8,9 @@
 */
 
 
+// dependencies
+require("inc_services_usage.php");
+
 
 
 /*
@@ -336,7 +339,7 @@ function service_invoices_generate($customerid = NULL)
 		Run through all the customers
 	*/
 	$sql_customers_obj		= New sql_query;
-	$sql_customers_obj->string	= "SELECT id FROM customers";
+	$sql_customers_obj->string	= "SELECT id, code_customer FROM customers";
 
 	if ($customerid)
 		$sql_customers_obj->string .= " WHERE id='$customerid'";
@@ -361,6 +364,7 @@ function service_invoices_generate($customerid = NULL)
 								."services_customers_periods.invoiceid, "
 								."services_customers_periods.date_start, "
 								."services_customers_periods.date_end, "
+								."services_customers.id as services_customers_id, "
 								."services_customers.quantity, "
 								."services_customers.description, "
 								."services_customers.serviceid "
@@ -433,7 +437,8 @@ function service_invoices_generate($customerid = NULL)
 					return 0;
 				}
 
-				$invoiceid = $invoice->id;
+				$invoiceid	= $invoice->id;
+				$invoicecode	= $invoice->data["code_invoice"];
 				unset($invoice);
 
 
@@ -453,7 +458,7 @@ function service_invoices_generate($customerid = NULL)
 					$sql_service_obj->fetch_array();
 
 					// fetch service type
-					$service_type = sql_get_singlevalue("SELECT name FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."'");
+					$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."'");
 					
 
 
@@ -533,10 +538,37 @@ function service_invoices_generate($customerid = NULL)
 
 										
 
-								// charge for data usage
-								// the datausage_get function will handle the different usage modes and return
-								// the billable amount.
-	//							$usage = datausage_get_byserviceid($sql_service_obj->data[0]["id"], $period_data["date_start"], $period_data["date_end"]);
+								/*
+									Fetch usage amount
+								*/
+								
+								$usage_obj					= New service_usage;
+								$usage_obj->services_customers_id		= $period_data["services_customers_id"];
+								$usage_obj->date_start				= $period_data["date_start"];
+								$usage_obj->date_end				= $period_data["date_end"];
+								
+								if ($usage_obj->prepare_load_servicedata())
+								{
+									$usage_obj->fetch_usagedata();
+
+									if ($usage_obj->data["total_byunits"])
+									{
+										$usage = $usage_obj->data["total_byunits"];
+									}
+									else
+									{
+										$usage = $usage_obj->data["total"];
+									}
+								}
+
+								unset($usage_obj);
+
+
+								/*
+									Charge for the usage in units
+								*/
+
+								$unitname = $sql_service_obj->data[0]["units"];
 
 								if ($usage > $sql_service_obj->data[0]["included_units"])
 								{
@@ -545,15 +577,16 @@ function service_invoices_generate($customerid = NULL)
 
 									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
 
-									// descripton example:		Used 120 out of 50 included units.
-									//				70 additional units charged at $5.00 each
-									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
-									$itemdata["description"] .= "\nExcess usage of $usage_excess ". $sql_service_obj->data[0]["units"] ." charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per unit.";
+									// description example:		Used 120 ZZ out of 50 ZZ included in plan
+									//				Excess usage of 70 ZZ charged at $5.00 per ZZ
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.";
+									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname.";
 								}
 								else
 								{
-									// description example:		Used 10 out of 50 included units
-									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
+
+									// description example:		Used 120 ZZ out of 50 ZZ included in plan
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.";
 								}
 
 							break;
@@ -599,14 +632,39 @@ function service_invoices_generate($customerid = NULL)
 									is an ID to the service_units table.
 								*/
 
-								// fetch units name
-								$itemdata["units"] = sql_get_singlevalue("SELECT name FROM service_units WHERE id='". $sql_service_obj->data["units"] ."'");
+								/*
+									Fetch usage amount
+								*/
+								
+								$usage_obj					= New service_usage;
+								$usage_obj->services_customers_id		= $period_data["services_customers_id"];
+								$usage_obj->date_start				= $period_data["date_start"];
+								$usage_obj->date_end				= $period_data["date_end"];
+								
+								if ($usage_obj->prepare_load_servicedata())
+								{
+									$usage_obj->fetch_usagedata();
+
+									if ($usage_obj->data["total_byunits"])
+									{
+										$usage = $usage_obj->data["total_byunits"];
+									}
+									else
+									{
+										$usage = $usage_obj->data["total"];
+									}
+								}
+								
+								unset($usage_obj);
+
+								
 								
 
-								// charge for data usage
-								// the datausage_get function will handle the different usage modes and return
-								// the billable amount.
-	//							$usage = datausage_get_byserviceid($sql_service_obj->data[0]["id"], $period_data["date_start"], $period_data["date_end"]);
+								/*
+									Charge for the usage in units
+								*/
+
+								$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $sql_service_obj->data[0]["units"] ."'");
 
 								if ($usage > $sql_service_obj->data[0]["included_units"])
 								{
@@ -615,25 +673,20 @@ function service_invoices_generate($customerid = NULL)
 
 									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
 
-									// description example:		Used 120 out of 50 included units.
-									//				70 additional units charged at $5.00 each
-									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $itemdata["units"] .".";
-									$itemdata["description"] .= "\nExcess usage of $usage_excess ". $itemdata["units"] ." charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per unit.";
+									// description example:		Used 120 GB out of 50 GB included in plan
+									//				Excess usage of 70 GB charged at $5.00 per GB
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.";
+									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname.";
 								}
 								else
 								{
 									// description example:		Used 10 out of 50 included units
-									$itemdata["description"] .= "\nUsed $usage out of ". $sql_service_obj->data[0]["included_units"] ." included ". $sql_service_obj->data[0]["units"] .".";
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.";
 								}
 
 							break;
 
 
-							case "generic_no_usage":
-							default:
-								// nothing to do
-							break;
-							
 						} // end of processing usage
 
 						// create the item
@@ -685,6 +738,10 @@ function service_invoices_generate($customerid = NULL)
 					*/
 					
 					// TODO: write this.
+
+
+					// complete for this customer
+					$_SESSION["notification"]["message"][] = "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created";
 
 					
 				} // end of processing periods

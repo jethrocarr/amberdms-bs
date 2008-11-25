@@ -392,6 +392,9 @@ function service_form_plan_process()
 			$data["units"]			= security_form_input_predefined("int", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
+			
+			// force data usage/time to be incrementing
+			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
 		break;
 	}
 
@@ -428,7 +431,8 @@ function service_form_plan_process()
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
-						."billing_mode='". $data["billing_mode"] ."' "
+						."billing_mode='". $data["billing_mode"] ."', "
+						."usage_mode='". $data["usage_mode"] ."' "
 						."WHERE id='$id'";
 	
 				
