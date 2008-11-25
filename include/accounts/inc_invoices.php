@@ -347,13 +347,48 @@ class invoice
 
 
 		// call the update function to process the invoice now that we have an ID for the DB row
-		if ($this->action_update())
+		if (!$this->action_update())
 		{
-			log_debug("invoice", "Successfully created new invoice ". $this->id ."");
-			return 1;
+			return 0;
+		}
+
+
+		// if the customer/vendor has a default tax configured, then we need to add a tax item to the invoice.
+		if ($this->type == "ap")
+		{
+			$defaulttax = sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $this->data["vendorid"] ."'");
+		}
+		else
+		{
+			$defaulttax = sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $this->data["customerid"] ."'");
+		}
+
+		if ($defaulttax)
+		{
+			// add a tax item to this invoice
+			$item_tax			= New invoice_items;
+			$item_tax->id_invoice		= $this->id;
+			$item_tax->type_invoice		= $this->type;
+			$item_tax->type_item		= "tax";
+
+			$itemdata			= array();
+			$itemdata["customid"]		= $defaulttax;
+
+			$item_tax->prepare_data($itemdata);
+
+			if (!$item_tax->action_create())
+			{
+				return 0;
+			}
+
+			// note: normally we would generate ledger and total amounts here, but
+			// because there are no other items at this stage, tax amount and all
+			// totals will be equal to zero.
 		}
 		
-		return 0;
+
+		log_debug("invoice", "Successfully created new invoice ". $this->id ."");
+		return 1;
 		
 	} // end of action_create
 

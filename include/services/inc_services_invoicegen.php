@@ -439,29 +439,6 @@ function service_invoices_generate($customerid = NULL)
 
 
 				/*
-					Fetch tax requirements from customer and add to invoice
-				*/
-// TODO: write this:
-// need to add tax support to customer's page
-/*
-				$invoice_item			= New invoice_items;
-				
-				$invoice_item->id_invoice	= $invoiceid;
-				
-				$invoice_item->type_invoice	= "ar";
-				$invoice_item->type_item	= "tax";
-				
-
-				$itemdata = array();
-				$itemdata["customid"]	= TAX ID
-				$invoice_item->prepare_data($itemdata);
-				$invoice_item->action_create();
-
-*/
-
-
-
-				/*
 					Create Service Items
 										
 					We need to create an item for basic service plan - IE: the regular fixed fee, and another item for any
