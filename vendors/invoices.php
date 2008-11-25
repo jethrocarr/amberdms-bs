@@ -41,7 +41,7 @@ if (user_permissions_get('vendors_view'))
 
 		// heading
 		print "<h3>VENDOR'S INVOICES</h3>";
-		print "<p>This page lists all the AP invoices from this vendor.</p>";
+		print "<p>This page lists all the AP invoices from this vendor. <a href=\"index.php?page=accounts/ap/invoice-add.php\">Click here to add a new AP invoice</a>.</p>";
 
 
 		$mysql_string	= "SELECT id FROM `vendors` WHERE id='$id'";
