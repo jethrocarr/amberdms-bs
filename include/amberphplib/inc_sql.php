@@ -434,9 +434,16 @@ function sql_get_singlevalue($string)
 {
 	log_debug("sql", "Executing sql_get_singlevalue(SQL query)");
 
+	// so many bugs are caused by forgetting to request fields from the DB as "value", so
+	// this function has been added.
+	if (!strstr($string, 'value'))
+	{
+		die("Error: SQL queries to sql_get_singlevalue must request the field with the name of \"value\". Eg: \"SELECT name as value FROM mytable WHERE id=foo\"");
+	}
+
+	// fetch and return data
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= $string;
-
 	$sql_obj->execute();
 
 	if (!$sql_obj->num_rows())
