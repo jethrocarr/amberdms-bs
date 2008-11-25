@@ -18,7 +18,7 @@ if (user_permissions_get('products_write'))
 
 	$id				= security_form_input_predefined("int", "id_product", 0, "");
 	
-	$data["code_product"]		= security_form_input_predefined("any", "code_product", 1, "");
+	$data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
 	$data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
 	$data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
 
@@ -61,17 +61,21 @@ if (user_permissions_get('products_write'))
 	//// ERROR CHECKING ///////////////////////
 
 	// make sure we don't choose a product code that has already been choosen
-	$mysql_string	= "SELECT id FROM `products` WHERE code_product='". $data["code_product"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-	if ($mysql_num_rows)
+	if ($data["code_product"])
 	{
-		$_SESSION["error"]["message"][] = "This product code is already used for another product - please choose a unique identifier.";
-		$_SESSION["error"]["code_product-error"] = 1;
+		$mysql_string	= "SELECT id FROM `products` WHERE code_product='". $data["code_product"] ."'";
+		if ($id)
+			$mysql_string .= " AND id!='$id'";
+		$mysql_result	= mysql_query($mysql_string);
+		$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+		if ($mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "This product code is already used for another product - please choose a unique identifier.";
+			$_SESSION["error"]["code_product-error"] = 1;
+		}
 	}
+
 
 
 	// make sure we don't choose a product name that has already been taken
@@ -90,7 +94,7 @@ if (user_permissions_get('products_write'))
 
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
-	{	
+	{
 		if ($mode == "edit")
 		{
 			$_SESSION["error"]["form"]["product_view"] = "failed";
@@ -106,6 +110,13 @@ if (user_permissions_get('products_write'))
 	}
 	else
 	{
+		// set a default code
+		if (!$data["code_product"])
+		{
+			$data["code_product"] = config_generate_uniqueid("CODE_PRODUCT", "SELECT id FROM products WHERE code_product='VALUE'");
+		}
+
+	
 		if ($mode == "add")
 		{
 			// create a new entry in the DB

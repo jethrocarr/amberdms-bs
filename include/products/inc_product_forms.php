@@ -45,7 +45,6 @@ function products_form_details_render($productid, $mode)
 	$structure = NULL;
 	$structure["fieldname"] 	= "code_product";
 	$structure["type"]		= "input";
-	$structure["options"]["req"]	= "yes";
 	$form->add_input($structure);
 	
 	$structure = NULL;
