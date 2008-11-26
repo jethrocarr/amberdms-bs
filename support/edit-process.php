@@ -22,7 +22,8 @@ if (user_permissions_get('support_write'))
 	$data["priority"]		= security_form_input_predefined("any", "priority", 1, "You must select a priority for the support ticket");
 	$data["details"]		= security_form_input_predefined("any", "details", 0, "");
 	$data["status"]			= security_form_input_predefined("any", "status", 1, "You must set the status.");
-	$data["date_start"]		= security_form_input_predefined("any", "address2_state", 0, "");
+	$data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
+	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
 	
 
 	// are we editing an existing ticket or a new one?

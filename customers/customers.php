@@ -43,13 +43,13 @@ if (user_permissions_get('customers_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure["sql"]	= "date_start >= 'value'";
 		$customer_list->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
+		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
 		$customer_list->add_filter($structure);
 		
 		$structure = NULL;

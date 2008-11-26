@@ -22,7 +22,7 @@ if (user_permissions_get('projects_write'))
 	$data["name_project"]		= security_form_input_predefined("any", "name_project", 1, "You must set a project name");
 	$data["details"]		= security_form_input_predefined("any", "details", 0, "");
 	
-	$data["date_start"]		= security_form_input_predefined("date", "date_start", 0, "");
+	$data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
 	
 	

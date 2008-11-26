@@ -44,13 +44,13 @@ if (user_permissions_get('vendors_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure["sql"]	= "date_start >= 'value'";
 		$vendor_list->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
+		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
 		$vendor_list->add_filter($structure);
 		
 		$structure = NULL;
@@ -59,7 +59,14 @@ if (user_permissions_get('vendors_view'))
 		$structure["sql"]	= "code_vendor LIKE '%value%' OR name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
 		$vendor_list->add_filter($structure);
 
-
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_vendors";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide any vendors who are no longer active";
+		$vendor_list->add_filter($structure);
+		
 
 		// heading
 		print "<h3>VENDORS/SUPPLIERS LIST</h3><br><br>";

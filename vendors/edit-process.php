@@ -24,7 +24,7 @@ if (user_permissions_get('vendors_write'))
 	$data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
 	$data["contact_fax"]		= security_form_input_predefined("any", "contact_fax", 0, "");
 	$data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
-	$data["date_start"]		= security_form_input_predefined("date", "date_start", 0, "");
+	$data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
 
 	$data["address1_street"]	= security_form_input_predefined("any", "address1_street", 0, "");

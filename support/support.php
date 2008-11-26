@@ -40,13 +40,13 @@ if (user_permissions_get('support_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure["sql"]	= "date_start >= 'value'";
 		$support_ticket_list->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
+		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
 		$support_ticket_list->add_filter($structure);
 		
 		$structure = NULL;
@@ -54,6 +54,15 @@ if (user_permissions_get('support_view'))
 		$structure["type"]	= "input";
 		$structure["sql"]	= "title LIKE '%value%'";
 		$support_ticket_list->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_tickets";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide completed support tickets";
+		$support_ticket_list->add_filter($structure);
+
 
 
 

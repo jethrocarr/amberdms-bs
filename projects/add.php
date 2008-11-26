@@ -44,8 +44,10 @@ if (user_permissions_get('projects_write'))
 		$form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
+		$structure["fieldname"] 	= "date_start";
+		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= date("Y-m-d");
+		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 
 		$structure = NULL;

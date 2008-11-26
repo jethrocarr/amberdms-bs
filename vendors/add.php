@@ -68,8 +68,10 @@ if (user_permissions_get('vendors_write'))
 		$form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "input";
+		$structure["fieldname"] 	= "date_start";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= date("Y-m-d");
+		$structure["options"]["req"]	= "yes";
 		$form->add_input($structure);
 
 		$structure = NULL;

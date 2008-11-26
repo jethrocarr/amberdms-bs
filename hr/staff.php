@@ -40,13 +40,13 @@ if (user_permissions_get('staff_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure["sql"]	= "date_start >= 'value'";
 		$staff_list->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
+		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
 		$staff_list->add_filter($structure);
 		
 		$structure = NULL;
@@ -54,7 +54,15 @@ if (user_permissions_get('staff_view'))
 		$structure["type"]	= "input";
 		$structure["sql"]	= "staff_code LIKE '%value%' OR name_staff LIKE '%value%' OR staff_position LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
 		$staff_list->add_filter($structure);
-
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_employees";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide any ex-employees";
+		$staff_list->add_filter($structure);
+		
 
 
 		// heading

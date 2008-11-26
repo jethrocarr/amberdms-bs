@@ -88,6 +88,7 @@ if (user_permissions_get('projects_view'))
 			$structure = NULL;
 			$structure["fieldname"] 	= "date_start";
 			$structure["type"]		= "date";
+			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
 
 			$structure = NULL;

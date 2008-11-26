@@ -103,8 +103,9 @@ if (user_permissions_get('vendors_view'))
 			$form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"] = "date_start";
-			$structure["type"]	= "date";
+			$structure["fieldname"] 	= "date_start";
+			$structure["type"]		= "date";
+			$structure["options"]["req"]	= "yes";
 			$form->add_input($structure);
 
 			$structure = NULL;

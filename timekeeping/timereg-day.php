@@ -207,7 +207,14 @@ if (user_permissions_get('timekeeping'))
 
 			if (!$timereg_table->data_num_rows)
 			{
-				print "<p><b>There is currently no time registered to this day.</b></p>";
+				if ($editid)
+				{
+					print "<p><b>You have requested to view an entry which you do not have permissions to access.</b></p>";
+				}
+				else
+				{
+					print "<p><b>There is currently no time registered to this day.</b></p>";
+				}
 			}
 			else
 			{

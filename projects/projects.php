@@ -35,13 +35,13 @@ if (user_permissions_get('projects_view'))
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure["sql"]	= "date_start >= 'value'";
 		$project_list->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
+		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
 		$project_list->add_filter($structure);
 			
 		$structure = NULL;
@@ -49,7 +49,15 @@ if (user_permissions_get('projects_view'))
 		$structure["type"]	= "input";
 		$structure["sql"]	= "code_project LIKE '%value%' OR name_project LIKE '%value%'";
 		$project_list->add_filter($structure);
-			
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_projects";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide completed projects";
+		$project_list->add_filter($structure);
+
 
 
 
