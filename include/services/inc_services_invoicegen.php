@@ -731,20 +731,20 @@ function service_invoices_generate($customerid = NULL)
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
 					$sql_obj->execute();
-
-
-					/*
-						Send the invoice to the customer
-					*/
-					
-					// TODO: write this.
-
-
-					// complete for this customer
-					$_SESSION["notification"]["message"][] = "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created";
-
 					
 				} // end of processing periods
+
+
+				/*
+						Send the invoice to the customer
+				*/
+					
+				// TODO: write this.
+
+
+				// complete for this customer
+				$_SESSION["notification"]["message"][] = "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created";
+
 
 			} // end of processing customers
 
