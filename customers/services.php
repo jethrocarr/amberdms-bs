@@ -97,18 +97,18 @@ if (user_permissions_get('customers_view'))
 			}
 			else
 			{
-				// history link
+				// details link
 				$structure = NULL;
 				$structure["customerid"]["value"]	= $customerid;
 				$structure["serviceid"]["column"]	= "id";
-				$service_list->add_link("history", "customers/service-history.php", $structure);
-				
-				// edit link
+				$service_list->add_link("details", "customers/service-edit.php", $structure);
+
+				// periods link
 				$structure = NULL;
 				$structure["customerid"]["value"]	= $customerid;
 				$structure["serviceid"]["column"]	= "id";
-				$service_list->add_link("edit", "customers/service-edit.php", $structure);
-				
+				$service_list->add_link("periods", "customers/service-history.php", $structure);
+							
 				// delete link
 				$structure = NULL;
 				$structure["customerid"]["value"]	= $customerid;
