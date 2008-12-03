@@ -271,7 +271,7 @@ class menu_nav
 				}
 				else
 				{
-					print "<li><a href=\"index.php?". $structure["links"][$i] ."\" title=\"". $this->structure["title"][$i] ."\">". $this->structure["title"][$i] ."</a></li>";
+					print "<li><a href=\"index.php?". $this->structure["links"][$i] ."\" title=\"". $this->structure["title"][$i] ."\">". $this->structure["title"][$i] ."</a></li>";
 				}
 			}
 
