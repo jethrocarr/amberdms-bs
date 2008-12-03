@@ -540,15 +540,16 @@ class table
 
 
 			case "bool_tick":
-				// interperate the bool as either a tick or a cross
+				// label as Y or N. The render functions may perform further work such
+				// as displaying icons instead
 
 				if ($this->data[$row][$column])
 				{
-					$result = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
+					$result = "Y";
 				}
 				else
 				{
-					$result = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
+					$result = "N";
 				}
 			break;
 
@@ -902,7 +903,23 @@ class table
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				print "<td valign=\"top\">". $this->render_field($columns, $i) ."</td>";
+				$content = $this->render_field($columns, $i);
+
+				// handle bool images
+				if ($this->structure[$columns]["type"] == "bool_tick")
+				{
+					if ($content == "Y")
+					{
+						$content = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
+					}
+					else
+					{
+						$content = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
+					}
+				}
+
+				// display
+				print "<td valign=\"top\">$content</td>";
 			}
 
 
