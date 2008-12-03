@@ -18,6 +18,12 @@ class page_output
 		return user_permissions_get('customers_write');
 	}
 
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
 
 	function execute()
 	{
