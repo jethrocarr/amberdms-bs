@@ -9,232 +9,249 @@
 	allows the vendor to be updated.
 */
 
-if (user_permissions_get('vendors_view'))
+
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Vendor's Details";
-	$_SESSION["nav"]["query"][]	= "page=vendors/view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=vendors/view.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Vendors's Journal";
-	$_SESSION["nav"]["query"][]	= "page=vendors/journal.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Vendor's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=vendors/invoices.php&id=$id";
-
-	if (user_permissions_get('vendors_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Vendor";
-		$_SESSION["nav"]["query"][]	= "page=vendors/delete.php&id=$id";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Vendor's Details", "page=vendors/view.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Vendor's Journal", "page=vendors/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Vendor's Invoices", "page=vendors/invoices.php&id=". $this->id ."");
+
+		if (user_permissions_get("vendors_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->id ."");
+		}
 	}
 
 
-	function page_render()
+
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("vendors_view");
+	}
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>VENDOR DETAILS</h3><br>";
-		print "<p>This page allows you to view and adjust the vendor's records.</p>";
 
-		$mysql_string	= "SELECT id FROM `vendors` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-		if (!$mysql_num_rows)
+	function check_requirements()
+	{
+		// verify that vendor exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested vendor does not exist. <a href=\"index.php?page=vendors/vendors.php\">Try looking for your vendor on the vendor list page.</a></b></p>";
+			log_write("error", "page_output", "The requested vendor (". $this->id .") does not exist - possibly the vendor has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "vendor_view";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "vendors/edit-process.php";
+		$this->obj_form->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_vendor";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_vendor";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "name_contact";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "name_contact";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_email";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_phone";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_fax";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "date_start";
+		$structure["type"]		= "date";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$this->obj_form->add_input($structure);
+
+
+		// taxes
+		$structure = NULL;
+		$structure["fieldname"] = "tax_number";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure = form_helper_prepare_dropdownfromdb("tax_default", "SELECT id, name_tax as label FROM account_taxes");
+		$this->obj_form->add_input($structure);
+
+
+		// billing address
+		$structure = NULL;
+		$structure["fieldname"] = "address1_street";
+		$structure["type"]	= "textarea";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address1_city";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address1_state";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address1_country";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "address1_zipcode";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "pobox";
+		$structure["type"]	= "textarea";
+		$this->obj_form->add_input($structure);
+
+
+		// shipping address
+		$structure = NULL;
+		$structure["fieldname"] = "address2_street";
+		$structure["type"]	= "textarea";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address2_city";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address2_state";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "address2_country";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "address2_zipcode";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+		
+		// submit section
+		if (user_permissions_get("vendors_write"))
+		{
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Save Changes";
+			$this->obj_form->add_input($structure);
+		
 		}
 		else
 		{
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "vendor_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "vendors/edit-process.php";
-			$form->method = "post";
-			
-
-			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "code_vendor";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_vendor";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "name_contact";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "name_contact";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_email";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_phone";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_fax";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_start";
-			$structure["type"]		= "date";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "date_end";
-			$structure["type"]	= "date";
-			$form->add_input($structure);
-
-
-			// taxes
-			$structure = NULL;
-			$structure["fieldname"] = "tax_number";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure = form_helper_prepare_dropdownfromdb("tax_default", "SELECT id, name_tax as label FROM account_taxes");
-			$form->add_input($structure);
-
-
-			// billing address
-			$structure = NULL;
-			$structure["fieldname"] = "address1_street";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_city";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_state";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address1_country";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "address1_zipcode";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "pobox";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-
-
-			// shipping address
-			$structure = NULL;
-			$structure["fieldname"] = "address2_street";
-			$structure["type"]	= "textarea";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_city";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_state";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "address2_country";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "address2_zipcode";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-			
-			// submit section
-			if (user_permissions_get("vendors_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$form->add_input($structure);
-			
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to vendor records.</i></p>";
-				$form->add_input($structure);
-			}
-
-			// hidden
-			$structure = NULL;
-			$structure["fieldname"] 	= "id_vendor";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-
-
-			// define subforms
-			$form->subforms["vendor_view"]		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
-			$form->subforms["vendor_taxes"]		= array("tax_number", "tax_default");
-			$form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
-			$form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
-			$form->subforms["hidden"]		= array("id_vendor");
-			$form->subforms["submit"]		= array("submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `vendors` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
-
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to vendor records.</i></p>";
+			$this->obj_form->add_input($structure);
 		}
 
-	} // end page_render
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_vendor";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+
+		// define subforms
+		$this->obj_form->subforms["vendor_view"]		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+		$this->obj_form->subforms["vendor_taxes"]		= array("tax_number", "tax_default");
+		$this->obj_form->subforms["address_billing"]		= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
+		$this->obj_form->subforms["address_shipping"]		= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+		$this->obj_form->subforms["hidden"]			= array("id_vendor");
+		$this->obj_form->subforms["submit"]			= array("submit");
+
+		
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT * FROM `vendors` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->load_data();
+
+	}
+
+
+	function render_html()
+	{
+		// title + summary
+		print "<h3>VENDOR DETAILS</h3><br>";
+		print "<p>This page allows you to view and adjust the vendor's records.</p>";
+
+		// display the form
+		$this->obj_form->render_form();
+	}
+
+
+} // end of page_output
 
 ?>

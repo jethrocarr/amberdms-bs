@@ -7,57 +7,77 @@
 	Displays a list of all the vendors on the system.
 */
 
-if (user_permissions_get('vendors_view'))
+
+class page_output
 {
-	function page_render()
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("vendors_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$vendor_list = New table;
+		$this->obj_table = New table;
 
-		$vendor_list->language	= $_SESSION["user"]["lang"];
-		$vendor_list->tablename	= "vendor_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "vendor_list";
 
 
 		// define all the columns and structure
-		$vendor_list->add_column("standard", "code_vendor", "");
-		$vendor_list->add_column("standard", "name_vendor", "");
-		$vendor_list->add_column("standard", "name_contact", "");
-		$vendor_list->add_column("standard", "contact_phone", "");
-		$vendor_list->add_column("standard", "contact_email", "");
-		$vendor_list->add_column("standard", "contact_fax", "");
-		$vendor_list->add_column("date", "date_start", "");
-		$vendor_list->add_column("date", "date_end", "");
-		$vendor_list->add_column("standard", "tax_number", "");
-		$vendor_list->add_column("standard", "address1_city", "");
-		$vendor_list->add_column("standard", "address1_state", "");
-		$vendor_list->add_column("standard", "address1_country", "");
+		$this->obj_table->add_column("standard", "code_vendor", "");
+		$this->obj_table->add_column("standard", "name_vendor", "");
+		$this->obj_table->add_column("standard", "name_contact", "");
+		$this->obj_table->add_column("standard", "contact_phone", "");
+		$this->obj_table->add_column("standard", "contact_email", "");
+		$this->obj_table->add_column("standard", "contact_fax", "");
+		$this->obj_table->add_column("date", "date_start", "");
+		$this->obj_table->add_column("date", "date_end", "");
+		$this->obj_table->add_column("standard", "tax_number", "");
+		$this->obj_table->add_column("standard", "address1_city", "");
+		$this->obj_table->add_column("standard", "address1_state", "");
+		$this->obj_table->add_column("standard", "address1_country", "");
 
 		// defaults
-		$vendor_list->columns		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_email");
-		$vendor_list->columns_order	= array("name_vendor");
+		$this->obj_table->columns		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_email");
+		$this->obj_table->columns_order		= array("name_vendor");
 
 		// define SQL structure
-		$vendor_list->sql_obj->prepare_sql_settable("vendors");
-		$vendor_list->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_settable("vendors");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_start >= 'value'";
-		$vendor_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
-		$vendor_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "code_vendor LIKE '%value%' OR name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
-		$vendor_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_ex_vendors";
@@ -65,27 +85,33 @@ if (user_permissions_get('vendors_view'))
 		$structure["sql"]		= "date_end='0000-00-00'";
 		$structure["defaultvalue"]	= "on";
 		$structure["options"]["label"]	= "Hide any vendors who are no longer active";
-		$vendor_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
+		
+		// load options
+		$this->obj_table->load_options_form();
+		
+		// fetch all the vendor information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+	}
 
+
+
+	function render_html()
+	{
 		// heading
 		print "<h3>VENDORS/SUPPLIERS LIST</h3><br><br>";
 
+		// display options form
+		$this->obj_table->render_options_form();
 
-		// options form
-		$vendor_list->load_options_form();
-		$vendor_list->render_options_form();
-
-
-		// fetch all the vendor information
-		$vendor_list->generate_sql();
-		$vendor_list->load_data_sql();
-
-		if (!count($vendor_list->columns))
+		// display data
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$vendor_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no vendors in your database.</b></p>";
 		}
@@ -94,21 +120,24 @@ if (user_permissions_get('vendors_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"] = "id";
-			$vendor_list->add_link("view", "vendors/view.php", $structure);
+			$this->obj_table->add_link("view", "vendors/view.php", $structure);
 
 			// display the table
-			$vendor_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";
 		}
 
-		
-	} // end page_render
+	}
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+
+	function render_csv()
+	{
+		// display table
+		$this->obj_table->render_table_csv();
+	}
+	
+} // end of page_output
 
 ?>
