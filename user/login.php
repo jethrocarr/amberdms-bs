@@ -12,9 +12,6 @@ class page_output
 	var $obj_form;
 
 
-	/*
-		Check user permissions
-	*/
 	function check_permissions()
 	{
 		if (user_online())
@@ -28,12 +25,14 @@ class page_output
 		}
 	}
 
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
 
 
-	/*
-		Define Structure
-	*/
 	function execute()
 	{
 		/*
@@ -84,9 +83,6 @@ class page_output
 
 
 
-	/*
-		Output: HTML
-	*/
 	function render_html()
 	{
 		// heading

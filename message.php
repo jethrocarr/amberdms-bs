@@ -9,18 +9,26 @@ class page_output
 {
 	function check_permissions()
 	{
+		// allow all users (logged and logged out)
+		return 1;
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
 		return 1;
 	}
 
 	function execute()
 	{
 		// nothing todo
+		return 1;
 	}
 
 	function render_html()
 	{
 		// nothing todo
-		print "test";
+		return 1;
 	}
 }
 

@@ -20,12 +20,21 @@ else
 	{
 		function check_permissions()
 		{
+			// this page has a special method for handling permissions - please refer to code comments above
 			return 1;
 		}
 
+
+		function check_requirements()
+		{
+			// nothing todo
+			return 1;
+		}
+		
 		function execute()
 		{
 			// nothing todo
+			return 1;
 		}
 
 		function render_html()

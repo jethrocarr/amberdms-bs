@@ -9,131 +9,146 @@
 	to have new services added/removed.
 */
 
-if (user_permissions_get('customers_view'))
+
+class page_output
 {
-	$customerid = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$customerid";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table;
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$customerid";
 
-	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$customerid";
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$customerid";
-	$_SESSION["nav"]["current"]	= "page=customers/services.php&id=$customerid";
-
-	if (user_permissions_get('customers_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Customer";
-		$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$customerid";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."", TRUE);
+
+		if (user_permissions_get("customers_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
+		}
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("customers_view");
+	}
+
+
+	function check_requirements()
+	{
+		// verify that customer exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
 	}
 
 
 
-	function page_render()
+	function execute()
 	{
-		$customerid = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		// check that the specified customer actually exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `customers` WHERE id='$customerid'";
-		$sql_obj->execute();
+		// establish a new table object
+		$this->obj_table = New table;
+
+		$this->obj_table->language		= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "service_list";
+
+		// define all the columns and structure
+		$this->obj_table->add_column("standard", "name_service", "services.name_service");
+		$this->obj_table->add_column("bool_tick", "active", "services_customers.active");
+		$this->obj_table->add_column("standard", "typeid", "service_types.name");
+		$this->obj_table->add_column("standard", "billing_cycles", "billing_cycles.name");
+		$this->obj_table->add_column("date", "date_period_first", "");
+		$this->obj_table->add_column("date", "date_period_next", "");
+		$this->obj_table->add_column("standard", "description", "services_customers.description");
+
+		// defaults
+		$this->obj_table->columns		= array("name_service", "active", "typeid", "date_period_next", "description");
+		$this->obj_table->columns_order	= array("name_service");
+
+		// define SQL structure
+		$this->obj_table->sql_obj->prepare_sql_settable("services_customers");
 		
-		if (!$sql_obj->num_rows())
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN services ON services.id = services_customers.serviceid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
+		
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "services_customers.id");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("services_customers.customerid = '". $this->id ."'");
+
+		// run SQL query
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+
+	}
+
+
+
+	function render_html()
+	{
+		// heading
+		print "<h3>CUSTOMER SERVICES</h3>";
+		print "<p>This page allows you to manage all the services that the customer is assigned to.</p>";
+	
+
+		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>Error: The requested customer does not exist. <a href=\"index.php?page=customers/customers.php\">Try looking for your customer on the customer list page.</a></b></p>";
+			print "<p><b>This customer is not subscribed to any services. <a href=\"index.php?page=customers/service-edit.php&id=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
 		}
 		else
 		{
-			// heading
-			print "<h3>CUSTOMER SERVICES</h3>";
+			// details link
+			$structure = NULL;
+			$structure["customerid"]["value"]	= $this->id;
+			$structure["serviceid"]["column"]	= "id";
+			$this->obj_table->add_link("details", "customers/service-edit.php", $structure);
 
-			print "<p>This page allows you to manage all the services that the customer is assigned to.</p>";
-		
-		
-			// establish a new table object
-			$service_list = New table;
-
-			$service_list->language		= $_SESSION["user"]["lang"];
-			$service_list->tablename	= "service_list";
-
-			// define all the columns and structure
-			$service_list->add_column("standard", "name_service", "services.name_service");
-			$service_list->add_column("bool_tick", "active", "services_customers.active");
-			$service_list->add_column("standard", "typeid", "service_types.name");
-			$service_list->add_column("standard", "billing_cycles", "billing_cycles.name");
-			$service_list->add_column("date", "date_period_first", "");
-			$service_list->add_column("date", "date_period_next", "");
-			$service_list->add_column("standard", "description", "services_customers.description");
-
-			// defaults
-			$service_list->columns		= array("name_service", "active", "typeid", "date_period_next", "description");
-			$service_list->columns_order	= array("name_service");
-
-			// define SQL structure
-			$service_list->sql_obj->prepare_sql_settable("services_customers");
-			
-			$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN services ON services.id = services_customers.serviceid");
-			$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
-			$service_list->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
-			
-			$service_list->sql_obj->prepare_sql_addfield("id", "services_customers.id");
-			$service_list->sql_obj->prepare_sql_addwhere("services_customers.customerid = '$customerid'");
-
-			// run SQL query
-			$service_list->generate_sql();
-			$service_list->load_data_sql();
-
-			if (!$service_list->data_num_rows)
-			{
-				print "<p><b>This customer is not subscribed to any services. <a href=\"index.php?page=customers/service-edit.php&customerid=$customerid\">Click here to add this customer to a service</a>.</b></p>";
-			}
-			else
-			{
-				// details link
-				$structure = NULL;
-				$structure["customerid"]["value"]	= $customerid;
-				$structure["serviceid"]["column"]	= "id";
-				$service_list->add_link("details", "customers/service-edit.php", $structure);
-
-				// periods link
-				$structure = NULL;
-				$structure["customerid"]["value"]	= $customerid;
-				$structure["serviceid"]["column"]	= "id";
-				$service_list->add_link("periods", "customers/service-history.php", $structure);
-							
-				// delete link
-				$structure = NULL;
-				$structure["customerid"]["value"]	= $customerid;
-				$structure["serviceid"]["column"]	= "id";
-				$service_list->add_link("delete", "customers/service-delete.php", $structure);
+			// periods link
+			$structure = NULL;
+			$structure["customerid"]["value"]	= $this->id;
+			$structure["serviceid"]["column"]	= "id";
+			$this->obj_table->add_link("periods", "customers/service-history.php", $structure);
+						
+			// delete link
+			$structure = NULL;
+			$structure["customerid"]["value"]	= $this->id;
+			$structure["serviceid"]["column"]	= "id";
+			$this->obj_table->add_link("delete", "customers/service-delete.php", $structure);
 
 
-				// display the table
-				$service_list->render_table();
-
-				
-				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=$customerid\">Click here to add a new service to your customer</a>.</b></p>";
-			}
+			// display the table
+			$this->obj_table->render_table_html();
 
 			
-			print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=$customerid\">Automatically generate any new invoices</a>.</b></p>";
+			print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add a new service to your customer</a>.</b></p>";
+		}
 
-		} // end if customer exists
 		
-	} // end page_render
+		print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+	}
+
+} // end of page_output class
+
 
 ?>

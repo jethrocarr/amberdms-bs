@@ -20,6 +20,11 @@ class page_output
 		}
 	}
 
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
 
 	/*
