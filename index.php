@@ -397,12 +397,25 @@ function obj_show(obj)
         // DISPLAY THE PAGE (PROVIDING THAT ONE WAS LOADED)
         if ($_SESSION["error"]["pagestate"] && $page_valid)
         {
-		log_debug("index", "Executing page_render() function");
+		log_debug("index", "Executing page functions");
+
+
+		// perform page processing
+		$page_obj = New page_output;		
+		$page_obj->process();
+
 
 		// display the page
 		print "<td valign=\"top\" style=\"padding: 5px;\">";
-                page_render();
+		
+		$page_obj->render_html();
+		
                 print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
+
+
+		// free up page memory
+		unset($page_obj);
+		
 
                 // save query string, so the user can return here if they login. (providing none of the pages are in the user/ folder, as that will break some stuff otherwise.)
                 if (!preg_match('/^user/', $page))

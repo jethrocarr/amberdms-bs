@@ -856,11 +856,25 @@ class table
 	/*
 		render_table()
 
-		This function renders the entire table.
+		(Obsolete) Calls the render_table_html function. All code should be
+		updated so that this old feature can be removed.
 	*/
 	function render_table()
 	{
-		log_debug("table", "Executing render_table()");
+		log_debug("table", "Warning: Obsolete use of render_table() should be replaced with render_table_html");
+
+		return render_table_html();
+	}
+	
+
+	/*
+		render_table_html()
+
+		This function renders the entire table in HTML format.
+	*/
+	function render_table_html()
+	{
+		log_debug("table", "Executing render_table_html()");
 
 		// translate the column labels
 		$this->render_column_names();
