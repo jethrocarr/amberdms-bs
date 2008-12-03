@@ -16,18 +16,25 @@ if (!user_online())
 }
 else
 {
-	// match to menu entry
-	$_SESSION["error"]["menuid"] = "1";
-	
-	function page_render()
+	class page_output
 	{
-		print "<h3>SYSTEM OVERVIEW</h3>";
+		function check_permissions()
+		{
+			return 1;
+		}
 
-		print "<p>Overview of all features needs to go here</p>";
+		function execute()
+		{
+			// nothing todo
+		}
 
+		function render_html()
+		{
+			print "<h3>SYSTEM OVERVIEW</h3>";
+			print "<p>Overview of all features needs to go here</p>";
+		}
+	}
+}
 
-	} // end page_render
-
-} // end of if logged in
 
 ?>

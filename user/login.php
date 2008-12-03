@@ -7,93 +7,122 @@
 
 
 
-// render page
-function page_render()
+class page_output
 {
+	var $obj_form;
 
-	// returned input from processing form
-	if ($_SESSION["error"]["message"])
+
+	/*
+		Check user permissions
+	*/
+	function check_permissions()
 	{
-		security_script_input("/^[A-Za-z0-9.]*$/","username_amberdms_bs");
-		security_script_input("/^\S*$/", "password_amberdms_bs");
+		if (user_online())
+		{
+			log_write("error", "You are already logged in, there is no need to revisit the login page.");
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
 	}
 
 
-	print "<h3>SYSTEM LOGIN:</h3>";
 
 
-	if (user_online())
+	/*
+		Define Structure
+	*/
+	function execute()
 	{
-		print "<p><b>Error: You are already logged in!</b></p>";
-	}
-	else
-	{
-		// make sure that the user's old session has been totally cleaned up
-		// otherwise some very strange errors and logon behaviour can occur
+		/*
+			Make sure that the user's old session has been totally cleaned up
+			otherwise some very strange errors and logon behaviour can occur
+		*/
 		$_SESSION["user"] = array();
-	
-		?>
+
+
+		/*
+			Define Login Form
+		*/
+		$this->obj_form = New form_input;
+
+		$this->obj_form->formname = "login";
+
+		$this->obj_form->action = "user/login-process.php";
+		$this->obj_form->method = "post";
 		
-		<p>Please enter your username and password to login to the Amberdms Billing System.</p>
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "username_amberdms_bs";
+		$structure["type"]		= "input";
+		$this->obj_form->add_input($structure);
 		
+		$structure = NULL;
+		$structure["fieldname"] 	= "password_amberdms_bs";
+		$structure["type"]		= "password";
+		$this->obj_form->add_input($structure);
+		
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Login";
+		$this->obj_form->add_input($structure);
+		
+
+		// define subforms
+//		$this->obj_form->subforms["login"]	= array("username_amberdms_bs", "password_amberdms_bs");
+//		$this->obj_form->subforms["submit"]	= array("submit");
+		
+		// load any data returned due to errors
+		$this->obj_form->load_data_error();
+	}
+
+
+
+	/*
+		Output: HTML
+	*/
+	function render_html()
+	{
+		// heading
+		print "<h3>SYSTEM LOGIN:</h3>";
+		print "<p>Please enter your username and password to login to the Amberdms Billing System.</p>";
+
+		// javascript notification
+		print "<noscript>";
+		print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\"><tr>";
+		print "<td bgcolor=\"#ffc274\">";
+		print "<p><b>We have detected that you have the javascript capabilities of your browser turned off.</b><br><br>";
+		print "The Amberdms Billing System will work without javascript, but will not provide the best experience. We highly recommend you use this website with a Javascript-enabled browser.";
+		print "</p>";
+		print "</td>";
+		print "</tr></table>";
+		print "</noscript>";
+
+		// display the form
+		$this->obj_form->render_form();
 	
-		<noscript>
-			<table width="100%" cellspacing="0" cellpadding="5"><tr>
-			<td bgcolor="#ffc274">
-			<p><b>We have detected that you have the javascript capabilities of your browser turned off.</b><br>
-			<br>
-			The Amberdms Billing System will work without javascript, but will not provide the best experience. We highly recommend you use this website with a Javascript-enabled browser.
-			</p>
-			</td>
-			</tr></table>
-			
-		</noscript>
+
+		// troubleshoot page
+		print "<p id=\"troublestart\"><br><br><a href=\"#\" onclick=\"obj_show('trouble'); obj_hide('troublestart');\"><b>Unable to login? Click here for help</b></a></p>";
+		print "<div id=\"trouble\">";
+		print "<br><br><br><hr>";
+		
+		print "<h3>LOGIN TROUBLE?</h3>";
+		print "<p>If you have forgotten your password, please refer to your system administrator. In the event that person is not able to help you, please read the administration manual for information on how to reset it.</p>";
+		print "</div>";
+
+		print "<script type=\"text/javascript\">";
+		print "obj_hide('trouble');";
+		print "</script>";
+	}
 	
-		<form method="post" action="user/login-process.php">
-		<table width="100%" cellpadding="3" cellspacing="0" border="0">
-		<tr <?php error_render_table("usernameamberdms_bs"); ?>>
-			<td width="25%"><b>Username:</b></td>
-			<td width="25%"><input name="username_amberdms_bs" size="20" value="<?php print $_SESSION["error"]["username_amberdms_bs"]; ?>"></td>
-			<td width="50%"></td>
-		</tr>
-		<tr <?php error_render_table("password_rtlb"); ?>>
-			<td width="25%"><b>Password: </b></td>
-			<td width="25%"><input type="password" name="password_amberdms_bs" size="20" value="<?php print $_SESSION["error"]["password_amberdms_bs"]; ?>"></td>
-			<td width="50%"></td>
-		</tr>
-		<tr>
-			<td width="25%"></td>
-			<td width="25%"><br><input type="submit" value="Login"></td>
-			<td width="50%"></td>
-		</tr>
-		</table>
-		</form>
+} // end of page_output class
 
-		<!-- Login Help -->
-		<p id="troublestart"><br><br><a href="#" onclick="obj_show('trouble'); obj_hide('troublestart');"><b>Unable to login? Click here for help</b></a></p>
-		<div id="trouble">
-		<br><br><br><hr>
-
-		<h3>LOGIN TROUBLE?</h3>
-		<p>If you have forgotten your password, please refer to your system administrator. In the event that person is not able to help you, please read the administration manual for information on how to reset it.</p>
-		</div>
-
-		<script type="text/javascript">
-		obj_hide('trouble');
-		</script>
-
-
-
-		<?php
-
-		// clear errors
-		$_SESSION["error"] = array();
-		$_SESSION["notification"] = array();
-
-	
-	} // end if logged in
-
-
-} // end of page_render function.
 
 ?>

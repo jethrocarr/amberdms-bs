@@ -52,16 +52,16 @@ class sql_query
 
 		if (strlen($this->string) < 1000)
 		{
-			log_debug("sql_query", "SQL:". $this->string);
+			log_write("sql", "sql_query", $this->string);
 		}
 		else
 		{
-			log_debug("sql_query", "SQL query too long to display for debug.");
+			log_write("sql", "sql_query", "SQL query too long to display for debug.");
 		}
 		
 		if (!$this->query_result = mysql_query($this->string))
 		{
-			log_debug("sql_query", "Error: Problem executing SQL query - ". mysql_error());
+			log_debug("sql", "sql_query", "Error: Problem executing SQL query - ". mysql_error());
 			return 0;
 		}
 		else

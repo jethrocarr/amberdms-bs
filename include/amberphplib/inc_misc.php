@@ -250,17 +250,70 @@ function helplink($id)
 
 
 
-/* DEBUG FUNCTIONS */
+
+/* LOGGING FUNCTIONS */
+
 
 /*
-	debug_log_render()
+	log_error_render()
+
+	Displays any error logs
+*/
+function log_error_render()
+{
+        if ($_SESSION["error"]["message"])
+        {
+		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
+                print "<tr><td bgcolor=\"#ffeda4\" style=\"border: 1px dashed #dc6d00; padding: 3px;\">";
+                print "<p><b>Error:</b><br><br>";
+
+		foreach ($_SESSION["error"]["message"] as $errormsg)
+		{
+			print "$errormsg<br>";
+		}
+		
+		print "</p>";
+                print "</td></tr>";
+		print "</table>";
+	}
+}
+
+
+/*
+	log_notification_render()
+
+	Displays any notification messages, provided that there are no error messages as well
+*/
+function log_notification_render()
+{
+        if ($_SESSION["notification"]["message"] && !$_SESSION["error"]["message"])
+        {
+		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
+                print "<tr><td bgcolor=\"#c7e8ed\" style=\"border: 1px dashed #374893; padding: 3px;\">";
+                print "<p><b>Notification:</b><br><br>";
+		
+		foreach ($_SESSION["notification"]["message"] as $notificationmsg)
+		{
+			print "$notificationmsg<br>";
+		}
+
+		print "</p>";
+                print "</td></tr>";
+		print "</table>";
+        }
+}
+
+
+
+
+/*
+	log_debug_render()
 
 	Displays the debugging log
 */
-
-function debug_log_render()
+function log_debug_render()
 {
-	log_debug("inc_misc", "Executing debug_log_render()");
+	log_debug("inc_misc", "Executing log_debug_render()");
 
 
 	print "<p><b>Debug Output:</b></p>";
@@ -273,6 +326,7 @@ function debug_log_render()
 	print "<tr class=\"header\">";
 		print "<td nowrap><b>Time</b></td>";
 		print "<td nowrap><b>Memory</b></td>";
+		print "<td nowrap><b>Type</b></td>";
 		print "<td nowrap><b>Category</b></td>";
 		print "<td><b>Message/Content</b></td>";
 	print "</tr>";
@@ -281,9 +335,28 @@ function debug_log_render()
 	// content
 	foreach ($_SESSION["user"]["log_debug"] as $log_record)
 	{
-		print "<tr>";
+		switch ($log_record["type"])
+		{
+			case "error":
+				print "<tr bgcolor=\"#ff5a00\">";
+			break;
+
+			case "warning":
+				print "<tr bgcolor=\"#ffeb68\">";
+			break;
+
+			case "sql":
+				print "<tr bgcolor=\"#7bbfff\">";
+			break;
+
+			default:
+				print "<tr>";
+			break;
+		}
+		
 		print "<td nowrap>". $log_record["time"] ."</td>";
 		print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
+		print "<td nowrap>". $log_record["type"] ."</td>";
 		print "<td nowrap>". $log_record["category"] ."</td>";
 		print "<td>". $log_record["content"] ."</td>";
 		print "</tr>";

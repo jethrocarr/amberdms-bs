@@ -19,10 +19,17 @@
 */
 function log_debug($category, $content)
 {
+	return log_write("debug", $category, $content);
+}
+
+function log_write($type, $category, $content)
+{
 	if ($_SESSION["user"]["debug"] == "on")
 	{
+		// write log record
 		$log_record = array();
 
+		$log_record["type"]	= $type;
 		$log_record["category"]	= $category;
 		$log_record["content"]	= $content;
 		$log_record["memory"]	= memory_get_usage();
@@ -33,6 +40,18 @@ function log_debug($category, $content)
 		$log_record["time"]	= ((float)$usec + (float)$sec);
 		
 		$_SESSION["user"]["log_debug"][] = $log_record;
+	}
+
+	// also add error messages to the error array
+	if ($type == "error")
+	{
+		$_SESSION["error"]["message"][] = $content;
+	}
+
+	// also add notification messages to the notification array
+	if ($type == "notification")
+	{
+		$_SESSION["notification"]["message"][] = $content;
 	}
 }
 
@@ -45,7 +64,7 @@ function log_debug($category, $content)
 
 log_debug("start", "");
 log_debug("start", "AMBERPHPLIB STARTED");
-log_Debug("start", "Debugging for: ". $_SERVER["REQUEST_URI"] ."");
+log_debug("start", "Debugging for: ". $_SERVER["REQUEST_URI"] ."");
 log_debug("start", "");
 
 
@@ -76,6 +95,9 @@ require("inc_file_uploads.php");
 
 // Journal System
 require("inc_journal.php");
+
+// Menus
+require("inc_menus.php");
 
 
 ?>
