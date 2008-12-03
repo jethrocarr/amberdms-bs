@@ -66,6 +66,9 @@ require("inc_errors.php");
 // Misc Functions
 require("inc_misc.php");
 
+// Template processing engines
+require("inc_template_engines.php");
+
 // Functions/classes for data entry and processing
 require("inc_forms.php");
 require("inc_tables.php");
