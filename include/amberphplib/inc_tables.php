@@ -1140,7 +1140,202 @@ class table
 		print "</table>";
 		
 		
-	}
+	} // end of render_table_html
+
+
+
+	/*
+		render_table_csv()
+
+		This function renders the entire table in CSV format
+	*/
+	function render_table_csv()
+	{
+		log_debug("table", "Executing render_table_csv()");
+
+		// translate the column labels
+		$this->render_column_names();
+
+		// display header row
+		foreach ($this->columns as $column)
+		{
+			print "\"". $this->render_columns[$column] ."\";";
+		}
+		
+		// title for optional total column (displayed when row totals are active)
+		if ($this->total_rows)
+			print "\"Total\";";
+	
+
+		print "\n";
+
+
+		// display data
+		for ($i=0; $i < $this->data_num_rows; $i++)
+		{
+			print "\n";
+
+			// content for columns
+			foreach ($this->columns as $columns)
+			{
+				print "\"". $this->render_field($columns, $i) ."\";";
+			}
+
+
+			// optional: row totals column
+			if ($this->total_rows)
+			{
+				switch ($this->total_rows_mode)
+				{
+					/*
+						SUBTOTAL
+
+						Add all the columns for the row together, but don't increment
+						them at all.
+					*/
+					case "subtotal":
+					
+						$this->data[$i]["total"] = 0;
+	
+						foreach ($this->total_rows as $total_col)
+						{
+							// add to the total
+							$this->data[$i]["total"] += $this->data[$i][$total_col];
+						}
+					break;
+
+
+					/*
+						INCREMENTING
+
+						We keep track of the previous row's value and add it to the total
+						for the current row.
+					*/
+					case "incrementing":
+					
+						$this->data[$i]["total"] = $total_rows_incrementing;
+
+						foreach ($this->total_rows as $total_col)
+						{
+							// add to the total
+							$this->data[$i]["total"] += $this->data[$i][$total_col];
+						}
+
+						// add to row incrementing total
+						$total_rows_incrementing = $this->data[$i]["total"];
+					break;
+
+
+					/*
+						LEDGER
+						
+						For ledger row totals, we need to total up to show the account balance. We
+						can either add credit or add debit as different modes are needed, depending
+						on the account type.
+
+						Because it's a ledger, we then set the final total row value
+						to be equal to the final total from the ledger.
+					*/
+					case "ledger_add_credit":
+					case "ledger_add_debit":
+					
+						$this->data[$i]["total"] = $total_rows_incrementing;
+						
+							
+						if ($this->total_rows_mode == "ledger_add_credit")
+						{
+							// add the credit column
+							$this->data[$i]["total"] += $this->data[$i]["credit"];
+	
+							// subtract the debit column
+							$this->data[$i]["total"] -= $this->data[$i]["debit"];
+						}
+						else
+						{
+							// add the debit column
+							$this->data[$i]["total"] += $this->data[$i]["debit"];
+	
+							// subtract the credit column
+							$this->data[$i]["total"] -= $this->data[$i]["credit"];
+						}
+
+						// add to row incrementing total
+						$total_rows_incrementing = $this->data[$i]["total"];
+
+						// set the total summary row, since it can't be incremented further on
+						// like normal totals.
+						$this->data["total"]["total"] = $total_rows_incrementing;
+						
+					break;
+
+
+					default:
+						log_debug("inc_tables", "Error: Unrecognised row total mode ". $this->total_rows_mode ."");
+					break;
+				}
+
+
+				// make the type of the column the same as one of the columns to be totaled
+				// this is assumed to be correct, since only the same type of column should ever be totaled
+				$this->structure["total"]["type"] = $this->structure[ $this->total_rows[0] ]["type"];
+
+				
+				print "\"". $this->render_field("total", $i) ."\";";
+			}
+	
+		}
+
+		// display totals for columns
+		if ($this->total_columns)
+		{
+			print "\n";
+
+			foreach ($this->columns as $column)
+			{
+				if (in_array($column, $this->total_columns))
+				{
+					$this->data["total"][$column] = 0;
+					
+					for ($i=0; $i < $this->data_num_rows; $i++)
+					{
+						$this->data["total"][$column] += $this->data[$i][$column];
+					}
+
+					print "\"". $this->render_field($column, "total") ."\";";
+				}
+			}
+
+			// optional: totals for rows
+			if ($this->total_rows)
+			{
+				// we have already calculated the final total for ledger
+				// totals, so only calculate for non-ledger items.
+				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
+				{
+					$this->data["total"]["total"] = 0;
+					
+					// total all the total columns
+					foreach ($this->total_columns as $column)
+					{
+						$this->data["total"]["total"] += $this->data["total"][$column];
+					}
+				}
+
+				print "\"". $this->render_field("total", "total") ."\";";
+			}
+
+			print "\n";
+		}
+	
+	} // end of render_table_csv
+
+
+
+
+
+
+
+	
 
 } // end of table class
 
