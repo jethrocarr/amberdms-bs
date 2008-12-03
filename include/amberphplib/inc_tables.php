@@ -1162,12 +1162,12 @@ class table
 		// display header row
 		foreach ($this->columns as $column)
 		{
-			print "\"". $this->render_columns[$column] ."\";";
+			print "\"". $this->render_columns[$column] ."\",";
 		}
 		
 		// title for optional total column (displayed when row totals are active)
 		if ($this->total_rows)
-			print "\"Total\";";
+			print "\"Total\",";
 	
 
 		print "\n";
@@ -1181,7 +1181,7 @@ class table
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				print "\"". $this->render_field($columns, $i) ."\";";
+				print "\"". $this->render_field($columns, $i) ."\",";
 			}
 
 
@@ -1283,7 +1283,7 @@ class table
 				$this->structure["total"]["type"] = $this->structure[ $this->total_rows[0] ]["type"];
 
 				
-				print "\"". $this->render_field("total", $i) ."\";";
+				print "\"". $this->render_field("total", $i) ."\",";
 			}
 	
 		}
@@ -1295,6 +1295,8 @@ class table
 
 			foreach ($this->columns as $column)
 			{
+				print "\"";
+				
 				if (in_array($column, $this->total_columns))
 				{
 					$this->data["total"][$column] = 0;
@@ -1304,8 +1306,10 @@ class table
 						$this->data["total"][$column] += $this->data[$i][$column];
 					}
 
-					print "\"". $this->render_field($column, "total") ."\";";
+					print $this->render_field($column, "total");
 				}
+
+				print "\",";
 			}
 
 			// optional: totals for rows
@@ -1324,7 +1328,7 @@ class table
 					}
 				}
 
-				print "\"". $this->render_field("total", "total") ."\";";
+				print "\"". $this->render_field("total", "total") ."\",";
 			}
 
 			print "\n";
