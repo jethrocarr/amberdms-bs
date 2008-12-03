@@ -6,161 +6,180 @@
 
 	Lists all the invoices belonging to the selected customer
 */
-
-if (user_permissions_get('customers_view'))
+	
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table;
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=customers/invoices.php&id=$id";
 	
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$id";
-
-	if (user_permissions_get('customers_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Customer";
-		$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
+
+		if (user_permissions_get("customers_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
+		}
 	}
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("customers_view");
+	}
+	
+
+	function check_requirements()
+	{
+		// verifiy that customer exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+		return 1;
+	}
 
 
 
+	function execute()
+	{
+
+		// establish a new table object
+		$this->obj_table = New table;
+
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "customer_invoices";
+
+		// define all the columns and structure
+		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
+		$this->obj_table->add_column("standard", "code_ordernumber", "account_ar.code_ordernumber");
+		$this->obj_table->add_column("standard", "code_ponumber", "account_ar.code_ponumber");
+		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("date", "date_trans", "account_ar.date_trans");
+		$this->obj_table->add_column("date", "date_due", "account_ar.date_due");
+		$this->obj_table->add_column("price", "amount_tax", "account_ar.amount_tax");
+		$this->obj_table->add_column("price", "amount", "account_ar.amount");
+		$this->obj_table->add_column("price", "amount_total", "account_ar.amount_total");
+		$this->obj_table->add_column("price", "amount_paid", "account_ar.amount_paid");
+
+		// totals
+		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
+
+		
+		// defaults
+		$this->obj_table->columns		= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid");
+		$this->obj_table->columns_order	= array("code_invoice");
+
+		// define SQL structure
+		$this->obj_table->sql_obj->prepare_sql_settable("account_ar");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_ar.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ar.employeeid");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("account_ar.customerid='". $this->id ."'");
+
+
+		// acceptable filter options
+		$this->obj_table->add_fixed_option("id", $this->id);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date_trans >= 'value'";
+		$this->obj_table->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "date_trans <= 'value'";
+		$this->obj_table->add_filter($structure);
+		
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure["sql"]	= "account_ar.employeeid='value'";
+		$this->obj_table->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_closed";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Hide Closed Invoices";
+		$structure["defaultvalue"]	= "";
+		$structure["sql"]		= "account_ar.amount_paid!=account_ar.amount_total";
+		$this->obj_table->add_filter($structure);
+
+		// load options
+		$this->obj_table->load_options_form();
+
+		// fetch all the chart information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+
+	}
+
+
+	function render_html()
+	{
 		// heading
 		print "<h3>CUSTOMER'S INVOICES</h3>";
 		print "<p>This page lists all the invoices belonging to this customer. <a href=\"index.php?page=accounts/ar/invoice-add.php\">Click here to add a new invoice</a></p>";
 
+	
+		// display options form	
+		$this->obj_table->render_options_form();
 
-		$mysql_string	= "SELECT id FROM `customers` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-		if (!$mysql_num_rows)
+		// display data
+		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Error: The requested customer does not exist. <a href=\"index.php?page=customers/customers.php\">Try looking for your customer on the customer list page.</a></b></p>";
+			print "<p><b>Please select some valid options to display.</b></p>";
+		}
+		elseif (!$this->obj_table->data_num_rows)
+		{
+			print "<p><b>You currently have no invoices belonging to this customer and matching your search requirements.</b></p>";
 		}
 		else
 		{
-
-
-			// establish a new table object
-			$invoice_list = New table;
-
-			$invoice_list->language	= $_SESSION["user"]["lang"];
-			$invoice_list->tablename	= "customer_invoices";
-
-			// define all the columns and structure
-			$invoice_list->add_column("standard", "code_invoice", "account_ar.code_invoice");
-			$invoice_list->add_column("standard", "code_ordernumber", "account_ar.code_ordernumber");
-			$invoice_list->add_column("standard", "code_ponumber", "account_ar.code_ponumber");
-			$invoice_list->add_column("standard", "name_staff", "staff.name_staff");
-			$invoice_list->add_column("date", "date_trans", "account_ar.date_trans");
-			$invoice_list->add_column("date", "date_due", "account_ar.date_due");
-			$invoice_list->add_column("price", "amount_tax", "account_ar.amount_tax");
-			$invoice_list->add_column("price", "amount", "account_ar.amount");
-			$invoice_list->add_column("price", "amount_total", "account_ar.amount_total");
-			$invoice_list->add_column("price", "amount_paid", "account_ar.amount_paid");
-
-			// totals
-			$invoice_list->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
-
-			
-			// defaults
-			$invoice_list->columns		= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid");
-			$invoice_list->columns_order	= array("code_invoice");
-
-			// define SQL structure
-			$invoice_list->sql_obj->prepare_sql_settable("account_ar");
-			$invoice_list->sql_obj->prepare_sql_addfield("id", "account_ar.id");
-			$invoice_list->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ar.employeeid");
-			$invoice_list->sql_obj->prepare_sql_addwhere("account_ar.customerid='$id'");
-
-
-			// acceptable filter options
-			$invoice_list->add_fixed_option("id", $id);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "date_start";
-			$structure["type"]	= "date";
-			$structure["sql"]	= "date_trans >= 'value'";
-			$invoice_list->add_filter($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "date_end";
-			$structure["type"]	= "date";
-			$structure["sql"]	= "date_trans <= 'value'";
-			$invoice_list->add_filter($structure);
-			
-			$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
-			$structure["sql"]	= "account_ar.employeeid='value'";
-			$invoice_list->add_filter($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "hide_closed";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Hide Closed Invoices";
-			$structure["defaultvalue"]	= "";
-			$structure["sql"]		= "account_ar.amount_paid!=account_ar.amount_total";
-			$invoice_list->add_filter($structure);
-
-
-
-
-			// options form
-			$invoice_list->load_options_form();
-			$invoice_list->render_options_form();
-
-
-			// fetch all the chart information
-			$invoice_list->generate_sql();
-			$invoice_list->load_data_sql();
-
-			if (!count($invoice_list->columns))
+			// view link
+			if (user_permissions_get("accounts_ar_view"))
 			{
-				print "<p><b>Please select some valid options to display.</b></p>";
+				$structure = NULL;
+				$structure["id"]["column"]	= "id";
+				$this->obj_table->add_link("view invoice", "accounts/ar/invoice-view.php", $structure);
 			}
-			elseif (!$invoice_list->data_num_rows)
-			{
-				print "<p><b>You currently have no invoices belonging to this customer and matching your search requirements.</b></p>";
-			}
-			else
-			{
-				// view link
-				if (user_permissions_get("accounts_ar_view"))
-				{
-					$structure = NULL;
-					$structure["id"]["column"]	= "id";
-					$invoice_list->add_link("view invoice", "accounts/ar/invoice-view.php", $structure);
-				}
 
-				// display the table
-				$invoice_list->render_table();
+			// display the table
+			$this->obj_table->render_table_html();
 
-				// TODO: display CSV download link
-			}
-			
-		} // end if customer exists
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=customers/invoices.php&id=". $this->id ."\">Export as CSV</a></p>";
+		}
+	
+	}
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+	function render_csv()
+	{
+		// display table
+		$this->obj_table->render_table_csv();
+	}
+
+} // end of page_output
 
 ?>

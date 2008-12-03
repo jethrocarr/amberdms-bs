@@ -7,174 +7,165 @@
 	Form to delete a customer service.
 */
 
-if (user_permissions_get('customers_write'))
+class page_output
 {
-	$customerid = $_GET["customerid"];
+	var $customerid;
+	var $services_customers_id;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$customerid";
-
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$customerid";
-
-	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$customerid";
+	var $obj_menu_nav;
+	var $obj_form;
 	
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$customerid";
-	$_SESSION["nav"]["current"]	= "page=customers/services.php&id=$customerid";
 
-	$_SESSION["nav"]["title"][]	= "Delete Customer";
-	$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$customerid";
-
-
-
-	function page_render()
+	function page_output()
 	{
-		$customerid		= security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$services_customers_id	= security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		// fetch variables
+		$this->customerid		= security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		$this->services_customers_id	= security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->customerid ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->customerid ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->customerid ."");
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->customerid ."", TRUE);
+
+		if (user_permissions_get("customers_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->customerid ."");
+		}
+	}
 
 
-		/*
-			Perform verification tasks
-		*/
-		$error = 0;
-	
-	
-		// check that the specified customer actually exists
+
+	function check_permissions()
+	{
+		return user_permissions_get("customers_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that customer exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `customers` WHERE id='$customerid' LIMIT 1";
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->customerid ."'";
 		$sql_obj->execute();
-			
+
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested customer does not exist. <a href=\"index.php?page=customers/customers.php\">Try looking for your customer on the customer list page.</a></b></p>";
-			$error = 1;
+			log_write("error", "page_output", "The requested customer (". $this->customerid .") does not exist - possibly the customer has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		// verify that the customer_service mapping exists and belongs to the correct customer
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT customerid FROM `services_customers` WHERE id='". $this->services_customers_id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested service does not exist.");
+			return 0;
 		}
 		else
 		{
-			if ($services_customers_id)
+			$sql_obj->fetch_array();
+
+			if ($sql_obj->data[0]["customerid"] != $this->customerid)
 			{
-				// are we editing an existing service? make sure it exists and belongs to this customer
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT serviceid, customerid FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
-				$sql_obj->execute();
-
-				if (!$sql_obj->num_rows())
-				{
-					print "<p><b>Error: The requested service does not exist.</b></p>";
-					$error = 1;
-				}
-				else
-				{
-					$sql_obj->fetch_array();
-
-					$serviceid = $sql_obj->data[0]["serviceid"];
-
-					if ($sql_obj->data[0]["customerid"] != $customerid)
-					{
-						print "<p><b>Error: The requested service does not match the provided customer ID. Potential application bug?</b></p>";
-						$error = 1;
-					}
-					
-				}
+				log_write("error", "page_output", "The requested service does not match the provided customer ID. Potential application bug?");
+				return 0;
 			}
 		}
 
-	
+		unset($sql_obj);
 
-	
+		return 1;
+	}
+
+
+	function execute()
+	{
 		/*
-			Display Form
+			Define form structure
 		*/
-		if (!$error)
-		{
-			/*
-				Title + Summary
-			*/
-			
-			print "<h3>DELETE SERVICE</h3><br>";
-			print "<p>This page allows you to delete a service from a customer's account.</p>";
-			
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "service_delete";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "service_delete";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "customers/service-delete-process.php";
-			$form->method = "post";
-		
-		
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_service";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-
-			// hidden values
-			$structure = NULL;
-			$structure["fieldname"]		= "customerid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $customerid;
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"]		= "services_customers_id";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $services_customers_id;
-			$form->add_input($structure);
-			
-
-			// confirm delete
-			$structure = NULL;
-			$structure["fieldname"] 	= "delete_confirm";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Yes, I wish to delete this service and realise that once deleted the data can not be recovered.";
-			$form->add_input($structure);
-
-
-			// submit button
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Delete Service";
-			$form->add_input($structure);
-
-
-			// define subforms
-			$form->subforms["service_delete"]	= array("name_service", "description");
-			$form->subforms["hidden"]		= array("customerid", "services_customers_id");
-			$form->subforms["submit"]		= array("delete_confirm", "submit");
+		$this->obj_form->action = "customers/service-delete-process.php";
+		$this->obj_form->method = "post";
 	
+	
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_service";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
 
-			// fetch the form data
-			$form->sql_query = "SELECT services_customers.description, services.name_service FROM services_customers LEFT JOIN services ON services.id = services_customers.serviceid WHERE services_customers.id='$services_customers_id' LIMIT 1";
-			$form->load_data();
+		$structure = NULL;
+		$structure["fieldname"] 	= "description";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
 
 
-			// display the form
-			$form->render_form();
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"]		= "customerid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $customerid;
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"]		= "services_customers_id";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $services_customers_id;
+		$this->obj_form->add_input($structure);
+		
 
-		} // end if valid options
+		// confirm delete
+		$structure = NULL;
+		$structure["fieldname"] 	= "delete_confirm";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Yes, I wish to delete this service and realise that once deleted the data can not be recovered.";
+		$this->obj_form->add_input($structure);
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Delete Service";
+		$this->obj_form->add_input($structure);
+
+
+		// define subforms
+		$this->obj_form->subforms["service_delete"]	= array("name_service", "description");
+		$this->obj_form->subforms["hidden"]		= array("customerid", "services_customers_id");
+		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT services_customers.description, services.name_service FROM services_customers LEFT JOIN services ON services.id = services_customers.serviceid WHERE services_customers.id='". $this->services_customers_id ."' LIMIT 1";
+		$this->obj_form->load_data();
+	}
+
+
+	function render_html()
+	{
+		// title + summary
+		print "<h3>DELETE SERVICE</h3><br>";
+		print "<p>This page allows you to delete a service from a customer's account.</p>";
+	
+		// display the form
+		$this->obj_form->render_form();
+	}
+	
+} // end of page_output
+
 
 ?>

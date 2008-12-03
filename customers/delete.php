@@ -14,30 +14,11 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
-
-	function check_permissions()
-	{
-		return user_permissions_get('customers_write');
-	}
-
 	
 	function page_output()
 	{
 		// fetch variables
 		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
-
-
-		// verifiy that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
-		{
-			log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
-		}
-
-		unset($sql_obj);
 
 
 		// define the navigiation menu
@@ -47,7 +28,32 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Delete Customer", "page=customers/services.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."", TRUE);
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get('customers_write');
+	}
+	
+
+	function check_requirements()
+	{
+		// verifiy that customer exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+		return 1;
 	}
 
 

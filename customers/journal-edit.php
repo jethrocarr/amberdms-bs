@@ -7,71 +7,102 @@
 	Allows the addition or adjustment of journal entries.
 */
 
-if (user_permissions_get('customers_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $journalid;
+	var $action;
+	var $type;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=customers/journal.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$id";
-
-	if (user_permissions_get('customers_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Customer";
-		$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
+		// fetch variables
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+	
+	
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
 	}
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		return user_permissions_get("customers_write");
+	}
 
-		
+
+
+	function check_requirements()
+	{
+		// verify that customer exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+
+	function execute()
+	{
 		/*
-			Journal Forms
+			Configure journal form basics
 		*/
 
-		$journal_form = New journal_input;
+		$this->obj_form = New journal_input;
 			
 		// basic details of this entry
-		$journal_form->prepare_set_journalname("customers");
-		$journal_form->prepare_set_journalid($journalid);
-		$journal_form->prepare_set_customid($id);
+		$this->obj_form->prepare_set_journalname("customers");
+		$this->obj_form->prepare_set_journalid($this->journalid);
+		$this->obj_form->prepare_set_customid($this->id);
 
 		// set the processing form
-		$journal_form->prepare_set_form_process_page("customers/journal-edit-process.php");
+		$this->obj_form->prepare_set_form_process_page("customers/journal-edit-process.php");
+	}
 
-		
-		if ($action == "delete")
+
+
+	function render_html()
+	{
+		if ($this->action == "delete")
 		{
 			print "<h3>CUSTOMER JOURNAL - DELETE ENTRY</h3><br>";
 			print "<p>This page allows you to delete an entry from the customer's journal.</p>";
 
 			// render delete form
-			$journal_form->render_delete_form();		
+			$this->obj_form->render_delete_form();		
 
 		}
 		else
 		{
-			if ($type == "file")
+			if ($this->type == "file")
 			{
 				// file uploader
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>CUSTOMER JOURNAL - UPLOAD FILE</h3><br>";
 					print "<p>This page allows you to attach a file to the customer's journal.</p>";
@@ -83,12 +114,12 @@ if (user_permissions_get('customers_write'))
 				}
 
 				// edit or add file
-				$journal_form->render_file_form();
+				$this->obj_form->render_file_form();
 			}
 			else
 			{
 				// default to text
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>CUSTOMER JOURNAL - EDIT ENTRY</h3><br>";
 					print "<p>This page allows you to edit an existing entry in the customer's journal.</p>";
@@ -100,19 +131,15 @@ if (user_permissions_get('customers_write'))
 				}
 
 				// edit or add
-				$journal_form->render_text_form();		
+				$this->obj_form->render_text_form();		
 			}
 			
 		}
 		
+	}
 
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+} // end of page_output
 
 ?>
