@@ -101,6 +101,20 @@ if (user_permissions_get('customers_write'))
 		}
 	}
 
+	// don't allow a date closed to be set if there are active services belonging to this customer
+	if ($id && $data["date_end"] != "0000-00-00")
+	{
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM services_customers WHERE customerid='$id' AND active='1'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$_SESSION["error"]["message"][] = "You can not close this customer, as there are still active services on this account";
+			$_SESSION["error"]["date_end-error"] = 1;
+		}
+	}
+
 
 
 	/// if there was an error, go back to the entry page
