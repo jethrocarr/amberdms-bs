@@ -9,83 +9,105 @@
 */
 
 
-if (user_permissions_get('staff_view'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Employee's Details";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-view.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_journal;
 
-	$_SESSION["nav"]["title"][]	= "Employee's Journal";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=hr/staff-journal.php&id=$id";
 
-	if (user_permissions_get('staff_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Employee";
-		$_SESSION["nav"]["query"][]	= "page=hr/staff-delete.php&id=$id";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Employee's Details", "page=hr/staff-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Employee's Journal", "page=hr/staff-journal.php&id=". $this->id ."", TRUE);
+
+		if (user_permissions_get("staff_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Employee", "page=hr/staff-delete.php&id=". $this->id ."");
+		}
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("staff_view");
 	}
 
 
 
-	function page_render()
+	function check_requirements()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// verify that staff exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM staff WHERE id='". $this->id ."'";
+		$sql_obj->execute();
 
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested employee (". $this->id .") does not exist - possibly the employee has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{	
 		/*
-			Title + Summary
+			Define the journal structure
 		*/
+
+		// basic
+		$this->obj_journal		= New journal_display;
+		$this->obj_journal->journalname	= "staff";
+		
+		// set the pages to use for forms or file downloads
+		$this->obj_journal->prepare_set_form_process_page("hr/staff-journal-edit.php");
+		$this->obj_journal->prepare_set_download_page("hr/staff-journal-download-process.php");
+
+
+		// configure options form
+		$this->obj_journal->prepare_predefined_optionform();
+		$this->obj_journal->add_fixed_option("id", $this->id);
+
+		// load options form
+		$this->obj_journal->load_options_form();
+
+
+		// define SQL structure
+		$this->obj_journal->sql_obj->prepare_sql_addwhere("customid='". $this->id ."'");		// we only want journal entries for this ticket!
+
+		// process SQL			
+		$this->obj_journal->generate_sql();
+		$this->obj_journal->load_data();
+	}
+
+
+	function render_html()
+	{
+		// Title + Summary
 		print "<h3>EMPLOYEE'S JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this employee.</p>";
 
-		print "<p><b><a href=\"index.php?page=hr/staff-journal-edit.php&type=text&id=$id\">Add new journal entry</a> || <a href=\"index.php?page=hr/staff-journal-edit.php&type=file&id=$id\">Upload File</a></b></p>";
+		print "<p><b><a href=\"index.php?page=hr/staff-journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=hr/staff-journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
 
+		// display options form
+		$this->obj_journal->render_options_form();
 
-		// make sure the staff exists
-		$sql = New sql_query;
-		$sql->string = "SELECT id FROM `staff` WHERE id='$id'";
-		$sql->execute();
-		
-		if (!$sql->num_rows())
-		{
-			print "<p><b>Error: The requested employee does not exist. <a href=\"index.php?page=staff/staff.php\">Try looking for your employee on the staff list page.</a></b></p>";
-		}
-		else
-		{
-			/*
-				Define the journal structure
-			*/
+		// display journal
+		$this->obj_journal->render_journal();
+	}
 
-			// basic
-			$journal		= New journal_display;
-			$journal->journalname	= "staff";
-			
-			// set the pages to use for forms or file downloads
-			$journal->prepare_set_form_process_page("hr/staff-journal-edit.php");
-			$journal->prepare_set_download_page("hr/staff-journal-download-process.php");
-
-
-			// define SQL structure
-			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
-
-			// process SQL			
-			$journal->generate_sql();
-			$journal->load_data();
-
-			// display			
-			$journal->render_journal();
-			
-		}
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+} // end of page_output
 
 ?>

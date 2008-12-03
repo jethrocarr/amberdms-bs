@@ -9,148 +9,169 @@
 	has write permissions allows the staff member to be adjusted.
 */
 
-if (user_permissions_get('staff_view'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Employee's Details";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=hr/staff-view.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Employee's Journal";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-journal.php&id=$id";
 
-	if (user_permissions_get('staff_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Employee";
-		$_SESSION["nav"]["query"][]	= "page=hr/staff-delete.php&id=$id";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Employee's Details", "page=hr/staff-view.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Employee's Journal", "page=hr/staff-journal.php&id=". $this->id ."");
+
+		if (user_permissions_get("staff_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Employee", "page=hr/staff-delete.php&id=". $this->id ."");
+		}
 	}
 
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("staff_view");
+	}
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>EMPLOYEE'S DETAILS</h3><br>";
-		print "<p>This page allows you to view and adjust the employee's records.</p>";
 
-		$mysql_string	= "SELECT id FROM `staff` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-		if (!$mysql_num_rows)
+	function check_requirements()
+	{
+		// verify that staff exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM staff WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested employee does not exist. <a href=\"index.php?page=hr/staff.php\">Try looking for your employee on the staff list page.</a></b></p>";
+			log_write("error", "page_output", "The requested employee (". $this->id .") does not exist - possibly the employee has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{	
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "staff_view";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "hr/staff-edit-process.php";
+		$this->obj_form->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_staff";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] = "staff_code";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "staff_position";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_email";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_phone";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "contact_fax";
+		$structure["type"]	= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]		= "date_start";
+		$structure["type"]		= "date";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$this->obj_form->add_input($structure);
+
+
+		// hidden section
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_staff";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+
+		// submit section
+		if (user_permissions_get("staff_write"))
+		{
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Save Changes";
+			$this->obj_form->add_input($structure);
+		
 		}
 		else
 		{
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "staff_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "hr/staff-edit-process.php";
-			$form->method = "post";
-			
-
-			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_staff";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_staff";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] = "staff_code";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "staff_position";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_email";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_phone";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "contact_fax";
-			$structure["type"]	= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"]		= "date_start";
-			$structure["type"]		= "date";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] = "date_end";
-			$structure["type"]	= "date";
-			$form->add_input($structure);
-
-			// submit section
-			if (user_permissions_get("staff_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$form->add_input($structure);
-			
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to staff records.</i></p>";
-				$form->add_input($structure);
-			}
-			
-			
-			// define subforms
-			$form->subforms["staff_view"]		= array("id_staff", "name_staff", "staff_code", "staff_position", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
-			$form->subforms["submit"]		= array("submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `staff` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
-
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to staff records.</i></p>";
+			$this->obj_form->add_input($structure);
 		}
+		
+		
+		// define subforms
+		$this->obj_form->subforms["staff_view"]		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+		$this->obj_form->subforms["hidden"]		= array("id_staff");
+		$this->obj_form->subforms["submit"]		= array("submit");
 
-	} // end page_render
+		
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT * FROM `staff` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->load_data();
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+	}
+
+
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>EMPLOYEE'S DETAILS</h3><br>";
+		print "<p>This page allows you to view and adjust the employee's records.</p>";
+		
+		// display the form
+		$this->obj_form->render_form();
+	}
+	
+} // end of page_output class
+
 
 ?>

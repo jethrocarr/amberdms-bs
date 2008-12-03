@@ -1,71 +1,106 @@
 <?php
 /*
-	staff/journal_edit.php
+	employees/journal_edit.php
 	
 	access: staff_write
 
 	Allows the addition or adjustment of journal entries.
 */
 
-if (user_permissions_get('staff_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
-
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
+	var $id;
+	var $journalid;
+	var $action;
+	var $type;
 	
-	$_SESSION["nav"]["title"][]	= "Employee's Details";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-view.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Employee's Journal";
-	$_SESSION["nav"]["query"][]	= "page=hr/staff-journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=hr/staff-journal.php&id=$id";
 
-	if (user_permissions_get('staff_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Employee";
-		$_SESSION["nav"]["query"][]	= "page=hr/staff-delete.php&id=$id";
+		// fetch variables
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+	
+	
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Employee's Details", "page=hr/staff-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Employee's Journal", "page=hr/staff-journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete Employee", "page=hr/staff-delete.php&id=". $this->id ."");
 	}
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		return user_permissions_get("staff_write");
+	}
 
-		
+
+
+	function check_requirements()
+	{
+		// verify that employee exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM staff WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested employee (". $this->id .") does not exist - possibly the employee has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+
+	function execute()
+	{
 		/*
-			Journal Forms
+			Configure journal form basics
 		*/
 
-		$journal_form = New journal_input;
+		$this->obj_form = New journal_input;
 			
 		// basic details of this entry
-		$journal_form->prepare_set_journalname("staff");
-		$journal_form->prepare_set_journalid($journalid);
-		$journal_form->prepare_set_customid($id);
+		$this->obj_form->prepare_set_journalname("staff");
+		$this->obj_form->prepare_set_journalid($this->journalid);
+		$this->obj_form->prepare_set_customid($this->id);
 
 		// set the processing form
-		$journal_form->prepare_set_form_process_page("hr/staff-journal-edit-process.php");
+		$this->obj_form->prepare_set_form_process_page("hr/staff-journal-edit-process.php");
+	}
 
-		
-		if ($action == "delete")
+
+
+	function render_html()
+	{
+		if ($this->action == "delete")
 		{
 			print "<h3>EMPLOYEE JOURNAL - DELETE ENTRY</h3><br>";
 			print "<p>This page allows you to delete an entry from the employee's journal.</p>";
 
 			// render delete form
-			$journal_form->render_delete_form();		
+			$this->obj_form->render_delete_form();		
 
 		}
 		else
 		{
-			if ($type == "file")
+			if ($this->type == "file")
 			{
 				// file uploader
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>EMPLOYEE JOURNAL - UPLOAD FILE</h3><br>";
 					print "<p>This page allows you to attach a file to the employee's journal.</p>";
@@ -77,12 +112,12 @@ if (user_permissions_get('staff_write'))
 				}
 
 				// edit or add file
-				$journal_form->render_file_form();
+				$this->obj_form->render_file_form();
 			}
 			else
 			{
 				// default to text
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>EMPLOYEE JOURNAL - EDIT ENTRY</h3><br>";
 					print "<p>This page allows you to edit an existing entry in the employee's journal.</p>";
@@ -94,19 +129,15 @@ if (user_permissions_get('staff_write'))
 				}
 
 				// edit or add
-				$journal_form->render_text_form();		
+				$this->obj_form->render_text_form();		
 			}
 			
 		}
 		
+	}
 
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+} // end of page_output
 
 ?>

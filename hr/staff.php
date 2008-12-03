@@ -7,33 +7,50 @@
 	Displays a list of all the staff on the system.
 */
 
-if (user_permissions_get('staff_view'))
+class page_output
 {
-	function page_render()
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("staff_view");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$staff_list = New table;
+		$this->obj_table = New table;
 
-		$staff_list->language	= $_SESSION["user"]["lang"];
-		$staff_list->tablename	= "staff_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "staff_list";
 
 		// define all the columns and structure
-		$staff_list->add_column("standard", "staff_code", "staff_code");
-		$staff_list->add_column("standard", "name_staff", "name_staff");
-		$staff_list->add_column("standard", "staff_position", "staff_position");
-		$staff_list->add_column("standard", "contact_phone", "contact_phone");
-		$staff_list->add_column("standard", "contact_email", "contact_email");
-		$staff_list->add_column("standard", "contact_fax", "contact_fax");
-		$staff_list->add_column("date", "date_start", "date_start");
-		$staff_list->add_column("date", "date_end", "date_end");
+		$this->obj_table->add_column("standard", "staff_code", "staff_code");
+		$this->obj_table->add_column("standard", "name_staff", "name_staff");
+		$this->obj_table->add_column("standard", "staff_position", "staff_position");
+		$this->obj_table->add_column("standard", "contact_phone", "contact_phone");
+		$this->obj_table->add_column("standard", "contact_email", "contact_email");
+		$this->obj_table->add_column("standard", "contact_fax", "contact_fax");
+		$this->obj_table->add_column("date", "date_start", "date_start");
+		$this->obj_table->add_column("date", "date_end", "date_end");
 
 		// defaults
-		$staff_list->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
-		$staff_list->columns_order	= array("name_staff");
+		$this->obj_table->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
+		$this->obj_table->columns_order	= array("name_staff");
 
 		// define SQL structure
-		$staff_list->sql_obj->prepare_sql_settable("staff");
-		$staff_list->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_settable("staff");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
 
 
 		// acceptable filter options
@@ -41,19 +58,19 @@ if (user_permissions_get('staff_view'))
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_start >= 'value'";
-		$staff_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
-		$staff_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "staff_code LIKE '%value%' OR name_staff LIKE '%value%' OR staff_position LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
-		$staff_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_ex_employees";
@@ -61,28 +78,32 @@ if (user_permissions_get('staff_view'))
 		$structure["sql"]		= "date_end='0000-00-00'";
 		$structure["defaultvalue"]	= "on";
 		$structure["options"]["label"]	= "Hide any ex-employees";
-		$staff_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
+	
+		// load options
+		$this->obj_table->load_options_form();
 		
+		// fetch all the staff information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+	}
 
 
+
+	function render_html()
+	{
 		// heading
 		print "<h3>STAFF LIST</h3><br><br>";
 
-
-		// options form
-		$staff_list->load_options_form();
-		$staff_list->render_options_form();
-
-
-		// fetch all the staff information
-		$staff_list->generate_sql();
-		$staff_list->load_data_sql();
-
-		if (!count($staff_list->columns))
+		// display options form
+		$this->obj_table->render_options_form();
+		
+		// display data
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$staff_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no staff in your database.</b></p>";
 		}
@@ -91,22 +112,26 @@ if (user_permissions_get('staff_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$staff_list->add_link("view", "hr/staff-view.php", $structure);
+			$this->obj_table->add_link("view", "hr/staff-view.php", $structure);
 
 			// display the table
-			$staff_list->render_table();
+			$this->obj_table->render_table_html();
 
-		
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=hr/staff.php\">Export as CSV</a></p>";
 		}
+	}
 
+
+	function render_csv()
+	{
+		// display the table
+		$this->obj_table->render_table_csv();
 		
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
-}
+	}
+	
+	
+	
+} // end of page_output class
 
 ?>
