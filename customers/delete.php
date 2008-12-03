@@ -9,65 +9,71 @@
 
 if (user_permissions_get('customers_write'))
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Details";
-	$_SESSION["nav"]["query"][]	= "page=customers/view.php&id=$id";
+        $_SESSION["error"]["pagestate"] = 1;
 
-	$_SESSION["nav"]["title"][]	= "Customer's Journal";
-	$_SESSION["nav"]["query"][]	= "page=customers/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Customer's Invoices";
-	$_SESSION["nav"]["query"][]	= "page=customers/invoices.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Customer's Services";
-	$_SESSION["nav"]["query"][]	= "page=customers/services.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Customer";
-	$_SESSION["nav"]["query"][]	= "page=customers/delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=customers/delete.php&id=$id";
-
-
-	function page_render()
+		
+	class page_output
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		var $id;
+		var $obj_menu_nav;
+		var $obj_form;
+
 
 		/*
-			Title + Summary
+			Constructor
 		*/
-		print "<h3>DELETE CUSTOMER</h3><br>";
-		print "<p>This page allows you to delete an unwanted customers. Note that it is only possible to delete a customer if they do not belong to any
-		invoices or time groups. If they do, you can not delete the customer, but instead you can disable the customer by setting the date_end field.</p>";
-
-		$mysql_string	= "SELECT id FROM `customers` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if (!$mysql_num_rows)
+		function page_output()
 		{
-			print "<p><b>Error: The requested customer does not exist. <a href=\"index.php?page=customers/customers.php\">Try looking for your customer on the customer list page.</a></b></p>";
+			// fetch variables
+			$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+
+			// verifiy that customer exists
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			}
+
+			unset($sql_obj);
+
+
+			// define the navigiation menu
+			$this->obj_menu_nav = New menu_nav;
+
+			$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=$id");
+			$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=$id");
+			$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=$id");
+			$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=$id");
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/services.php&id=$id", TRUE);
 		}
-		else
+
+
+
+		/*
+			Logic Code
+		*/
+		function execute()
 		{
 			/*
 				Define form structure
 			*/
-			$form = New form_input;
-			$form->formname = "customer_delete";
-			$form->language = $_SESSION["user"]["lang"];
+			$this->obj_form = New form_input;
+			$this->obj_form->formname = "customer_delete";
+			$this->obj_form->language = $_SESSION["user"]["lang"];
 
-			$form->action = "customers/delete-process.php";
-			$form->method = "post";
+			$this->obj_form->action = "customers/delete-process.php";
+			$this->obj_form->method = "post";
 			
 
 			// general
 			$structure = NULL;
 			$structure["fieldname"] 	= "name_customer";
 			$structure["type"]		= "text";
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 
 
 			// hidden
@@ -75,7 +81,7 @@ if (user_permissions_get('customers_write'))
 			$structure["fieldname"] 	= "id_customer";
 			$structure["type"]		= "hidden";
 			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 			
 			
 			// confirm delete
@@ -83,7 +89,7 @@ if (user_permissions_get('customers_write'))
 			$structure["fieldname"] 	= "delete_confirm";
 			$structure["type"]		= "checkbox";
 			$structure["options"]["label"]	= "Yes, I wish to delete this customer and realise that once deleted the data can not be recovered.";
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 
 
 
@@ -130,26 +136,40 @@ if (user_permissions_get('customers_write'))
 				$structure["defaultvalue"]	= "delete";
 			}
 					
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 
 
 			
 			// define subforms
-			$form->subforms["customer_delete"]	= array("name_customer");
-			$form->subforms["hidden"]		= array("id_customer");
-			$form->subforms["submit"]		= array("delete_confirm", "submit");
+			$this->obj_form->subforms["customer_delete"]	= array("name_customer");
+			$this->obj_form->subforms["hidden"]		= array("id_customer");
+			$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
 
 			
 			// fetch the form data
-			$form->sql_query = "SELECT name_customer FROM `customers` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
+			$this->obj_form->sql_query = "SELECT name_customer FROM `customers` WHERE id='$id' LIMIT 1";		
+			$this->obj_form->load_data();
+			
+		} // end of execute function
+
+
+
+		/*
+			Output: HTML
+		*/
+		function render_html()
+		{
+
+			// title/summary
+			print "<h3>DELETE CUSTOMER</h3><br>";
+			print "<p>This page allows you to delete an unwanted customers. Note that it is only possible to delete a customer if they do not belong to any invoices or time groups. If they do, you can not delete the customer, but instead you can disable the customer by setting the date_end field.</p>";
 
 			// display the form
-			$form->render_form();
-
+			$this->obj_form->render_form();
 		}
 
-	} // end page_render
+
+	} // end page_output
 
 } // end of if logged in
 else
