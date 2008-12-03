@@ -231,7 +231,7 @@ class menu_nav
 	*/
 	function add_item($title, $link, $selected = NULL)
 	{
-		log_write("debug", "Executing menu_navigation:menu_nav_add($title, $link, $selected)");
+		log_debug("menu_nav", "Executing add_item($title, $link, $selected)");
 
 		$this->structure["links"][] = $link;
 		$this->structure["title"][] = $title;
@@ -252,9 +252,9 @@ class menu_nav
 	*/
 	function render_html()
 	{
-		log_write("debug", "Executing menu_navigiation:menu_nav_render_html()");
+		log_debug("menu_nav", "Executing render_html()");
 
-		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">";
+		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
 		print "<tr>";
 		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
 
