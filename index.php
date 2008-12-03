@@ -134,126 +134,121 @@ if (user_online())
 
 
 
-	/*
-		Load the page
-	*/
+/*
+	Load the page
+*/
 
-	if ($page_valid == 1)
+if ($page_valid == 1)
+{
+	log_debug("index", "Loading page $page");
+
+
+	// include PHP code
+	include($page);
+
+
+	// create new page object
+	$page_obj = New page_output;
+
+	// check permissions
+	if ($page_obj->check_permissions())
 	{
-		log_debug("index", "Loading page $page");
-
-
-		// include PHP code
-		include($page);
-
-        
-		// create new page object
-		$page_obj = New page_output;
-
-		// check permissions
-		if ($page_obj->check_permissions())
+		/*
+			Draw navigiation menu
+		*/
+		
+		if ($page_obj->obj_menu_nav)
 		{
-			/*
-				Draw navigiation menu
-			*/
-			
-			if ($page_obj->obj_menu_nav)
-			{
-				print "<tr><td>";
-				$page_obj->obj_menu_nav->render_html();
-				print "</tr></td>";
-			}
-
-
-
-			/*
-				Run data loading and logic
-			*/
-			
-			$page_obj->execute();
-
-
-
-			/*
-				Draw messages
-			*/
-
-			if ($_SESSION["error"]["message"])
-			{
-				print "<tr><td>";
-				log_error_render();
-				print "</td></tr>";
-			}
-			else
-			{
-				if ($_SESSION["notification"]["message"])
-				{
-					print "<tr><td>";
-					log_notification_render();
-					print "</td></tr>";
-				}
-			}
-
-
-
-			/*
-				Draw page data
-			*/
-
-			print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
-			print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\"><tr>";
-	
-			print "<td valign=\"top\" style=\"padding: 5px;\">";
-			$page_obj->render_html();
-			print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
-
-			print "</tr></table>";
-			print "</td></tr>";
-
-
-			// free up page memory
-			unset($page_obj);
-	
-		}
-		else
-		{
-			// user has no access permissions
-			error_render_noperms();
-			
 			print "<tr><td>";
-			log_error_render();
-			print "</td></tr>";
+			$page_obj->obj_menu_nav->render_html();
+			print "</tr></td>";
+		}
 
 
-			print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
-			print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">";
-	
-			print "<td valign=\"top\" style=\"padding: 5px;\">";
-			print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
 
-			print "</tr></table>";
-			print "</td></tr>";
+		/*
+			Check data
+		*/
+		$page_valid = $page_obj->check_requirements();
+
+
+		/*
+			Run page logic, provided that the data was valid
+		*/
+		if ($page_valid)
+		{
+			$page_obj->execute();
 		}
 	}
 	else
 	{
-		if ($_SESSION["error"]["message"])
-		{
-			print "<tr><td>";
-			log_error_render();
-			print "</td></tr>";
-		}
-	
+		// user has no valid permissions
+		error_render_noperms();
 	}
+}
 
 
-	// save query string, so the user can return here if they login. (providing none of the pages are in the user/ folder, as that will break some stuff otherwise.)
-	if (!preg_match('/^user/', $page))
+
+/*
+	Draw messages
+*/
+
+if ($_SESSION["error"]["message"])
+{
+	print "<tr><td>";
+	log_error_render();
+	print "</td></tr>";
+}
+else
+{
+	if ($_SESSION["notification"]["message"])
 	{
-		$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
+		print "<tr><td>";
+		log_notification_render();
+		print "</td></tr>";
 	}
+}
 
-	?>
+
+
+/*
+	Draw page data
+*/
+
+if ($page_valid)
+{
+	// HTML-formatted output
+	print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
+	print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\"><tr>";
+
+	print "<td valign=\"top\" style=\"padding: 5px;\">";
+	$page_obj->render_html();
+	print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
+
+	print "</tr></table>";
+	print "</td></tr>";
+}
+else
+{
+	// padding
+	print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
+	print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">";
+
+	print "<td valign=\"top\" style=\"padding: 5px;\">";
+	print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
+	
+	print "</tr></table>";
+	print "</td></tr>";
+}
+
+
+// save query string, so the user can return here if they login. (providing none of the pages are in the user/ folder, as that will break some stuff otherwise.)
+if (!preg_match('/^user/', $page))
+{
+	$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
+}
+
+?>
 
 
 
