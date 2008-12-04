@@ -7,12 +7,121 @@
 	TODO: currently IPv4 only, need to test and make suitable changes for IPv6
 */
 
-// only admins may access this page
-if (user_permissions_get("admin"))
+
+class page_output
 {
-	$_SESSION["error"]["menuid"] = "21";
+	var $obj_form;
+	var $obj_table_blacklist;
+
+	function check_permissions()
+	{
+		return user_permissions_get("admin");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+	function execute()
+	{
+		/*
+			Define blacklist options form
+		*/
+		
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "blacklist_control";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "admin/blacklist-enable-process.php";
+		$this->obj_form->method = "post";
 	
-	function page_render()
+	
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "blacklist_enable";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "blacklist_limit";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Apply changes";
+		$this->obj_form->add_input($structure);
+
+
+		// define subforms
+		$this->obj_form->subforms["blacklist_control"]	= array("blacklist_enable", "blacklist_limit");
+		$this->obj_form->subforms["submit"]		= array("submit");
+
+
+		// fetch state from DB
+		$this->obj_form->sql_query = "SELECT value as blacklist_enable FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1";
+		$this->obj_form->load_data();
+		
+		$this->obj_form->sql_query = "SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1";
+		$this->obj_form->load_data();
+
+
+
+		/*
+			Define blacklisted address table
+
+			(only needed if blacklisting is enabled)
+		*/
+		if ($this->obj_form->structure["blacklist_enable"]["defaultvalue"] == "enabled")
+		{
+			// establish a new table object
+			$this->obj_table_blacklist = New table;
+
+			$this->obj_table_blacklist->language	= $_SESSION["user"]["lang"];
+			$this->obj_table_blacklist->tablename	= "blacklist_list";
+
+			// define all the columns and structure
+			$this->obj_table_blacklist->add_column("timestamp", "time", "");
+			$this->obj_table_blacklist->add_column("standard", "ipaddress", "");
+			$this->obj_table_blacklist->add_column("standard", "failedcount", "");
+
+			// defaults
+			$this->obj_table_blacklist->columns		= array("time", "ipaddress", "failedcount");
+			$this->obj_table_blacklist->columns_order	= array("time");
+
+			// define SQL structure
+			$this->obj_table_blacklist->sql_obj->prepare_sql_settable("users_blacklist");
+			$this->obj_table_blacklist->sql_obj->prepare_sql_addfield("id", "");
+
+			// selected all the blacklist information
+			$this->obj_table_blacklist->generate_sql();
+			$this->obj_table_blacklist->load_data_sql();
+
+			if ($this->obj_table_blacklist->data_num_rows)
+			{
+				// replace any failedcount result equal to the defined limit with "blocked"
+				for ($i=0; $i < count($this->obj_table_blacklist->data); $i++)
+				{
+					if ($this->obj_table_blacklist->data[$i]["failedcount"] == $this->obj_form->structure["blacklist_limit"]["defaultvalue"])
+					{
+						$this->obj_table_blacklist->data[$i]["failedcount"] = "blocked";
+					}
+				}
+			}
+			
+		} // end if blacklisitng enabled
+	}
+
+
+
+	function render_html()
 	{
 		print "<h3>BRUTE FORCE BLACKLIST</h3>";
 	
@@ -37,122 +146,40 @@ if (user_permissions_get("admin"))
 		
 		print "<h3>BLACKLIST SETTINGS</h3><br><br>";
 
-		$form = New form_input;
-		$form->formname = "blacklist_control";
-		$form->language = $_SESSION["user"]["lang"];
-
-		$form->action = "admin/blacklist-enable-process.php";
-		$form->method = "post";
-	
-	
-		// general
-		$structure = NULL;
-		$structure["fieldname"] 	= "blacklist_enable";
-		$structure["type"]		= "checkbox";
-		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] 	= "blacklist_limit";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
-
-
-		// submit button
-		$structure = NULL;
-		$structure["fieldname"] 	= "submit";
-		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Apply changes";
-		$form->add_input($structure);
-
-
-		// define subforms
-		$form->subforms["blacklist_control"]	= array("blacklist_enable", "blacklist_limit");
-		$form->subforms["submit"]		= array("submit");
-
-
-		// fetch state from DB
-		$form->sql_query = "SELECT value as blacklist_enable FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1";
-		$form->load_data();
-		
-		$form->sql_query = "SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1";
-		$form->load_data();
 		
 		// display the form
-		$form->render_form();
+		$this->obj_form->render_form();
 
 		print "</td></tr></table>";
 
 
 
-		if ($form->structure["blacklist_enable"]["defaultvalue"] == "enabled")
+		if ($this->obj_form->structure["blacklist_enable"]["defaultvalue"] == "enabled")
 		{
-			// establish a new table object
-			$blacklist_list = New table;
-
-			$blacklist_list->language	= $_SESSION["user"]["lang"];
-			$blacklist_list->tablename	= "blacklist_list";
-
-			// define all the columns and structure
-			$blacklist_list->add_column("timestamp", "time", "");
-			$blacklist_list->add_column("standard", "ipaddress", "");
-			$blacklist_list->add_column("standard", "failedcount", "");
-
-			// defaults
-			$blacklist_list->columns	= array("time", "ipaddress", "failedcount");
-			$blacklist_list->columns_order	= array("time");
-
-			// define SQL structure
-			$blacklist_list->sql_obj->prepare_sql_settable("users_blacklist");
-			$blacklist_list->sql_obj->prepare_sql_addfield("id", "");
-
-
-
 			// heading
 			print "<br><br><h3>BLACKLISTED ADDRESSES</h3><br><br>";
 
-			// selected all the blacklist information
-			$blacklist_list->generate_sql();
-			$blacklist_list->load_data_sql();
-
-			if (!$blacklist_list->data_num_rows)
+			if (!$this->obj_table_blacklist->data_num_rows)
 			{
 				print "<p><b>The blacklist is currently empty.</b></p>";
 			}
 			else
 			{
-				// replace any failedcount result equal to the defined limit with "blocked"
-				for ($i=0; $i < count($blacklist_list->data); $i++)
-				{
-					if ($blacklist_list->data[$i]["failedcount"] == $form->structure["blacklist_limit"]["defaultvalue"])
-					{
-						$blacklist_list->data[$i]["failedcount"] = "blocked";
-					}
-				}
-				
-				
-			
 				// view link
 				$structure = NULL;
 				$structure["id"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
-				$blacklist_list->add_link("delete", "admin/blacklist-delete-process.php", $structure);
+				$this->obj_table_blacklist->add_link("delete", "admin/blacklist-delete-process.php", $structure);
 
 				// display the table
-				$blacklist_list->render_table();
-
+				$this->obj_table_blacklist->render_table_html();
 			}
 
 		}
 
-	} // end of page_render()
-	
+	}
 
-// if user doesn't have access, display messages.
 }
-else
-{
-	error_render_noperms();
-}
+
+
 ?>
