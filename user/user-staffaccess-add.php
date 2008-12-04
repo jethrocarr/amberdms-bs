@@ -7,158 +7,150 @@
 	Allows the administrator to add new access rights for a staff member to a user's account.
 */
 
-if (user_permissions_get('admin'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "User's Details";
-	$_SESSION["nav"]["query"][]	= "page=user/user-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Permissions";
-	$_SESSION["nav"]["query"][]	= "page=user/user-permissions.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Staff Access Rights";
-	$_SESSION["nav"]["query"][]	= "page=user/user-staffaccess.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=user/user-staffaccess.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "User's Journal";
-	$_SESSION["nav"]["query"][]	= "page=user/user-journal.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Delete User";
-	$_SESSION["nav"]["query"][]	= "page=user/user-delete.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
 
-	function page_render()
+	function page_output()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$staffid	= security_script_input('/^[0-9]*$/', $_GET["staffid"]);
+		// fetch variables
+		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		// check that the user exists
-		$mysql_string	= "SELECT id FROM `users` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
 
-		if (!$mysql_num_rows)
+		$this->obj_menu_nav->add_item("User's Details", "page=user/user-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Journal", "page=user/user-journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Permissions", "page=user/user-permissions.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Staff Access Rights", "page=user/user-staffaccess.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete User", "page=user/user-delete.php&id=". $this->id ."");
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("admin");
+	}
+
+
+	function check_requirements()
+	{
+		// verify that user exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM users WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested user does not exist. <a href=\"index.php?page=user/users.php\">Try looking for your user on the user list page.</a></b></p>";
+			log_write("error", "page_output", "The requested user (". $this->id .") does not exist - possibly the user has been deleted.");
+			return 0;
 		}
-		else
-		{
-					
-			/*
-				Title + Summary
-			*/
-			print "<h3>USER STAFF ACCESS RIGHTS</h3><br>";
 
-			print "<p>Use this page to assign access rights to a staff member for the selected user account.</p>";
+		unset($sql_obj);
 
-		
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "users_permissions_staff";
-			$form->language = $_SESSION["user"]["lang"];
+		return 1;
+	}
 
-			$form->action = "user/user-staffaccess-edit-process.php";
-			$form->method = "post";
-
-
-			// staff member dropdown
-			$structure = form_helper_prepare_dropdownfromdb("id_staff", "SELECT id, name_staff as label FROM `staff` ORDER BY name_staff");
-			$form->add_input($structure);
-			
-			$form->subforms["user_permissions_selectstaff"]	= array("id_staff");
-
-
-			/*
-				Permissions sub-form
-			*/
-
-			$mysql_string = "SELECT * FROM `permissions_staff`";
-			log_debug("user-staffaccess", "SQL: $mysql_string");
-
-			if (!$mysql_perms_results = mysql_query($mysql_string))
-				log_debug("user-staffaccess", "FATAL SQL: ". mysql_error());
 	
-			while ($mysql_perms_data = mysql_fetch_array($mysql_perms_results))
+	function execute()
+	{
+		
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "users_permissions_staff";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "user/user-staffaccess-edit-process.php";
+		$this->obj_form->method = "post";
+
+
+		// staff member dropdown
+		$structure = form_helper_prepare_dropdownfromdb("id_staff", "SELECT id, name_staff as label FROM `staff` ORDER BY name_staff");
+		$this->obj_form->add_input($structure);
+		
+		$this->obj_form->subforms["user_permissions_selectstaff"]	= array("id_staff");
+
+
+
+		/*
+			Permissions sub-form
+		*/
+		
+		// run through all the avaliable permissions
+		$sql_perms_obj			= New sql_query;
+		$sql_perms_obj->string		= "SELECT * FROM `permissions_staff`";
+		$sql_perms_obj->execute();
+
+		if ($sql_perms_obj->num_rows())
+		{
+			$sql_perms_obj->fetch_array();
+
+			foreach ($sql_perms_obj->data as $data_perms)
 			{
 				// define the checkbox
 				$structure = NULL;
-				$structure["fieldname"]		= $mysql_perms_data["value"];
+				$structure["fieldname"]		= $data_perms["value"];
 				$structure["type"]		= "checkbox";
-				$structure["options"]["label"]	= $mysql_perms_data["description"];
-
-
-				// check the database to see if this checkbox is selected
-				$mysql_string = "SELECT "
-						."id "
-						."FROM `users_permissions_staff` "
-						."WHERE "
-						."userid='$id' "
-						."AND permid='". $mysql_perms_data["id"] ."' "
-						."AND staffid='$staffid'";
-						
-				log_debug("user-staffaccess", "SQL: $mysql_string");
-
-				if (!$mysql_userperms_result = mysql_query($mysql_string))
-					log_debug("user-staffaccess", "FATAL SQL: ". mysql_error());
-
-				$mysql_userperms_num_rows = mysql_num_rows($mysql_userperms_result);
-				if ($mysql_userperms_num_rows)
-				{
-					$structure["defaultvalue"] = "on";
-				}
-
+				$structure["options"]["label"]	= $data_perms["description"];
 
 				// add checkbox
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				// add checkbox to subforms
-				$form->subforms["user_permissions_staff"][] = $mysql_perms_data["value"];
-
+				$this->obj_form->subforms["user_permissions_staff"][] = $data_perms["value"];
 			}
+		}
+	
+
+	
+
+		// hidden fields
+		$structure = NULL;
+		$structure["fieldname"]		= "id_user";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+	
+		// submit section
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 		
-
-			// hidden fields
-			$structure = NULL;
-			$structure["fieldname"]		= "id_user";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $id;
-			$form->add_input($structure);
 		
-			// submit section
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$form->add_input($structure);
-			
-			
-			// define subforms
-			$form->subforms["hidden"]			= array("id_user");
-			$form->subforms["submit"]			= array("submit");
+		// define subforms
+		$this->obj_form->subforms["hidden"]			= array("id_user");
+		$this->obj_form->subforms["submit"]			= array("submit");
 
-			/*
-				Note: We don't load from error data, since there should never
-				be any errors when using this form.
-			*/
+		/*
+			Note: We don't load from error data, since there should never
+			be any errors when using this form.
+		*/
 
-			// display the form
-			$form->render_form();
-			
 
-		} // end if user exists
+	}
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>USER STAFF ACCESS RIGHTS</h3><br>";
+
+		print "<p>Use this page to assign access rights to a staff member for the selected user account.</p>";
+
+		// display the form
+		$this->obj_form->render_form();
+	}
+	
 }
+
 
 ?>

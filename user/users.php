@@ -5,59 +5,82 @@
 	Administrator-only utility to create, edit or delete user accounts.
 */
 
-// only admins may access this page
-if (user_permissions_get("admin"))
+
+class page_output
 {
-	
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
 	{
-		print "<h3>USER MANAGEMENT</h3>";
-		print "<p>This page allows you to create, edit or delete user accounts, as well as allowing you to define the the account permissions.</p>";
+		return user_permissions_get("admin");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
 
+	function execute()
+	{
 		// establish a new table object
-		$user_list = New table;
+		$this->obj_table = New table;
 
-		$user_list->language	= $_SESSION["user"]["lang"];
-		$user_list->tablename	= "user_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "user_list";
 
 		// define all the columns and structure
-		$user_list->add_column("standard", "username", "");
-		$user_list->add_column("standard", "realname", "");
-		$user_list->add_column("standard", "contact_email", "");
-		$user_list->add_column("timestamp", "lastlogin_time", "time");
-		$user_list->add_column("standard", "lastlogin_ipaddress", "ipaddress");
+		$this->obj_table->add_column("standard", "username", "");
+		$this->obj_table->add_column("standard", "realname", "");
+		$this->obj_table->add_column("standard", "contact_email", "");
+		$this->obj_table->add_column("timestamp", "lastlogin_time", "time");
+		$this->obj_table->add_column("standard", "lastlogin_ipaddress", "ipaddress");
 
 		// defaults
-		$user_list->columns		= array("username", "realname", "contact_email", "lastlogin_time");
-		$user_list->columns_order	= array("username");
+		$this->obj_table->columns		= array("username", "realname", "contact_email", "lastlogin_time");
+		$this->obj_table->columns_order	= array("username");
 
 		// define SQL structure
-		$user_list->sql_obj->prepare_sql_settable("users");
-		$user_list->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_settable("users");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
 
 		// acceptable filter options
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "username LIKE '%value%' OR realname LIKE '%value%' OR contact_email LIKE '%value%'";
-		$user_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 
-		// options form
-		$user_list->load_options_form();
-		$user_list->render_options_form();
+		// load options
+		$this->obj_table->load_options_form();
+
 
 
 		// fetch all the user information
-		$user_list->generate_sql();
-		$user_list->load_data_sql();
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
 
-		if (!count($user_list->columns))
+	}
+
+
+	function render_html()
+	{
+		// title + summary
+		print "<h3>USER MANAGEMENT</h3>";
+		print "<p>This page allows you to create, edit or delete user accounts, as well as allowing you to define the the account permissions.</p>";
+
+		// display options form
+		$this->obj_table->render_options_form();
+
+		// table data
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$user_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>No users that match your options were found.</b></p>";
 		}
@@ -66,21 +89,16 @@ if (user_permissions_get("admin"))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$user_list->add_link("view", "user/user-view.php", $structure);
+			$this->obj_table->add_link("view", "user/user-view.php", $structure);
 
 			// display the table
-			$user_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
 		}
 
-	} // end of page_render()
-	
+	}
 
-// if user doesn't have access, display messages.
 }
-else
-{
-	error_render_noperms();
-}
+
+
 ?>

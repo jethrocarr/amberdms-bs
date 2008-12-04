@@ -7,38 +7,90 @@
 	Allows the configuration of user's access rights to staff member accounts.
 */
 
-if (user_permissions_get('admin'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "User's Details";
-	$_SESSION["nav"]["query"][]	= "page=user/user-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Permissions";
-	$_SESSION["nav"]["query"][]	= "page=user/user-permissions.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Staff Access Rights";
-	$_SESSION["nav"]["query"][]	= "page=user/user-staffaccess.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=user/user-staffaccess.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "User's Journal";
-	$_SESSION["nav"]["query"][]	= "page=user/user-journal.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Delete User";
-	$_SESSION["nav"]["query"][]	= "page=user/user-delete.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table;
 
 
-
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		/*
-			Title + Summary
-		*/
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("User's Details", "page=user/user-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Journal", "page=user/user-journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Permissions", "page=user/user-permissions.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Staff Access Rights", "page=user/user-staffaccess.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete User", "page=user/user-delete.php&id=". $this->id ."");
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("admin");
+	}
+
+
+	function check_requirements()
+	{
+		// verify that user exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM users WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested user (". $this->id .") does not exist - possibly the user has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+
+	function execute()
+	{
+		// establish a new table object
+		$this->obj_table = New table;
+
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "userstaff_list";
+
+		// define all the columns and structure
+		$this->obj_table->add_column("standard", "staff_code", "staff.staff_code");
+		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "staff_position", "staff.staff_position");
+
+		// defaults
+		$this->obj_table->columns	= array("staff_code", "name_staff", "staff_position");
+		$this->obj_table->columns_order	= array("name_staff");
+
+
+		// define SQL structure
+		$this->obj_table->sql_obj->prepare_sql_settable("users_permissions_staff");
+		$this->obj_table->sql_obj->prepare_sql_addfield("staffid", "staff.id");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("userid = '". $this->id ."'");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = users_permissions_staff.staffid");
+		$this->obj_table->sql_obj->prepare_sql_addgroupby("users_permissions_staff.staffid");
+
+		// run SQL query
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+	}
+
+
+	function render_html()
+	{
+		// Title + Summary
 		print "<h3>USER STAFF ACCESS RIGHTS</h3><br>";
 		print "<p>The Amberdms Billing System allows user accounts to be in charge of multiple staff members
 			- what this means, is that you can configure which staff members the user can act on behalf
@@ -49,72 +101,27 @@ if (user_permissions_get('admin'))
 			able to edit all staff member's timesheets in order to correct mistakes at billing time.</p>";
 		
 
-		$mysql_string	= "SELECT id FROM `users` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if (!$mysql_num_rows)
+		// display table
+		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>Error: The requested user does not exist. <a href=\"index.php?page=user/users.php\">Try looking for your user on the user list page.</a></b></p>";
+			print "<br><p><b>This user currently has no staff access rights.</b></p><br>";
 		}
 		else
 		{
-		
-			// establish a new table object
-			$userstaff_list = New table;
+			// edit link
+			$structure = NULL;
+			$structure["id"]["value"]		= $this->id;
+			$structure["staffid"]["column"]		= "staffid";
+			$this->obj_table->add_link("full details", "user/user-staffaccess-edit.php", $structure);
 
-			$userstaff_list->language	= $_SESSION["user"]["lang"];
-			$userstaff_list->tablename	= "userstaff_list";
+			// display the table
+			$this->obj_table->render_table_html();
+		}
 
-			// define all the columns and structure
-			$userstaff_list->add_column("standard", "staff_code", "staff.staff_code");
-			$userstaff_list->add_column("standard", "name_staff", "staff.name_staff");
-			$userstaff_list->add_column("standard", "staff_position", "staff.staff_position");
+		// add link
+		print "<p><b><a href=\"index.php?page=user/user-staffaccess-add.php&id=". $this->id ."\">Click here to add new staff access rights</a>.</b></p>";
 
-			// defaults
-			$userstaff_list->columns	= array("staff_code", "name_staff", "staff_position");
-			$userstaff_list->columns_order	= array("name_staff");
-
-
-			// define SQL structure
-			$userstaff_list->sql_obj->prepare_sql_settable("users_permissions_staff");
-			$userstaff_list->sql_obj->prepare_sql_addfield("staffid", "staff.id");
-			$userstaff_list->sql_obj->prepare_sql_addwhere("userid = '$id'");
-			$userstaff_list->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = users_permissions_staff.staffid");
-			$userstaff_list->sql_obj->prepare_sql_addgroupby("users_permissions_staff.staffid");
-
-			// run SQL query
-			$userstaff_list->generate_sql();
-			$userstaff_list->load_data_sql();
-
-			if (!$userstaff_list->data_num_rows)
-			{
-				print "<br><p><b>This user currently has no staff access rights.</b></p><br>";
-			}
-			else
-			{
-				// edit link
-				$structure = NULL;
-				$structure["id"]["value"]		= $id;
-				$structure["staffid"]["column"]		= "staffid";
-				$userstaff_list->add_link("full details", "user/user-staffaccess-edit.php", $structure);
-
-				// display the table
-				$userstaff_list->render_table();
-
-			}
-
-			// add link
-			print "<p><b><a href=\"index.php?page=user/user-staffaccess-add.php&id=$id\">Click here to add new staff access rights</a>.</b></p>";
-
-		} // end if user exists
-		
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}	
 }
 
 ?>

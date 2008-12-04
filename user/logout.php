@@ -6,16 +6,29 @@
 
 */
 
-// match to menu entry
-$_SESSION["error"]["menuid"] = "5";
-
-
-function page_render()
+class page_output
 {
-	// is the user logged in?
-	if (user_online())
+	function check_permissions()
 	{
+		return user_online();
+	}
 
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+	
+	function execute()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function render_html()
+	{
 		/////////////////////////
 	
 		print "<h3>USER LOGOUT:</h3>";
@@ -25,14 +38,8 @@ function page_render()
 		<input type=\"submit\" value=\"Logout\">
 		</form>";
 		/////////////////////////
-
-	}
-	else
-	{
-		print "<p><b>You are not logged in! Please <a href=\"index.php?page=user/login.php\">click here</a> to login.</b></p>";
 	}
 }
-
 
 
 ?>

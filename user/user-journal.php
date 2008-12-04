@@ -8,95 +8,103 @@
 */
 
 
-if (user_permissions_get('admin'))
+class page_output
 {
-	$id = $_GET["id"];
-
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "User's Details";
-	$_SESSION["nav"]["query"][]	= "page=user/user-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Permissions";
-	$_SESSION["nav"]["query"][]	= "page=user/user-permissions.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "User's Staff Access Rights";
-	$_SESSION["nav"]["query"][]	= "page=user/user-staffaccess.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "User's Journal";
-	$_SESSION["nav"]["query"][]	= "page=user/user-journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=user/user-journal.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Delete User";
-	$_SESSION["nav"]["query"][]	= "page=user/user-delete.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_journal;
 
 
-
-
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("User's Details", "page=user/user-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Journal", "page=user/user-journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("User's Permissions", "page=user/user-permissions.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("User's Staff Access Rights", "page=user/user-staffaccess.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete User", "page=user/user-delete.php&id=". $this->id ."");
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("admin");
+	}
+
+
+	function check_requirements()
+	{
+		// verify that user exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM users WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested user (". $this->id .") does not exist - possibly the user has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
 		/*
-			Title + Summary
+			Define the journal structure
 		*/
+
+		// basic
+		$this->obj_journal		= New journal_display;
+		$this->obj_journal->journalname	= "users";
+		
+		// set the pages to use for forms or file downloads
+		$this->obj_journal->prepare_set_form_process_page("user/user-journal-edit.php");
+		$this->obj_journal->prepare_set_download_page("user/user-journal-download-process.php");
+		
+		// configure options form
+		$this->obj_journal->prepare_predefined_optionform();
+		$this->obj_journal->add_fixed_option("id", $this->id);
+
+		// load options
+		$this->obj_journal->load_options_form();
+
+
+		// define SQL structure
+		$this->obj_journal->sql_obj->prepare_sql_addwhere("customid='". $this->id ."'");		// we only want journal entries for this ticket!
+
+		// process SQL			
+		$this->obj_journal->generate_sql();
+		$this->obj_journal->load_data();
+
+	}
+	
+
+	function render_html()
+	{
+		// Title + Summary
 		print "<h3>USER'S JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this user.</p>";
 
-		print "<p><b><a href=\"index.php?page=user/user-journal-edit.php&type=text&id=$id\">Add new journal entry</a> || <a href=\"index.php?page=user/user-journal-edit.php&type=file&id=$id\">Upload File</a></b></p>";
+		print "<p><b><a href=\"index.php?page=user/user-journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=user/user-journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
 
+		// display options form
+		$this->obj_journal->render_options_form();
 
-		// make sure the users exists
-		$sql = New sql_query;
-		$sql->string = "SELECT id FROM `users` WHERE id='$id'";
-		$sql->execute();
+		// display			
+		$this->obj_journal->render_journal();
 		
-		if (!$sql->num_rows())
-		{
-			print "<p><b>Error: The requested user does not exist. <a href=\"index.php?page=users/users.php\">Try looking for your user on the users list page.</a></b></p>";
-		}
-		else
-		{
-			/*
-				Define the journal structure
-			*/
+	}
 
-			// basic
-			$journal		= New journal_display;
-			$journal->journalname	= "users";
-			
-			// set the pages to use for forms or file downloads
-			$journal->prepare_set_form_process_page("user/user-journal-edit.php");
-			$journal->prepare_set_download_page("user/user-journal-download-process.php");
-			
-			// configure options form
-			$journal->prepare_predefined_optionform();
-			$journal->add_fixed_option("id", $id);
-
-			// load + display options form
-			$journal->load_options_form();
-			$journal->render_options_form();
-
-
-			// define SQL structure
-			$journal->sql_obj->prepare_sql_addwhere("customid='$id'");		// we only want journal entries for this ticket!
-
-			// process SQL			
-			$journal->generate_sql();
-			$journal->load_data();
-
-			// display			
-			$journal->render_journal();
-			
-		}
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>
