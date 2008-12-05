@@ -2,38 +2,59 @@
 /*
 	support/support.php
 
-	access: "support_view" group members
+	access: support_view
 
 	Displays a list of all the support tickets currently on the system, and allows
 	the user to filter or sort though them to find the one they need.
 */
 
-if (user_permissions_get('support_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		if (user_permissions_get('support_view'))
+		{
+			return 1;
+		}
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	/*
+		Define table and load data
+	*/
+	function execute()
 	{
 		// establish a new table object
-		$support_ticket_list = New table;
+		$this->obj_table = New table;
 
-		$support_ticket_list->language	= $_SESSION["user"]["lang"];
-		$support_ticket_list->tablename	= "support_ticket_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "support_ticket_list";
 
 		// define all the columns and structure
-		$support_ticket_list->add_column("standard", "title", "support_tickets.title");
-		$support_ticket_list->add_column("standard", "status", "support_tickets_status.value");
-		$support_ticket_list->add_column("standard", "priority", "support_tickets_priority.value");
-		$support_ticket_list->add_column("date", "date_start", "");
-		$support_ticket_list->add_column("date", "date_end", "");
+		$this->obj_table->add_column("standard", "title", "support_tickets.title");
+		$this->obj_table->add_column("standard", "status", "support_tickets_status.value");
+		$this->obj_table->add_column("standard", "priority", "support_tickets_priority.value");
+		$this->obj_table->add_column("date", "date_start", "");
+		$this->obj_table->add_column("date", "date_end", "");
 
 		// defaults
-		$support_ticket_list->columns		= array("title", "status", "priority");
-		$support_ticket_list->columns_order	= array("status");
+		$this->obj_table->columns		= array("title", "status", "priority");
+		$this->obj_table->columns_order	= array("status");
 
 		// define SQL structure
-		$support_ticket_list->sql_obj->prepare_sql_settable("support_tickets");
-		$support_ticket_list->sql_obj->prepare_sql_addfield("id", "support_tickets.id");
-		$support_ticket_list->sql_obj->prepare_sql_addjoin("LEFT JOIN support_tickets_status ON support_tickets.status = support_tickets_status.id");
-		$support_ticket_list->sql_obj->prepare_sql_addjoin("LEFT JOIN support_tickets_priority ON support_tickets.priority = support_tickets_priority.id");
+		$this->obj_table->sql_obj->prepare_sql_settable("support_tickets");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "support_tickets.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN support_tickets_status ON support_tickets.status = support_tickets_status.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN support_tickets_priority ON support_tickets.priority = support_tickets_priority.id");
 
 
 		// acceptable filter options
@@ -41,19 +62,19 @@ if (user_permissions_get('support_view'))
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_start >= 'value'";
-		$support_ticket_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
-		$support_ticket_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "title LIKE '%value%'";
-		$support_ticket_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_ex_tickets";
@@ -61,29 +82,33 @@ if (user_permissions_get('support_view'))
 		$structure["sql"]		= "date_end='0000-00-00'";
 		$structure["defaultvalue"]	= "on";
 		$structure["options"]["label"]	= "Hide completed support tickets";
-		$support_ticket_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 
+		// load options
+		$this->obj_table->load_options_form();
 
+		// fetch all the support_ticket information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+	}
+	
 
+	function render_html()
+	{
 		// heading
 		print "<h3>SUPPORT TICKETS</h3><br><br>";
 
-
-		// options form
-		$support_ticket_list->load_options_form();
-		$support_ticket_list->render_options_form();
+		// display options
+		$this->obj_table->render_options_form();
 
 
-		// fetch all the support_ticket information
-		$support_ticket_list->generate_sql();
-		$support_ticket_list->load_data_sql();
-
-		if (!count($support_ticket_list->columns))
+		// display table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$support_ticket_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no support_tickets in your database.</b></p>";
 		}
@@ -92,25 +117,28 @@ if (user_permissions_get('support_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$support_ticket_list->add_link("view", "support/view.php", $structure);
+			$this->obj_table->add_link("view", "support/view.php", $structure);
 
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$support_ticket_list->add_link("journal", "support/journal.php", $structure);
+			$this->obj_table->add_link("journal", "support/journal.php", $structure);
 
 			
 			// display the table
-			$support_ticket_list->render_table();
-
-			// TODO: display CSV download link
+			$this->obj_table->render_table_html();
+			
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=support/support.php\">Export as CSV</a></p>";
 		}
+	}
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();	
+	}
+
+	
 }
 
 ?>

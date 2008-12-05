@@ -7,28 +7,35 @@
 	Allows new support tickets to be added to the database.
 */
 
-if (user_permissions_get('support_write'))
+
+class page_output
 {
-	function page_render()
+	var $obj_form;	// page form
+
+
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("support_write");
+	}
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>ADD SUPPORT TICKET</h3><br>";
-		print "<p>This page allows you to add a new support ticket to the database.</p>";
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
 
+	function execute()
+	{
 		/*
 			Define form structure
 		*/
-		$form = New form_input;
-		$form->formname = "support_ticket_add";
-		$form->language = $_SESSION["user"]["lang"];
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "support_ticket_add";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "support/edit-process.php";
-		$form->method = "post";
+		$this->obj_form->action = "support/edit-process.php";
+		$this->obj_form->method = "post";
 		
 
 		// general
@@ -36,32 +43,32 @@ if (user_permissions_get('support_write'))
 		$structure["fieldname"] 	= "title";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_start";
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= date("Y-m-d");
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_end";
 		$structure["type"]		= "date";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "details";
 		$structure["type"]		= "textarea";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		// status + priority
 		$structure = form_helper_prepare_dropdownfromdb("status", "SELECT id, value as label FROM support_tickets_status");
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("priority", "SELECT id, value as label FROM support_tickets_priority");
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 
 		// customer/product/project/service ID
@@ -74,7 +81,7 @@ if (user_permissions_get('support_write'))
 			$structure["fieldname"] 	= "submit";
 			$structure["type"]		= "submit";
 			$structure["defaultvalue"]	= "Save Changes";
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 		
 		}
 		else
@@ -83,28 +90,33 @@ if (user_permissions_get('support_write'))
 			$structure["fieldname"] 	= "submit";
 			$structure["type"]		= "message";
 			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to support_ticket records.</i></p>";
-			$form->add_input($structure);
+			$this->obj_form->add_input($structure);
 		}
 		
 		
 		// define subforms
-		$form->subforms["support_ticket_details"]	= array("title", "priority", "details");
-		$form->subforms["support_ticket_status"]	= array("status", "date_start", "date_end");
-		$form->subforms["submit"]			= array("submit");
+		$this->obj_form->subforms["support_ticket_details"]	= array("title", "priority", "details");
+		$this->obj_form->subforms["support_ticket_status"]	= array("status", "date_start", "date_end");
+		$this->obj_form->subforms["submit"]			= array("submit");
 
 		
 		// fetch the form data
-		$form->load_data_error();
+		$this->obj_form->load_data_error();
+
+
+	}
+
+	
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>ADD SUPPORT TICKET</h3><br>";
+		print "<p>This page allows you to add a new support ticket to the database.</p>";
 
 		// display the form
-		$form->render_form();
+		$this->obj_form->render_form();
+	}
 
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>
