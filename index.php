@@ -183,6 +183,7 @@ if ($page_valid == 1)
 	else
 	{
 		// user has no valid permissions
+		$page_valid = 0;
 		error_render_noperms();
 	}
 }
