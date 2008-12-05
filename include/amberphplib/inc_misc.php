@@ -144,6 +144,28 @@ function format_size_human($bytes)
 }
 
 
+/*
+	format_msgbox($type, $text)
+
+	Creates a coloured message box, based on the type.
+
+	Supported types:
+	important
+	info
+*/
+function format_msgbox($type, $text)
+{
+	log_debug("misc", "Executing format_msgbox($type, text)");
+
+	print "<table width=\"100%\" class=\"table_highlight_$type\">";
+	print "<tr>";
+		print "<td>";
+		print "$text";
+		print "</td>";
+	print "</tr>";
+	print "</table>";
+}
+
 
 
 /* TIME FUNCTION */

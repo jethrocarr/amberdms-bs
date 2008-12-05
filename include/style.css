@@ -104,17 +104,12 @@ a:active {
 	background-color: #e7e7e7;
 }
 
-.table_highlight_red {
+.table_highlight_important {
 	padding: 4px;
 	background-color: #ff933c;
 }
 
-.invoice_summarybox_open {
-	padding: 4px;
-	background-color: #ff933c;
-}
-
-.invoice_summarybox_closed {
+.table_highlight_info {
 	padding: 4px;
 	background-color: #92dd90;
 }
