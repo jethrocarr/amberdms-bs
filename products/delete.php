@@ -1,10 +1,12 @@
 <?php
 /*
-	products/delete.php
+	products/view.php
 
-	access: products_write (write access)
+	access: products_view (read-only)
+		products_write (write access)
 
-	Allows users to delete products which have not been added to any invoices.
+	Displays the selected product and if the user has correct permissions
+	allows the product to be updated.
 */
 
 
@@ -12,61 +14,71 @@
 require("include/products/inc_product_forms.php");
 
 
-
-if (user_permissions_get('products_write'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Product Details";
-	$_SESSION["nav"]["query"][]	= "page=products/view.php&id=$id";
+	var $obj_productform;
 
-	$_SESSION["nav"]["title"][]	= "Product Journal";
-	$_SESSION["nav"]["query"][]	= "page=products/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Product";
-	$_SESSION["nav"]["query"][]	= "page=products/delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=products/delete.php&id=$id";
-
-
-
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->obj_productform			= New products_form_delete;
+		$this->obj_productform->productid	= security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		/*
-			Title + Summary
-		*/
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Product Details", "page=products/view.php&id=". $this->obj_productform->productid ."");
+		$this->obj_menu_nav->add_item("Product Journal", "page=products/journal.php&id=". $this->obj_productform->productid ."");
+
+		if (user_permissions_get("products_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Product", "page=products/delete.php&id=". $this->obj_productform->productid ."", TRUE);
+		}
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("products_view");
+	}
+
+	function check_requirements()
+	{
+		// verify that the product exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM products WHERE id='". $this->obj_productform->productid ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested product (". $this->obj_productform->productid .") does not exist - possibly the product has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		return $this->obj_productform->execute();
+	}
+
+	function render_html()
+	{
+		// Title + Summary
 		print "<h3>PRODUCT DELETE</h3><br>";
 		print "<p>This page allows you to delete unwanted products. Note that you can't delete a product once it has been added to an invoice,
 		in this case you should instead set the dates to mark this product as being no-longer sold.</p>";
 
-		$mysql_string	= "SELECT id FROM `products` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-		if (!$mysql_num_rows)
-		{
-			print "<p><b>Error: The requested product does not exist. <a href=\"index.php?page=products/products.php\">Try looking for your product on the product list page.</a></b></p>";
-		}
-		else
-		{
-			/*
-				Render details form
-			*/
-			
-			products_form_delete_render($id);
+		// render form
+		return $this->obj_productform->render_html();
+	}
 
-		}
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
+
 
 ?>

@@ -7,88 +7,110 @@
 	Displays a list of all the products on the system.
 */
 
-if (user_permissions_get('products_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		if (user_permissions_get("products_view"))
+		{
+			return 1;
+		}
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$product_list = New table;
+		$this->obj_table = New table;
 
-		$product_list->language	= $_SESSION["user"]["lang"];
-		$product_list->tablename	= "product_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "product_list";
 
 
 		// define all the columns and structure
-		$product_list->add_column("standard", "code_product", "");
-		$product_list->add_column("standard", "name_product", "");
-		$product_list->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
-		$product_list->add_column("price", "price_cost", "");
-		$product_list->add_column("price", "price_sale", "");
-		$product_list->add_column("date", "date_current", "");
-		$product_list->add_column("standard", "quantity_instock", "");
-		$product_list->add_column("standard", "quantity_vendor", "");
+		$this->obj_table->add_column("standard", "code_product", "");
+		$this->obj_table->add_column("standard", "name_product", "");
+		$this->obj_table->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
+		$this->obj_table->add_column("price", "price_cost", "");
+		$this->obj_table->add_column("price", "price_sale", "");
+		$this->obj_table->add_column("date", "date_current", "");
+		$this->obj_table->add_column("standard", "quantity_instock", "");
+		$this->obj_table->add_column("standard", "quantity_vendor", "");
 
 		// defaults
-		$product_list->columns		= array("code_product", "name_product", "account_sales", "price_cost", "price_sale");
-		$product_list->columns_order	= array("code_product");
+		$this->obj_table->columns		= array("code_product", "name_product", "account_sales", "price_cost", "price_sale");
+		$this->obj_table->columns_order	= array("code_product");
 
 		// define SQL structure
-		$product_list->sql_obj->prepare_sql_settable("products");
-		$product_list->sql_obj->prepare_sql_addfield("id", "products.id");
-		$product_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = products.account_sales");
+		$this->obj_table->sql_obj->prepare_sql_settable("products");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "products.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = products.account_sales");
 
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "name_product LIKE '%value%' OR code_product LIKE '%value%'";
-		$product_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
+
+		// load options
+		$this->obj_table->load_options_form();
+
+		// fetch all the product information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+
+	}
 
 
-
-
+	function render_html()
+	{
 		// heading
 		print "<h3>PRODUCTS LIST</h3><br><br>";
 
+		// render options form
+		$this->obj_table->render_options_form();
 
-		// options form
-		$product_list->load_options_form();
-		$product_list->render_options_form();
-
-
-		// fetch all the product information
-		$product_list->generate_sql();
-		$product_list->load_data_sql();
-
-		if (!count($product_list->columns))
+		// render table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$product_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no products in your database.</b></p>";
 		}
 		else
 		{
-
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$product_list->add_link("view", "products/view.php", $structure);
+			$this->obj_table->add_link("view", "products/view.php", $structure);
 
 			// display the table
-			$product_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
-
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=products/products.php\">Export as CSV</a></p>";
 		}
+	}
 
+
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
 		
-	} // end page_render
+	}
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	
 }
 
 ?>
