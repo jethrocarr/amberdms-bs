@@ -52,6 +52,7 @@ if (user_permissions_get('timekeeping'))
 			{
 				$_SESSION["error"]["message"][] = "This time entry has been locked and can not be adjusted.";
 			}
+		}
 	}
 	else
 	{
@@ -107,13 +108,13 @@ if (user_permissions_get('timekeeping'))
 		if ($mode == "edit")
 		{
 			$_SESSION["error"]["form"]["timereg_day"] = "failed";
-			header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] ."&editid=$id");
+			header("Location: ../index.php?page=timekeeping/timereg-day-edit.php&date=". $data["date"] ."&editid=$id");
 			exit(0);
 		}
 		else
 		{
 			$_SESSION["error"]["form"]["timereg_day"] = "failed";
-			header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] . "");
+			header("Location: ../index.php?page=timekeeping/timereg-day-edit.php&date=". $data["date"] . "");
 			exit(0);
 		}
 	}

@@ -16,10 +16,9 @@ if (user_permissions_get('timekeeping'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_timereg", 1, "");
+	$id				= security_script_input("/^[0-9]*$/", $_GET["id"]);
+	$date				= security_script_input("/^\S*$/", $_GET["date"]);
 	
-	$data["date"]			= security_form_input_predefined("any", "date", 1, "You must specify a date for the entry to belong to.");
-
 
 	
 	// make sure the time entry actually exists
@@ -50,7 +49,7 @@ if (user_permissions_get('timekeeping'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["timereg_delete"] = "failed";
-		header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] ."&editid=$id");
+		header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $date ."&editid=$id");
 		exit(0);
 	}
 	else
@@ -68,7 +67,7 @@ if (user_permissions_get('timekeeping'))
 		}
 
 		// display updated details
-		header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $data["date"] ."");
+		header("Location: ../index.php?page=timekeeping/timereg-day.php&date=". $date ."");
 		exit(0);
 	}
 
