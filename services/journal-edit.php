@@ -7,67 +7,94 @@
 	Allows the addition or adjustment of journal entries.
 */
 
-if (user_permissions_get('services_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $journalid;
+	var $action;
+	var $type;
+	var $obj_form_journal;
 
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Service Details";
-	$_SESSION["nav"]["query"][]	= "page=services/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Service Plan";
-	$_SESSION["nav"]["query"][]	= "page=services/plan.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Service Journal";
-	$_SESSION["nav"]["query"][]	= "page=services/journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=services/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Service";
-	$_SESSION["nav"]["query"][]	= "page=services/delete.php&id=$id";
-
-
-
-	function page_render()
+	function page_output()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
 
-		
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete Service", "page=services/delete.php&id=". $this->id ."");
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("services_write");
+	}
+
+
+	function check_requirements()
+	{
+		// verify that the service exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM services WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested service (". $this->id .") does not exist - possibly the service has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+		return 1;
+	}
+
+
+	function execute()
+	{
 		/*
 			Journal Forms
 		*/
 
-		$journal_form = New journal_input;
+		$this->obj_form_journal = New journal_input;
 			
 		// basic details of this entry
-		$journal_form->prepare_set_journalname("services");
-		$journal_form->prepare_set_journalid($journalid);
-		$journal_form->prepare_set_customid($id);
+		$this->obj_form_journal->prepare_set_journalname("services");
+		$this->obj_form_journal->prepare_set_journalid($this->journalid);
+		$this->obj_form_journal->prepare_set_customid($this->id);
 
 		// set the processing form
-		$journal_form->prepare_set_form_process_page("services/journal-edit-process.php");
+		$this->obj_form_journal->prepare_set_form_process_page("services/journal-edit-process.php");
+	}
 
+
+	function render_html()
+	{
 		
-		if ($action == "delete")
+		if ($this->action == "delete")
 		{
 			print "<h3>SERVICE JOURNAL - DELETE ENTRY</h3><br>";
 			print "<p>This page allows you to delete an entry from the service's journal.</p>";
 
 			// render delete form
-			$journal_form->render_delete_form();		
+			$this->obj_form_journal->render_delete_form();		
 
 		}
 		else
 		{
-			if ($type == "file")
+			if ($this->type == "file")
 			{
 				// file uploader
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>SERVICE JOURNAL - UPLOAD FILE</h3><br>";
 					print "<p>This page allows you to attach a file to the service's journal.</p>";
@@ -79,12 +106,12 @@ if (user_permissions_get('services_write'))
 				}
 
 				// edit or add file
-				$journal_form->render_file_form();
+				$this->obj_form_journal->render_file_form();
 			}
 			else
 			{
 				// default to text
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>SERVICE JOURNAL - EDIT ENTRY</h3><br>";
 					print "<p>This page allows you to edit an existing entry in the service's journal.</p>";
@@ -96,19 +123,11 @@ if (user_permissions_get('services_write'))
 				}
 
 				// edit or add
-				$journal_form->render_text_form();		
+				$this->obj_form_journal->render_text_form();		
 			}
-			
 		}
-		
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}
 }
+
 
 ?>

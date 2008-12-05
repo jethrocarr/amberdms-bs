@@ -2,78 +2,83 @@
 /*
 	services/plan.php
 
-	access: services_view (read-only)
-		services_write (write access)
-
-	Displays the selected service's plan and pricing information and if the user
-	has correct permissions, allows the service to be updated.
+	access: services_view
+		services_write
+	
+	Displays the selected service plan details and allows these details
+	to be updated.
 */
 
 
 // include form functions
-require("include/accounts/inc_charts.php");
-require("include/services/inc_services_plan.php");
+require("include/services/inc_services_forms.php");
 
 
-
-if (user_permissions_get('services_view'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Service Details";
-	$_SESSION["nav"]["query"][]	= "page=services/view.php&id=$id";
+	var $obj_serviceform;
 
-	$_SESSION["nav"]["title"][]	= "Service Plan";
-	$_SESSION["nav"]["query"][]	= "page=services/plan.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=services/plan.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Service Journal";
-	$_SESSION["nav"]["query"][]	= "page=services/journal.php&id=$id";
-
-	if (user_permissions_get('services_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Service";
-		$_SESSION["nav"]["query"][]	= "page=services/delete.php&id=$id";
+		$this->obj_serviceform			= New services_form_plan;
+		$this->obj_serviceform->serviceid	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->obj_serviceform->serviceid ."");
+		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->obj_serviceform->serviceid ."", TRUE);
+		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->obj_serviceform->serviceid ."");
+
+		if (user_permissions_get("services_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Service", "page=services/delete.php&id=". $this->obj_serviceform->serviceid ."");
+		}
 	}
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("services_view");
+	}
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>SERVICE PLAN CONFIGURATION</h3><br>";
-		print "<p>This page allows you to view and adjust the service. Note that any changes will only affect the next invoice for customers, it will not adjust any invoices that have already been created.</p>";
 
+	function check_requirements()
+	{
+		// verify that the service exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM services WHERE id='$id'";
+		$sql_obj->string	= "SELECT id FROM services WHERE id='". $this->obj_serviceform->serviceid ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested service does not exist. <a href=\"index.php?page=services/services.php\">Try looking for your service on the service list page.</a></b></p>";
-		}
-		else
-		{
-			/*
-				Render details form
-			*/
-			
-			services_form_plan_render($id);
-
+			log_write("error", "page_output", "The requested service (". $this->obj_serviceform->serviceid .") does not exist - possibly the service has been deleted.");
+			return 0;
 		}
 
-	} // end page_render
+		unset($sql_obj);
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		return 1;
+	}
+
+
+	function execute()
+	{
+		return $this->obj_serviceform->execute();
+	}
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>SERVICE PLAN CONFIGURATION</h3><br>";
+		print "<p>This page allows you to view and adjust the service. Note that any changes will only affect the next invoice for customers, it will not adjust any invoices that have already been created.</p>";
+
+
+		// render form
+		return $this->obj_serviceform->render_html();
+	}
+
 }
 
 ?>

@@ -8,33 +8,50 @@
 */
 
 // include form functions
-require("include/accounts/inc_charts.php");
-require("include/services/inc_services_details.php");
+require("include/services/inc_services_forms.php");
 
 
-if (user_permissions_get('services_write'))
+class page_output
 {
-	function page_render()
+	var $obj_serviceform;
+
+	function page_output()
 	{
-		/*
-			Title + Summary
-		*/
+		$this->obj_serviceform			= New services_form_details;
+		$this->obj_serviceform->serviceid	= 0;
+		$this->obj_serviceform->mode		= "add";
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("services_write");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
+	{
+		return $this->obj_serviceform->execute();
+	}
+
+	function render_html()
+	{
+		// Title + Summary
 		print "<h3>ADD SERVICE</h3><br>";
 		print "<p>This page allows you to add a new service.</p>";
 
 
-		/*
-			Render details form
-		*/
-		services_form_details_render(0, "add");
+		// render form
+		return $this->obj_serviceform->render_html();
+	}
 
-		
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
+
 
 ?>

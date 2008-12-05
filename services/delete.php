@@ -2,74 +2,78 @@
 /*
 	services/delete.php
 
-	access: services_write (write access)
+	access: services_write
 
-	Allows users to delete services which have not been added to any customers.
+	Displays the selected service and if the user has correct permissions
+	allows the service to be updated.
 */
 
 
 // include form functions
-require("include/services/inc_services_delete.php");
+require("include/services/inc_services_forms.php");
 
 
-if (user_permissions_get('services_write'))
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
+	var $obj_serviceform;
 
-	$_SESSION["nav"]["title"][]	= "Service Details";
-	$_SESSION["nav"]["query"][]	= "page=services/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Service Plan";
-	$_SESSION["nav"]["query"][]	= "page=services/plan.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Service Journal";
-	$_SESSION["nav"]["query"][]	= "page=services/journal.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Delete Service";
-	$_SESSION["nav"]["query"][]	= "page=services/delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=services/delete.php&id=$id";
-
-
-
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->obj_serviceform			= New services_form_delete;
+		$this->obj_serviceform->serviceid	= security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>SERVICE DELETE</h3><br>";
-		print "<p>This page allows you to delete unwanted services.</p>";
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->obj_serviceform->serviceid ."");
+		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->obj_serviceform->serviceid ."");
+		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->obj_serviceform->serviceid ."");
+		$this->obj_menu_nav->add_item("Delete Service", "page=services/delete.php&id=". $this->obj_serviceform->serviceid ."", TRUE);
+	}
 
 
+	function check_permissions()
+	{
+		return user_permissions_get("services_write");
+	}
+
+	function check_requirements()
+	{
+		// verify that the service exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `services` WHERE id='$id'";
+		$sql_obj->string	= "SELECT id FROM services WHERE id='". $this->obj_serviceform->serviceid ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested service does not exist. <a href=\"index.php?page=services/services.php\">Try looking for your service on the service list page.</a></b></p>";
-		}
-		else
-		{
-			/*
-				Render details form
-			*/
-			
-			service_form_delete_render($id);
-
+			log_write("error", "page_output", "The requested service (". $this->obj_serviceform->serviceid .") does not exist - possibly the service has been deleted.");
+			return 0;
 		}
 
-	} // end page_render
+		unset($sql_obj);
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		return 1;
+	}
+
+
+	function execute()
+	{
+		return $this->obj_serviceform->execute();
+	}
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>SERVICE DELETE</h3><br>";
+		print "<p>This page allows you to delete unwanted services.</p>";
+
+
+		// render form
+		return $this->obj_serviceform->render_html();
+	}
+
 }
+
 
 ?>

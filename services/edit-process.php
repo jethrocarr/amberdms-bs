@@ -13,8 +13,7 @@ require("../include/amberphplib/main.php");
 
 
 // custom includes
-require("../include/accounts/inc_charts.php");
-require("../include/services/inc_services_details.php");
+require("../include/services/inc_services_process.php");
 
 
 if (user_permissions_get('services_write'))

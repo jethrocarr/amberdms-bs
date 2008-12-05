@@ -13,7 +13,7 @@ require("../include/amberphplib/main.php");
 
 
 // custom includes
-require("../include/services/inc_services_delete.php");
+require("../include/services/inc_services_process.php");
 
 
 if (user_permissions_get('services_write'))
