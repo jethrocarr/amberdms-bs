@@ -76,108 +76,115 @@ if ($page_valid == 1)
 	// check permissions
 	if ($page_obj->check_permissions())
 	{
-	
 		/*
 			Check data
 		*/
-		if ($page_obj->check_requirements())
-		{
+		$page_valid = $page_obj->check_requirements();
 
-			/*
-				Run data loading and logic
-			*/
-			
+
+		/*
+			Run page logic, provided that the data was valid
+		*/
+		if ($page_valid)
+		{
 			$page_obj->execute();
-
-
-
-			/*
-				Setup HTTP headers we need for doing a file download
-			*/
-
-			$filename = "amberdms_bs_". mktime() .".$mode";
-			
-			// required for IE, otherwise Content-disposition is ignored
-			if (ini_get('zlib.output_compression'))
-				ini_set('zlib.output_compression', 'Off');
-		
-			// set the relevant content type
-			$file_extension = strtolower(substr(strrchr($this->data["file_name"],"."),1));
-
-			switch ($file_extension)
-			{
-				case "pdf": $ctype="application/pdf"; break;
-				case "exe": $ctype="application/octet-stream"; break;
-				case "zip": $ctype="application/zip"; break;
-				case "doc": $ctype="application/msword"; break;
-				case "xls": $ctype="application/vnd.ms-excel"; break;
-				case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
-				case "gif": $ctype="image/gif"; break;
-				case "png": $ctype="image/png"; break;
-				case "jpeg":
-				case "jpg": $ctype="image/jpg"; break;
-				default: $ctype="application/force-download";
-			}
-			
-			header("Pragma: public"); // required
-			header("Expires: 0");
-			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-			header("Cache-Control: private",false); // required for certain browsers 
-			header("Content-Type: $ctype");
-			
-			header("Content-Disposition: attachment; filename=\"".basename($filename)."\";" );
-			header("Content-Transfer-Encoding: binary");
-
-	// Not needed?
-	//		// tell the browser how big the file is (in bytes)
-	//		// most browers seem to ignore this, but it's vital in order to make IE 7 work.
-	//		header("Content-Length: ". $this->data["file_size"] ."");
-
-
-
-			/*
-				Output page data
-			*/
-
-			switch ($mode)
-			{
-				case "csv":
-					$page_obj->render_csv();
-				break;
-
-				case "pdf":
-					$page_obj->render_pdf();
-				break;
-
-				case "ps":
-					$page_obj->render_ps();
-				break;
-
-				default:
-					print "Invalid mode supplied";
-				break;
-			}
 		}
-		else
-		{
-			// required data not provided
-			log_write("error", "index-export", "Unable to generate data due to fatal error");
-		}
-
 	}
 	else
 	{
-		// user has no access permissions
+		// user has no valid permissions
+		$page_valid = 0;
 		error_render_noperms();
 	}
+}
 
 
-	// display errors
-	if ($_SESSION["error"]["message"])
+
+/*
+	Draw messages
+*/
+
+if ($_SESSION["error"]["message"])
+{
+	print "<tr><td>";
+	log_error_render();
+	print "</td></tr>";
+}
+
+
+
+/*
+	Draw page data
+*/
+
+if ($page_valid)
+{
+	/*
+		Setup HTTP headers we need for doing a file download
+	*/
+
+	$filename = "amberdms_bs_". mktime() .".$mode";
+	
+	// required for IE, otherwise Content-disposition is ignored
+	if (ini_get('zlib.output_compression'))
+		ini_set('zlib.output_compression', 'Off');
+
+	// set the relevant content type
+	$file_extension = strtolower(substr(strrchr($this->data["file_name"],"."),1));
+
+	switch ($file_extension)
 	{
-		log_error_render();
+		case "pdf": $ctype="application/pdf"; break;
+		case "exe": $ctype="application/octet-stream"; break;
+		case "zip": $ctype="application/zip"; break;
+		case "doc": $ctype="application/msword"; break;
+		case "xls": $ctype="application/vnd.ms-excel"; break;
+		case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
+		case "gif": $ctype="image/gif"; break;
+		case "png": $ctype="image/png"; break;
+		case "jpeg":
+		case "jpg": $ctype="image/jpg"; break;
+		default: $ctype="application/force-download";
 	}
 	
+	header("Pragma: public"); // required
+	header("Expires: 0");
+	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+	header("Cache-Control: private",false); // required for certain browsers 
+	header("Content-Type: $ctype");
+	
+	header("Content-Disposition: attachment; filename=\"".basename($filename)."\";" );
+	header("Content-Transfer-Encoding: binary");
+
+// Not needed?
+//		// tell the browser how big the file is (in bytes)
+//		// most browers seem to ignore this, but it's vital in order to make IE 7 work.
+//		header("Content-Length: ". $this->data["file_size"] ."");
+
+
+
+	/*
+		Output page data
+	*/
+
+	switch ($mode)
+	{
+		case "csv":
+			$page_obj->render_csv();
+		break;
+
+		case "pdf":
+			$page_obj->render_pdf();
+		break;
+
+		case "ps":
+			$page_obj->render_ps();
+		break;
+
+		default:
+			print "Invalid mode supplied";
+		break;
+	}
 }
 
 ?>
