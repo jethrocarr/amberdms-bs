@@ -7,68 +7,103 @@
 	Allows the addition or adjustment of journal entries.
 */
 
-if (user_permissions_get('accounts_ap_write'))
+
+
+class page_output
 {
-	$id = $_GET["id"];
-
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
+	var $id;
+	var $journalid;
+	var $action;
+	var $type;
 	
-	$_SESSION["nav"]["title"][]	= "Invoice Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-view.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form_journal;
 
-	$_SESSION["nav"]["title"][]	= "Invoice Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-items.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Invoice Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ap/journal.php&id=$id";
-
-	if (user_permissions_get('accounts_ap_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Invoice";
-		$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-delete.php&id=$id";
+		// fetch vapiables
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Invoice Details", "page=accounts/ap/invoice-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Items", "page=accounts/ap/invoice-items.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Payments", "page=accounts/ap/invoice-payments.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ap/journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ap/invoice-delete.php&id=". $this->id ."");
 	}
 
 
-	function page_render()
-	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
 
-		
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_ap_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the invoice
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ap WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested invoice (". $this->id .") does not exist - possibly the invoice has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+
 		/*
 			Journal Forms
 		*/
 
-		$journal_form = New journal_input;
+		$this->obj_form_journal = New journal_input;
 			
 		// basic details of this entry
-		$journal_form->prepare_set_journalname("account_ap");
-		$journal_form->prepare_set_journalid($journalid);
-		$journal_form->prepare_set_customid($id);
+		$this->obj_form_journal->prepare_set_journalname("account_ap");
+		$this->obj_form_journal->prepare_set_journalid($this->journalid);
+		$this->obj_form_journal->prepare_set_customid($this->id);
 
 		// set the processing form
-		$journal_form->prepare_set_form_process_page("accounts/ap/journal-edit-process.php");
+		$this->obj_form_journal->prepare_set_form_process_page("accounts/ap/journal-edit-process.php");
+	}
 
-		
-		if ($action == "delete")
+
+	function render_html()
+	{
+		if ($this->action == "delete")
 		{
 			print "<h3>INVOICE JOURNAL - DELETE ENTRY</h3><br>";
 			print "<p>This page allows you to delete an entry from the invoice/invoice journal.</p>";
 
 			// render delete form
-			$journal_form->render_delete_form();		
+			$this->obj_form_journal->render_delete_form();		
 
 		}
 		else
 		{
-			if ($type == "file")
+			if ($this->type == "file")
 			{
 				// file uploader
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>INVOICE JOURNAL - UPLOAD FILE</h3><br>";
 					print "<p>This page allows you to attach a file to the invoice journal.</p>";
@@ -80,12 +115,12 @@ if (user_permissions_get('accounts_ap_write'))
 				}
 
 				// edit or add file
-				$journal_form->render_file_form();
+				$this->obj_form_journal->render_file_form();
 			}
 			else
 			{
 				// default to text
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>INVOICE JOURNAL - EDIT ENTRY</h3><br>";
 					print "<p>This page allows you to edit an existing entry in the invoice journal.</p>";
@@ -97,19 +132,11 @@ if (user_permissions_get('accounts_ap_write'))
 				}
 
 				// edit or add
-				$journal_form->render_text_form();		
+				$this->obj_form_journal->render_text_form();		
 			}
 			
 		}
-		
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}
 }
 
 ?>

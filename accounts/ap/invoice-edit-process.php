@@ -12,9 +12,7 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 // custom includes
-require("../../include/accounts/inc_invoices.php");
-require("../../include/accounts/inc_invoices_details.php");
-
+require("../../include/accounts/inc_invoices_process.php");
 
 
 if (user_permissions_get('accounts_ap_write'))

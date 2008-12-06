@@ -151,7 +151,7 @@ class page_output
 
 	function render_csv()
 	{
-		$this->obj_table->render_table_html();
+		$this->obj_table->render_table_csv();
 	}
 
 }

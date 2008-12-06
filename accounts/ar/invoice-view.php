@@ -2,16 +2,10 @@
 /*
 	accounts/ar/invoices-view.php
 	
-	access: account_ar_view
+	access: accounts_ar_view
 
-	Form to add a new invoice to the database.
+	Displays details of the selected invoice and allows them to be adjusted.
 
-	This page is a lot more complicated than most of the other forms in this program, since
-	it needs to allow the user to "update" the form, so that the form adds additional input
-	fields for more invoice listings.
-
-	The update option will also generate and return totals back to the program.
-	
 */
 
 // custom includes

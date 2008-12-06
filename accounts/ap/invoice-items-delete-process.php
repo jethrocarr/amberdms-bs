@@ -2,7 +2,7 @@
 /*
 	accounts/ap/invoice-items-delete-process.php
 
-	access: accounts_ap_write
+	access: accounts_invoices_write
 
 	Allows a user to delete an item from an invoice
 */

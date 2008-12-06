@@ -2,7 +2,7 @@
 /*
 	accounts/ar/invoice-edit-process.php
 
-	access: accounts_invoices_write
+	access: accounts_ar_write
 
 	Allows new invoices to be added to the database, or for existing invoices to be adjusted.
 */

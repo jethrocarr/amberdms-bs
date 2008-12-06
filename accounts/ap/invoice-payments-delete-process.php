@@ -2,7 +2,7 @@
 /*
 	accounts/ap/invoice-payments-delete-process.php
 
-	access: accounts_invoices_write
+	access: accounts_ap_write
 
 	Allows a user to delete a payment from an invoice
 */

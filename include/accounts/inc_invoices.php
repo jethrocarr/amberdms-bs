@@ -420,7 +420,7 @@ class invoice
 		// update the invoice details
 		$sql_obj = New sql_query;
 			
-		if ($type == "ap")
+		if ($this->type == "ap")
 		{
 			$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
 						."vendorid='". $this->data["vendorid"] ."', "
@@ -451,7 +451,7 @@ class invoice
 		
 		if (!$sql_obj->execute())
 		{
-			log_debug("invoice", "An error occured whilst attempting to update the invoice");
+			log_write("error", "invoice", "Unable to update database with new invoice information");
 			return 0;
 		}
 		else
@@ -496,7 +496,7 @@ class invoice
 		if (!$sql_obj->execute())
 		{
 			$error = 1;
-			log_debug("invoice", "Error: Problem occured whilst deleting invoice from acccount_". $this->type ."");
+			log_write("error", "invoice", "Problem occured whilst deleting invoice from acccount_". $this->type ." in DB");
 		}
 
 		// delete all the item options
@@ -517,7 +517,7 @@ class invoice
 				if (!$sql_obj->execute())
 				{
 					$error = 1;
-					log_debug("invoice", "Error: Problem occured whilst deleting invoice item option records");
+					log_write("error", "invoice", "Problem occured whilst deleting invoice item option records from DB");
 				}
 			}
 		}
@@ -530,7 +530,7 @@ class invoice
 		if (!$sql_obj->execute())
 		{
 			$error = 1;
-			log_debug("invoice", "Error: Problem occured whilst deleting invoice item");
+			log_write("error", "invoice", "Problem occured whilst deleting invoice item from DB");
 		}
 		
 		// delete invoice journal entries
@@ -544,7 +544,7 @@ class invoice
 		if (!$sql_obj->execute())
 		{
 			$error = 1;
-			log_debug("invoice", "Error: Problem occured whilst deleting invoice transactions");
+			log_write("error", "invoice", "Problem occured whilst deleting invoice transactions");
 		}
 
 
@@ -668,7 +668,7 @@ class invoice_items
 		// we must have supplied item data
 		if (!$this->type_item)
 		{
-			log_debug("invoice_items", "Error: No item_type value supplied, unable to process data.");
+			log_write("error", "invoice_items", "No item_type value supplied, unable to process data.");
 			return 0;
 		}
 
@@ -953,7 +953,7 @@ class invoice_items
 		
 		if (!$this->id_item)
 		{
-			log_debug("invoice_items", "Error: No item ID was supplied before running action_update");
+			log_write("error", "invoice_items", "No item ID was supplied before running action_update");
 			return 0;
 		}
 
@@ -976,7 +976,7 @@ class invoice_items
 						
 		if (!$sql_obj->execute())
 		{
-			log_debug("invoice_items", "Error: A fatal problem ocurred whilst attempting to update the DB.");
+			log_write("error", "invoice_items", "A fatal problem ocurred whilst attempting to update the DB.");
 			return 0;
 		}
 
@@ -1413,7 +1413,7 @@ class invoice_items
 		
 		if (!$sql_obj->execute())
 		{
-			$_SESSION["error"]["message"][] = "Error: Unable to delete invoice item ". $this->id_item ."";
+			log_write("error", "invoice_items", "Unable to delete invoice item ". $this->id_item ." from DB");
 			return 0;
 		}
 

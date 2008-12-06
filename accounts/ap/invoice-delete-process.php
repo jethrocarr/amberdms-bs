@@ -2,7 +2,7 @@
 /*
 	accounts/ap/invoice-delete-process.php
 
-	access: accounts_ap_write
+	access: accounts_invoices_write
 
 	Deletes invoices from the database
 */
@@ -12,8 +12,7 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 // custom includes
-require("../../include/accounts/inc_invoices.php");
-require("../../include/accounts/inc_invoices_delete.php");
+require("../../include/accounts/inc_invoices_process.php");
 
 
 

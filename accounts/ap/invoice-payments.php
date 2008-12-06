@@ -1,11 +1,10 @@
 <?php
 /*
-	accounts/ap/invoices-payments.php
+	accounts/ap/invoices-items.php
 	
 	access: account_ap_view
 
-	Displays and allows creation/adjustment/deletion of payments against the invoice.
-	
+	Lists all the payments against this invoice and allows them to be added/edited/deleted.
 */
 
 // custom includes
@@ -14,55 +13,87 @@ require("include/accounts/inc_invoices_items.php");
 require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_ap_view'))
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table_payments;
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Invoice Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-items.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Payments";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-payments.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ap/invoice-payments.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ap/journal.php&id=$id";
-
-	if (user_permissions_get('accounts_ap_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Invoice";
-		$_SESSION["nav"]["query"][]	= "page=accounts/ap/invoice-delete.php&id=$id";
+		// fetch vapiables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Invoice Details", "page=accounts/ap/invoice-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Items", "page=accounts/ap/invoice-items.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Payments", "page=accounts/ap/invoice-payments.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ap/journal.php&id=". $this->id ."");
+
+		if (user_permissions_get("accounts_ap_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ap/invoice-delete.php&id=". $this->id ."");
+		}
 	}
 
 
-	function page_render()
+
+	function check_permissions()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("accounts_ap_view");
+	}
 
 
-		/*
-			Title + Summary
-		*/
+
+	function check_requirements()
+	{
+		// verify that the invoice
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ap WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested invoice (". $this->id .") does not exist - possibly the invoice has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_table_payments		= New invoice_list_payments;
+		$this->obj_table_payments->type		= "ap";
+		$this->obj_table_payments->invoiceid	= $this->id;
+		$this->obj_table_payments->page_view	= "accounts/ap/invoice-payments-edit.php";
+		$this->obj_table_payments->page_delete	= "accounts/ap/invoice-payments-delete-process.php";
+		
+		$this->obj_table_payments->execute();
+	}
+
+
+	function render_html()
+	{
+		// heading
 		print "<h3>INVOICE PAYMENTS</h3><br>";
 		print "<p>This page shows all payments made against this invoice and allows you to edit them.</p>";
+		
+		// display summapy box
+		invoice_render_summarybox("ap", $this->id);
 
-		invoice_render_summarybox("ap", $id);
-
-		invoice_list_items_payments("ap", $id, "accounts/ap/invoice-payments-edit.php", "accounts/ap/invoice-payments-delete-process.php");
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display form
+		$this->obj_table_payments->render_html();
+	}
+	
 }
+
 
 ?>

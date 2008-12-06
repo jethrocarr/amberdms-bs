@@ -4,45 +4,60 @@
 	
 	access: accounts_ap_view
 
-	Lists all the invoices/invoices in the system and allows the user to seapch + filter them
+	Lists all the invoices/invoices in the system and allows the user to search + filter them
 */
 
-if (user_permissions_get('accounts_ap_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_ap_view");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$invoice_list = New table;
+		$this->obj_table = New table;
 
-		$invoice_list->language	= $_SESSION["user"]["lang"];
-		$invoice_list->tablename	= "account_ap";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "account_ap";
 
 		// define all the columns and structure
-		$invoice_list->add_column("standapd", "name_vendor", "vendors.name_vendor");
-		$invoice_list->add_column("standapd", "name_staff", "staff.name_staff");
-		$invoice_list->add_column("standapd", "code_invoice", "account_ap.code_invoice");
-		$invoice_list->add_column("standapd", "code_ordernumber", "account_ap.code_ordernumber");
-		$invoice_list->add_column("standapd", "code_ponumber", "account_ap.code_ponumber");
-		$invoice_list->add_column("date", "date_trans", "account_ap.date_trans");
-		$invoice_list->add_column("date", "date_due", "account_ap.date_due");
-		$invoice_list->add_column("price", "amount_tax", "account_ap.amount_tax");
-		$invoice_list->add_column("price", "amount", "account_ap.amount");
-		$invoice_list->add_column("price", "amount_total", "account_ap.amount_total");
-		$invoice_list->add_column("price", "amount_paid", "account_ap.amount_paid");
+		$this->obj_table->add_column("standapd", "name_vendor", "vendors.name_vendor");
+		$this->obj_table->add_column("standapd", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standapd", "code_invoice", "account_ap.code_invoice");
+		$this->obj_table->add_column("standapd", "code_ordernumber", "account_ap.code_ordernumber");
+		$this->obj_table->add_column("standapd", "code_ponumber", "account_ap.code_ponumber");
+		$this->obj_table->add_column("date", "date_trans", "account_ap.date_trans");
+		$this->obj_table->add_column("date", "date_due", "account_ap.date_due");
+		$this->obj_table->add_column("price", "amount_tax", "account_ap.amount_tax");
+		$this->obj_table->add_column("price", "amount", "account_ap.amount");
+		$this->obj_table->add_column("price", "amount_total", "account_ap.amount_total");
+		$this->obj_table->add_column("price", "amount_paid", "account_ap.amount_paid");
 
 		// totals
-		$invoice_list->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
+		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
 
 		
 		// defaults
-		$invoice_list->columns		= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid");
-		$invoice_list->columns_order	= array("code_invoice");
+		$this->obj_table->columns	= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid");
+		$this->obj_table->columns_order	= array("code_invoice");
 
 		// define SQL structure
-		$invoice_list->sql_obj->prepare_sql_settable("account_ap");
-		$invoice_list->sql_obj->prepare_sql_addfield("id", "account_ap.id");
-		$invoice_list->sql_obj->prepare_sql_addjoin("LEFT JOIN vendors ON vendors.id = account_ap.vendorid");
-		$invoice_list->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ap.employeeid");
+		$this->obj_table->sql_obj->prepare_sql_settable("account_ap");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_ap.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN vendors ON vendors.id = account_ap.vendorid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ap.employeeid");
 
 
 		// acceptable filter options
@@ -50,21 +65,21 @@ if (user_permissions_get('accounts_ap_view'))
 		$structure["fieldname"] = "date_stapt";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans >= 'value'";
-		$invoice_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans <= 'value'";
-		$invoice_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
 		$structure["sql"]	= "account_ap.employeeid='value'";
-		$invoice_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure		= form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors ORDER BY name_vendor ASC");
 		$structure["sql"]	= "account_ap.vendorid='value'";
-		$invoice_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
@@ -72,51 +87,71 @@ if (user_permissions_get('accounts_ap_view'))
 		$structure["options"]["label"]	= "Hide Closed Invoices";
 		$structure["defaultvalue"]	= "enabled";
 		$structure["sql"]		= "account_ap.amount_paid!=account_ap.amount_total";
-		$invoice_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 
 
+		// load options
+		$this->obj_table->load_options_form();
 
+
+		// fetch all the chapt information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+	}
+
+
+	function render_html()
+	{
 		// heading
 		print "<h3>LIST OF ACCOUNTS PAYABLE INVOICES</h3><br><br>";
 
 
-		// options form
-		$invoice_list->load_options_form();
-		$invoice_list->render_options_form();
+		// display options form
+		$this->obj_table->render_options_form();
 
 
-		// fetch all the chapt information
-		$invoice_list->generate_sql();
-		$invoice_list->load_data_sql();
-
-		if (!count($invoice_list->columns))
+		// display table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$invoice_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no invoices in your database.</b></p>";
 		}
 		else
 		{
-			// view link
+			// details link 
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$invoice_list->add_link("view", "accounts/ap/invoice-view.php", $structure);
+			$this->obj_table->add_link("details", "accounts/ap/invoice-view.php", $structure);
+
+			// items link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("items", "accounts/ap/invoice-items.php", $structure);
+
+			// payments link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("payments", "accounts/ap/invoice-payments.php", $structure);
+
 
 			// display the table
-			$invoice_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/ap/ap.php\">Export as CSV</a></p>";
 		}
+	}
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
+	}
+	
 }
 
 ?>
