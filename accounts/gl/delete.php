@@ -7,131 +7,150 @@
 	Allows an unwanted transaction to be deleted.
 */
 
-if (user_permissions_get('accounts_gl_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $locked = 0;
 	
+	var $obj_menu_nav;
+	var $obj_form;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;	
-	
-	$_SESSION["nav"]["title"][]	= "Transaction Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/gl/view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Transaction";
-	$_SESSION["nav"]["query"][]	= "page=accounts/gl/delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/gl/delete.php&id=$id";
-
-
-
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>DELETE TRANSACTION</h3><br>";
-		print "<p>This page allows you to delete an unwanted transaction, provided that it hasn't been locked.</p>";
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
 
-		$sql_trans_obj		= New sql_query;
-		$sql_trans_obj->string	= "SELECT id, locked FROM `account_gl` WHERE id='$id'";
-		$sql_trans_obj->execute();
-		
-		if (!$sql_trans_obj->num_rows())
+		$this->obj_menu_nav->add_item("Transaction Details", "page=accounts/gl/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Transaction", "page=accounts/gl/delete.php&id=". $this->id ."", TRUE);
+	}
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_gl_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the account exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, locked FROM account_gl WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested transaction does not exist. <a href=\"index.php?page=accounts/gl/gl.php\">Try looking for your transaction in the general ledger.</a></b></p>";
+			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
+			return 0;
 		}
 		else
 		{
-			// we need some of the info later on
-			$sql_trans_obj->fetch_array();
+			$sql_obj->fetch_array();
 
-			
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "transaction_delete";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "accounts/gl/delete-process.php";
-			$form->method = "post";
-			
-
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_gl";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-
-			// hidden
-			$structure = NULL;
-			$structure["fieldname"] 	= "id_transaction";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			
-			// confirm delete
-			$structure = NULL;
-			$structure["fieldname"] 	= "delete_confirm";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Yes, I wish to delete this transaction and realise that once deleted the data can not be recovered.";
-			$form->add_input($structure);
-
-
-
-			/*
-				Check that the transaction can be deleted
-			*/
-
-			// define submit field
-			$structure = NULL;
-			$structure["fieldname"] = "submit";
-
-			if ($sql_trans_obj->data[0]["locked"])
-			{
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>This transaction has now been locked and can not be deleted.</i>";
-			}
-			else
-			{
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "delete";
-			}
-					
-			$form->add_input($structure);
-
-
-			
-			// define subforms
-			$form->subforms["transaction_delete"]	= array("code_gl", "description");
-			$form->subforms["hidden"]		= array("id_transaction");
-			$form->subforms["submit"]		= array("delete_confirm", "submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT code_gl, description FROM `account_gl` WHERE id='$id' LIMIT 1";
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
-
+			$this->locked = $sql_obj->data[0]["locked"];
 		}
 
-	} // end page_render
+		unset($sql_obj);
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "transaction_delete";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "accounts/gl/delete-process.php";
+		$this->obj_form->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_gl";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "description";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_transaction";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+		
+		// confirm delete
+		$structure = NULL;
+		$structure["fieldname"] 	= "delete_confirm";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Yes, I wish to delete this transaction and realise that once deleted the data can not be recovered.";
+		$this->obj_form->add_input($structure);
+
+
+
+		/*
+			Check that the transaction can be deleted
+		*/
+
+		// define submit field
+		$structure = NULL;
+		$structure["fieldname"] = "submit";
+
+		if ($this->locked)
+		{
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<i>This transaction has now been locked and can not be deleted.</i>";
+		}
+		else
+		{
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "delete";
+		}
+				
+		$this->obj_form->add_input($structure);
+
+
+		
+		// define subforms
+		$this->obj_form->subforms["transaction_delete"]	= array("code_gl", "description");
+		$this->obj_form->subforms["hidden"]		= array("id_transaction");
+		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT code_gl, description FROM `account_gl` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->load_data();
+
+	}
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>DELETE TRANSACTION</h3><br>";
+		print "<p>This page allows you to delete an unwanted transaction, provided that it hasn't been locked.</p>";
+
+		// display the form
+		$this->obj_form->render_form();
+
+	}
+
 }
 
 ?>

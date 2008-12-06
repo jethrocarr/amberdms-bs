@@ -11,7 +11,7 @@
 
 class page_output
 {
-	var $obj_table;
+	var $obj_form;
 
 
 	function check_permissions()

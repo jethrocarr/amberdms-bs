@@ -11,44 +11,53 @@
 require("include/accounts/inc_ledger.php");
 
 
-if (user_permissions_get('accounts_gl_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
 	{
-		// heading
-		print "<h3>GENERAL LEDGER</h3>";
-		print "<p>This page lists all the transactions in all the accounts.</p>";
+		return user_permissions_get('accounts_gl_view');
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
 
-	
+	function execute()
+	{
 		// establish a new table object
-		$transaction_list = New table;
+		$this->obj_table = New table;
 
-		$transaction_list->language	= $_SESSION["user"]["lang"];
-		$transaction_list->tablename	= "account_gl";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "account_gl";
 
 		// define all the columns and structure
-		$transaction_list->add_column("standard", "date_trans", "account_trans.date_trans");
-		$transaction_list->add_column("standard", "code_reference", "NONE");
-		$transaction_list->add_column("standard", "code_chart", "CONCAT_WS('--', account_charts.code_chart, account_charts.description)");
-		$transaction_list->add_column("standard", "description", "account_trans.memo");
-		$transaction_list->add_column("standard", "source", "account_trans.source");
-		$transaction_list->add_column("money", "debit", "account_trans.amount_debit");
-		$transaction_list->add_column("money", "credit", "account_trans.amount_credit");
+		$this->obj_table->add_column("standard", "date_trans", "account_trans.date_trans");
+		$this->obj_table->add_column("standard", "code_reference", "NONE");
+		$this->obj_table->add_column("standard", "code_chart", "CONCAT_WS('--', account_charts.code_chart, account_charts.description)");
+		$this->obj_table->add_column("standard", "description", "account_trans.memo");
+		$this->obj_table->add_column("standard", "source", "account_trans.source");
+		$this->obj_table->add_column("money", "debit", "account_trans.amount_debit");
+		$this->obj_table->add_column("money", "credit", "account_trans.amount_credit");
 
 		// defaults
-		$transaction_list->columns		= array("date_trans", "code_reference", "description", "source", "debit", "credit", "code_chart");
-		$transaction_list->columns_order	= array("date_trans");
+		$this->obj_table->columns	= array("date_trans", "code_reference", "description", "source", "debit", "credit", "code_chart");
+		$this->obj_table->columns_order	= array("date_trans");
 
 		// totals
-		$transaction_list->total_columns	= array("debit", "credit");
+		$this->obj_table->total_columns	= array("debit", "credit");
 
 		// define SQL structure
-		$transaction_list->sql_obj->prepare_sql_settable("account_trans");
-		$transaction_list->sql_obj->prepare_sql_addfield("id", "account_trans.id");
-		$transaction_list->sql_obj->prepare_sql_addfield("type", "account_trans.type");
-		$transaction_list->sql_obj->prepare_sql_addfield("customid", "account_trans.customid");
-		$transaction_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
+		$this->obj_table->sql_obj->prepare_sql_settable("account_trans");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_trans.id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("type", "account_trans.type");
+		$this->obj_table->sql_obj->prepare_sql_addfield("customid", "account_trans.customid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
 
 
 
@@ -57,73 +66,89 @@ if (user_permissions_get('accounts_gl_view'))
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans >= 'value'";
-		$transaction_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans <= 'value'";
-		$transaction_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "memo LIKE '%value%' OR source LIKE '%value%'";
-		$transaction_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 
-		// options form
-		$transaction_list->load_options_form();
-		$transaction_list->render_options_form();
+		// load options
+		$this->obj_table->load_options_form();
 
 
 
 		// fetch all the transaction information
-		$transaction_list->generate_sql();
+		$this->obj_table->generate_sql();
 
 		// add ordering rule to order by the ID - this causes all the transactions
 		// to be sorted by the other that they were addded to the database once they have
 		// been sorted by date. If this was not done, the accounts look odd with transactions being
 		// out of order.
-		$transaction_list->sql_obj->string .= ", id ASC";
+		$this->obj_table->sql_obj->string .= ", id ASC";
 		
-		$transaction_list->load_data_sql();
+		$this->obj_table->load_data_sql();
+
+	}
 
 
-		/*
-			Fetch all the reference information
-			
-			Type of transaction, ID and the link for it
-		*/
-		for ($i=0; $i < count(array_keys($transaction_list->data)); $i++)
+	function render_html()
+	{
+		// heading
+		print "<h3>GENERAL LEDGER</h3>";
+		print "<p>This page lists all the transactions in all the accounts.</p>";
+
+
+		// display options form
+		$this->obj_table->render_options_form();
+
+		// label all the reference links
+		for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
 		{
-			$transaction_list->data[$i]["code_reference"] = ledger_trans_typelabel($transaction_list->data[$i]["type"], $transaction_list->data[$i]["customid"]);
+			$this->obj_table->data[$i]["code_reference"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["customid"], TRUE);
 		}
 
 
-
-		if (!count($transaction_list->columns))
+		// display table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$transaction_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no transactions matching the filter options in your database.</b></p>";
 		}
 		else
 		{
 			// display the table
-			$transaction_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/gl/gl.php\">Export as CSV</a></p>";
+		}
+	}
+
+	function render_csv()
+	{
+
+		// label all the reference links
+		for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
+		{
+			$this->obj_table->data[$i]["code_reference"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["customid"], FALSE);
 		}
 
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display table
+		$this->obj_table->render_table_csv();
+	
+	}
 }
 
 ?>
