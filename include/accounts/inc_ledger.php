@@ -87,11 +87,12 @@ function ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amoun
 	Values
 	type		Transaction type (account_trans.type)
 	customid	Custom ID filed (account_trans.customid)
+	enablelink	enable or disable the addition of a hyperlink
 
 	Return
 	string		Label to be used
 */
-function ledger_trans_typelabel($type, $customid)
+function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 {
 	log_debug("inc_ledger", "Executing ledger_trans_typelabel($type, $customid)");
 
@@ -101,15 +102,21 @@ function ledger_trans_typelabel($type, $customid)
 		case "ar_tax":
 			// for AR invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
-						
-			$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$customid\">AR invoice $result</a>";
+			
+			$result = "AR invoice $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$customid\">$result</a>";
 		break;
 
 		case "ar_pay":
 			// for AR invoice payments fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
 						
-			$result = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=$customid\">AR payment $result</a>";
+			$result = "AR payment $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=$customid\">$result</a>";
 		break;
 
 		
@@ -118,14 +125,20 @@ function ledger_trans_typelabel($type, $customid)
 			// for AP invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
 						
-			$result = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=$customid\">AP invoice $result</a>";
+			$result = "AP invoice $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=$customid\">$result</a>";
 		break;
 
 		case "ap_pay":
 			// for AP invoice payments fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
 						
-			$result = "<a href=\"index.php?page=accounts/ap/invoice-payments.php&id=$customid\">AP payment $result</a>";
+			$result = "AP payment $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ap/invoice-payments.php&id=$customid\">$result</a>";
 		break;
 
 
@@ -133,7 +146,10 @@ function ledger_trans_typelabel($type, $customid)
 			// general ledger transaction
 			$result = sql_get_singlevalue("SELECT code_gl as value FROM account_gl WHERE id='$customid'");
 						
-			$result = "<a href=\"index.php?page=accounts/gl/view.php&id=$customid\">Transaction $result</a>";
+			$result = "Transaction $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/gl/view.php&id=$customid\">$result</a>";
 		break;
 
 		
@@ -356,7 +372,7 @@ class ledger_account_list
 		{
 			for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
 			{
-				$this->obj_table->data[$i]["item_id"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["item_id"]);
+				$this->obj_table->data[$i]["item_id"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["item_id"], TRUE);
 			}
 		}
 
@@ -376,21 +392,53 @@ class ledger_account_list
 		}
 		else
 		{
-/*
-			TODO: the links are going to depend on the type of transaction
-// view link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "ar/accounts/view.php", $structure);
-*/
-
 			// display the table
-			$this->obj_table->render_table();
-
-			// TODO: display CSV download link
+			$this->obj_table->render_table_html();
 		}
 
 	}
+
+
+
+	/*
+		render_table_csv()
+
+		Generate CSV table
+	*/
+	function render_table_csv()
+	{
+		log_debug("ledger_account_list", "Executing render_table_csv()");
+
+		/*
+			Label the items the transaction belongs to
+		
+			Because there are range of different items types (ar, ap, general ledger, etc) we need
+			to check the type of the ledger entry, then display the correct title
+		*/
+		if ($this->obj_table->data_num_rows)
+		{
+			for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
+			{
+				$this->obj_table->data[$i]["item_id"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["item_id"], FALSE);
+			}
+		}
+
+
+
+		/*
+			Display the table
+		*/
+		
+		if ($this->obj_table->data_num_rows)
+		{
+			// display the table
+			$this->obj_table->render_table_csv();
+		}
+
+	}
+
+
+	
 	
 } // end of ledger_account_list class
 

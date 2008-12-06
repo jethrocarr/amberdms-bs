@@ -7,47 +7,56 @@
 	Displays a list of all the charts on the system.
 */
 
-if (user_permissions_get('accounts_charts_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get('accounts_charts_view');
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$chart_list = New table;
+		$this->obj_table = New table;
 
-		$chart_list->language	= $_SESSION["user"]["lang"];
-		$chart_list->tablename	= "account_charts";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "account_charts";
 
 		// define all the columns and structure
-		$chart_list->add_column("standard", "code_chart", "account_charts.code_chart");
-		$chart_list->add_column("standard", "description", "account_charts.description");
-		$chart_list->add_column("standard", "chart_type", "account_chart_type.value");
+		$this->obj_table->add_column("standard", "code_chart", "account_charts.code_chart");
+		$this->obj_table->add_column("standard", "description", "account_charts.description");
+		$this->obj_table->add_column("standard", "chart_type", "account_chart_type.value");
 
 		// the debit and credit columns need to be calculated by a seporate query
-		$chart_list->add_column("price", "debit", "NONE");
-		$chart_list->add_column("price", "credit", "NONE");
+		$this->obj_table->add_column("price", "debit", "NONE");
+		$this->obj_table->add_column("price", "credit", "NONE");
 
 		// defaults
-		$chart_list->columns		= array("code_chart", "description", "chart_type", "debit", "credit");
-		$chart_list->columns_order	= array("code_chart");
+		$this->obj_table->columns	= array("code_chart", "description", "chart_type", "debit", "credit");
+		$this->obj_table->columns_order	= array("code_chart");
 
 		// totals
-		$chart_list->total_columns	= array("debit", "credit");
+		$this->obj_table->total_columns	= array("debit", "credit");
 
 		// define SQL structure
-		$chart_list->sql_obj->prepare_sql_settable("account_charts");
-		$chart_list->sql_obj->prepare_sql_addfield("id", "account_charts.id");
-		$chart_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
-
-
-
-		// heading
-		print "<h3>CHART OF ACCOUNTS</h3>";
-		print "<p>This page lists all the accounts which transactions are filed against and provides a basic overview of the current state of the financials.</p>";
+		$this->obj_table->sql_obj->prepare_sql_settable("account_charts");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_charts.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
 
 
 		// fetch all the chart information
-		$chart_list->generate_sql();
-		$chart_list->load_data_sql();
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
 
 
 		// fetch debit and credit summaries for all charts in advance - this
@@ -62,11 +71,11 @@ if (user_permissions_get('accounts_charts_view'))
 
 
 			// run through all the chart rows and fill in the credit/debit fields
-			for ($i = 0; $i < count(array_keys($chart_list->data)); $i++)
+			for ($i = 0; $i < count(array_keys($this->obj_table->data)); $i++)
 			{
 				foreach ($sql_amount_obj->data as $data_amount)
 				{
-					if ($data_amount["chartid"] == $chart_list->data[$i]["id"])
+					if ($data_amount["chartid"] == $this->obj_table->data[$i]["id"])
 					{
 						/*
 							we only want to show financial difference in the columns - for example, if
@@ -76,31 +85,42 @@ if (user_permissions_get('accounts_charts_view'))
 
 						if ($data_amount["credit"] == $data_amount["debit"])
 						{
-							$chart_list->data[$i]["debit"]	= "";
-							$chart_list->data[$i]["credit"]	= "";
+							$this->obj_table->data[$i]["debit"]	= "";
+							$this->obj_table->data[$i]["credit"]	= "";
 						}
 						elseif ($data_amount["debit"] > $data_amount["credit"])
 						{
-							$chart_list->data[$i]["debit"]	= $data_amount["debit"] - $data_amount["credit"];
-							$chart_list->data[$i]["credit"]	= "";
+							$this->obj_table->data[$i]["debit"]	= $data_amount["debit"] - $data_amount["credit"];
+							$this->obj_table->data[$i]["credit"]	= "";
 						}
 						elseif ($data_amount["debit"] < $data_amount["credit"])
 						{
-							$chart_list->data[$i]["debit"]	= "";
-							$chart_list->data[$i]["credit"]	= $data_amount["credit"] - $data_amount["debit"];
+							$this->obj_table->data[$i]["debit"]	= "";
+							$this->obj_table->data[$i]["credit"]	= $data_amount["credit"] - $data_amount["debit"];
 						}
 					}
 				}
 			}
 		}
 	
-	
 
-		if (!count($chart_list->columns))
+
+	}
+
+
+	function render_html()
+	{
+		// heading
+		print "<h3>CHART OF ACCOUNTS</h3>";
+		print "<p>This page lists all the accounts which transactions are filed against and provides a basic overview of the current state of the financials.</p>";
+
+
+		// display table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$chart_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no charts in your database.</b></p>";
 		}
@@ -109,26 +129,28 @@ if (user_permissions_get('accounts_charts_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$chart_list->add_link("view", "accounts/charts/view.php", $structure);
+			$this->obj_table->add_link("view", "accounts/charts/view.php", $structure);
 
 			// ledger link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$chart_list->add_link("ledger", "accounts/charts/ledger.php", $structure);
+			$this->obj_table->add_link("ledger", "accounts/charts/ledger.php", $structure);
 
 
 			// display the table
-			$chart_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/charts/charts.php\">Export as CSV</a></p>";
 		}
+	}
 
-	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
+	}
 }
+
 
 ?>

@@ -13,94 +13,103 @@
 require("include/accounts/inc_ledger.php");
 
 
-if (user_permissions_get('accounts_charts_view'))
+class page_output
 {
-	if ($_GET["id"])
-	{
-		$id = $_GET["id"];
-	}
-	else
-	{
-		$id = $_GET["filter_id"];
-	}
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Account Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Account Ledger";
-	$_SESSION["nav"]["query"][]	= "page=accounts/charts/ledger.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/charts/ledger.php&id=$id";
-	
-	if (user_permissions_get('accounts_charts_write'))
-	{
-		$_SESSION["nav"]["title"][]	= "Delete Account";
-		$_SESSION["nav"]["query"][]	= "page=accounts/charts/delete.php&id=$id";
-	}
+	var $id;
+	var $obj_menu_nav;
+	var $obj_ledger;
 
 
-	function page_render()
+	function page_output()
 	{
-		if ($_GET["id"])
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		if (!$this->id)
 		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+			$this->id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
 		}
-		else
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Account Details", "page=accounts/charts/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Account Ledger", "page=accounts/charts/ledger.php&id=". $this->id ."", TRUE);
+
+		if (user_permissions_get("accounts_charts_write"))
 		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
+			$this->obj_menu_nav->add_item("Delete Account", "page=accounts/charts/delete.php&id=". $this->id ."");
 		}
+	}
+
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_charts_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the account exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_charts WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		// define ledger
+		$this->obj_ledger			= New ledger_account_list;
+		$this->obj_ledger->ledgername	= "account_ledger";
+		$this->obj_ledger->chartid	= $this->id;
 		
+		$this->obj_ledger->prepare_ledger();
 
-		$mysql_string	= "SELECT id FROM `account_charts` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		// define SQL structure
+		$this->obj_ledger->prepare_generate_sql();
 
-		if (!$mysql_num_rows)
-		{
-			print "<p><b>Error: The requested chart does not exist. <a href=\"index.php?page=charts/charts.php\">Try looking for your chart on the chart list page.</a></b></p>";
-		}
-		else
-		{
-			
-			/*
-				Page Heading
-			*/
-			print "<h3>ACCOUNT LEDGER</h3>";
-			print "<p>This page displays a list of transactions for the selected account. You can use the filter options to define dates and other search/filtering criteria.</p>";
+		// load data
+		$this->obj_ledger->prepare_load_data();
+	}
 
-			/*
-				Display Ledger
-			*/
 
-			// define ledger
-			$ledger			= New ledger_account_list;
-			$ledger->ledgername	= "account_ledger";
-			$ledger->chartid	= $id;
+	function render_html()
+	{
+		// page title
+		print "<h3>ACCOUNT LEDGER</h3>";
+		print "<p>This page displays a list of transactions for the selected account. You can use the filter options to define dates and other search/filtering criteria.</p>";
 
-			$ledger->prepare_ledger();
+		// display options form
+		$this->obj_ledger->render_options_form();
 
-			// display options form
-			$ledger->render_options_form();
+		// display ledger
+		$this->obj_ledger->render_table_html();
 
-			// define SQL structure
-			$ledger->prepare_generate_sql();
+		// display CSV download link
+		print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/charts/ledger.php&id=". $this->id ."\">Export as CSV</a></p>";
+	}
 
-			// load data
-			$ledger->prepare_load_data();
+	function render_csv()
+	{
+		// display ledger	
+		$this->obj_ledger->render_table_csv();
+	}
 
-			// render
-			$ledger->render_table_html();
-
-		} // end if chart/account exists
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>

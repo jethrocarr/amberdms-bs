@@ -19,7 +19,7 @@ if (user_permissions_get('accounts_charts_write'))
 	$id				= security_form_input_predefined("int", "id_chart", 0, "");
 
 	// general details
-	$data["code_chart"]		= security_form_input_predefined("int", "code_chart", 1, "A chart code must be supplied and can only consist of numbers.");
+	$data["code_chart"]		= security_form_input_predefined("int", "code_chart", 0, "A chart code can only consist of numbers.");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "");
 	$data["chart_type"]		= security_form_input_predefined("int", "chart_type", 1, "");
 	
@@ -64,16 +64,19 @@ if (user_permissions_get('accounts_charts_write'))
 
 
 	// make sure we don't choose a chart code number that is already in use
-	$mysql_string	= "SELECT id FROM `account_charts` WHERE code_chart='". $data["code_chart"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-	if ($mysql_num_rows)
+	if ($data["code_chart"])
 	{
-		$_SESSION["error"]["message"][] = "This account code has already been used by another account - please enter a unique code.";
-		$_SESSION["error"]["name_chart-error"] = 1;
+		$mysql_string	= "SELECT id FROM `account_charts` WHERE code_chart='". $data["code_chart"] ."'";
+		if ($id)
+			$mysql_string .= " AND id!='$id'";
+		$mysql_result	= mysql_query($mysql_string);
+		$mysql_num_rows	= mysql_num_rows($mysql_result);
+
+		if ($mysql_num_rows)
+		{
+			$_SESSION["error"]["message"][] = "This account code has already been used by another account - please enter a unique code.";
+			$_SESSION["error"]["name_chart-error"] = 1;
+		}
 	}
 
 
@@ -95,6 +98,13 @@ if (user_permissions_get('accounts_charts_write'))
 	}
 	else
 	{
+		if (!$data["code_chart"])
+		{
+			// generate a unique chart code
+			$data["code_chart"] = config_generate_uniqueid("CODE_ACCOUNT", "SELECT id FROM account_charts WHERE code_chart='VALUE'");
+		}
+
+	
 		// APPLY GENERAL OPTIONS
 		if ($mode == "add")
 		{

@@ -5,18 +5,30 @@
 	Summary/Link page for other accounts sections
 */
 
-if (user_online())
+class page_output
 {
-	function page_render()
+	function check_permissions()
+	{
+		return user_online();
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+	function execute()
+	{
+		// nothing todo
+		return 1;
+	}
+
+	function render_html()
 	{
 		print "<h3>Accounts</h3>";
-
 		print "<p>Have overview/summary of account status here.</p>";
 	}
-}
-else
-{
-	error_render_noperms();
 }
 
 ?>	
