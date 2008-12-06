@@ -2,7 +2,7 @@
 /*
 	accounts/taxes/tax_collected.php
 	
-	access: accounts_taxes_view (read-only)
+	access: accounts_taxes_view
 
 	Report on tax collected on either an invoiced or cash basis.
 */
@@ -11,84 +11,97 @@
 require("include/accounts/inc_taxes.php");
 
 
-if (user_permissions_get('accounts_taxes_view'))
+
+class page_output
 {
-	if ($_GET["id"])
+	var $id;
+	var $obj_menu_nav;
+	var $obj_taxreport;
+
+
+	function page_output()
 	{
-		$id = $_GET["id"];
-	}
-	else
-	{
-		$id = $_GET["filter_id"];
-	}
-	
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Tax Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Tax Ledger";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/ledger.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/taxes/ledger.php&id=$id";
-	
-	if (user_permissions_get('accounts_taxes_write'))
-	{
-		$_SESSION["nav"]["title"][]	= "Delete Tax";
-		$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
-	}
-
-
-
-	function page_render()
-	{
-		if ($_GET["id"])
-		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
-		}
-		else
-		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
-		}
+		if (!$this->id)
+			$this->id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
 		
-		/*
-			Verify that the tax exists
-		*/
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Tax Details", "page=accounts/taxes/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."", TRUE);
+
+		if (user_permissions_get("accounts_taxes_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Tax", "page=accounts/taxes/delete.php&id=". $this->id ."");
+		}
+	}
+
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_taxes_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the tax exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_taxes WHERE id='$id' LIMIT 1";
+		$sql_obj->string	= "SELECT id FROM account_taxes WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested tax does not exist. <a href=\"index.php?page=accounts/taxes/taxes.php\">Try looking for your tax on the taxes list page.</a></b></p>";
+			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
+			return 0;
 		}
-		else
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_taxreport 		= New taxes_report_transactions;
+		$this->obj_taxreport->mode	= "collected";
+		$this->obj_taxreport->taxid	= $this->id;
+
+		$this->obj_taxreport->execute();
+	}
+
+
+	function render_html()
+	{
+		// Page Heading
+		print "<h3>TAX COLLECTED</h3>";
+		print "<p>This page allows you to generate reports on how much tax has been collected on invoices on either an Accural/Invoice or Cash basis for a selectable time period.</p>";
+
+		print "<p><i>Note: The cash selection mode will only display invoices which have been fully paid - any partially paid invoices will only appear when the Accural/Invoice selection mode is used.</i></p>";
+
+
+		// display tax report
+		if ($this->obj_taxreport->render_html())
 		{
-			/*
-				Page Heading
-			*/
-			print "<h3>TAX COLLECTED</h3>";
-			print "<p>This page allows you to generate reports on how much tax has been collected on invoices on either an Accural/Invoice or Cash basis for a selectable time period.</p>";
-
-			print "<p><i>Note: The cash selection mode will only display invoices which have been fully paid - any partially paid invoices will only appear when the Accural/Invoice selection mode is used.</i></p>";
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/taxes/tax_collected.php&id=". $this->id ."\">Export as CSV</a></p>";
+		}
+	}
 
 
-			/*
-				Display tax report
-			*/
+	function render_csv()
+	{
+		$this->obj_taxreport->render_csv();
+	}
 
-			taxes_report_transactions("collected", $id);
-		
-		
-		} // end if tax exists
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>

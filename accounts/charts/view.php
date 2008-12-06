@@ -47,7 +47,7 @@ class page_output
 	{
 		// verify that the account exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_charts WHERE id='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM account_charts WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())

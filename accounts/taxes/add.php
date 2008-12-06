@@ -12,27 +12,35 @@
 require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_taxes_write'))
+class page_output
 {
-	function page_render()
-	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+	var $obj_form;
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>ADD NEW TAX</h3><br>";
-		print "<p>This page allows you to add a tax to the system.</p>";
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_charts_write");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
+	{
 
 		/*
 			Define form structure
 		*/
-		$form = New form_input;
-		$form->formname = "tax_add";
-		$form->language = $_SESSION["user"]["lang"];
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "tax_add";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "accounts/taxes/edit-process.php";
-		$form->method = "post";
+		$this->obj_form->action = "accounts/taxes/edit-process.php";
+		$this->obj_form->method = "post";
 		
 
 		// general
@@ -40,19 +48,19 @@ if (user_permissions_get('accounts_taxes_write'))
 		$structure["fieldname"] 	= "name_tax";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "taxrate";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		// tax account selection
 		$structure = charts_form_prepare_acccountdropdown("chartid", "tax_summary_account");
@@ -63,7 +71,7 @@ if (user_permissions_get('accounts_taxes_write'))
 			$structure["type"]		= "text";
 			$structure["defaultvalue"]	= "<b>You need to add some tax accounts for this tax to belong to, before you can use this tax</b>";
 		}
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 
 	
@@ -73,25 +81,29 @@ if (user_permissions_get('accounts_taxes_write'))
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Create Tax";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 		
 
 		// define subforms
-		$form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "description");
-		$form->subforms["submit"]	= array("submit");
+		$this->obj_form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "description");
+		$this->obj_form->subforms["submit"]	= array("submit");
 		
 		// load any data returned due to errors
-		$form->load_data_error();
+		$this->obj_form->load_data_error();
+
+	}
+
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>ADD NEW TAX</h3><br>";
+		print "<p>This page allows you to add a tax to the system.</p>";
 
 		// display the form
-		$form->render_form();
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		$this->obj_form->render_form();
+	}
+	
 }
 
 ?>

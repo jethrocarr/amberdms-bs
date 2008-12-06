@@ -7,30 +7,46 @@
 	Displays a list of all the taxes on the system.
 */
 
-if (user_permissions_get('accounts_taxes_view'))
+
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get('accounts_taxes_view');
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$tax_list = New table;
+		$this->obj_table = New table;
 
-		$tax_list->language	= $_SESSION["user"]["lang"];
-		$tax_list->tablename	= "account_taxes";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "account_taxes";
 
 		// define all the columns and structure
-		$tax_list->add_column("standard", "name_tax", "account_taxes.name_tax");
-		$tax_list->add_column("standard", "taxrate", "account_taxes.taxrate");
-		$tax_list->add_column("standard", "chartid", "account_charts.code_chart");
-		$tax_list->add_column("standard", "description", "account_taxes.description");
+		$this->obj_table->add_column("standard", "name_tax", "account_taxes.name_tax");
+		$this->obj_table->add_column("standard", "taxrate", "account_taxes.taxrate");
+		$this->obj_table->add_column("standard", "chartid", "account_charts.code_chart");
+		$this->obj_table->add_column("standard", "description", "account_taxes.description");
 
 		// defaults
-		$tax_list->columns		= array("name_tax", "taxrate", "chartid", "description");
-		$tax_list->columns_order	= array("name_tax");
+		$this->obj_table->columns		= array("name_tax", "taxrate", "chartid", "description");
+		$this->obj_table->columns_order		= array("name_tax");
 
 		// define SQL structure
-		$tax_list->sql_obj->prepare_sql_settable("account_taxes");
-		$tax_list->sql_obj->prepare_sql_addfield("id", "account_taxes.id");
-		$tax_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid");
+		$this->obj_table->sql_obj->prepare_sql_settable("account_taxes");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_taxes.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid");
 
 /*
 		// acceptable filter options
@@ -38,40 +54,49 @@ if (user_permissions_get('accounts_taxes_view'))
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date >= 'value'";
-		$tax_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date <= 'value'";
-		$tax_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "name_tax LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
-		$tax_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 */
 
 
+		// load options
+		$this->obj_table->load_options_form();
+
+		// fetch all the tax information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+
+
+
+	}
+
+
+	function render_html()
+	{
 		// heading
 		print "<h3>TAXES</h3><br><br>";
 
-
-		// options form
-		$tax_list->load_options_form();
-		$tax_list->render_options_form();
+		// display options form
+		$this->obj_table->render_options_form();
 
 
-		// fetch all the tax information
-		$tax_list->generate_sql();
-		$tax_list->load_data_sql();
-
-		if (!count($tax_list->columns))
+		// display table
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$tax_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no taxes in your database.</b></p>";
 		}
@@ -80,32 +105,26 @@ if (user_permissions_get('accounts_taxes_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$tax_list->add_link("view", "accounts/taxes/view.php", $structure);
+			$this->obj_table->add_link("view", "accounts/taxes/view.php", $structure);
 
 			// tax collected link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$tax_list->add_link("collected", "accounts/taxes/tax_collected.php", $structure);
+			$this->obj_table->add_link("collected", "accounts/taxes/tax_collected.php", $structure);
 
 			// tax paid link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$tax_list->add_link("paid", "accounts/taxes/tax_paid.php", $structure);
-
-
+			$this->obj_table->add_link("paid", "accounts/taxes/tax_paid.php", $structure);
 
 			// display the table
-			$tax_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/taxes/taxes.php\">Export as CSV</a></p>";
 		}
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}
+	
 }
 
 ?>

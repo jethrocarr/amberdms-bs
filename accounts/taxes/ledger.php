@@ -2,7 +2,7 @@
 /*
 	accounts/taxes/ledger.php
 	
-	access: accounts_taxes_view (read-only)
+	access: accounts_taxes_view
 
 	Links to other pages with information for the best way to get tax ledgers.
 */
@@ -11,92 +11,94 @@
 require("include/accounts/inc_ledger.php");
 
 
-if (user_permissions_get('accounts_charts_view'))
+
+class page_output
 {
-	if ($_GET["id"])
-	{
-		$id = $_GET["id"];
-	}
-	else
-	{
-		$id = $_GET["filter_id"];
-	}
+	var $id;
+	var $obj_menu_nav;
 	
+	var $obj_sql_tax;
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Tax Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Tax Ledger";
-	$_SESSION["nav"]["query"][]	= "page=accounts/taxes/ledger.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/taxes/ledger.php&id=$id";
-	
-	if (user_permissions_get('accounts_taxes_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Tax";
-		$_SESSION["nav"]["query"][]	= "page=accounts/taxes/delete.php&id=$id";
-	}
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-
-
-	function page_render()
-	{
-		if ($_GET["id"])
+		if (!$this->id)
 		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+			$this->id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
 		}
-		else
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Tax Details", "page=accounts/taxes/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."", TRUE);
+
+		if (user_permissions_get("accounts_taxes_write"))
 		{
-			$id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
+			$this->obj_menu_nav->add_item("Delete Tax", "page=accounts/taxes/delete.php&id=". $this->id ."");
 		}
-		
+	}
+
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_taxes_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the tax exists
+		$this->obj_sql_tax		= New sql_query;
+		$this->obj_sql_tax->string	= "SELECT chartid, CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description) as name_chart FROM account_taxes LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid WHERE account_taxes.id='". $this->id ."' LIMIT 1";
+		$this->obj_sql_tax->execute();
+
+		if (!$this->obj_sql_tax->num_rows())
+		{
+			log_write("error", "page_output", "The requested tax (". $this->id .") does not exist - possibly the tax has been deleted.");
+			return 0;
+		}
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_sql_tax->fetch_array();
+	}
+
+	function render_html()
+	{
 		/*
-			Verify that the tax exists and fetch useful information
+			Page Heading
 		*/
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT chartid, CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description) as name_chart FROM account_taxes LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid WHERE account_taxes.id='$id' LIMIT 1";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
-		{
-			print "<p><b>Error: The requested tax does not exist. <a href=\"index.php?page=accounts/taxes/taxes.php\">Try looking for your tax on the taxes list page.</a></b></p>";
-		}
-		else
-		{
-			$sql_obj->fetch_array();
-
-			/*
-				Page Heading
-			*/
-			print "<h3>TAX LEDGER</h3>";
-			print "<p>There are 3 different types of ledger-style reports you can generate for taxes.</p>";
+		print "<h3>TAX LEDGER</h3>";
+		print "<p>There are 3 different types of ledger-style reports you can generate for taxes.</p>";
 
 
-			print "<br><p>";
-			print "<b>1. Account Ledger</b><br><br>";
-			print "Transactions for this tax are entered against account \"". $sql_obj->data[0]["name_chart"] ."\". You can <a href=\"index.php?page=accounts/charts/ledger.php&id=". $sql_obj->data[0]["chartid"] ."\">view the ledger for this account here</a>.<br>";
-			print "</p>";
+		print "<br><p>";
+		print "<b>1. Account Ledger</b><br><br>";
+		print "Transactions for this tax are entered against account \"". $this->obj_sql_tax->data[0]["name_chart"] ."\". You can <a href=\"index.php?page=accounts/charts/ledger.php&id=". $this->obj_sql_tax->data[0]["chartid"] ."\">view the ledger for this account here</a>.<br>";
+		print "</p>";
 
-			print "<br><p>";
-			print "<b>2. Tax Collected Report</b><br><br>";
-			print "Generate reports on the amount of tax collected either on an invoice or cash basis from accounts recievables using the <a href=\"index.php?page=accounts/taxes/tax_collected.php&id=$id\">AR tax collected report</a>.<br>";
-			print "</p>";
+		print "<br><p>";
+		print "<b>2. Tax Collected Report</b><br><br>";
+		print "Generate reports on the amount of tax collected either on an invoice or cash basis from accounts recievables using the <a href=\"index.php?page=accounts/taxes/tax_collected.php&id=". $this->id ."\">AR tax collected report</a>.<br>";
+		print "</p>";
 
-			print "<br><p>";
-			print "<b>3. Tax Paid Report</b><br><br>";
-			print "Generate reports on the amount of tax paid either on an invoice or cash basis from accounts payable using the <a href=\"index.php?page=accounts/taxes/tax_paid.php&id=$id\">AP tax paid report</a>.<br>";
-			print "</p>";
-		
-		} // end if tax exists
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		print "<br><p>";
+		print "<b>3. Tax Paid Report</b><br><br>";
+		print "Generate reports on the amount of tax paid either on an invoice or cash basis from accounts payable using the <a href=\"index.php?page=accounts/taxes/tax_paid.php&id=". $this->id ."\">AP tax paid report</a>.<br>";
+		print "</p>";
+	
+	}
 }
+
 
 ?>
