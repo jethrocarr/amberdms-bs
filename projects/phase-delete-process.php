@@ -96,7 +96,7 @@ if (user_permissions_get('projects_write'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["phase_delete"] = "failed";
-		header("Location: ../index.php?page=projects/phase-delete.php&projectid=$projectid&phaseid=$phaseid");
+		header("Location: ../index.php?page=projects/phase-delete.php&id=$projectid&phaseid=$phaseid");
 		exit(0);
 	}
 	else

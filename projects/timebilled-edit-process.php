@@ -117,6 +117,11 @@ if (user_permissions_get('projects_write'))
 			{
 				$data["time_entries"][ $entries_data["id"] ]["billable"] = 0;
 			}
+
+			// save to session array
+			$_SESSION["error"]["time_". $entries_data["id"] ."_bill"]	= $_POST["time_". $entries_data["id"] ."_bill"];
+			$_SESSION["error"]["time_". $entries_data["id"] ."_nobill"]	= $_POST["time_". $entries_data["id"] ."_nobill"];
+			
 		}
 	}
 
@@ -147,7 +152,7 @@ if (user_permissions_get('projects_write'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["timebilled_view"] = "failed";
-		header("Location: ../index.php?page=projects/timebilled-edit.php&projectid=$projectid&groupid=$groupid");
+		header("Location: ../index.php?page=projects/timebilled-edit.php&id=$projectid&groupid=$groupid");
 		exit(0);
 	}
 	else

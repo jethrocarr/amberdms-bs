@@ -7,393 +7,390 @@
 	Form to add or edit a time grouping.
 */
 
-if (user_permissions_get('projects_write'))
+class page_output
 {
-	$id = $_GET["projectid"];
+	var $id;
+	var $groupid;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Project Details";
-	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Project Phases";
-	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebooked";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
+	var $obj_sql_entries;
 
-	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=projects/timebilled.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Journal";
-	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Project";
-	$_SESSION["nav"]["query"][]	= "page=projects/delete.php&id=$id";
+	var $locked = 0;
 
 
-	function page_render()
+	function page_output()
 	{
-		$projectid	= security_script_input('/^[0-9]*$/', $_GET["projectid"]);
-		$groupid		= security_script_input('/^[0-9]*$/', $_GET["groupid"]);
+		// fetch variables
+		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->groupid	= security_script_input('/^[0-9]*$/', $_GET["groupid"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+	}
 
 
-		/*
-			Perform verification tasks
-		*/
-		$error = 0;
-		
-		// check that the specified project actually exists
+	function check_permissions()
+	{
+		return user_permissions_get("projects_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that project exists
 		$sql_obj		= New sql_query;
-		
-		$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid'";
+		$sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
-			$error = 1;
+			log_write("error", "page_output", "The requested project (". $this->id .") does not exist - possibly the project has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+		
+		// verify that the time group exists and belongs to this project
+		if ($this->groupid)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid, locked FROM time_groups WHERE id='". $this->groupid ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				log_write("error", "page_output", "The requested time group (". $this->groupid .") does not exist - possibly the time group has been deleted.");
+				return 0;
+			}
+			else
+			{
+				$sql_obj->fetch_array();
+
+				$this->locked = $sql_obj->data[0]["locked"];
+
+				if ($sql_obj->data[0]["projectid"] != $this->id)
+				{
+					log_write("error", "page_output", "The requested time group (". $this->groupid .") does not belong to the selected project (". $this->id .")");
+					return 0;
+				}
+			}
+			
+			unset($sql_obj);
+		}
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "timebilled_view";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "projects/timebilled-edit-process.php";
+		$this->obj_form->method = "post";
+	
+	
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_group";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_invoice";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "description";
+		$structure["type"]		= "textarea";
+		$this->obj_form->add_input($structure);
+
+
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"]		= "projectid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+		$structure = null;
+		$structure["fieldname"]		= "groupid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->groupid;
+		$this->obj_form->add_input($structure);
+	
+		
+
+		/*
+			Define checkboxes for all unassigned time entries
+		*/
+
+		$this->obj_sql_entries = New sql_query;
+		
+		$this->obj_sql_entries->prepare_sql_settable("timereg");
+		
+		$this->obj_sql_entries->prepare_sql_addfield("id", "timereg.id");
+		$this->obj_sql_entries->prepare_sql_addfield("date", "timereg.date");
+		$this->obj_sql_entries->prepare_sql_addfield("name_phase", "project_phases.name_phase");
+		$this->obj_sql_entries->prepare_sql_addfield("name_staff", "staff.name_staff");
+		$this->obj_sql_entries->prepare_sql_addfield("description", "timereg.description");
+		$this->obj_sql_entries->prepare_sql_addfield("time_booked", "timereg.time_booked");
+		$this->obj_sql_entries->prepare_sql_addfield("groupid", "timereg.groupid");
+		$this->obj_sql_entries->prepare_sql_addfield("billable", "timereg.billable");
+		
+		$this->obj_sql_entries->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
+		$this->obj_sql_entries->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
+
+		if ($this->groupid)
+		{
+			$this->obj_sql_entries->prepare_sql_addwhere("groupid='". $this->groupid ."' OR !groupid");
 		}
 		else
 		{
-			if ($groupid)
+			$this->obj_sql_entries->prepare_sql_addwhere("!groupid");
+		}
+
+		$this->obj_sql_entries->generate_sql();
+		$this->obj_sql_entries->execute();
+
+		if ($this->obj_sql_entries->num_rows())
+		{
+			$this->obj_sql_entries->fetch_array();
+
+			foreach ($this->obj_sql_entries->data as $data)
 			{
-				// are we editing an existing group? make sure it exists and belongs to this project
-				$sql_group_obj		= New sql_query;
-				$sql_group_obj->string	= "SELECT projectid, locked FROM time_groups WHERE id='$groupid' LIMIT 1";
-				$sql_group_obj->execute();
+				// define the billable check box
+				$structure = NULL;
+				$structure["fieldname"]		= "time_". $data["id"] ."_bill";
+				$structure["type"]		= "checkbox";
+				$structure["options"]["label"]	= " ";
 
-				if (!$sql_group_obj->num_rows())
+				if ($data["groupid"] == $this->groupid && $data["billable"] == "1")
 				{
-					print "<p><b>Error: The requested time group does not exist.</b></p>";
-					$error = 1;
+					$structure["defaultvalue"] = "on";
 				}
-				else
-				{
-					$sql_group_obj->fetch_array();
+				
+				$this->obj_form->add_input($structure);
 
-					if ($sql_group_obj->data[0]["projectid"] != $projectid)
-					{
-						print "<p><b>Error: The requested time group does not match the provided project ID. Potential application bug?</b></p>";
-						$error = 1;
-					}
-					
+				// define the nobill check box
+				$structure = NULL;
+				$structure["fieldname"]		= "time_". $data["id"] ."_nobill";
+				$structure["type"]		= "checkbox";
+				$structure["options"]["label"]	= " ";
+
+				if ($data["groupid"] == $this->groupid && $data["billable"] == "0")
+				{
+					$structure["defaultvalue"] = "on";
 				}
+				
+				$this->obj_form->add_input($structure);
+
 			}
 		}
 
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+
+		if ($this->locked)
+		{
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
+		}
+		else
+		{
+			$structure["type"]		= "submit";
+			
+			if ($this->groupid)
+			{
+				$structure["defaultvalue"]	= "Save Changes";
+			}
+			else
+			{
+				$structure["defaultvalue"]	= "Create Time Group";
+			}
+		}
+		
+		$this->obj_form->add_input($structure);
+
+		
+
+
+		// fetch the form data if editing
+		if ($this->groupid)
+		{
+			$this->obj_form->sql_query = "SELECT time_groups.name_group, time_groups.customerid, time_groups.description, account_ar.code_invoice FROM time_groups LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='". $this->groupid ."' LIMIT 1";
+			$this->obj_form->load_data();
+		}
+		else
+		{
+			// load any data returned due to errors
+			$this->obj_form->load_data_error();
+		}
+
+	}
+
+
+	function render_html()
+	{
+		// Title + Summary
+		if ($this->groupid)
+		{
+			print "<h3>EDIT TIME GROUP</h3><br>";
+			print "<p>This page allows you to modify a time grouping.</p>";
+		}
+		else
+		{
+			print "<h3>ADD NEW TIME GROUP</h3><br>";
+			print "<p>This page allows you to add a new time group entry to a project.</p>";
+		}
+		
+
+
 	
 		/*
-			Display Form
+			Display the form
+
+			Because we need all the columns for the different time items, we have to do
+			a custom display for this form.
 		*/
-		if (!$error)
+
+		// start form
+		print "<form enctype=\"multipart/form-data\" method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
+
+
+		// GENERAL INPUTS
+		
+		// start table
+		print "<table class=\"form_table\" width=\"100%\">";
+
+		// form header
+		print "<tr class=\"header\">";
+		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_details") ."</b></td>";
+		print "</tr>";
+
+		// display all the rows
+		$this->obj_form->render_row("name_group");
+		$this->obj_form->render_row("customerid");
+		$this->obj_form->render_row("code_invoice");
+		$this->obj_form->render_row("description");
+
+
+		// end table
+		print "</table><br>";
+
+
+
+		// TIME SELECTION
+
+		print "<table class=\"form_table\" width=\"100%\">";
+		print "<tr class=\"header\">";
+		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_selection") ."</b></td>";
+		print "</tr>";
+		print "</table>";
+
+		
+		if ($this->obj_sql_entries->num_rows())
 		{
-			/*
-				Title + Summary
-			*/
-			if ($groupid)
-			{
-				print "<h3>EDIT TIME GROUP</h3><br>";
-				print "<p>This page allows you to modify a time grouping.</p>";
-			}
-			else
-			{
-				print "<h3>ADD NEW TIME GROUP</h3><br>";
-				print "<p>This page allows you to add a new time group entry to a project.</p>";
-			}
-			
-
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "timebilled_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "projects/timebilled-edit-process.php";
-			$form->method = "post";
-		
-		
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_group";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_invoice";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "textarea";
-			$form->add_input($structure);
-
-
-			// hidden values
-			$structure = NULL;
-			$structure["fieldname"]		= "projectid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $projectid;
-			$form->add_input($structure);
-			
-			$structure = null;
-			$structure["fieldname"]		= "groupid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $groupid;
-			$form->add_input($structure);
-		
-			
-
-			/*
-				Define checkboxes for all unassigned time entries
-			*/
-
-			$sql_entries_obj = New sql_query;
-			
-			$sql_entries_obj->prepare_sql_settable("timereg");
-			
-			$sql_entries_obj->prepare_sql_addfield("id", "timereg.id");
-			$sql_entries_obj->prepare_sql_addfield("date", "timereg.date");
-			$sql_entries_obj->prepare_sql_addfield("name_phase", "project_phases.name_phase");
-			$sql_entries_obj->prepare_sql_addfield("name_staff", "staff.name_staff");
-			$sql_entries_obj->prepare_sql_addfield("description", "timereg.description");
-			$sql_entries_obj->prepare_sql_addfield("time_booked", "timereg.time_booked");
-			$sql_entries_obj->prepare_sql_addfield("groupid", "timereg.groupid");
-			$sql_entries_obj->prepare_sql_addfield("billable", "timereg.billable");
-			
-			$sql_entries_obj->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
-			$sql_entries_obj->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
-
-			if ($groupid)
-			{
-				$sql_entries_obj->prepare_sql_addwhere("groupid='$groupid' OR !groupid");
-			}
-			else
-			{
-				$sql_entries_obj->prepare_sql_addwhere("!groupid");
-			}
-
-			$sql_entries_obj->generate_sql();
-			$sql_entries_obj->execute();
-
-			if ($sql_entries_obj->num_rows())
-			{
-				$sql_entries_obj->fetch_array();
-
-				foreach ($sql_entries_obj->data as $data)
-				{
-					// define the billable check box
-					$structure = NULL;
-					$structure["fieldname"]		= "time_". $data["id"] ."_bill";
-					$structure["type"]		= "checkbox";
-					$structure["options"]["label"]	= " ";
-
-					if ($data["groupid"] == $groupid && $data["billable"] == "1")
-					{
-						$structure["defaultvalue"] = "on";
-					}
-					
-					$form->add_input($structure);
-
-					// define the nobill check box
-					$structure = NULL;
-					$structure["fieldname"]		= "time_". $data["id"] ."_nobill";
-					$structure["type"]		= "checkbox";
-					$structure["options"]["label"]	= " ";
-
-					if ($data["groupid"] == $groupid && $data["billable"] == "0")
-					{
-						$structure["defaultvalue"] = "on";
-					}
-					
-					$form->add_input($structure);
-
-				}
-			}
-
-
-			// submit button
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-
-			if ($sql_group_obj->data[0]["locked"])
-			{
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
-			}
-			else
-			{
-				$structure["type"]		= "submit";
-				
-				if ($groupid)
-				{
-					$structure["defaultvalue"]	= "Save Changes";
-				}
-				else
-				{
-					$structure["defaultvalue"]	= "Create Time Group";
-				}
-			}
-			
-			$form->add_input($structure);
-
-			
-
-
-			// fetch the form data if editing
-			if ($groupid)
-			{
-				$form->sql_query = "SELECT time_groups.name_group, time_groups.customerid, time_groups.description, account_ar.code_invoice FROM time_groups LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='$groupid' LIMIT 1";
-				$form->load_data();
-			}
-			else
-			{
-				// load any data returned due to errors
-				$form->load_data_error();
-			}
-
-
-
-			/*
-				Display the form
-
-				Because we need all the columns for the different time items, we have to do
-				a custom display for this form.
-			*/
-
-			// start form
-			print "<form enctype=\"multipart/form-data\" method=\"". $form->method ."\" action=\"". $form->action ."\" class=\"form_standard\">";
-
-
-			// GENERAL INPUTS
-			
 			// start table
-			print "<table class=\"form_table\" width=\"100%\">";
+			print "<p>Select all the time that should belong to this group from the list below - this list only shows time currently unassigned to any group.</p>";
+			print "<p>You can choose whether to add the time as billable or as unbillable. This is used to group hours that are unbilled, eg: internal paper work
+			for the customer's account or other administrative overheads so that they won't continue to show in this list.</p>";
+
+			
+			print "<table class=\"table_content\" width=\"100%\">";
 
 			// form header
 			print "<tr class=\"header\">";
-			print "<td colspan=\"2\"><b>". language_translate_string($form->language, "timebilled_details") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "date") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "name_phase") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "name_staff") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "description") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "time_booked") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "time_bill") ."</b></td>";
+			print "<td><b>". language_translate_string($this->obj_form->language, "time_nobill") ."</b></td>";
 			print "</tr>";
 
 			// display all the rows
-			$form->render_row("name_group");
-			$form->render_row("customerid");
-			$form->render_row("code_invoice");
-			$form->render_row("description");
-
-
-			// end table
-			print "</table><br>";
-
-
-
-			// TIME SELECTION
-
-			print "<table class=\"form_table\" width=\"100%\">";
-			print "<tr class=\"header\">";
-			print "<td colspan=\"2\"><b>". language_translate_string($form->language, "timebilled_selection") ."</b></td>";
-			print "</tr>";
-			print "</table>";
-
-			
-			if ($sql_entries_obj->num_rows())
+			foreach ($this->obj_sql_entries->data as $data)
 			{
-				// start table
-				print "<p>Select all the time that should belong to this group from the list below - this list only shows time currently unassigned to any group.</p>";
-				print "<p>You can choose whether to add the time as billable or as unbillable. This is used to group hours that are unbilled, eg: internal paper work
-				for the customer's account or other administrative overheads so that they won't continue to show in this list.</p>";
+				print "<tr>";
+					print "<td>". $data["date"] ."</td>";
+					print "<td>". $data["name_phase"] ."</td>";
+					print "<td>". $data["name_staff"] ."</td>";
+					print "<td>". $data["description"] ."</td>";
+					print "<td>". time_format_hourmins($data["time_booked"]) ."</td>";
 
-				
-				print "<table class=\"table_content\" width=\"100%\">";
+					print "<td>";
+					$this->obj_form->render_field("time_". $data["id"] ."_bill");
+					print "</td>";
 
-				// form header
-				print "<tr class=\"header\">";
-				print "<td><b>". language_translate_string($form->language, "date") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "name_phase") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "name_staff") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "description") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "time_booked") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "time_bill") ."</b></td>";
-				print "<td><b>". language_translate_string($form->language, "time_nobill") ."</b></td>";
+					print "<td>";
+					$this->obj_form->render_field("time_". $data["id"] ."_nobill");
+					print "</td>";
+					
 				print "</tr>";
-
-				// display all the rows
-				foreach ($sql_entries_obj->data as $data)
-				{
-					print "<tr>";
-						print "<td>". $data["date"] ."</td>";
-						print "<td>". $data["name_phase"] ."</td>";
-						print "<td>". $data["name_staff"] ."</td>";
-						print "<td>". $data["description"] ."</td>";
-						print "<td>". time_format_hourmins($data["time_booked"]) ."</td>";
-
-						print "<td>";
-						$form->render_field("time_". $data["id"] ."_bill");
-						print "</td>";
-
-						print "<td>";
-						$form->render_field("time_". $data["id"] ."_nobill");
-						print "</td>";
-						
-					print "</tr>";
-				}
-
-				// end table
-				print "</table><br>";
 			}
-			else
-			{
-				print "<p><i>There is currently no un-grouped time that can be selected.</i></p>";
-			}
-
-
-
-
-
-			// HIDDEN FIELDS
-			$form->render_field("projectid");
-			$form->render_field("groupid");
-
-
-			// SUBMIT
-			
-			// start table
-			print "<table class=\"form_table\" width=\"100%\">";
-
-			// form header
-			print "<tr class=\"header\">";
-			print "<td colspan=\"2\"><b>". language_translate_string($form->language, "submit") ."</b></td>";
-			print "</tr>";
-
-			// display all the rows
-			$form->render_row("submit");
-
 
 			// end table
 			print "</table><br>";
+		}
+		else
+		{
+			print "<p><i>There is currently no un-grouped time that can be selected.</i></p>";
+		}
 
 
-			// end form
-			print "</form>";
+
+		// HIDDEN FIELDS
+		$this->obj_form->render_field("projectid");
+		$this->obj_form->render_field("groupid");
 
 
-		} // end if valid options
+		// SUBMIT
+		
+		// start table
+		print "<table class=\"form_table\" width=\"100%\">";
 
-	} // end page_render
+		// form header
+		print "<tr class=\"header\">";
+		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "submit") ."</b></td>";
+		print "</tr>";
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display all the rows
+		$this->obj_form->render_row("submit");
+
+
+		// end table
+		print "</table><br>";
+
+
+		// end form
+		print "</form>";
+
+	}
+	
 }
-
 ?>

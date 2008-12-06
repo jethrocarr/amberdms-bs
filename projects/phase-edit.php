@@ -7,186 +7,180 @@
 	Form to add or edit a project phase.
 */
 
-if (user_permissions_get('projects_write'))
+class page_output
 {
-	$id = $_GET["projectid"];
+	var $id;
+	var $phaseid;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Project Details";
-	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Phases";
-	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=projects/phases.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebooked";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$projectid";
-
-	$_SESSION["nav"]["title"][]	= "Project Journal";
-	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Project";
-	$_SESSION["nav"]["query"][]	= "page=projects/delete.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
 
-	function page_render()
+	function page_output()
 	{
-		$projectid	= security_script_input('/^[0-9]*$/', $_GET["projectid"]);
-		$phaseid	= security_script_input('/^[0-9]*$/', $_GET["phaseid"]);
+		// fetch variables
+		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->phaseid	= security_script_input('/^[0-9]*$/', $_GET["phaseid"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+	}
 
 
-		/*
-			Perform verification tasks
-		*/
-		$error = 0;
-		
-		// check that the specified project actually exists
-		$mysql_string	= "SELECT id FROM `projects` WHERE id='$projectid'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-		if (!$mysql_num_rows)
+	function check_permissions()
+	{
+		return user_permissions_get("projects_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that project exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
-			$error = 1;
+			log_write("error", "page_output", "The requested project (". $this->id .") does not exist - possibly the project has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+		
+		// verify that phase exists and belongs to this project
+		if ($this->phaseid)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid FROM project_phases WHERE id='". $this->phaseid ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				log_write("error", "page_output", "The requested phase (". $this->phaseid .") does not exist - possibly the phase has been deleted.");
+				return 0;
+			}
+			else
+			{
+				$sql_obj->fetch_array();
+
+				if ($sql_obj->data[0]["projectid"] != $this->id)
+				{
+					log_write("error", "page_output", "The requested phase (". $this->phaseid .") does not belong to the selected project (". $this->id .")");
+					return 0;
+				}
+			}
+			
+			unset($sql_obj);
+		}
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "phase_view";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "projects/phase-edit-process.php";
+		$this->obj_form->method = "post";
+	
+	
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_phase";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "description";
+		$structure["type"]		= "textarea";
+		$this->obj_form->add_input($structure);
+
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"]		= "projectid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"]		= "phaseid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->phaseid;
+		$this->obj_form->add_input($structure);
+		
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		if ($this->phaseid)
+		{
+			$structure["defaultvalue"]	= "Save Changes";
 		}
 		else
 		{
-			if ($phaseid)
-			{
-				// are we editing an existing phase? make sure it exists and belongs to this project
-				$mysql_string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid'";
-				$mysql_result	= mysql_query($mysql_string);
-				$mysql_num_rows	= mysql_num_rows($mysql_result);
+			$structure["defaultvalue"]	= "Create Phase";
+		}
+		$this->obj_form->add_input($structure);
 
-				if (!$mysql_num_rows)
-				{
-					print "<p><b>Error: The requested phase does not exist.</b></p>";
-					$error = 1;
-				}
-				else
-				{
-					$mysql_data = mysql_fetch_array($mysql_result);
 
-					if ($mysql_data["projectid"] != $projectid)
-					{
-						print "<p><b>Error: The requested phase does not match the provided project ID. Potential application bug?</b></p>";
-						$error = 1;
-					}
-					
-				}
-			}
+		// define subforms
+		$this->obj_form->subforms["phase_edit"]		= array("name_phase", "description");
+		$this->obj_form->subforms["hidden"]		= array("projectid", "phaseid");
+		$this->obj_form->subforms["submit"]		= array("submit");
+
+
+		// fetch the form data if editing
+		if ($this->phaseid)
+		{
+			$this->obj_form->sql_query = "SELECT * FROM `project_phases` WHERE id='". $this->phaseid ."' LIMIT 1";
+			$this->obj_form->load_data();
+		}
+		else
+		{
+			// load any data returned due to errors
+			$this->obj_form->load_data_error();
 		}
 
-	
-		/*
-			Display Form
-		*/
-		if (!$error)
+	}
+
+
+	function render_html()
+	{
+		// Title + Summary
+		if ($this->phaseid)
 		{
-			/*
-				Title + Summary
-			*/
-			if ($phaseid)
-			{
-				print "<h3>EDIT PHASE</h3><br>";
-				print "<p>This page allows you to modifiy a project phase.</p>";
-			}
-			else
-			{
-				print "<h3>ADD NEW PHASE</h3><br>";
-				print "<p>This page allows you to add a new phase to a project.</p>";
-			}
-			
-
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "phase_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "projects/phase-edit-process.php";
-			$form->method = "post";
-		
-		
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_phase";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "textarea";
-			$form->add_input($structure);
-
-			// hidden values
-			$structure = NULL;
-			$structure["fieldname"]		= "projectid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $projectid;
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"]		= "phaseid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $phaseid;
-			$form->add_input($structure);
-			
-
-
-			// submit button
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			if ($phaseid)
-			{
-				$structure["defaultvalue"]	= "Save Changes";
-			}
-			else
-			{
-				$structure["defaultvalue"]	= "Create Phase";
-			}
-			$form->add_input($structure);
-
-
-			// define subforms
-			$form->subforms["phase_edit"]		= array("name_phase", "description");
-			$form->subforms["hidden"]		= array("projectid", "phaseid");
-			$form->subforms["submit"]		= array("submit");
+			print "<h3>EDIT PHASE</h3><br>";
+			print "<p>This page allows you to modifiy a project phase.</p>";
+		}
+		else
+		{
+			print "<h3>ADD NEW PHASE</h3><br>";
+			print "<p>This page allows you to add a new phase to a project.</p>";
+		}
 	
 
-			// fetch the form data if editing
-			if ($phaseid)
-			{
-				$form->sql_query = "SELECT * FROM `project_phases` WHERE id='$phaseid' LIMIT 1";
-				$form->load_data();
-			}
-			else
-			{
-				// load any data returned due to errors
-				$form->load_data_error();
-			}
+		// display the form
+		$this->obj_form->render_form();
 
-
-			// display the form
-			$form->render_form();
-
-		} // end if valid options
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}
 }
 
 ?>

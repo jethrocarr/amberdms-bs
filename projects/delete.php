@@ -2,162 +2,172 @@
 /*
 	projects/delete.php
 	
-	access: 	projects_write (write access)
+	access: 	projects_write
 
 	Tool to allow a project to be deleted, provided that there is no time booked
 	to this project.
 */
 
-if (user_permissions_get('projects_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Project Details";
-	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Phases";
-	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebooked";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Journal";
-	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Project";
-	$_SESSION["nav"]["query"][]	= "page=projects/delete.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=projects/delete.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form;
 
 
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>PROJECT DELETE</h3><br>";
-		print "<p>This page allows you to delete an unwanted project.</p>";
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
 
-		$mysql_string	= "SELECT id FROM `projects` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."", TRUE);
+	}
 
-		if (!$mysql_num_rows)
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("projects_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that project exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
+			log_write("error", "page_output", "The requested project (". $this->id .") does not exist - possibly the project has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "project_delete";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "projects/delete-process.php";
+		$this->obj_form->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_project";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_project";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_project";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+
+		
+		// confirm delete
+		$structure = NULL;
+		$structure["fieldname"] 	= "delete_confirm";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Yes, I wish to delete this project and realise that once deleted the data can not be recovered.";
+		$this->obj_form->add_input($structure);
+
+
+		// submit button
+		// We check if any time bookings have been made against this project
+		// and either provide a button or a message.
+		$locked = 0;
+		
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM project_phases WHERE projectid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $phase_data)
+			{
+				$sql_phase_obj			= New sql_query;
+				$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."'";
+				$sql_phase_obj->execute();
+
+				if ($sql_phase_obj->num_rows())
+				{
+					$locked = 1;
+				}
+			}
+		}
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+
+		if ($locked)
+		{
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<i>This project can not be deleted because time entries have been assigned to it.</i>";
 		}
 		else
 		{
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "project_delete";
-			$form->language = $_SESSION["user"]["lang"];
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "delete";
+		}
+		
+		$this->obj_form->add_input($structure);
 
-			$form->action = "projects/delete-process.php";
-			$form->method = "post";
-			
-
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_project";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_project";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-
-			// hidden
-			$structure = NULL;
-			$structure["fieldname"] 	= "id_project";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-
-			
-			// confirm delete
-			$structure = NULL;
-			$structure["fieldname"] 	= "delete_confirm";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Yes, I wish to delete this project and realise that once deleted the data can not be recovered.";
-			$form->add_input($structure);
-
-
-			// submit button
-			// We check if any time bookings have been made against this project
-			// and either provide a button or a message.
-			$locked = 0;
-			
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM project_phases WHERE projectid='$id'";
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				$sql_obj->fetch_array();
-
-				foreach ($sql_obj->data as $phase_data)
-				{
-					$sql_phase_obj			= New sql_query;
-					$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."'";
-					$sql_phase_obj->execute();
-
-					if ($sql_phase_obj->num_rows())
-					{
-						$locked = 1;
-					}
-				}
-			}
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-
-			if ($locked)
-			{
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>This project can not be deleted because time entries have been assigned to it.</i>";
-			}
-			else
-			{
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "delete";
-			}
-			
-			$form->add_input($structure);
+	
+		// define subforms
+		$this->obj_form->subforms["project_delete"]	= array("code_project", "name_project");
+		$this->obj_form->subforms["hidden"]		= array("id_project");
+		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
 
 		
-			// define subforms
-			$form->subforms["project_delete"]	= array("code_project", "name_project");
-			$form->subforms["hidden"]		= array("id_project");
-			$form->subforms["submit"]		= array("delete_confirm", "submit");
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT * FROM `projects` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->load_data();
 
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `projects` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
+	}
 
-			// display the form
-			$form->render_form();
 
-		}
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>PROJECT DELETE</h3><br>";
+		print "<p>This page allows you to delete an unwanted project.</p>";
 
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display the form
+		$this->obj_form->render_form();
+	}
 }
+
 
 ?>

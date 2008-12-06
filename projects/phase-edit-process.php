@@ -93,7 +93,7 @@ if (user_permissions_get('projects_write'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["phase_view"] = "failed";
-		header("Location: ../index.php?page=projects/phase-edit.php&projectid=$projectid&phaseid=$phaseid");
+		header("Location: ../index.php?page=projects/phase-edit.php&id=$projectid&phaseid=$phaseid");
 		exit(0);
 	}
 	else

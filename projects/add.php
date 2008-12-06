@@ -8,27 +8,34 @@
 
 */
 
-if (user_permissions_get('projects_write'))
+class page_output
 {
-	function page_render()
+	var $obj_form;	// page form
+
+
+	function check_permissions()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("projects_write");
+	}
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>ADD NEW PROJECT</h3><br>";
-		print "<p>This page allows you to add a new project.</p>";
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
 
+
+	function execute()
+	{	
 		/*
 			Define form structure
 		*/
-		$form = New form_input;
-		$form->formname = "project_add";
-		$form->language = $_SESSION["user"]["lang"];
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "project_add";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$form->action = "projects/edit-process.php";
-		$form->method = "post";
+		$this->obj_form->action = "projects/edit-process.php";
+		$this->obj_form->method = "post";
 	
 	
 		// general
@@ -36,29 +43,29 @@ if (user_permissions_get('projects_write'))
 		$structure["fieldname"] 	= "name_project";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "code_project";
 		$structure["type"]		= "input";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_start";
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= date("Y-m-d");
 		$structure["options"]["req"]	= "yes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "details";
 		$structure["type"]		= "textarea";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 
 		// submit button
@@ -66,25 +73,29 @@ if (user_permissions_get('projects_write'))
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Create Project";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 		
 
 		// define subforms
-		$form->subforms["project_view"]		= array("code_project", "name_project", "date_start", "date_end", "details");
-		$form->subforms["submit"]		= array("submit");
+		$this->obj_form->subforms["project_view"]	= array("code_project", "name_project", "date_start", "date_end", "details");
+		$this->obj_form->subforms["submit"]		= array("submit");
 		
 		// load any data returned due to errors
-		$form->load_data_error();
+		$this->obj_form->load_data_error();
+
+	}
+
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>ADD NEW PROJECT</h3><br>";
+		print "<p>This page allows you to add a new project.</p>";
+
 
 		// display the form
-		$form->render_form();
+		$this->obj_form->render_form();
+	}
 
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>

@@ -7,193 +7,189 @@
 	Allows the deletion of a deletion page.
 */
 
-if (user_permissions_get('projects_write'))
+
+class page_output
 {
-	$id = $_GET["projectid"];
+	var $id;
+	var $groupid;
 	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Project Details";
-	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
+	var $obj_menu_nav;
+	var $obj_form;
 
-	$_SESSION["nav"]["title"][]	= "Project Phases";
-	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebooked";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
+	var $obj_sql_entries;
 
-	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=projects/timebilled.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Journal";
-	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Project";
-	$_SESSION["nav"]["query"][]	= "page=projects/delete.php&id=$id";
+	var $locked = 0;
 
 
-	function page_render()
+	function page_output()
 	{
-		$projectid	= security_script_input('/^[0-9]*$/', $_GET["projectid"]);
-		$groupid	= security_script_input('/^[0-9]*$/', $_GET["groupid"]);
+		// fetch variables
+		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->groupid	= security_script_input('/^[0-9]*$/', $_GET["groupid"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+	}
 
 
-		/*
-			Perform verification tasks
-		*/
-		$error = 0;
-		
-		// check that the specified project actually exists
+	function check_permissions()
+	{
+		return user_permissions_get("projects_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that project exists
 		$sql_obj		= New sql_query;
-		
-		$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid'";
+		$sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
-			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
-			$error = 1;
+			log_write("error", "page_output", "The requested project (". $this->id .") does not exist - possibly the project has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+		
+		// verify that the time group exists and belongs to this project
+		if ($this->groupid)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid, locked FROM time_groups WHERE id='". $this->groupid ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				log_write("error", "page_output", "The requested time group (". $this->groupid .") does not exist - possibly the time group has been deleted.");
+				return 0;
+			}
+			else
+			{
+				$sql_obj->fetch_array();
+
+				$this->locked = $sql_obj->data[0]["locked"];
+
+				if ($sql_obj->data[0]["projectid"] != $this->id)
+				{
+					log_write("error", "page_output", "The requested time group (". $this->groupid .") does not belong to the selected project (". $this->id .")");
+					return 0;
+				}
+			}
+			
+			unset($sql_obj);
+		}
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "timebilled_delete";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "projects/timebilled-delete-process.php";
+		$this->obj_form->method = "post";
+	
+	
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_group";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_customer";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "description";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_invoice";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "delete_confirm";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Yes, I wish to delete this time group and realise that once deleted the data can not be recovered.";
+		$this->obj_form->add_input($structure);
+
+	
+
+
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"]		= "projectid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+		$structure = null;
+		$structure["fieldname"]		= "groupid";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->groupid;
+		$this->obj_form->add_input($structure);
+	
+		
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+
+		if ($this->locked)
+		{
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
 		}
 		else
 		{
-			// are we editing an existing group? make sure it exists and belongs to this project
-			$sql_group_obj		= New sql_query;
-			$sql_group_obj->string	= "SELECT projectid, locked FROM time_groups WHERE id='$groupid' LIMIT 1";
-			$sql_group_obj->execute();
-
-			if (!$sql_group_obj->num_rows())
-			{
-				print "<p><b>Error: The requested time group does not exist.</b></p>";
-				$error = 1;
-			}
-			else
-			{
-				$sql_group_obj->fetch_array();
-				if ($sql_group_obj->data[0]["projectid"] != $projectid)
-				{
-					print "<p><b>Error: The requested time group does not match the provided project ID. Potential application bug?</b></p>";
-					$error = 1;
-				}
-					
-			}
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "delete";
 		}
-
-	
-		/*
-			Display Form
-		*/
-		if (!$error)
-		{
-			/*
-				Title + Summary
-			*/
-			
-			print "<h3>DELETE TIME GROUP</h3><br>";
-			print "<p>This page allows you to delete a time group. Once deleted, this action is irreverable.</p>";
-			
-
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "timebilled_delete";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "projects/timebilled-delete-process.php";
-			$form->method = "post";
 		
-		
-			// general
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_group";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_customer";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_invoice";
-			$structure["type"]		= "text";
-			$form->add_input($structure);
-	
-			$structure = NULL;
-			$structure["fieldname"] 	= "delete_confirm";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Yes, I wish to delete this time group and realise that once deleted the data can not be recovered.";
-			$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 		
 
-
-			// hidden values
-			$structure = NULL;
-			$structure["fieldname"]		= "projectid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $projectid;
-			$form->add_input($structure);
-			
-			$structure = null;
-			$structure["fieldname"]		= "groupid";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $groupid;
-			$form->add_input($structure);
-		
-			
-			// submit button
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-
-			if ($sql_group_obj->data[0]["locked"])
-			{
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
-			}
-			else
-			{
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "delete";
-			}
-			
-			$form->add_input($structure);
-
-			
+		// fetch the form data if editing
+		$this->obj_form->sql_query = "SELECT name_group, description, account_ar.code_invoice, customers.name_customer FROM time_groups LEFT JOIN customers ON customers.id = time_groups.customerid LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='". $this->groupid ."' LIMIT 1";
+		$this->obj_form->load_data();
 
 
-			// fetch the form data if editing
-			$form->sql_query = "SELECT name_group, description, account_ar.code_invoice, customers.name_customer FROM time_groups LEFT JOIN customers ON customers.id = time_groups.customerid LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='$groupid' LIMIT 1";
-			$form->load_data();
+		// display the subforms
+		$this->obj_form->subforms["timebilled_details"]	= array("name_group", "name_customer", "code_invoice", "description");
+		$this->obj_form->subforms["hidden"]		= array("projectid", "groupid");
+		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+	}
 
 
+	function render_html()
+	{
+		// Title + Summary
+		print "<h3>DELETE TIME GROUP</h3><br>";
+		print "<p>This page allows you to delete a time group. Once deleted, this action is irreverable.</p>";
 
-			/*
-				Display the form
-			*/
-
-			$form->subforms["timebilled_details"]	= array("name_group", "name_customer", "code_invoice", "description");
-			$form->subforms["hidden"]		= array("projectid", "groupid");
-			$form->subforms["submit"]		= array("delete_confirm", "submit");
-
-			$form->render_form();
-
-
-		} // end if valid options
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display the form
+		$this->obj_form->render_form();
+	}
 }
 
 ?>

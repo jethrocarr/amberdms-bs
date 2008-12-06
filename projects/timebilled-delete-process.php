@@ -82,7 +82,7 @@ if (user_permissions_get('projects_write'))
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["timebilled_delete"] = "failed";
-		header("Location: ../index.php?page=projects/timebilled-delete.php&projectid=$projectid&groupid=$groupid");
+		header("Location: ../index.php?page=projects/timebilled-delete.php&id=$projectid&groupid=$groupid");
 		exit(0);
 	}
 	else

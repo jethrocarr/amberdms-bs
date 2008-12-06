@@ -7,48 +7,63 @@
 	Displays a list of all the projects on the system.
 */
 
-if (user_permissions_get('projects_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("projects_view");
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$project_list = New table;
+		$this->obj_table = New table;
 
-		$project_list->language	= $_SESSION["user"]["lang"];
-		$project_list->tablename	= "project_list";
+		$this->obj_table->language	= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename	= "project_list";
 
 		// define all the columns and structure
-		$project_list->add_column("standard", "code_project", "");
-		$project_list->add_column("standard", "name_project", "");
-		$project_list->add_column("date", "date_start", "");
-		$project_list->add_column("date", "date_end", "");
+		$this->obj_table->add_column("standard", "code_project", "");
+		$this->obj_table->add_column("standard", "name_project", "");
+		$this->obj_table->add_column("date", "date_start", "");
+		$this->obj_table->add_column("date", "date_end", "");
 
 		// defaults
-		$project_list->columns		= array("code_project", "name_project", "date_start", "date_end");
-		$project_list->columns_order	= array("name_project");
+		$this->obj_table->columns		= array("code_project", "name_project", "date_start", "date_end");
+		$this->obj_table->columns_order	= array("name_project");
 
 		// define SQL structure
-		$project_list->sql_obj->prepare_sql_settable("projects");
-		$project_list->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_settable("projects");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
 
 		// filter options
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_start >= 'value'";
-		$project_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_end <= 'value' AND date_end != '0000-00-00'";
-		$project_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 			
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "code_project LIKE '%value%' OR name_project LIKE '%value%'";
-		$project_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_ex_projects";
@@ -56,32 +71,34 @@ if (user_permissions_get('projects_view'))
 		$structure["sql"]		= "date_end='0000-00-00'";
 		$structure["defaultvalue"]	= "on";
 		$structure["options"]["label"]	= "Hide completed projects";
-		$project_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
+		// load options
+		$this->obj_table->load_options_form();
+		
+	
+		// fetch all the project information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
 
+	}
 
-
-
-
-
+	function render_html()
+	{
 		// heading
 		print "<h3>PROJECT LIST</h3><br><br>";
 
 
-		// options form
-		$project_list->load_options_form();
-		$project_list->render_options_form();
+		// display options form
+		$this->obj_table->render_options_form();
 
 
-		// fetch all the project information
-		$project_list->generate_sql();
-		$project_list->load_data_sql();
-
-		if (!count($project_list->columns))
+		// display table data
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$project_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no projects in your database.</b></p>";
 		}
@@ -90,22 +107,22 @@ if (user_permissions_get('projects_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$project_list->add_link("view", "projects/view.php", $structure);
+			$this->obj_table->add_link("view", "projects/view.php", $structure);
 
 			// display the table
-			$project_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
-
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=projects/projects.php\">Export as CSV</a></p>";
 		}
 
-		
-	} // end page_render
+	}
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
+	}
 }
 
 ?>

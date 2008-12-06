@@ -9,139 +9,151 @@
 	permissions allows the project to be updated.
 */
 
-if (user_permissions_get('projects_view'))
+
+class page_output
 {
-	$id = $_GET["id"];
-	
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Project Details";
-	$_SESSION["nav"]["query"][]	= "page=projects/view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=projects/view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Phases";
-	$_SESSION["nav"]["query"][]	= "page=projects/phases.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebooked";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebooked.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Timebilled/Grouped";
-	$_SESSION["nav"]["query"][]	= "page=projects/timebilled.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Project Journal";
-	$_SESSION["nav"]["query"][]	= "page=projects/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Project";
-	$_SESSION["nav"]["query"][]	= "page=projects/delete.php&id=$id";
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form;
 
 
-	function page_render()
+	function page_output()
 	{
-		$id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		/*
-			Title + Summary
-		*/
-		print "<h3>PROJECT DETAILS</h3><br>";
-		print "<p>This page allows you to view and adjust the project's records.</p>";
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
 
-		$mysql_string	= "SELECT id FROM `projects` WHERE id='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
 
-		if (!$mysql_num_rows)
+		if (user_permissions_get("projects_write"))
 		{
-			print "<p><b>Error: The requested project does not exist. <a href=\"index.php?page=projects/projects.php\">Try looking for your project on the project list page.</a></b></p>";
+			$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+		}
+	}
+
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("projects_view");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that project exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested project (". $this->id .") does not exist - possibly the project has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		/*
+			Define form structure
+		*/
+		$this->obj_form = New form_input;
+		$this->obj_form->formname = "project_view";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form->action = "projects/edit-process.php";
+		$this->obj_form->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_project";
+		$structure["type"]		= "text";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_project";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "code_project";
+		$structure["type"]		= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "date_start";
+		$structure["type"]		= "date";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "date_end";
+		$structure["type"]		= "date";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "details";
+		$structure["type"]		= "textarea";
+		$this->obj_form->add_input($structure);
+
+
+		// submit section
+		if (user_permissions_get("projects_write"))
+		{
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Save Changes";
+			$this->obj_form->add_input($structure);
+		
 		}
 		else
 		{
-			/*
-				Define form structure
-			*/
-			$form = New form_input;
-			$form->formname = "project_view";
-			$form->language = $_SESSION["user"]["lang"];
-
-			$form->action = "projects/edit-process.php";
-			$form->method = "post";
-			
-
-			// general
 			$structure = NULL;
-			$structure["fieldname"] 	= "id_project";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= "$id";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "name_project";
-			$structure["type"]		= "input";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "code_project";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_start";
-			$structure["type"]		= "date";
-			$structure["options"]["req"]	= "yes";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_end";
-			$structure["type"]		= "date";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "details";
-			$structure["type"]		= "textarea";
-			$form->add_input($structure);
-
-
-			// submit section
-			if (user_permissions_get("projects_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$form->add_input($structure);
-			
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to project records.</i></p>";
-				$form->add_input($structure);
-			}
-			
-			
-			// define subforms
-			$form->subforms["project_view"]		= array("id_project", "code_project", "name_project", "date_start", "date_end", "details");
-			$form->subforms["submit"]		= array("submit");
-
-			
-			// fetch the form data
-			$form->sql_query = "SELECT * FROM `projects` WHERE id='$id' LIMIT 1";		
-			$form->load_data();
-
-			// display the form
-			$form->render_form();
-
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to project records.</i></p>";
+			$this->obj_form->add_input($structure);
 		}
+		
+		
+		// define subforms
+		$this->obj_form->subforms["project_view"]		= array("id_project", "code_project", "name_project", "date_start", "date_end", "details");
+		$this->obj_form->subforms["submit"]		= array("submit");
 
-	} // end page_render
+		
+		// fetch the form data
+		$this->obj_form->sql_query = "SELECT * FROM `projects` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->load_data();
+	}
+	
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	function render_html()
+	{
+		// title + summary
+		print "<h3>PROJECT DETAILS</h3><br>";
+		print "<p>This page allows you to view and adjust the project's records.</p>";
+
+		// display the form
+		$this->obj_form->render_form();
+	}
 }
 
 ?>
