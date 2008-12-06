@@ -12,45 +12,40 @@
 include("inc_ledger.php");
 
 
-
 /*
-	FUNCTIONS
-*/
-
-
-/*
-	invoice_list_items($type, $id, $viewpage, $deletepage);
+	class: invoice_list_items
 
 	This function lists all the items belonging to the invoice and creates links to view/edit/delete them.
-
-	Values
-	type		"ar", "ap" or "quotes"
-	id		If editing/viewing an existing invoice, provide the ID
-	viewpage	Page for viewing/editing invoice items
-	deletepage	Processing page for deleting invoice items
-	
-	Return Codes
-	0	failure
-	1	success
 */
-function invoice_list_items($type, $id, $viewpage, $deletepage)
+class invoice_list_items
 {
-	log_debug("inc_invoice_items", "Executing invoice_list_items($type, $id, $viewpage, $deletepage)");
+	var $type;		// Either "ar", "ap" or "quotes"
+	var $invoiceid;		// If editing/viewing an existing invoice, provide the ID
+	
+	var $page_view;		// Page for viewing/editing the invoice item
+	var $page_delete;	// Page for deleting the invoice item
 
-	/*
-		Make sure invoice does exist!
-	*/
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
-	$sql_obj->execute();
+	var $mode;
+	
+//	var $obj_table_standard;
+//	var $obj_table_taxes;
+
+
+
+	function execute()
+	{
+		log_debug("invoice_list_items", "Executing execute()");
 		
-	if (!$sql_obj->num_rows())
-	{
-		print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
-		return 0;
+		// TODO: fix up this class to comply with the standard coding style of the rest of the application
+	
+		// do nothing
+		return 1;
 	}
-	else
+
+	function render_html()
 	{
+		log_debug("invoice_list_items", "Executing render_html()");
+
 		/*
 			Standard invoice items
 		*/
@@ -84,8 +79,8 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_addfield("customid", "");
 		$item_list->sql_obj->prepare_sql_addfield("chartid", "");
 		
-		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
-		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='$type'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
 		$item_list->sql_obj->prepare_sql_addwhere("type!='payment'");
 		
@@ -150,37 +145,37 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 			}
 
 
-			if (user_permissions_get("accounts_". $type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write"))
 			{
 				// edit link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["id"]["action"]	= "edit";
 				$structure["itemid"]["column"]	= "id";
 			
-				$item_list->add_link("edit", $viewpage, $structure);
+				$item_list->add_link("edit", $this->page_view, $structure);
 
 			
 				// delete link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["itemid"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
 			
-				$item_list->add_link("delete", $deletepage, $structure);
+				$item_list->add_link("delete", $this->page_delete, $structure);
 			}
 
 
 			// display the table
-			$item_list->render_table();	
+			$item_list->render_table_html();
 		}
 		
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=standard\">Add standard transaction item</a></b></p>";
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=product\">Add product item</a></b></p>";
+		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=standard\">Add standard transaction item</a></b></p>";
+		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=product\">Add product item</a></b></p>";
 
-		if ($type == "ar")
+		if ($this->type == "ar")
 		{
-			print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=time\">Add time item</a></b></p>";
+			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=time\">Add time item</a></b></p>";
 		}
 
 
@@ -213,8 +208,8 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_settable("account_items");
 		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_taxes ON account_taxes.id = account_items.customid");
-		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
-		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='$type'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
 		$item_list->sql_obj->prepare_sql_addwhere("type='tax'");
 		
 
@@ -229,73 +224,74 @@ function invoice_list_items($type, $id, $viewpage, $deletepage)
 		else
 		{
 			
-			if (user_permissions_get("accounts_". $type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write"))
 			{
 				// edit link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["itemid"]["column"]	= "id";
 			
-				$item_list->add_link("edit", $viewpage, $structure);
+				$item_list->add_link("edit", $this->page_view, $structure);
 			
 				// delete link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["itemid"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
 
-				$item_list->add_link("delete", $deletepage, $structure);
+				$item_list->add_link("delete", $this->page_delete, $structure);
 			}
 
 		
 			// display the table
-			$item_list->render_table();
+			$item_list->render_table_html();
 	
 		}
 		
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=tax\">Add tax item</a></b></p>";
+		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=tax\">Add tax item</a></b></p>";
 
+		return 1;
+	}
 
-	} // end if invoice exists
-
-	return 1;
 	
-} // end of invoice_list_items()
+} // end of class invoice_list_items
+
+
 
 
 
 /*
-	invoice_list_items_payments($type, $id, $viewpage, $deletepage);
+	class: invoice_list_payments
 
-	This function lists all payments items and provided links to add/edit/delete them.
-
-	Values
-	type		Either "ar" or "ap"
-	id		If editing/viewing an existing invoice, provide the ID
-	viewpage	Page for viewing/editing invoice items
-	deletepage	Processing page for deleting invoice items
-	
-	Return Codes
-	0	failure
-	1	success
+	This function lists all the payments belonging to the invoice and creates links to view/edit/delete them.
 */
-function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
+class invoice_list_payments
 {
-	log_debug("inc_invoice_items", "Executing invoice_list_items_payments($type, $id, $viewpage, $deletepage)");
+	var $type;		// Either "ar" or "ap"
+	var $invoiceid;		// If editing/viewing an existing invoice, provide the ID
+	
+	var $page_view;		// Page for viewing/editing the invoice item
+	var $page_delete;	// Page for deleting the invoice item
 
-	/*
-		Make sure invoice does exist!
-	*/
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
-	$sql_obj->execute();
-		
-	if (!$sql_obj->num_rows())
+	var $mode;
+	
+//	var $obj_table_standard;
+//	var $obj_table_taxes;
+
+
+
+	function execute()
 	{
-		print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
-		return 0;
+		log_debug("invoice_list_payments", "Executing execute()");
+		
+		// TODO: fix up this class to comply with the standard coding style of the rest of the application
+	
+		// do nothing
+		return 1;
 	}
-	else
+
+
+	function render_html()
 	{
 		/*
 			Generate table of all the items
@@ -325,7 +321,7 @@ function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
 		$item_list->sql_obj->prepare_sql_settable("account_items");
 		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
-		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='$id'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
 		$item_list->sql_obj->prepare_sql_addwhere("type='payment'");
 
 		// run SQL query
@@ -361,40 +357,38 @@ function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
 
 
 
-			if (user_permissions_get("accounts_". $type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write"))
 			{
 				// edit link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["id"]["action"]	= "edit";
 				$structure["itemid"]["column"]	= "id";
 				
-				$item_list->add_link("edit", $viewpage, $structure);
+				$item_list->add_link("edit", $this->page_view, $structure);
 
 				
 				// delete link
 				$structure = NULL;
-				$structure["id"]["value"]	= "$id";
+				$structure["id"]["value"]	= $this->invoiceid;
 				$structure["itemid"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
 				
-				$item_list->add_link("delete", $deletepage, $structure);
+				$item_list->add_link("delete", $this->page_delete, $structure);
 			}
 			
 
 			// display the table
-			$item_list->render_table();	
+			$item_list->render_table_html();
 		}
 		
-		print "<p><b><a href=\"index.php?page=$viewpage&id=$id&type=payment\">Add Payment</a></b></p>";
+		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></b></p>";
 
 
-	} // end if invoice exists
-
-	return 1;
+		return 1;
+	}
 	
-} // end of invoice_list_items_payments()
-
+} // end of invoice_list_payments()
 
 
 
@@ -402,243 +396,146 @@ function invoice_list_items_payments($type, $id, $viewpage, $deletepage)
 
 
 /*
-	invoice_form_items_render($type, $id, $processpage)
+	class: invoice_form_item
 
-	This function provides a form for creating or editing invoice items.
-
-	Values
-	type		Either "ar" or "ap"
-	id		If editing/viewing an existing invoice, provide the ID
-	processpage	Page to submit the form too
-
-	Return Codes
-	0	failure
-	1	success
+	Provides a form for creating or editing invoice items/payments
 */
-function invoice_form_items_render($type, $id, $processpage)
+class invoice_form_item
 {
-	log_debug("inc_invoices_details", "Executing invoice_form_items_render($type, $id, $processpage)");
-
+	var $type;		// Either "ar" or "ap"
+	var $invoiceid;		// If editing/viewing an existing invoice, provide the ID
+	var $itemid;		// If editing/viewing an existing item, provide the ID
 	
-	// fetch the item ID
-	$itemid		= security_script_input('/^[0-9]*$/', $_GET["itemid"]);
+	var $processpage;	// Page to process the submitted form
+	var $item_type;		// Type of item
 
-	if ($itemid)
-	{
-		$mode = "edit";
-	}
-	else
-	{
-		$mode		= "add";
-		$item_type	= security_script_input('/^[a-z]*$/', $_GET["type"]);
-	}
-
-
-
-	/*
-		Make sure invoice does exist!
-	*/
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_$type WHERE id='$id'";
-	$sql_obj->execute();
+	var $mode;
 	
-	if (!$sql_obj->num_rows())
+	var $obj_form;
+	
+
+	function execute()
 	{
-		print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/$type/$type.php\">Try looking on the invoice/invoice list page.</a></b></p>";
-		return 0;
+		log_debug("invoice_form_items", "Executing execute()");
+		
+		// TODO: fix up this class to comply with the standard coding style of the rest of the application
+	
+		// do nothing
+		return 1;
 	}
 
 
-
-	/*
-		Make sure invoice item does exist, that it belongs to the correct invoice
-		and fetch the item ID at the same time.
-	*/
-	if ($mode == "edit")
+	function render_html()
 	{
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, type FROM account_items WHERE id='$itemid' AND invoiceid='$id' LIMIT 1";
-		$sql_obj->execute();
+		log_debug("inc_invoices_details", "Executing invoice_form_items_render($type, $id, $processpage)");
 
-		if (!$sql_obj->num_rows())
+
+		// determine the mode
+		if ($this->itemid)
 		{
-			print "<p><b>Error: The requested item/invoice combination does not exist. Are you trying to use a link to a deleted invoice?</b></p>";
-			return 0;
+			$this->mode = "edit";
 		}
 		else
 		{
-			$sql_obj->fetch_array();
-
-			$item_type = $sql_obj->data[0]["type"];
+			$this->mode		= "add";
 		}
-	}
 
 
+		/*
+			Start Form
+		*/
+		$form = New form_input;
+		$form->formname		= $this->type ."_invoice_". $this->mode;
+		$form->language		= $_SESSION["user"]["lang"];
 
-
-	/*
-		Start Form
-	*/
-	$form = New form_input;
-	$form->formname		= $type ."_invoice_". $mode;
-	$form->language		= $_SESSION["user"]["lang"];
-
-	$form->action		= $processpage;
-	$form->method		= "POST";
-	
-
-
-
-	/*
-		Define form structure, depending on the type of the item
-	*/
-
-	switch ($item_type)
-	{
-		case "standard":
+		$form->action		= $this->processpage;
+		$form->method		= "POST";
 		
-			/*
-				STANDARD
-				
-				simple transaction item which allows the user to specifiy a value only.
-			*/
+
+
+		/*
+			Define form structure, depending on the type of the item
+		*/
+
+		switch ($this->item_type)
+		{
+			case "standard":
 			
-			// basic details
-			$structure = NULL;
-			$structure["fieldname"] 	= "amount";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-
-			if ($type == "ap")
-			{
-				$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
-			}
-			else
-			{
-				$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
-			}
-			$form->add_input($structure);
+				/*
+					STANDARD
+					
+					simple transaction item which allows the user to specifiy a value only.
+				*/
 				
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "textarea";
-			$structure["options"]["height"]	= "50";
-			$structure["options"]["width"]	= 500;
-			$form->add_input($structure);
-
-	
-			// define form layout
-			$form->subforms[$type ."_invoice_item"]		= array("amount", "chartid", "description");
-
-			// SQL query
-			$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='$itemid'";
-
-		break;
-
-
-		/*
-			PRODUCT
-
-			Product item - selection of a product from the DB, and specify quantity, unit and amount.
-		*/
-
-		case "product":
-
-			// basic details
-			$structure = NULL;
-			$structure["fieldname"] 	= "price";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			// quantity
-			$structure = NULL;
-			$structure["fieldname"] 	= "quantity";
-			$structure["type"]		= "input";
-			$structure["options"]["width"]	= 50;
-			$form->add_input($structure);
-
-
-			// units
-			$structure = NULL;
-			$structure["fieldname"] 		= "units";
-			$structure["type"]			= "input";
-			$structure["options"]["width"]		= 50;
-			$structure["options"]["max_length"]	= 10;
-			$form->add_input($structure);
-
-
-
-			// product id
-			$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
-			$form->add_input($structure);
-
-
-			// description
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "textarea";
-			$structure["options"]["height"]	= "50";
-			$structure["options"]["width"]	= 500;
-			$form->add_input($structure);
-
-	
-			// define form layout
-			$form->subforms[$type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description");
-
-			// SQL query
-			$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='$itemid'";
-
-
-		
-		break;
-
-
-		/*
-			TIME (AR only)
-
-			Before time can be added to an invoice, the time entries need to be grouped together
-			using the form under projects.
-
-			The user can then select a group of time below to add to the invoice. This methods makes
-			it easier to add time to invoices, and also means that the time grouping could be done
-			by someone without access to invoicing itself.
-		*/
-		case "time":
-
-			if ($type == "ar")
-			{
-				// fetch the customer ID for this invoice, so we can create
-				// a list of the time groups can be added.
-				$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_$type WHERE id='$id' LIMIT 1");
-				
-				// list of avaliable time groups
-				$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND locked='0' ORDER BY name_group");
-				$structure["options"]["width"] = "400";
-	
-				if ($structure["values"])
-				{
-					if (count(array_keys($structure["values"])) == 1)
-					{
-						// if there is only 1 time group avaliable, select it by default
-						$structure["options"]["noselectoption"] = "yes";
-					}
-				}
-				
+				// basic details
+				$structure = NULL;
+				$structure["fieldname"] 	= "amount";
+				$structure["type"]		= "input";
 				$form->add_input($structure);
 
-			
-				// price field
-				// TODO: this should auto-update from the product price
+				$structure = NULL;
+
+				if ($this->type == "ap")
+				{
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
+				}
+				else
+				{
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
+				}
+				$form->add_input($structure);
+					
+				$structure = NULL;
+				$structure["fieldname"] 	= "description";
+				$structure["type"]		= "textarea";
+				$structure["options"]["height"]	= "50";
+				$structure["options"]["width"]	= 500;
+				$form->add_input($structure);
+
+		
+				// define form layout
+				$form->subforms[$this->type ."_invoice_item"] = array("amount", "chartid", "description");
+
+				// SQL query
+				$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+
+			break;
+
+
+			/*
+				PRODUCT
+
+				Product item - selection of a product from the DB, and specify quantity, unit and amount.
+			*/
+
+			case "product":
+
+				// basic details
 				$structure = NULL;
 				$structure["fieldname"] 	= "price";
 				$structure["type"]		= "input";
 				$form->add_input($structure);
 
+				// quantity
+				$structure = NULL;
+				$structure["fieldname"] 	= "quantity";
+				$structure["type"]		= "input";
+				$structure["options"]["width"]	= 50;
+				$form->add_input($structure);
+
+
+				// units
+				$structure = NULL;
+				$structure["fieldname"] 		= "units";
+				$structure["type"]			= "input";
+				$structure["options"]["width"]		= 50;
+				$structure["options"]["max_length"]	= 10;
+				$form->add_input($structure);
+
+
+
 				// product id
 				$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
-				$structure["options"]["width"] = "400";
 				$form->add_input($structure);
 
 
@@ -652,225 +549,298 @@ function invoice_form_items_render($type, $id, $processpage)
 
 		
 				// define form layout
-				$form->subforms[$type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description");
+				$form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description");
 
 				// SQL query
-				$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='$itemid'";
-				
-			
-			}
-			else
-			{
-				print "<p><i>Error: Time items are only avaliable for AR invoices.</i></p>";
-			}
-
-		break;
-		
-
-		case "tax":
-		
-			/*
-				TAX
-
-				Tax items are quite flexible items - they allow the user to select a different
-				tax code, and then set the item to either automatically calculate the tax
-				based on the total items, or to set a manual value.
-
-				The tax will then auto-recalculate if required when other items are changed.
-
-				Other accounting systems looked at seem to only allow 1 tax to be added to invoices - by having
-				tax as an item, we can do nifty stuff like have different tax items to be added - for example if you
-				add a product, the product could be configured to add a specific tax item of a specific amount to the
-				invoice.
-			*/
-
-			// tax selection
-			$structure = form_helper_prepare_dropdownfromdb("tax_id", "SELECT id, name_tax as label FROM account_taxes");
-
-			if (count(array_keys($structure["values"])) == 1)
-			{
-				// if there is only 1 tax option avaliable, select it as the default
-				$structure["options"]["noselectoption"] = "yes";
-			}
-	
-			$form->add_input($structure);
-	
-
-			// auto or manual
-			$structure = NULL;
-			$structure["fieldname"] 	= "manual_option";
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= "Do not auto-calculate this tax, instead specify the amount charged for this tax in the field below.";
-			$form->add_input($structure);
-
-			// manual value input field
-			$structure = NULL;
-			$structure["fieldname"] 	= "manual_amount";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-
-			// define form layout
-			$form->subforms[$type ."_invoice_item"]		= array("tax_id", "manual_option", "manual_amount");
-
-			// SQL query
-			$form->sql_query = "SELECT customid as tax_id, amount as manual_amount FROM account_items WHERE id='$itemid'";
-
-		break;
-
-
-		case "payment":
-			/*
-				PAYMENT
-
-				Payments against invoices are also items
-			*/
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_trans";
-			$structure["type"]		= "date";
-			$structure["defaultvalue"]	= date("Y-m-d");
-			$form->add_input($structure);
-			
-			$structure = NULL;
-			$structure["fieldname"] 	= "amount";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure = charts_form_prepare_acccountdropdown("chartid", 6);
-			
-			if (count(array_keys($structure["values"])) == 1)
-			{
-				// if there is only 1 account avaliable, select it as the default
-				$structure["options"]["noselectoption"] = "yes";
-			}
-			
-			$form->add_input($structure);
-
-			$structure = NULL;
-			$structure["fieldname"] 	= "source";
-			$structure["type"]		= "input";
-			$form->add_input($structure);
-				
-			$structure = NULL;
-			$structure["fieldname"] 	= "description";
-			$structure["type"]		= "textarea";
-			$structure["options"]["height"]	= "50";
-			$structure["options"]["width"]	= 500;
-			$form->add_input($structure);
-			
-	
-			// define form layout
-			$form->subforms[$type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
-
-			// SQL query
-			$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='$itemid'";
+				$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
 
 
 			
-
-		break;
-
-
-		default:
-			print "<p><b>Error: Unknown type passed to render form.</b></p>";
-		break;
-	}
-
-
-
-	// IDs
-	$structure = NULL;
-	$structure["fieldname"]		= "id_invoice";
-	$structure["type"]		= "hidden";
-	$structure["defaultvalue"]	= $id;
-	$form->add_input($structure);	
-	
-	$structure = NULL;
-	$structure["fieldname"]		= "id_item";
-	$structure["type"]		= "hidden";
-	$structure["defaultvalue"]	= $itemid;
-	$form->add_input($structure);	
-	
-	$structure = NULL;
-	$structure["fieldname"]		= "item_type";
-	$structure["type"]		= "hidden";
-	$structure["defaultvalue"]	= $item_type;
-	$form->add_input($structure);	
-
-
-
-	// submit
-	$structure = NULL;
-	$structure["fieldname"]		= "submit";
-	$structure["type"]		= "submit";
-	$structure["defaultvalue"]	= "Save Changes";
-	$form->add_input($structure);
-
-
-	// load data
-	$form->load_data();
-
-	// custom loads for different item type
-	if ($itemid)
-	{
-		switch ($item_type)
-		{
-			case "tax":
-
-				// check if the tax is to be calculated manually or calculated
-				// automatically.
-				
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TAX_CALC_MODE' LIMIT 1";
-				$sql_obj->execute();
-
-				if ($sql_obj->num_rows())
-				{
-					$form->structure["manual_option"]["defaultvalue"] = "on";
-					$form->structure["manual_amount"]["defaultvalue"] = "";
-				}
-				else
-				{
-					$form->structure["manual_option"]["defaultvalue"] = "";
-					$form->structure["manual_amount"]["defaultvalue"] = "";
-				}
-
 			break;
 
 
+			/*
+				TIME (AR only)
+
+				Before time can be added to an invoice, the time entries need to be grouped together
+				using the form under projects.
+
+				The user can then select a group of time below to add to the invoice. This methods makes
+				it easier to add time to invoices, and also means that the time grouping could be done
+				by someone without access to invoicing itself.
+			*/
 			case "time":
 
-				// fetch the time group ID
-				$form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='TIMEGROUPID' LIMIT 1");
+				if ($this->type == "ar")
+				{
+					// fetch the customer ID for this invoice, so we can create
+					// a list of the time groups can be added.
+					$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+					
+					// list of avaliable time groups
+					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND locked='0' ORDER BY name_group");
+					$structure["options"]["width"] = "400";
+		
+					if ($structure["values"])
+					{
+						if (count(array_keys($structure["values"])) == 1)
+						{
+							// if there is only 1 time group avaliable, select it by default
+							$structure["options"]["noselectoption"] = "yes";
+						}
+					}
+					
+					$form->add_input($structure);
+
 				
+					// price field
+					// TODO: this should auto-update from the product price
+					$structure = NULL;
+					$structure["fieldname"] 	= "price";
+					$structure["type"]		= "input";
+					$form->add_input($structure);
+
+					// product id
+					$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+					$structure["options"]["width"] = "400";
+					$form->add_input($structure);
+
+
+					// description
+					$structure = NULL;
+					$structure["fieldname"] 	= "description";
+					$structure["type"]		= "textarea";
+					$structure["options"]["height"]	= "50";
+					$structure["options"]["width"]	= 500;
+					$form->add_input($structure);
+
+			
+					// define form layout
+					$form->subforms[$this->type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description");
+
+					// SQL query
+					$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+					
+				
+				}
+				else
+				{
+					print "<p><i>Error: Time items are only avaliable for AR invoices.</i></p>";
+				}
+
+			break;
+			
+
+			case "tax":
+			
+				/*
+					TAX
+
+					Tax items are quite flexible items - they allow the user to select a different
+					tax code, and then set the item to either automatically calculate the tax
+					based on the total items, or to set a manual value.
+
+					The tax will then auto-recalculate if required when other items are changed.
+
+					Other accounting systems looked at seem to only allow 1 tax to be added to invoices - by having
+					tax as an item, we can do nifty stuff like have different tax items to be added - for example if you
+					add a product, the product could be configured to add a specific tax item of a specific amount to the
+					invoice.
+				*/
+
+				// tax selection
+				$structure = form_helper_prepare_dropdownfromdb("tax_id", "SELECT id, name_tax as label FROM account_taxes");
+
+				if (count(array_keys($structure["values"])) == 1)
+				{
+					// if there is only 1 tax option avaliable, select it as the default
+					$structure["options"]["noselectoption"] = "yes";
+				}
+		
+				$form->add_input($structure);
+		
+
+				// auto or manual
+				$structure = NULL;
+				$structure["fieldname"] 	= "manual_option";
+				$structure["type"]		= "checkbox";
+				$structure["options"]["label"]	= "Do not auto-calculate this tax, instead specify the amount charged for this tax in the field below.";
+				$form->add_input($structure);
+
+				// manual value input field
+				$structure = NULL;
+				$structure["fieldname"] 	= "manual_amount";
+				$structure["type"]		= "input";
+				$form->add_input($structure);
+
+
+				// define form layout
+				$form->subforms[$this->type ."_invoice_item"]		= array("tax_id", "manual_option", "manual_amount");
+
+				// SQL query
+				$form->sql_query = "SELECT customid as tax_id, amount as manual_amount FROM account_items WHERE id='". $this->itemid ."'";
+
 			break;
 
 
 			case "payment":
+				/*
+					PAYMENT
 
-				// fetch payment date_trans and source fields.
-				$form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='DATE_TRANS' LIMIT 1");
-				$form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='$itemid' AND option_name='SOURCE' LIMIT 1");
-			
+					Payments against invoices are also items
+				*/
+				
+				$structure = NULL;
+				$structure["fieldname"] 	= "date_trans";
+				$structure["type"]		= "date";
+				$structure["defaultvalue"]	= date("Y-m-d");
+				$form->add_input($structure);
+				
+				$structure = NULL;
+				$structure["fieldname"] 	= "amount";
+				$structure["type"]		= "input";
+				$form->add_input($structure);
+
+				$structure = NULL;
+				$structure = charts_form_prepare_acccountdropdown("chartid", 6);
+				
+				if (count(array_keys($structure["values"])) == 1)
+				{
+					// if there is only 1 account avaliable, select it as the default
+					$structure["options"]["noselectoption"] = "yes";
+				}
+				
+				$form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 	= "source";
+				$structure["type"]		= "input";
+				$form->add_input($structure);
+					
+				$structure = NULL;
+				$structure["fieldname"] 	= "description";
+				$structure["type"]		= "textarea";
+				$structure["options"]["height"]	= "50";
+				$structure["options"]["width"]	= 500;
+				$form->add_input($structure);
+				
+		
+				// define form layout
+				$form->subforms[$this->type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
+
+				// SQL query
+				$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+
+			break;
+
+
+			default:
+				print "<p><b>Error: Unknown type passed to render form.</b></p>";
 			break;
 		}
+
+
+
+		// IDs
+		$structure = NULL;
+		$structure["fieldname"]		= "id_invoice";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->invoiceid;
+		$form->add_input($structure);	
+		
+		$structure = NULL;
+		$structure["fieldname"]		= "id_item";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->itemid;
+		$form->add_input($structure);	
+		
+		$structure = NULL;
+		$structure["fieldname"]		= "item_type";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->item_type;
+		$form->add_input($structure);	
+
+
+
+		// submit
+		$structure = NULL;
+		$structure["fieldname"]		= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$form->add_input($structure);
+
+
+		// load data
+		$form->load_data();
+
+		// custom loads for different item type
+		if ($this->itemid)
+		{
+			switch ($this->item_type)
+			{
+				case "tax":
+
+					// check if the tax is to be calculated manually or calculated
+					// automatically.
+					
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TAX_CALC_MODE' LIMIT 1";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$form->structure["manual_option"]["defaultvalue"] = "on";
+						$form->structure["manual_amount"]["defaultvalue"] = "";
+					}
+					else
+					{
+						$form->structure["manual_option"]["defaultvalue"] = "";
+						$form->structure["manual_amount"]["defaultvalue"] = "";
+					}
+
+				break;
+
+
+				case "time":
+
+					// fetch the time group ID
+					$form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TIMEGROUPID' LIMIT 1");
+					
+				break;
+
+
+				case "payment":
+
+					// fetch payment date_trans and source fields.
+					$form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DATE_TRANS' LIMIT 1");
+					$form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='SOURCE' LIMIT 1");
+				
+				break;
+			}
+		}
+
+
+		/*
+			Display Form
+		*/
+		
+		$form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
+		$form->subforms["submit"]			= array("submit");
+		
+		$form->render_form();
+
+
+		return 1;
 	}
+} // end of invoice_form_item
 
 
-	/*
-		Display Form
-	*/
-	
-	$form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
-	$form->subforms["submit"]			= array("submit");
-	
-	$form->render_form();
 
 
-	return 1;
-}
+/*
+	FUNCTIONS
+*/
+
 
 
 
@@ -1233,10 +1203,10 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		if (!$_SESSION["error"]["message"])
 		{
 			$_SESSION["notification"]["message"][] = "Item deleted successfully";
-			journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully deleted");
+			journal_quickadd_event("account_". $item->type_invoice ."", $item->id_invoice, "Item successfully deleted");
 		}
 		
-		header("Location: ../../index.php?page=$returnpage_error&id=". $this->id_invoice ."");
+		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice ."");
 		exit(0);
 	}
 	

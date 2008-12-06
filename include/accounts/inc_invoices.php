@@ -94,7 +94,7 @@ function invoice_render_summarybox($type, $id)
 
 		if ($sql_obj->data[0]["amount_total"] == 0)
 		{
-			print "<table width=\"100%\" class=\"invoice_summarybox_open\">";
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
 			print "<tr>";
 				print "<td>";
 				print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." has no items on it</b>";
@@ -107,7 +107,7 @@ function invoice_render_summarybox($type, $id)
 		{
 			if ($sql_obj->data[0]["amount_paid"] == $sql_obj->data[0]["amount_total"])
 			{
-				print "<table width=\"100%\" class=\"invoice_summarybox_closed\">";
+				print "<table width=\"100%\" class=\"table_highlight_info\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is closed (fully paid).</b>";
@@ -118,7 +118,7 @@ function invoice_render_summarybox($type, $id)
 			}
 			else
 			{
-				print "<table width=\"100%\" class=\"invoice_summarybox_open\">";
+				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is open (unpaid).</b>";

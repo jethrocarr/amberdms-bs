@@ -15,62 +15,88 @@
 */
 
 // custom includes
-require("include/accounts/inc_invoices.php");
-require("include/accounts/inc_invoices_details.php");
-require("include/accounts/inc_charts.php");
+require("include/accounts/inc_invoices_forms.php");
 
 
-if (user_permissions_get('accounts_ar_view'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form_invoice;
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-view.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/ar/invoice-view.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Invoice Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-items.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Payments";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-payments.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Invoice Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/ar/journal.php&id=$id";
-
-	if (user_permissions_get('accounts_ar_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Delete Invoice";
-		$_SESSION["nav"]["query"][]	= "page=accounts/ar/invoice-delete.php&id=$id";
+		// fetch variables
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Invoice Details", "page=accounts/ar/invoice-view.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Invoice Items", "page=accounts/ar/invoice-items.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Payments", "page=accounts/ar/invoice-payments.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ar/journal.php&id=". $this->id ."");
+
+		if (user_permissions_get("accounts_ar_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ar/invoice-delete.php&id=". $this->id ."");
+		}
 	}
 
 
 
-
-	function page_render()
+	function check_permissions()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("accounts_ar_view");
+	}
 
 
-		/*
-			Title + Summary
-		*/
+
+	function check_requirements()
+	{
+		// verify that the invoice
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ar WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested invoice (". $this->id .") does not exist - possibly the invoice has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_form_invoice			= New invoice_form_details;
+		$this->obj_form_invoice->type		= "ar";
+		$this->obj_form_invoice->invoiceid	= $this->id;
+		$this->obj_form_invoice->processpage	= "accounts/ar/invoice-edit-process.php";
+		
+		$this->obj_form_invoice->execute();
+	}
+
+	function render_html()
+	{
+		// heading
 		print "<h3>VIEW INVOICE</h3><br>";
 		print "<p>This page allows you to view the basic details of the invoice. You can use the links in the green navigation menu above to change to different sections of the invoice, in order to add items, payments or journal entries to the invoice.</p>";
 
-		invoice_render_summarybox("ar", $id);
+		// display summary box
+		invoice_render_summarybox("ar", $this->id);
 
-		invoice_form_details_render("ar", $id, "accounts/ar/invoice-edit-process.php");
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display form
+		$this->obj_form_invoice->render_html();
+	}
+	
 }
 
 ?>

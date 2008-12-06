@@ -1,44 +1,57 @@
 <?php
 /*
-	accounts/ar/invoice-add.php
+	accounts/ar/invoices-add.php
 	
-	access: account_ar_add
+	access: accounts_ar_wirte
 
-	Form to add a new invoice to the database.
-
-	This page is a lot more complicated than most of the other forms in this program, since
-	it needs to allow the user to "update" the form, so that the form adds additional input
-	fields for more invoice listings.
-
-	The update option will also generate and return totals back to the program.
-	
+	Provides the form to add a new AR invoice to the system	
 */
 
 // custom includes
-require("include/accounts/inc_invoices.php");
-require("include/accounts/inc_invoices_details.php");
-require("include/accounts/inc_charts.php");
+require("include/accounts/inc_invoices_forms.php");
 
 
-if (user_permissions_get('accounts_ar_write'))
+
+class page_output
 {
-	function page_render()
+	var $id;
+	var $obj_menu_nav;
+	var $obj_form_invoice;
+
+
+	function check_permissions()
 	{
-		/*
-			Title + Summary
-		*/
+		return user_permissions_get("accounts_ar_write");
+	}
+
+
+	function check_requirements()
+	{
+		// nothing to check
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_form_invoice			= New invoice_form_details;
+		$this->obj_form_invoice->type		= "ar";
+		$this->obj_form_invoice->invoiceid	= 0;
+		$this->obj_form_invoice->processpage	= "accounts/ar/invoice-edit-process.php";
+		
+		$this->obj_form_invoice->execute();
+	}
+
+	function render_html()
+	{
+		// heading
 		print "<h3>ADD INVOICE</h3><br>";
 		print "<p>This page provides features to allow you to add new invoices to the system.</p>";
 
-		invoice_form_details_render("ar", 0, "accounts/ar/invoice-edit-process.php");
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+		// display form
+		$this->obj_form_invoice->render_html();
+	}
+	
 }
 
 ?>
