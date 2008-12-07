@@ -575,7 +575,7 @@ class invoice_form_item
 				{
 					// fetch the customer ID for this invoice, so we can create
 					// a list of the time groups can be added.
-					$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+					$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
 					
 					// list of avaliable time groups
 					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND locked='0' ORDER BY name_group");
