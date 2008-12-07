@@ -69,7 +69,7 @@ function quotes_render_summarybox($id)
 
 		if ($sql_obj->data[0]["amount_total"] == 0)
 		{
-			print "<table width=\"100%\" class=\"invoice_summarybox_open\">";
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
 			print "<tr>";
 				print "<td>";
 				print "<b>Quote ". $sql_obj->data[0]["code_quote"] ." has no items on it</b>";
@@ -82,7 +82,7 @@ function quotes_render_summarybox($id)
 		{
 			if (time_date_to_timestamp($sql_obj->data[0]["date_validtill"]) <= mktime())
 			{
-				print "<table width=\"100%\" class=\"invoice_summarybox_closed\">";
+				print "<table width=\"100%\" class=\"table_highlight_info\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Quote ". $sql_obj->data[0]["code_quote"] ." has now expired and is no longer valid.</b>";
@@ -92,7 +92,7 @@ function quotes_render_summarybox($id)
 			}
 			else
 			{
-				print "<table width=\"100%\" class=\"invoice_summarybox_open\">";
+				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Quote ". $sql_obj->data[0]["code_quote"] ." is currently valid.</b>";

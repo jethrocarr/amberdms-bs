@@ -7,39 +7,54 @@
 	Lists all the quotes and allows the user to search through them.
 */
 
-if (user_permissions_get('accounts_quotes_view'))
+class page_output
 {
-	function page_render()
+	var $obj_table;
+
+
+	function check_permissions()
+	{
+		return user_permissions_get('accounts_quotes_view');
+	}
+
+	function check_requirements()
+	{
+		// nothing todo
+		return 1;
+	}
+
+
+	function execute()
 	{
 		// establish a new table object
-		$quote_list = New table;
+		$this->obj_table = New table;
 
-		$quote_list->language		= $_SESSION["user"]["lang"];
-		$quote_list->tablename		= "account_quotes";
+		$this->obj_table->language		= $_SESSION["user"]["lang"];
+		$this->obj_table->tablename		= "account_quotes";
 
 		// define all the columns and structure
-		$quote_list->add_column("standard", "name_customer", "customers.name_customer");
-		$quote_list->add_column("standard", "name_staff", "staff.name_staff");
-		$quote_list->add_column("standard", "code_quote", "account_quotes.code_quote");
-		$quote_list->add_column("date", "date_trans", "account_quotes.date_trans");
-		$quote_list->add_column("date", "date_validtill", "account_quotes.date_validtill");
-		$quote_list->add_column("price", "amount_tax", "account_quotes.amount_tax");
-		$quote_list->add_column("price", "amount", "account_quotes.amount");
-		$quote_list->add_column("price", "amount_total", "account_quotes.amount_total");
+		$this->obj_table->add_column("standard", "name_customer", "customers.name_customer");
+		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "code_quote", "account_quotes.code_quote");
+		$this->obj_table->add_column("date", "date_trans", "account_quotes.date_trans");
+		$this->obj_table->add_column("date", "date_validtill", "account_quotes.date_validtill");
+		$this->obj_table->add_column("price", "amount_tax", "account_quotes.amount_tax");
+		$this->obj_table->add_column("price", "amount", "account_quotes.amount");
+		$this->obj_table->add_column("price", "amount_total", "account_quotes.amount_total");
 
 		// totals
-		$quote_list->total_columns	= array("amount_tax", "amount", "amount_total");
+		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total");
 
 		
 		// defaults
-		$quote_list->columns		= array("name_customer", "code_quote", "date_trans", "amount_total");
-		$quote_list->columns_order	= array("code_quote");
+		$this->obj_table->columns	= array("name_customer", "code_quote", "date_trans", "amount_total");
+		$this->obj_table->columns_order	= array("code_quote");
 
 		// define SQL structure
-		$quote_list->sql_obj->prepare_sql_settable("account_quotes");
-		$quote_list->sql_obj->prepare_sql_addfield("id", "account_quotes.id");
-		$quote_list->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON customers.id = account_quotes.customerid");
-		$quote_list->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_quotes.employeeid");
+		$this->obj_table->sql_obj->prepare_sql_settable("account_quotes");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_quotes.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON customers.id = account_quotes.customerid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_quotes.employeeid");
 
 
 		// acceptable filter options
@@ -47,21 +62,21 @@ if (user_permissions_get('accounts_quotes_view'))
 		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans >= 'value'";
-		$quote_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans <= 'value'";
-		$quote_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 		
 		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
 		$structure["sql"]	= "account_quotes.employeeid='value'";
-		$quote_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
 		$structure["sql"]	= "account_quotes.customerid='value'";
-		$quote_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
@@ -69,29 +84,32 @@ if (user_permissions_get('accounts_quotes_view'))
 		$structure["options"]["label"]	= "Hide Closed Quotes";
 		$structure["defaultvalue"]	= "enabled";
 		$structure["sql"]		= "account_quotes.date_validtill >= '". date("Y-m-d") ."'";
-		$quote_list->add_filter($structure);
+		$this->obj_table->add_filter($structure);
+
+		// load options
+		$this->obj_table->load_options_form();
+
+		// fetch all the chart information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
+
+	}
 
 
-
-
+	function render_html()
+	{
 		// heading
 		print "<h3>LIST OF QUOTES</h3><br><br>";
 
+		// display options form
+		$this->obj_table->render_options_form();
 
-		// options form
-		$quote_list->load_options_form();
-		$quote_list->render_options_form();
-
-
-		// fetch all the chart information
-		$quote_list->generate_sql();
-		$quote_list->load_data_sql();
-
-		if (!count($quote_list->columns))
+		// display data
+		if (!count($this->obj_table->columns))
 		{
 			print "<p><b>Please select some valid options to display.</b></p>";
 		}
-		elseif (!$quote_list->data_num_rows)
+		elseif (!$this->obj_table->data_num_rows)
 		{
 			print "<p><b>You currently have no quotes in your database.</b></p>";
 		}
@@ -100,20 +118,24 @@ if (user_permissions_get('accounts_quotes_view'))
 			// view link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$quote_list->add_link("view", "accounts/quotes/quotes-view.php", $structure);
+			$this->obj_table->add_link("view", "accounts/quotes/quotes-view.php", $structure);
 
 			// display the table
-			$quote_list->render_table();
+			$this->obj_table->render_table_html();
 
-			// TODO: display CSV download link
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/ar/ar.php\">Export as CSV</a></p>";
+			
 		}
 
 	} // end page_render
 
-} // end of if logged in
-else
-{
-	error_render_noperms();
+
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
+	}
+
 }
 
 ?>

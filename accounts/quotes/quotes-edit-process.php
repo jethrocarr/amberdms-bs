@@ -12,7 +12,7 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 // custom includes
-require("../../include/accounts/inc_quotes_details.php");
+require("../../include/accounts/inc_quotes_process.php");
 
 
 

@@ -7,58 +7,127 @@
 	Allows adjusting or addition of new items to an quote.
 */
 
+
+
+
 // custom includes
 require("include/accounts/inc_quotes.php");
-require("include/accounts/inc_charts.php");
 require("include/accounts/inc_invoices_items.php");
+require("include/accounts/inc_charts.php");
 
 
-if (user_permissions_get('accounts_quotes_write'))
+class page_output
 {
-	$id = $_GET["id"];
-
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
+	var $id;
+	var $itemid;
+	var $item_type;
 	
-	$_SESSION["nav"]["title"][]	= "Quote Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Quote Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-items.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/quotes/quotes-items.php&id=$id";
+	var $obj_menu_nav;
 	
-	$_SESSION["nav"]["title"][]	= "Quote Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/journal.php&id=$id";
+	var $obj_form_item;
 
-	$_SESSION["nav"]["title"][]	= "Convert to Invoice";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-convert.php&id=$id";
 
-	$_SESSION["nav"]["title"][]	= "Delete Quote";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-delete.php&id=$id";
-	
-
-	function page_render()
+	function page_output()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		// fetch vapiables
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->itemid		= security_script_input('/^[0-9]*$/', $_GET["itemid"]);
+		$this->item_type	= security_script_input('/^[a-z]*$/', $_GET["type"]);
+
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Quote Details", "page=accounts/quotes/quotes-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Quote Items", "page=accounts/quotes/quotes-items.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Quote Journal", "page=accounts/quotes/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Convert to Invoice", "page=accounts/quotes/quotes-convert.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Quote", "page=accounts/quotes/quotes-delete.php&id=". $this->id ."");
+
+	}
 
 
-		/*
-			Title + Summary
-		*/
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_quotes_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the quote exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_quotes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested quote (". $this->id .") does not exist - possibly the quote has been deleted or converted into an invoice.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		// verify that the item id supplied exists and fetch required information
+		if ($this->itemid)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id, type FROM account_items WHERE id='". $this->itemid ."' AND invoiceid='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				log_write("error", "page_output", "The requested item/quote combination does not exist. Are you trying to use a link to a deleted item?");
+				return 0;
+			}
+			else
+			{
+				$sql_obj->fetch_array();
+
+				$this->item_type = $sql_obj->data[0]["type"];
+			}
+		}
+		else
+		{
+			if (!$this->item_type)
+			{
+				log_write("error", "page_output", "You must supply the item of item to create");
+				return 0;
+			}
+		}
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_form_item			= New invoice_form_item;
+		$this->obj_form_item->type		= "quotes";
+		$this->obj_form_item->invoiceid		= $this->id;
+		$this->obj_form_item->itemid		= $this->itemid;
+		$this->obj_form_item->item_type		= $this->item_type;
+		$this->obj_form_item->processpage	= "accounts/quotes/quotes-items-edit-process.php";
+		
+		$this->obj_form_item->execute();
+	}
+
+
+	function render_html()
+	{
+		// title + summapy
 		print "<h3>ADD/EDIT QUOTE ITEM</h3><br>";
 		print "<p>This page allows you to make changes to an quote item.</p>";
 
-		quotes_render_summarybox("quotes", $id);
+		quotes_render_summarybox("quotes", $this->id);
 
-		invoice_form_items_render("quotes", $id, "accounts/quotes/quotes-items-edit-process.php");
+		$this->obj_form_item->render_html();
+	}
 
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
+
+
 
 ?>

@@ -7,69 +7,104 @@
 	Allows the addition or adjustment of journal entries.
 */
 
-if (user_permissions_get('accounts_quotes_write'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $journalid;
+	var $action;
+	var $type;
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
-
-	$_SESSION["nav"]["title"][]	= "Quote Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Quote Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-items.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Quote Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/journal.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/quotes/journal.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Convert to Invoice";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-convert.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Delete Quote";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-delete.php&id=$id";
-	
+	var $obj_menu_nav;
+	var $obj_form_journal;
 
 
-	function page_render()
+	function page_output()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		// fetch quote ID
+		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		
 
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Quote Details", "page=accounts/quotes/quotes-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Quote Items", "page=accounts/quotes/quotes-items.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Quote Journal", "page=accounts/quotes/journal.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Convert to Invoice", "page=accounts/quotes/quotes-convert.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Delete Quote", "page=accounts/quotes/quotes-delete.php&id=". $this->id ."");
+	}
+
+
+
+	function check_permissions()
+	{
+		return user_permissions_get("accounts_quotes_write");
+	}
+
+
+
+	function check_requirements()
+	{
+		// verify that the quote exists
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_quotes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested quote (". $this->id .") does not exist - possibly the quote has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
 		
 		/*
 			Journal Forms
 		*/
 
-		$journal_form = New journal_input;
+		$this->obj_form_journal = New journal_input;
 			
 		// basic details of this entry
-		$journal_form->prepare_set_journalname("account_quotes");
-		$journal_form->prepare_set_journalid($journalid);
-		$journal_form->prepare_set_customid($id);
+		$this->obj_form_journal->prepare_set_journalname("account_quotes");
+		$this->obj_form_journal->prepare_set_journalid($this->journalid);
+		$this->obj_form_journal->prepare_set_customid($this->id);
 
 		// set the processing form
-		$journal_form->prepare_set_form_process_page("accounts/quotes/journal-edit-process.php");
+		$this->obj_form_journal->prepare_set_form_process_page("accounts/quotes/journal-edit-process.php");
 
-		
-		if ($action == "delete")
+
+	}
+
+
+	function render_html()
+	{
+		if ($this->action == "delete")
 		{
 			print "<h3>QUOTE JOURNAL - DELETE ENTRY</h3><br>";
 			print "<p>This page allows you to delete an entry from the quote journal.</p>";
 
 			// render delete form
-			$journal_form->render_delete_form();
+			$this->obj_form_journal->render_delete_form();
 
 		}
 		else
 		{
-			if ($type == "file")
+			if ($this->type == "file")
 			{
 				// file uploader
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>QUOTE JOURNAL - UPLOAD FILE</h3><br>";
 					print "<p>This page allows you to attach a file to the quote journal.</p>";
@@ -81,12 +116,12 @@ if (user_permissions_get('accounts_quotes_write'))
 				}
 
 				// edit or add file
-				$journal_form->render_file_form();
+				$this->obj_form_journal->render_file_form();
 			}
 			else
 			{
 				// default to text
-				if ($journalid)
+				if ($this->journalid)
 				{
 					print "<h3>QUOTE JOURNAL - EDIT ENTRY</h3><br>";
 					print "<p>This page allows you to edit an existing entry in the quote journal.</p>";
@@ -98,19 +133,11 @@ if (user_permissions_get('accounts_quotes_write'))
 				}
 
 				// edit or add
-				$journal_form->render_text_form();		
+				$this->obj_form_journal->render_text_form();		
 			}
 			
 		}
-		
-
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
+	}
 }
 
 ?>

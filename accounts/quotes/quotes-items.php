@@ -9,61 +9,92 @@
 	
 */
 
+
 // custom includes
-require("include/accounts/inc_quotes.php");
-require("include/accounts/inc_invoices_items.php");
+require("include/accounts/inc_quotes_forms.php");
 
 
-if (user_permissions_get('accounts_quotes_view'))
+
+class page_output
 {
-	$id = $_GET["id"];
+	var $id;
+	var $obj_menu_nav;
+	var $obj_table_items;
 
-	// nav bar options.
-	$_SESSION["nav"]["active"]	= 1;
 
-	$_SESSION["nav"]["title"][]	= "Quote Details";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-view.php&id=$id";
-
-	$_SESSION["nav"]["title"][]	= "Quote Items";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-items.php&id=$id";
-	$_SESSION["nav"]["current"]	= "page=accounts/quotes/quotes-items.php&id=$id";
-	
-	$_SESSION["nav"]["title"][]	= "Quote Journal";
-	$_SESSION["nav"]["query"][]	= "page=accounts/quotes/journal.php&id=$id";
-
-	if (user_permissions_get('accounts_quotes_write'))
+	function page_output()
 	{
-		$_SESSION["nav"]["title"][]	= "Convert to Invoice";
-		$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-convert.php&id=$id";
+		// fetch quote ID
+		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
-		$_SESSION["nav"]["title"][]	= "Delete Quote";
-		$_SESSION["nav"]["query"][]	= "page=accounts/quotes/quotes-delete.php&id=$id";
+		// define the navigiation menu
+		$this->obj_menu_nav = New menu_nav;
+
+		$this->obj_menu_nav->add_item("Quote Details", "page=accounts/quotes/quotes-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Quote Items", "page=accounts/quotes/quotes-items.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Quote Journal", "page=accounts/quotes/journal.php&id=". $this->id ."");
+
+		if (user_permissions_get("accounts_quotes_write"))
+		{
+			$this->obj_menu_nav->add_item("Convert to Invoice", "page=accounts/quotes/quotes-convert.php&id=". $this->id ."");
+			$this->obj_menu_nav->add_item("Delete Quote", "page=accounts/quotes/quotes-delete.php&id=". $this->id ."");
+		}
 	}
 
 
 
-	function page_render()
+	function check_permissions()
 	{
-		$id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		return user_permissions_get("accounts_quotes_view");
+	}
 
 
-		/*
-			Title + Summary
-		*/
+
+	function check_requirements()
+	{
+		// verify that the quote
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_quotes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_write("error", "page_output", "The requested quote (". $this->id .") does not exist - possibly the quote has been deleted.");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+		return 1;
+	}
+
+
+	function execute()
+	{
+		$this->obj_table_items			= New invoice_list_items;
+		$this->obj_table_items->type		= "quotes";
+		$this->obj_table_items->invoiceid	= $this->id;
+		$this->obj_table_items->page_view	= "accounts/quotes/quotes-items-edit.php";
+		$this->obj_table_items->page_delete	= "accounts/quotes/quotes-items-delete-process.php";
+		
+		$this->obj_table_items->execute();
+	}
+
+	function render_html()
+	{
+		// heading
 		print "<h3>QUOTE ITEMS</h3><br>";
 		print "<p>This page shows all the items belonging to the quote and allows you to edit them.</p>";
+		
+		// display summapy box
+		quotes_render_summarybox($this->id);
 
-		quotes_render_summarybox($id);
+		// display form
+		$this->obj_table_items->render_html();
+	}
 
-		invoice_list_items("quotes", $id, "accounts/quotes/quotes-items-edit.php", "accounts/quotes/quotes-items-delete-process.php");
 
-
-	} // end page_render
-
-} // end of if logged in
-else
-{
-	error_render_noperms();
 }
 
 ?>
