@@ -617,7 +617,7 @@ class form_input
 				if ($this->structure[$fieldname]["options"]["noselectoption"])
 				{
 					$this->structure[$fieldname]["options"]["autoselect"];
-					log_debug("inc_forms", "Warning: Obsolete usage of noselectoption dropdown option for field $fieldname");
+					log_write("warning", "inc_forms", "obsolete usage of noselectoption dropdown option for field $fieldname");
 				}
 
 				
