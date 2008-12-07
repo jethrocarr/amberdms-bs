@@ -224,7 +224,7 @@ function service_form_plan_process()
 		case "generic_with_usage":
 			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
-			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
+			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
 			$data["usage_mode"]		= security_form_input_predefined("int", "usage_mode", 1, "");
 		break;
 
@@ -239,7 +239,7 @@ function service_form_plan_process()
 		case "data_traffic":
 			$data["units"]			= security_form_input_predefined("int", "units", 1, "");
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
-			$data["price_extraunits"]	= security_form_input_predefined("float", "price_extraunits", 0, "");
+			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
 			
 			// force data usage/time to be incrementing
 			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
