@@ -21,6 +21,7 @@ if (user_permissions_get('accounts_taxes_write'))
 	$data["name_tax"]		= security_form_input_predefined("any", "name_tax", 1, "");
 	$data["taxrate"]		= security_form_input_predefined("any", "taxrate", 1, "");
 	$data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
+	$data["taxnumber"]		= security_form_input_predefined("any", "taxnumber", 1, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 1, "");
 	
 
@@ -112,6 +113,7 @@ if (user_permissions_get('accounts_taxes_write'))
 						."name_tax='". $data["name_tax"] ."', "
 						."taxrate='". $data["taxrate"] ."', "
 						."chartid='". $data["chartid"] ."', "
+						."taxnumber='". $data["taxnumber"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id'";
 						

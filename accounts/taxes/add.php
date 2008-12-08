@@ -57,6 +57,12 @@ class page_output
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
+		$structure["fieldname"] 	= "taxnumber";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
@@ -85,7 +91,7 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "description");
+		$this->obj_form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
 		$this->obj_form->subforms["submit"]	= array("submit");
 		
 		// load any data returned due to errors

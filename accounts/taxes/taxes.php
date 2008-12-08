@@ -37,10 +37,11 @@ class page_output
 		$this->obj_table->add_column("standard", "name_tax", "account_taxes.name_tax");
 		$this->obj_table->add_column("standard", "taxrate", "account_taxes.taxrate");
 		$this->obj_table->add_column("standard", "chartid", "account_charts.code_chart");
+		$this->obj_table->add_column("standard", "taxnumber", "account_taxes.taxnumber");
 		$this->obj_table->add_column("standard", "description", "account_taxes.description");
 
 		// defaults
-		$this->obj_table->columns		= array("name_tax", "taxrate", "chartid", "description");
+		$this->obj_table->columns		= array("name_tax", "taxrate", "chartid", "taxnumber", "description");
 		$this->obj_table->columns_order		= array("name_tax");
 
 		// define SQL structure
