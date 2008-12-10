@@ -123,11 +123,6 @@ class page_output
 		$structure["type"]	= "input";
 		$this->obj_form->add_input($structure);
 		
-		$structure = NULL;
-		$structure["fieldname"] = "pobox";
-		$structure["type"]	= "textarea";
-		$this->obj_form->add_input($structure);
-
 
 		// shipping address
 		$structure = NULL;
@@ -167,7 +162,7 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["customer_view"]	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
 		$this->obj_form->subforms["customer_taxes"]	= array("tax_number", "tax_default");
-		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "pobox");
+		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
 		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		

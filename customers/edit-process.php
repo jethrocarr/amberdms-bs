@@ -34,8 +34,6 @@ if (user_permissions_get('customers_write'))
 	$data["address1_country"]	= security_form_input_predefined("any", "address1_country", 0, "");
 	$data["address1_zipcode"]	= security_form_input_predefined("any", "address1_zipcode", 0, "");
 	
-	$data["pobox"]			= security_form_input_predefined("any", "pobox", 0, "");
-	
 	$data["address2_street"]	= security_form_input_predefined("any", "address2_street", 0, "");
 	$data["address2_city"]		= security_form_input_predefined("any", "address2_city", 0, "");
 	$data["address2_state"]		= security_form_input_predefined("any", "address2_state", 0, "");
@@ -172,7 +170,6 @@ if (user_permissions_get('customers_write'))
 						."address1_state='". $data["address1_state"] ."', "
 						."address1_country='". $data["address1_country"] ."', "
 						."address1_zipcode='". $data["address1_zipcode"] ."', "
-						."pobox='". $data["pobox"] ."', "
 						."address2_street='". $data["address2_street"] ."', "
 						."address2_city='". $data["address2_city"] ."', "
 						."address2_state='". $data["address2_state"] ."', "
