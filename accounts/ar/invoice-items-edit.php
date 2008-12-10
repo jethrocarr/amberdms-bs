@@ -42,6 +42,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Invoice Items", "page=accounts/ar/invoice-items.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Invoice Payments", "page=accounts/ar/invoice-payments.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ar/journal.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Export Invoice", "page=accounts/ar/invoice-export.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ar/invoice-delete.php&id=". $this->id ."");
 	}
 
@@ -121,7 +122,7 @@ class page_output
 		print "<h3>ADD/EDIT INVOICE ITEM</h3><br>";
 		print "<p>This page allows you to make changes to an invoice item.</p>";
 
-		invoice_render_summarybox("ar", $id);
+		invoice_render_summarybox("ar", $this->id);
 
 		$this->obj_form_item->render_html();
 	}

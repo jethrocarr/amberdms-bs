@@ -1,0 +1,112 @@
+%%
+%% GENERIC ENGLISH INVOICE
+%%
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1cm,bmargin=1cm,lmargin=1cm,rmargin=1cm}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{setspace}
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+%% A simple dot to overcome graphicx limitations
+\newcommand{\lyxdot}{.}
+
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+%%\noindent \includegraphics{\lyxdot \lyxdot [companylogo]}
+
+\noindent \begin{tabular}{>{\centering}p{0.5\columnwidth}>{\centering}p{0.5\columnwidth}}
+\noindent \begin{flushleft}
+\textbf{To:}
+(name\_customer)
+(customer\_address)
+
+\par\end{flushleft}
+& \begin{flushleft}
+\textbf{From:}
+
+(company\_address)
+
+\vspace{5mm}
+
+(company\_contactdetails)
+
+\par\end{flushleft}
+\tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+
+\noindent \textbf{TAX INVOICE}
+
+\vspace{5mm}
+\noindent \begin{tabular}{ll}
+%% foreach taxes
+%% (name_tax) & (taxnumber) \tabularnewline
+%% end
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+
+\noindent \begin{tabular}{ll}
+\textbf{Invoice No} & (code\_invoice) \tabularnewline
+\textbf{Order No} & (code\_ordernumber) \tabularnewline
+\textbf{Date Created} & (date\_trans) \tabularnewline
+\textbf{Date Due} & (date\_due) \tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.2\columnwidth}>{\raggedright}p{0.3\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}}
+\textbf{Number} & \textbf{Description} & \textbf{Quantity} & \textbf{Unit} & \textbf{Price} & \textbf{Amount}\tabularnewline
+%% foreach invoice_items
+%% (info) & (description) & (quantity) & (units) & (price) & (amount)\tabularnewline
+%% end
+\cline{1-6} 
+ &  & \multicolumn{3}{l}{\textbf{Subtotal}} & (amount)\tabularnewline
+\cline{3-6} 
+%% foreach taxes
+%% & & \multicolumn{3}{l}{(name_tax)} & (amount)\tabularnewline
+%% end
+\cline{3-6} 
+ &  & \multicolumn{3}{l}{Balance Owning} & (amount\_total)\tabularnewline
+\end{tabular}
+
+\noindent \vspace{20mm}
+
+
+\noindent \begin{flushleft}
+\textbf{PAYMENT METHODS}
+\vspace{5mm}
+
+\textbf{Credit Card:}
+
+Login and pay this invoice with your credit card, at www.amberdms.com/pay
+
+\vspace{5mm}
+\textbf{Direct Credit (NZ customers only):}
+
+Transfer the funds to our account at XX-XXXXX-XXXXXXXXXXXX. Please make sure you include your customer number in the reference field.
+
+\vspace{5mm}
+\textbf{Cheque (NZ customers only)}
+
+Mail us a cheque at the address at the top of this invoice.
+
+\end{flushleft}
+
+
+\end{document}
