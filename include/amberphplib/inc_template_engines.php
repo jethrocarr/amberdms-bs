@@ -163,11 +163,6 @@ class template_engine
 						$this->processed[] = $line_tmp;
 					}
 
-//					print_r($this->data_array);
-//					print "<br>";
-//					print "fieldname: $fieldname<br>";
-//					print "loop_count: $loopcount<br>";
-//					die("awesome!");
 				}
 				
 			}
@@ -318,7 +313,10 @@ class template_engine_latex extends template_engine
 			$this->output = file_get_contents("$tmp_filename.pdf");
 
 			// remove temporary files from disk
-			unlink("$tmp_filename.*");
+			unlink("$tmp_filename.aux");
+			unlink("$tmp_filename.log");
+			unlink("$tmp_filename.tex");
+			unlink("$tmp_filename.pdf");
 
 			return 1;
 		}
