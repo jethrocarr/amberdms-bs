@@ -61,7 +61,7 @@ class sql_query
 		
 		if (!$this->query_result = mysql_query($this->string))
 		{
-			log_debug("sql", "sql_query", "Error: Problem executing SQL query - ". mysql_error());
+			log_write("error", "sql_query", "Problem executing SQL query - ". mysql_error());
 			return 0;
 		}
 		else
@@ -119,7 +119,7 @@ class sql_query
 			}
 			else
 			{
-				log_debug("sql_query", "Error: No DB result avaliable for use to fetch num row information.");
+				log_write("debug", "sql_query", "No DB result avaliable for use to fetch num row information.");
 				return 0;
 			}
 		}
@@ -150,7 +150,7 @@ class sql_query
 		}
 		else
 		{
-			log_debug("sql_query", "Error: No DB result avaliable for use to fetch data.");
+			log_write("debug", "sql_query", "No DB result avaliable for use to fetch data.");
 			return 0;
 		}
 		
