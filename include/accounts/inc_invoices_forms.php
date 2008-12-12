@@ -233,6 +233,9 @@ class invoice_form_export
 	var $invoiceid;		// ID of the invoice
 	var $page_export;	// Page to submit the form to
 
+
+	var $obj_form_email;
+	var $obj_form_download;
 	var $obj_pdf;
 
 
@@ -241,208 +244,205 @@ class invoice_form_export
 	{
 		log_debug("invoice_form_export", "Executing execute()");
 
+		/*
+			Fetch basic invoice details
+		*/
+		$obj_sql_invoice		= New sql_query;
+		$obj_sql_invoice->string	= "SELECT code_invoice, customerid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+		$obj_sql_invoice->execute();
+		$obj_sql_invoice->fetch_array();
 
-		// nothing todo
+
+		/*
+			Fetch basic customer information
+		*/
+		$obj_sql_customer		= New sql_query;
+		$obj_sql_customer->string	= "SELECT contact_email FROM customers WHERE id='". $obj_sql_invoice->data[0]["customerid"] ."' LIMIT 1";
+		$obj_sql_customer->execute();
+		$obj_sql_customer->fetch_array();
+
+
+	
+
+
+		/*
+			Define email form
+		*/
+		$this->obj_form_email = New form_input;
+		$this->obj_form_email->formname = "invoice_export_email";
+		$this->obj_form_email->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form_email->action = "accounts/". $this->type ."/invoice-export-process.php";
+		$this->obj_form_email->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "subject";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= "Invoice ". $obj_sql_invoice->data[0]["code_invoice"];
+		$this->obj_form_email->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_to";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= $obj_sql_customer->data[0]["contact_email"];
+		$this->obj_form_email->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_cc";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= "";
+		$this->obj_form_email->add_input($structure);
+			
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_bcc";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= "";
+		$this->obj_form_email->add_input($structure);
+	
+		$structure = NULL;
+		$structure["fieldname"] 	= "message";
+		$structure["type"]		= "textarea";
+		$structure["defaultvalue"]	= "";
+		$this->obj_form_email->add_input($structure);
+		
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "formname";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->obj_form_email->formname;
+		$this->obj_form_email->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_invoice";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->invoiceid;
+		$this->obj_form_email->add_input($structure);
+
+
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Email Invoice";
+		$this->obj_form_email->add_input($structure);
+		
+		// load any data returned due to errors
+		$this->obj_form_email->load_data_error();
+
+
+
+		/*
+			Define download form
+		*/
+		$this->obj_form_download = New form_input;
+		$this->obj_form_download->formname = "invoice_export_download";
+		$this->obj_form_download->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form_download->action = "accounts/". $this->type ."/invoice-export-process.php";
+		$this->obj_form_download->method = "post";
+		
+
+		// general
+		$structure = NULL;
+		$structure["fieldname"] 	= "invoice_mark_as_sent";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Check this to show that the invoice has been sent to the customer when you download the PDF";
+		$this->obj_form_download->add_input($structure);
+
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "formname";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->obj_form_download->formname;
+		$this->obj_form_download->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_invoice";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->invoiceid;
+		$this->obj_form_download->add_input($structure);
+
+
+		
+
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Download Invoice";
+		$this->obj_form_download->add_input($structure);
+		
+
+		// load any data returned due to errors
+		$this->obj_form_download->load_data_error();
+
 		return 1;
 	}
 
-
+	
 	function render_html()
 	{
 		log_debug("invoice_form_export", "Executing render_html()");
 
-		// display export as PDF link
-		print "<p><a href=\"index-export.php?mode=pdf&page=". $this->page_export ."&id=". $this->invoiceid ."\">Export PDF</a></p>";
+
+		// download form
+		print "<table width=\"100%\" class=\"table_highlight\"><tr><td>";
+		print "<table cellpadding=\"5\"><tr>";
+		
+		print "<td valign=\"top\">";
+			print "pdf_icon_here";
+		print "</td>";
+
+		print "<td width=\"100%\">";
+			print "<h3>Download PDF:</h3>";
+			print "<form method=\"". $this->obj_form_download->method ."\" action=\"". $this->obj_form_download->action ."\">";
+			print "<br><br>";
+			$this->obj_form_download->render_field("invoice_mark_as_sent");
+			print "<br>";
+			$this->obj_form_download->render_field("formname");
+			$this->obj_form_download->render_field("id_invoice");
+			$this->obj_form_download->render_field("submit");
+			print "</form>";
+		print "</td>";	
+		
+		print "</tr></table>";
+		print "</td></tr></table>";
+		print "<br><br>";
+
+
+		// email form
+		print "<table width=\"100%\" class=\"table_highlight\"><tr><td>";
+		print "<table cellpadding=\"5\"><tr>";
+		
+		print "<td valign=\"top\">";
+			print "email_icon_here";
+		print "</td>";
+
+		print "<td width=\"100%\">";
+			print "<h3>Email PDF:</h3>";
+			print "<form method=\"". $this->obj_form_email->method ."\" action=\"". $this->obj_form_email->action ."\">";
+			print "<table width=\"100%\">";
+			$this->obj_form_email->render_row("subject");
+			$this->obj_form_email->render_row("email_to");
+			$this->obj_form_email->render_row("email_cc");
+			$this->obj_form_email->render_row("email_bcc");
+			$this->obj_form_email->render_row("message");
+			print "</table>";
+		
+			$this->obj_form_email->render_field("formname");
+			$this->obj_form_email->render_field("id_invoice");
+			$this->obj_form_email->render_field("submit");
+			
+			print "</form>";
+		print "</td>";	
+		
+		print "</tr></table>";
+		print "</td></tr></table>";
 	}
 
-
-	function render_pdf()
-	{
-		log_debug("invoice_form_export", "Executing render_pdf()");
-		
-		// start the PDF object
-		$this->obj_pdf = New template_engine_latex;
-
-		// load template
-		$this->obj_pdf->prepare_load_template("templates/latex/". $this->type ."_invoice.tex");
-
-
-		/*
-			Fetch data + define fields
-		*/
-
-
-		// fetch invoice data
-		$sql_invoice_obj		= New sql_query;
-		$sql_invoice_obj->string	= "SELECT code_invoice, code_ordernumber, customerid, date_due, date_trans, amount_total, amount_tax, amount FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
-		$sql_invoice_obj->execute();
-		$sql_invoice_obj->fetch_array();
-
-
-
-		// fetch customer data
-		$sql_customer_obj		= New sql_query;
-		$sql_customer_obj->string	= "SELECT name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $sql_invoice_obj->data[0]["customerid"] ."' LIMIT 1";
-		$sql_customer_obj->execute();
-		$sql_customer_obj->fetch_array();
-
-		// customer fields
-		$this->obj_pdf->prepare_add_field("name\_customer", $sql_customer_obj->data[0]["name_customer"]);
-
-
-		/*
-			Invoice Data (exc items/taxes)
-		*/
-		$this->obj_pdf->prepare_add_field("code\_invoice", $sql_invoice_obj->data[0]["code_invoice"]);
-		$this->obj_pdf->prepare_add_field("code\_ordernumber", $sql_invoice_obj->data[0]["code_ordernumber"]);
-		$this->obj_pdf->prepare_add_field("date\_trans", $sql_invoice_obj->data[0]["date_trans"]);
-		$this->obj_pdf->prepare_add_field("date\_due", $sql_invoice_obj->data[0]["date_due"]);
-		$this->obj_pdf->prepare_add_field("amount", $sql_invoice_obj->data[0]["amount"]);
-		$this->obj_pdf->prepare_add_field("amount\_total", $sql_invoice_obj->data[0]["amount_total"]);
-
-
-
-		/*
-			Invoice Items
-			(excluding tax items - these need to be processed in a different way)
-		*/
-
-		// fetch invoice items
-		$sql_items_obj			= New sql_query;
-		$sql_items_obj->string		= "SELECT id, type, chartid, customid, quantity, units, amount, price, description FROM account_items WHERE invoiceid='". $this->invoiceid ."' AND invoicetype='". $this->type ."' AND type!='tax' AND type!='payment'";
-		$sql_items_obj->execute();
-		$sql_items_obj->fetch_array();
-
-
-		$structure_invoiceitems = array();
-		foreach ($sql_items_obj->data as $data)
-		{
-			$structure = array();
-			
-			$structure["quantity"]		= $data["quantity"];
-
-			switch ($data["type"])
-			{
-				case "product":
-					/*
-						Fetch product name
-					*/
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $data["customid"] ."' LIMIT 1";
-					$sql_obj->execute();
-
-					$sql_obj->fetch_array();
-					
-					$structure["info"] = $sql_obj->data[0]["name_product"];
-					
-					unset($sql_obj);
-				break;
-
-
-				case "time":
-					/*
-						Fetch time group ID
-					*/
-
-					$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TIMEGROUPID'");
-
-					$structure["info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
-				break;
-
-
-				case "standard":
-					/*
-						Fetch account name and blank a few fields
-					*/
-
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $data["chartid"] ."' LIMIT 1";
-					$sql_obj->execute();
-
-					$sql_obj->fetch_array();
-					
-					$structure["info"]	= $sql_obj->data[0]["name_account"];
-					$structure["quantity"]	= " ";
-
-					unset($sql_obj);
-				break;
-			}
-
-
-			$structure["description"]	= $data["description"];
-			$structure["units"]		= $data["units"];
-			$structure["price"]		= $data["price"];
-			$structure["amount"]		= $data["amount"];
-
-			$structure_invoiceitems[] = $structure;
-		}
-	
-		$this->obj_pdf->prepare_add_array("invoice_items", $structure_invoiceitems);
-
-		unset($sql_items_obj);
-
-
-
-		/*
-			Tax Items
-		*/
-
-		// fetch tax items
-		$sql_tax_obj			= New sql_query;
-		$sql_tax_obj->string		= "SELECT "
-							."account_items.amount, "
-							."account_items.description, "
-							."account_taxes.name_tax, "
-							."account_taxes.taxnumber "
-							."FROM "
-							."account_items "
-							."LEFT JOIN account_taxes ON account_taxes.id = account_items.customid "
-							."WHERE "
-							."invoiceid='". $this->invoiceid ."' "
-							."AND invoicetype='". $this->type ."' "
-							."AND type='tax'";
-		$sql_tax_obj->execute();
-
-		if ($sql_tax_obj->num_rows())
-		{
-			$sql_tax_obj->fetch_array();
-
-			$structure_taxitems = array();
-			foreach ($sql_tax_obj->data as $data)
-			{
-				$structure = array();
-			
-				$structure["name_tax"]		= $data["name_tax"];
-				$structure["description"]	= $data["description"];
-				$structure["taxnumber"]		= $data["taxnumber"];
-				$structure["amount"]		= $data["amount"];
-
-				$structure_taxitems[] = $structure;
-			}
-		}
-	
-		$this->obj_pdf->prepare_add_array("taxes", $structure_taxitems);
-
-
-
-
-
-		/*
-			Output PDF
-		*/
-
-		// perform string escaping for latex
-		$this->obj_pdf->prepare_escape_fields();
-		
-		// fill template
-		$this->obj_pdf->prepare_filltemplate();
-
-		// generate PDF output
-		$this->obj_pdf->generate_pdf();
-
-		// output PDF file
-		print $this->obj_pdf->output;
-	}
 
 } // end of invoice_form_export
 

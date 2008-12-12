@@ -302,7 +302,7 @@ class template_engine_latex extends template_engine
 		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
 	
 		chdir("/tmp");
-		system("$app_pdflatex $tmp_filename.tex");
+		exec("$app_pdflatex $tmp_filename.tex");
 
 		// check that a PDF was generated
 		if (file_exists("$tmp_filename.pdf"))

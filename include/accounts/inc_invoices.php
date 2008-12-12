@@ -85,7 +85,7 @@ function invoice_render_summarybox($type, $id)
 
 	// fetch invoice information
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT code_invoice, amount_total, amount_paid FROM account_$type WHERE id='$id' LIMIT 1";
+	$sql_obj->string	= "SELECT date_sent, sentmethod, code_invoice, amount_total, amount_paid FROM account_$type WHERE id='$id' LIMIT 1";
 	$sql_obj->execute();
 
 	if ($sql_obj->num_rows())
@@ -143,7 +143,21 @@ function invoice_render_summarybox($type, $id)
 						print "<td>Amount Due:</td>";
 						print "<td>$". $amount_due."</td>";
 					print "</tr>";
+
 					
+					print "<tr>";
+						print "<td>Date Sent:</td>";
+
+						if ($sql_obj->data[0]["sentmethod"] == "")
+						{
+							print "<td><i>Has not been sent to customer</i></td>";
+						}
+						else
+						{
+							print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
+						}
+					print "</tr>";
+									
 					print "</tr></table>";
 					
 					print "</td>";
@@ -178,6 +192,8 @@ class invoice
 	var $id;		// ID of invoice
 	
 	var $data;		// array for storage of all invoice data
+
+	var $obj_pdf;		// generated PDF object
 
 
 	/*
@@ -558,7 +574,209 @@ class invoice
 	} // end of action_delete
 
 
+	/*
+		generate_pdf
+
+		Generates a PDF of the invoice and saves it into memory at $this->obj_pdf->output.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function generate_pdf()
+	{
+		log_debug("invoice_form_export", "Executing prepare_generate_pdf()");
+		
+		// start the PDF object
+		$this->obj_pdf = New template_engine_latex;
+
+		// load template
+		$this->obj_pdf->prepare_load_template("../../templates/latex/". $this->type ."_invoice.tex");
+
+
+		/*
+			Fetch data + define fields
+		*/
+
+		// fetch customer data
+		$sql_customer_obj		= New sql_query;
+		$sql_customer_obj->string	= "SELECT name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
+		$sql_customer_obj->execute();
+		$sql_customer_obj->fetch_array();
+
+		// customer fields
+		$this->obj_pdf->prepare_add_field("customer\_name", $sql_customer_obj->data[0]["name_customer"]);
+		$this->obj_pdf->prepare_add_field("customer\_contact", $sql_customer_obj->data[0]["name_contact"]);
+		$this->obj_pdf->prepare_add_field("customer\_address1\_street", $sql_customer_obj->data[0]["address1_street"]);
+		$this->obj_pdf->prepare_add_field("customer\_address1\_city", $sql_customer_obj->data[0]["address1_city"]);
+		$this->obj_pdf->prepare_add_field("customer\_address1\_state", $sql_customer_obj->data[0]["address1_state"]);
+		$this->obj_pdf->prepare_add_field("customer\_address1\_country", $sql_customer_obj->data[0]["address1_country"]);
+
+		if ($sql_customer_obj->data[0]["address1_zipcode"] == 0)
+		{
+			$sql_customer_obj->data[0]["address1_zipcode"] = "";
+		}
+		
+		$this->obj_pdf->prepare_add_field("customer\_address1\_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
+
+
+		/*
+			Invoice Data (exc items/taxes)
+		*/
+		$this->obj_pdf->prepare_add_field("code\_invoice", $this->data["code_invoice"]);
+		$this->obj_pdf->prepare_add_field("code\_ordernumber", $this->data["code_ordernumber"]);
+		$this->obj_pdf->prepare_add_field("date\_trans", $this->data["date_trans"]);
+		$this->obj_pdf->prepare_add_field("date\_due", $this->data["date_due"]);
+		$this->obj_pdf->prepare_add_field("amount", $this->data["amount"]);
+		$this->obj_pdf->prepare_add_field("amount\_total", $this->data["amount_total"]);
+
+
+
+		/*
+			Invoice Items
+			(excluding tax items - these need to be processed in a different way)
+		*/
+
+		// fetch invoice items
+		$sql_items_obj			= New sql_query;
+		$sql_items_obj->string		= "SELECT id, type, chartid, customid, quantity, units, amount, price, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type!='tax' AND type!='payment'";
+		$sql_items_obj->execute();
+		$sql_items_obj->fetch_array();
+
+
+		$structure_invoiceitems = array();
+		foreach ($sql_items_obj->data as $itemdata)
+		{
+			$structure = array();
+			
+			$structure["quantity"]		= $itemdata["quantity"];
+
+			switch ($itemdata["type"])
+			{
+				case "product":
+					/*
+						Fetch product name
+					*/
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $itemdata["customid"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					$sql_obj->fetch_array();
+					
+					$structure["info"] = $sql_obj->data[0]["name_product"];
+					
+					unset($sql_obj);
+				break;
+
+
+				case "time":
+					/*
+						Fetch time group ID
+					*/
+
+					$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='TIMEGROUPID'");
+
+					$structure["info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+				break;
+
+
+				case "standard":
+					/*
+						Fetch account name and blank a few fields
+					*/
+
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $itemdata["chartid"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					$sql_obj->fetch_array();
+					
+					$structure["info"]	= $sql_obj->data[0]["name_account"];
+					$structure["quantity"]	= " ";
+
+					unset($sql_obj);
+				break;
+			}
+
+
+			$structure["description"]	= $itemdata["description"];
+			$structure["units"]		= $itemdata["units"];
+			$structure["price"]		= $itemdata["price"];
+			$structure["amount"]		= $itemdata["amount"];
+
+			$structure_invoiceitems[] = $structure;
+		}
+	
+		$this->obj_pdf->prepare_add_array("invoice_items", $structure_invoiceitems);
+
+		unset($sql_items_obj);
+
+
+
+		/*
+			Tax Items
+		*/
+
+		// fetch tax items
+		$sql_tax_obj			= New sql_query;
+		$sql_tax_obj->string		= "SELECT "
+							."account_items.amount, "
+							."account_items.description, "
+							."account_taxes.name_tax, "
+							."account_taxes.taxnumber "
+							."FROM "
+							."account_items "
+							."LEFT JOIN account_taxes ON account_taxes.id = account_items.customid "
+							."WHERE "
+							."invoiceid='". $this->id ."' "
+							."AND invoicetype='". $this->type ."' "
+							."AND type='tax'";
+		$sql_tax_obj->execute();
+
+		if ($sql_tax_obj->num_rows())
+		{
+			$sql_tax_obj->fetch_array();
+
+			$structure_taxitems = array();
+			foreach ($sql_tax_obj->data as $taxdata)
+			{
+				$structure = array();
+			
+				$structure["name_tax"]		= $taxdata["name_tax"];
+				$structure["description"]	= $taxdata["description"];
+				$structure["taxnumber"]		= $taxdata["taxnumber"];
+				$structure["amount"]		= $taxdata["amount"];
+
+				$structure_taxitems[] = $structure;
+			}
+		}
+	
+		$this->obj_pdf->prepare_add_array("taxes", $structure_taxitems);
+
+
+
+
+		/*
+			Output PDF
+		*/
+
+		// perform string escaping for latex
+		$this->obj_pdf->prepare_escape_fields();
+		
+		// fill template
+		$this->obj_pdf->prepare_filltemplate();
+
+		// generate PDF output
+		$this->obj_pdf->generate_pdf();
+
+	} // end of generate_pdf
+
+
 } // END OF INVOICE CLASS
+
+
+	
+
 
 
 

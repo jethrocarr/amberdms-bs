@@ -176,6 +176,143 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 
 
 
+
+
+/*
+	invoice_form_export_process($type, $mode, $returnpage_error, $returnpage_success)
+
+	Form for processing export form results
+
+	Values
+	type			"ar" or "ap" invoice
+	returnpage_error	Page to return to in event of errors or updates
+	returnpage_success	Page to return to if successful.
+*/
+function invoice_form_export_process($type, $returnpage_error, $returnpage_success)
+{
+	log_debug("inc_invoices_forms", "Executing invoice_form_export_process($type, $returnpage_error, $returnpage_success)");
+
+	/*
+		Start the invoice
+	*/
+	$invoice	= New invoice;
+	$invoice->type	= $type;
+	
+	
+	/*
+		Fetch all form data
+	*/
+
+
+	// get the ID for an edit
+	$invoice->id = security_form_input_predefined("int", "id_invoice", 1, "");
+	
+
+	// general details
+	$data["formname"] = security_form_input_predefined("any", "formname", 1, "");
+
+	if ($data["formname"] == "invoice_export_email")
+	{
+		// send email
+		
+	}
+	else
+	{
+		// PDF download
+		$data["invoice_mark_as_sent"] = security_form_input_predefined("any", "invoice_mark_as_sent", 0, "");
+	}
+
+
+	// make sure that the invoice exists
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `account_". $invoice->type ."` WHERE id='". $invoice->id ."'";
+	$sql_obj->execute();
+
+	if (!$sql_obj->num_rows())
+	{
+		$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - ". $invoice->id ." - does not exist in this system.";
+	}
+
+
+
+	//// ERROR CHECKING ///////////////////////
+
+
+	/// if there was an error, go back to the entry page
+	if ($_SESSION["error"]["message"])
+	{	
+		header("Location: ../../index.php?page=$returnpage_error&id=". $invoice->id ."");
+		exit(0);
+	}
+	else
+	{
+		if ($data["formname"] == "invoice_export_email")
+		{
+			// send email
+			
+		}
+		else
+		{
+
+			/*
+				Mark invoice as being sent if user requests it
+			*/
+			if ($data["invoice_mark_as_sent"])
+			{
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE account_". $invoice->type ." SET date_sent='". date("Y-m-d") ."', sentmethod='manual' WHERE id='". $invoice->id ."'";
+				$sql_obj->execute();
+			}
+
+
+			/*
+				Provide PDF to user's browser
+			*/
+			
+			// generate PDF
+			$invoice->load_data();
+			$invoice->generate_pdf();
+
+
+			// PDF headers
+			$filename = "amberdms_bs_". mktime() .".pdf";
+			
+			// required for IE, otherwise Content-disposition is ignored
+			if (ini_get('zlib.output_compression'))
+				ini_set('zlib.output_compression', 'Off');
+
+			header("Pragma: public"); // required
+			header("Expires: 0");
+			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+			header("Cache-Control: private",false); // required for certain browsers 
+			header("Content-Type: application/pdf");
+			
+			header("Content-Disposition: attachment; filename=\"".basename($filename)."\";" );
+			header("Content-Transfer-Encoding: binary");
+
+
+			// output the PDF
+			print $invoice->obj_pdf->output;
+			exit(0);
+		}
+
+		
+		// display updated details
+		header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
+		exit(0);
+			
+
+	} // end if passed tests
+
+
+} // end if invoice_form_export_process
+
+
+
+
+
+
+
 /*
 	invoice_form_delete_process($type, $mode, $returnpage_error, $returnpage_success)
 
