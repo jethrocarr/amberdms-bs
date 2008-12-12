@@ -458,7 +458,7 @@ class form_input
 				// display
 				print "<textarea name=\"$fieldname\" ";
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px; height: ". $this->structure[$fieldname]["options"]["height"] ."px;\" ";
-				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea></td>";
+				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea>";
 			break;
 
 			case "date":
