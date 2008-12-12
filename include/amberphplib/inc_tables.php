@@ -527,9 +527,7 @@ class table
 				}
 				else
 				{
-					// TODO: in future, have currency field here
-					// for now, just add a $ symbol to the field.
-					$result = "$". sprintf("%0.2f", $this->data[$row][$column]);
+					$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data[$row][$column]);
 				}
 			break;
 

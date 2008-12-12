@@ -305,6 +305,5 @@ if ($_SESSION["user"]["log_debug"])
 $_SESSION["user"]["log_debug"] = array();
 $_SESSION["error"] = array();
 $_SESSION["notification"] = array();
-$_SESSION["lang_cache"] = array();
 
 ?>

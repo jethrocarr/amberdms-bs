@@ -420,8 +420,10 @@ class sql_query
 /*
 	sql_get_singlevalue($string)
 
-	Fetches a single value from the database and returns it.
-	(Very handy for fetching configuration values from the database)
+	Fetches a single value from the database and returns it. This function has inbuilt caching
+	and will record all values returned in the $GLOBALS array.
+
+	This function is ideal for fetching labels or configuration values.
 
 	Note: The value returned must have the label "value". You may need to make
 	the SQL statment re-write the value name in order to comply.
@@ -441,19 +443,29 @@ function sql_get_singlevalue($string)
 		die("Error: SQL queries to sql_get_singlevalue must request the field with the name of \"value\". Eg: \"SELECT name as value FROM mytable WHERE id=foo\"");
 	}
 
-	// fetch and return data
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= $string;
-	$sql_obj->execute();
-
-	if (!$sql_obj->num_rows())
+	if ($GLOBALS["cache"]["sql"][$string])
 	{
-		return 0;
+		log_write("sql", "sql_query", "Fetching results from cache");
+		return $GLOBALS["cache"]["sql"][$string];
 	}
 	else
 	{
-		$sql_obj->fetch_array();
-		return $sql_obj->data[0]["value"];
+
+		// fetch and return data
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= $string;
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+			$GLOBALS["cache"]["sql"][$string] = $sql_obj->data[0]["value"];
+			return $sql_obj->data[0]["value"];
+		}
 	}
 }
 

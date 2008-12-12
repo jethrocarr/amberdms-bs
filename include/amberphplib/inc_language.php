@@ -42,9 +42,9 @@ function language_translate($language, $label_array)
 	// run through the labels - see what ones we have cached, and what ones we need to query
 	foreach ($label_array as $label)
 	{
-		if ($_SESSION["lang_cache"][$label])
+		if ($GLOBALS["cache"]["lang"][$label])
 		{
-			$result[$label] = $_SESSION["lang_cache"][$label];
+			$result[$label] = $GLOBALS["cache"]["lang"][$label];
 		}
 		else
 		{
@@ -91,7 +91,7 @@ function language_translate($language, $label_array)
 			foreach ($sql_obj->data as $data)
 			{
 				$result[ $data["label"] ]			= $data["translation"];
-				$_SESSION["lang_cache"][ $data["label"] ]	= $data["translation"];
+				$GLOBALS["cache"]["lang"][ $data["label"] ]	= $data["translation"];
 			}
 		}
 		
@@ -107,8 +107,8 @@ function language_translate($language, $label_array)
 	{
 		if (!$result[$label])
 		{
-			$result[$label]			= $label;
-			$_SESSION["lang_cache"][$label]	= $label;
+			$result[$label]				= $label;
+			$GLOBALS["cache"]["lang"][$label]	= $label;
 		}
 	}
 
