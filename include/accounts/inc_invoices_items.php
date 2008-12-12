@@ -816,9 +816,21 @@ class invoice_form_item
 		*/
 		
 		$form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
-		$form->subforms["submit"]			= array("submit");
+
+
+		if ($this->item_type == "time" && count($form->structure["timeregid"]["values"]) == 0)
+		{
+			$form->subforms["submit"]			= array();
+			$form->render_form();
+			format_msgbox("important", "<p>There are currently no unprocessed time groups belonging to this customer - you must add time to a timegroup before you can create a time item.</p>");
+			
+		}
+		else
+		{
+			$form->subforms["submit"]			= array("submit");
+			$form->render_form();
+		}
 		
-		$form->render_form();
 
 
 		return 1;

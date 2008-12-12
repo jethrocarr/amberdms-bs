@@ -84,7 +84,7 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("name_service", "active", "typeid", "date_period_next", "description");
-		$this->obj_table->columns_order	= array("name_service");
+		$this->obj_table->columns_order		= array("name_service");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services_customers");
@@ -113,7 +113,9 @@ class page_output
 
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>This customer is not subscribed to any services. <a href=\"index.php?page=customers/service-edit.php&id=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
+			format_msgbox("important", "<p><b>This customer is not currently subscribed to any services.</b></p>");
+
+			print "<p><b><a href=\"index.php?page=customers/service-edit.php&id=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
 		}
 		else
 		{

@@ -87,7 +87,7 @@ class page_output
 
 		
 		// defaults
-		$this->obj_table->columns		= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid");
+		$this->obj_table->columns	= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid");
 		$this->obj_table->columns_order	= array("code_invoice");
 
 		// define SQL structure
@@ -152,7 +152,7 @@ class page_output
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>You currently have no invoices belonging to this customer and matching your search requirements.</b></p>";
+			format_msgbox("important", "<p><b>You currently have no invoices belonging to this customer and matching your search requirements.</b></p>");
 		}
 		else
 		{

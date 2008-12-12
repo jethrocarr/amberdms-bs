@@ -14,6 +14,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;		// hold locked status of customer
+
 	
 	function page_output()
 	{
@@ -99,9 +101,6 @@ class page_output
 			Check that the customer can be deleted
 		*/
 
-		$locked = 0;
-		
-
 		// make sure customer does not belong to any invoices
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "SELECT id FROM account_ar WHERE customerid='". $this->id ."'";
@@ -109,7 +108,7 @@ class page_output
 
 		if ($sql_obj->num_rows())
 		{
-			$locked = 1;
+			$this->locked = 1;
 		}
 
 		// make sure customer has no time groups assigned to it
@@ -119,24 +118,15 @@ class page_output
 
 		if ($sql_obj->num_rows())
 		{
-			$locked = 1;
+			$this->locked = 1;
 		}
 
 
 		// define submit field
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This customer can not be deleted because it belongs to an invoice or time group.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 				
 		$this->obj_form->add_input($structure);
 
@@ -145,8 +135,15 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["customer_delete"]	= array("name_customer");
 		$this->obj_form->subforms["hidden"]		= array("id_customer");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
 
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 		
 		// fetch the form data
 		$this->obj_form->sql_query = "SELECT name_customer FROM `customers` WHERE id='". $this->id ."' LIMIT 1";
@@ -163,8 +160,17 @@ class page_output
 		print "<h3>DELETE CUSTOMER</h3><br>";
 		print "<p>This page allows you to delete an unwanted customers. Note that it is only possible to delete a customer if they do not belong to any invoices or time groups. If they do, you can not delete the customer, but instead you can disable the customer by setting the date_end field.</p>";
 
-		// display the form
-		$this->obj_form->render_form();
+		if ($this->locked)
+		{
+			$this->obj_form->render_form();
+			format_msgbox("important", "<p><b>This customer can not be deleted because their account has invoices or time groups belonging to it.</b><br><br>
+							If you wish to close this customer's account, use the Customer Details page and set the date closed field.</p>");
+		}
+		else
+		{
+			// display the form
+			$this->obj_form->render_form();
+		}
 	}
 
 

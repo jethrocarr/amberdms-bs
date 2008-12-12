@@ -247,7 +247,7 @@ class taxes_report_transactions
 		// Note that the render_table_html function also performs the total row and total column generation tasks.
 		if (!$this->obj_table->filter["filter_date_start"]["defaultvalue"] || !$this->obj_table->filter["filter_date_end"]["defaultvalue"])
 		{
-			print "<p><b>Please enter a time period using the form above.</b></p>";
+			format_msgbox("important", "<p><b>Please select a time period to display using the filter options above.</b></p>");
 			return 0;
 		}
 		else
