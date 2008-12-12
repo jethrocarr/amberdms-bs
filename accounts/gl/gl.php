@@ -39,11 +39,11 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "date_trans", "account_trans.date_trans");
 		$this->obj_table->add_column("standard", "code_reference", "NONE");
-		$this->obj_table->add_column("standard", "code_chart", "CONCAT_WS('--', account_charts.code_chart, account_charts.description)");
 		$this->obj_table->add_column("standard", "description", "account_trans.memo");
 		$this->obj_table->add_column("standard", "source", "account_trans.source");
 		$this->obj_table->add_column("money", "debit", "account_trans.amount_debit");
 		$this->obj_table->add_column("money", "credit", "account_trans.amount_credit");
+		$this->obj_table->add_column("standard", "code_chart", "CONCAT_WS('--', account_charts.code_chart, account_charts.description)");
 
 		// defaults
 		$this->obj_table->columns	= array("date_trans", "code_reference", "description", "source", "debit", "credit", "code_chart");
