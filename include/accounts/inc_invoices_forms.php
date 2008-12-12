@@ -229,9 +229,9 @@ class invoice_form_details
 */
 class invoice_form_export
 {
-	var $type;		// Either "ar" or "ap"
+	var $type;		// Either "ar" or "quotes"
 	var $invoiceid;		// ID of the invoice
-	var $page_export;	// Page to submit the form to
+	var $processpage;	// Page to submit the form to
 
 
 	var $obj_form_email;
@@ -248,7 +248,16 @@ class invoice_form_export
 			Fetch basic invoice details
 		*/
 		$obj_sql_invoice		= New sql_query;
-		$obj_sql_invoice->string	= "SELECT code_invoice, customerid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+
+		if ($this->type == "ar")
+		{
+			$obj_sql_invoice->string	= "SELECT code_invoice, customerid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+		}
+		else
+		{
+			$obj_sql_invoice->string	= "SELECT code_quote, customerid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+		}
+		
 		$obj_sql_invoice->execute();
 		$obj_sql_invoice->fetch_array();
 
@@ -272,7 +281,7 @@ class invoice_form_export
 		$this->obj_form_email->formname = "invoice_export_email";
 		$this->obj_form_email->language = $_SESSION["user"]["lang"];
 
-		$this->obj_form_email->action = "accounts/". $this->type ."/invoice-export-process.php";
+		$this->obj_form_email->action = $this->processpage;
 		$this->obj_form_email->method = "post";
 		
 
@@ -280,7 +289,16 @@ class invoice_form_export
 		$structure = NULL;
 		$structure["fieldname"] 	= "subject";
 		$structure["type"]		= "input";
-		$structure["defaultvalue"]	= "Invoice ". $obj_sql_invoice->data[0]["code_invoice"];
+
+		if ($this->type == "ar")
+		{
+			$structure["defaultvalue"]	= "Invoice ". $obj_sql_invoice->data[0]["code_invoice"];
+		}
+		else
+		{
+			$structure["defaultvalue"]	= "Quote ". $obj_sql_invoice->data[0]["code_quote"];
+		}
+		
 		$this->obj_form_email->add_input($structure);
 		
 		$structure = NULL;
@@ -341,7 +359,7 @@ class invoice_form_export
 		$this->obj_form_download->formname = "invoice_export_download";
 		$this->obj_form_download->language = $_SESSION["user"]["lang"];
 
-		$this->obj_form_download->action = "accounts/". $this->type ."/invoice-export-process.php";
+		$this->obj_form_download->action = $this->processpage;
 		$this->obj_form_download->method = "post";
 		
 
@@ -351,6 +369,7 @@ class invoice_form_export
 		$structure["type"]		= "checkbox";
 		$structure["options"]["label"]	= "Check this to show that the invoice has been sent to the customer when you download the PDF";
 		$this->obj_form_download->add_input($structure);
+
 
 		// hidden
 		$structure = NULL;

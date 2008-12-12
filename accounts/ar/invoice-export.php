@@ -92,11 +92,6 @@ class page_output
 		$this->obj_form_invoice->render_html();
 	}
 
-	function render_pdf()
-	{
-		$this->obj_form_invoice->render_pdf();
-	}
-	
 }
 
 ?>

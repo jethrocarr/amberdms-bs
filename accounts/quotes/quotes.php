@@ -41,6 +41,7 @@ class page_output
 		$this->obj_table->add_column("price", "amount_tax", "account_quotes.amount_tax");
 		$this->obj_table->add_column("price", "amount", "account_quotes.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_quotes.amount_total");
+		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
 
 		// totals
 		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total");

@@ -1,0 +1,105 @@
+%%
+%% GENERIC ENGLISH INVOICE
+%%
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1cm,bmargin=1cm,lmargin=1cm,rmargin=1cm}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{setspace}
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+%% A simple dot to overcome graphicx limitations
+\newcommand{\lyxdot}{.}
+
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+%%\noindent \includegraphics{\lyxdot \lyxdot [companylogo]}
+
+\noindent \begin{tabular}{>{\centering}p{0.5\columnwidth}>{\centering}p{0.5\columnwidth}}
+\noindent \begin{flushleft}
+\textbf{To:}
+
+(customer\_contact)
+
+(customer\_name)
+
+
+(customer\_address1\_street)
+
+(customer\_address1\_city)
+
+(customer\_address1\_state)
+
+(customer\_address1\_country)
+
+(customer\_address1\_zipcode)
+
+\par\end{flushleft}
+& \begin{flushleft}
+\textbf{From:}
+
+(company\_address1\_street)
+
+(company\_address1\_city)
+
+(company\_address1\_state)
+
+(company\_address1\_country)
+
+(company\_address1\_zipcode)
+
+\vspace{5mm}
+
+(company\_contactdetails)
+
+\par\end{flushleft}
+\tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+
+\noindent \textbf{QUOTATION}
+
+\noindent \vspace{10mm}
+
+
+\noindent \begin{tabular}{ll}
+\textbf{Quote No} & (code\_quote) \tabularnewline
+\textbf{Date Created} & (date\_trans) \tabularnewline
+\textbf{Valid Until} & (date\_validto) \tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.2\columnwidth}>{\raggedright}p{0.3\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}}
+\textbf{Number} & \textbf{Description} & \textbf{Quantity} & \textbf{Unit} & \textbf{Price} & \textbf{Amount}\tabularnewline
+%% foreach invoice_items
+%% (info) & (description) & (quantity) & (units) & (price) & (amount)\tabularnewline
+%% end
+\cline{1-6} 
+ &  & \multicolumn{3}{l}{\textbf{Subtotal}} & (amount)\tabularnewline
+\cline{3-6} 
+%% foreach taxes
+%% & & \multicolumn{3}{l}{(name_tax)} & (amount)\tabularnewline
+%% end
+\cline{3-6} 
+ &  & \multicolumn{3}{l}{Balance Owning} & (amount\_total)\tabularnewline
+\end{tabular}
+
+\noindent \vspace{20mm}
+
+
+
+\end{document}

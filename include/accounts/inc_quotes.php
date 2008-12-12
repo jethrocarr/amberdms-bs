@@ -60,7 +60,7 @@ function quotes_render_summarybox($id)
 
 	// fetch quote information
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT code_quote, amount_total, date_validtill FROM account_quotes WHERE id='$id' LIMIT 1";
+	$sql_obj->string	= "SELECT code_quote, amount_total, date_validtill, date_sent, sentmethod FROM account_quotes WHERE id='$id' LIMIT 1";
 	$sql_obj->execute();
 
 	if ($sql_obj->num_rows())
@@ -108,13 +108,27 @@ function quotes_render_summarybox($id)
 						print "<td>Valid Until:</td>";
 						print "<td>". $sql_obj->data[0]["date_validtill"] ."</td>";
 					print "</tr>";
+			
+					print "<tr>";
+						print "<td>Date Sent:</td>";
+
+						if ($sql_obj->data[0]["sentmethod"] == "")
+						{
+							print "<td><i>Has not been sent to customer</i></td>";
+						}
+						else
+						{
+							print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
+						}
+					print "</tr>";
+
 					
 					print "</tr></table>";
 					
 					print "</td>";
 				print "</tr>";
 				print "</table>";
-				
+	
 			}
 		}
 

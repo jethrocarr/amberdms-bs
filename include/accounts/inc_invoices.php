@@ -623,10 +623,19 @@ class invoice
 		/*
 			Invoice Data (exc items/taxes)
 		*/
-		$this->obj_pdf->prepare_add_field("code\_invoice", $this->data["code_invoice"]);
-		$this->obj_pdf->prepare_add_field("code\_ordernumber", $this->data["code_ordernumber"]);
+		if ($this->type == "ar")
+		{
+			$this->obj_pdf->prepare_add_field("code\_invoice", $this->data["code_invoice"]);
+			$this->obj_pdf->prepare_add_field("code\_ordernumber", $this->data["code_ordernumber"]);
+			$this->obj_pdf->prepare_add_field("date\_due", $this->data["date_due"]);
+		}
+		else
+		{
+			$this->obj_pdf->prepare_add_field("code\_quote", $this->data["code_quote"]);
+			$this->obj_pdf->prepare_add_field("date\_validto", $this->data["date_validto"]);
+		}
+		
 		$this->obj_pdf->prepare_add_field("date\_trans", $this->data["date_trans"]);
-		$this->obj_pdf->prepare_add_field("date\_due", $this->data["date_due"]);
 		$this->obj_pdf->prepare_add_field("amount", $this->data["amount"]);
 		$this->obj_pdf->prepare_add_field("amount\_total", $this->data["amount_total"]);
 
