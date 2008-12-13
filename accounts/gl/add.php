@@ -77,8 +77,8 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["general"]	= array("code_gl", "date_trans", "employeeid", "description", "notes");
-		$this->obj_form->subforms["submit"]	= array("submit");
+		$this->obj_form->subforms["general_ledger_transaction_details"]	= array("code_gl", "date_trans", "employeeid", "description", "notes");
+		$this->obj_form->subforms["submit"]				= array("submit");
 		
 		// load any data returned due to errors
 		$this->obj_form->load_data_error();

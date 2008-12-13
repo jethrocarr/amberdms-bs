@@ -93,7 +93,7 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
-		$this->obj_form->subforms["general"]	= array("code_chart", "description", "chart_type");
+		$this->obj_form->subforms["chart_details"]	= array("code_chart", "description", "chart_type");
 
 
 		// menu configuration
@@ -148,28 +148,24 @@ class page_output
 
 	
 		// submit section
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
+	
+	
+		// define subforms
+		$this->obj_form->subforms["hidden"]	= array("id_chart");
+		
 		if (user_permissions_get("accounts_charts_write"))
 		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		
+			$this->obj_form->subforms["submit"]	= array("submit");
 		}
 		else
 		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to accounts.</i></p>";
-			$this->obj_form->add_input($structure);
+			$this->obj_form->subforms["submit"]	= array();
 		}
-		
-		
-		// define subforms
-		$this->obj_form->subforms["hidden"]	= array("id_chart");
-		$this->obj_form->subforms["submit"]	= array("submit");
 
 		
 		// fetch the form data
@@ -189,6 +185,10 @@ class page_output
 		// display the form
 		$this->obj_form->render_form();
 
+		if (!user_permissions_get("accounts_charts_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permission to edit this account</p>");
+		}
 	}
 }
 

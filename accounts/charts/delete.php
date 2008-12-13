@@ -13,6 +13,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
+	
 
 	function page_output()
 	{
@@ -59,6 +61,36 @@ class page_output
 	function execute()
 	{
 		/*
+			Check if account should be locked
+
+			If the account has transactions or items belonging to it, then it must be locked
+		*/
+
+		
+		// check the ledger - this will catch all general transactions and invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+	
+		// check the items - this will catch quotes which won't have any entry in the ledger table
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+		
+
+
+	
+		/*
 			Define form structure
 		*/
 		$this->obj_form = New form_input;
@@ -98,58 +130,27 @@ class page_output
 
 
 
-		/*
-			Check that the chart can be deleted
-		*/
-
-		$locked = 0;
-		
-
-		// make sure chart has no transactions in it
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-		
-
-		// make sure chart has no items belonging to it
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-		
-		
 		// define submit field
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This accounts can not be deleted because it has transactions or items belonging to it.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-				
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 
 		
 		// define subforms
-		$this->obj_form->subforms["chart_delete"]		= array("code_chart", "description");
+		$this->obj_form->subforms["chart_delete"]	= array("code_chart", "description");
 		$this->obj_form->subforms["hidden"]		= array("id_chart");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -166,6 +167,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This invoice has been locked and can no longer be removed.</p>");
+		}
 
 	}
 }

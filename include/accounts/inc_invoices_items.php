@@ -21,10 +21,11 @@ class invoice_list_items
 {
 	var $type;		// Either "ar", "ap" or "quotes"
 	var $invoiceid;		// If editing/viewing an existing invoice, provide the ID
-	
+
 	var $page_view;		// Page for viewing/editing the invoice item
 	var $page_delete;	// Page for deleting the invoice item
 
+	var $locked;
 	var $mode;
 	
 //	var $obj_table_standard;
@@ -35,6 +36,12 @@ class invoice_list_items
 	function execute()
 	{
 		log_debug("invoice_list_items", "Executing execute()");
+	
+		if ($this->type != "quotes")
+		{
+			$this->locked = sql_get_singlevalue("SELECT locked as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
+		}
+
 		
 		// TODO: fix up this class to comply with the standard coding style of the rest of the application
 	
@@ -145,7 +152,7 @@ class invoice_list_items
 			}
 
 
-			if (user_permissions_get("accounts_". $this->type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 			{
 				// edit link
 				$structure = NULL;
@@ -169,13 +176,17 @@ class invoice_list_items
 			// display the table
 			$item_list->render_table_html();
 		}
-		
-		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=standard\">Add standard transaction item</a></b></p>";
-		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=product\">Add product item</a></b></p>";
+	
 
-		if ($this->type == "ar")
+		if (!$this->locked)
 		{
-			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=time\">Add time item</a></b></p>";
+			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=standard\">Add standard transaction item</a></b></p>";
+			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=product\">Add product item</a></b></p>";
+
+			if ($this->type == "ar")
+			{
+				print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=time\">Add time item</a></b></p>";
+			}
 		}
 
 
@@ -219,12 +230,12 @@ class invoice_list_items
 
 		if (!$item_list->data_num_rows)
 		{
-			print "<p><i>There are currently no taxes items.</i></p>";
+			print "<p><i>There are currently no tax items.</i></p>";
 		}
 		else
 		{
 			
-			if (user_permissions_get("accounts_". $this->type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 			{
 				// edit link
 				$structure = NULL;
@@ -248,7 +259,10 @@ class invoice_list_items
 	
 		}
 		
-		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=tax\">Add tax item</a></b></p>";
+		if (!$this->locked)
+		{
+			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=tax\">Add tax item</a></b></p>";
+		}
 
 		return 1;
 	}
@@ -274,6 +288,7 @@ class invoice_list_payments
 	var $page_delete;	// Page for deleting the invoice item
 
 	var $mode;
+	var $locked;
 	
 //	var $obj_table_standard;
 //	var $obj_table_taxes;
@@ -286,7 +301,9 @@ class invoice_list_payments
 		
 		// TODO: fix up this class to comply with the standard coding style of the rest of the application
 	
-		// do nothing
+		$this->locked = sql_get_singlevalue("SELECT locked as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
+
+		
 		return 1;
 	}
 
@@ -357,7 +374,7 @@ class invoice_list_payments
 
 
 
-			if (user_permissions_get("accounts_". $this->type ."_write"))
+			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 			{
 				// edit link
 				$structure = NULL;
@@ -381,8 +398,11 @@ class invoice_list_payments
 			// display the table
 			$item_list->render_table_html();
 		}
-		
-		print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></b></p>";
+
+		if (!$this->locked)
+		{
+			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></b></p>";
+		}
 
 
 		return 1;

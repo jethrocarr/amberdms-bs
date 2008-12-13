@@ -11,10 +11,11 @@
 class page_output
 {
 	var $id;
-	var $locked = 0;
 	
 	var $obj_menu_nav;
 	var $obj_form;
+	
+	var $locked;
 	
 
 	function page_output()
@@ -111,18 +112,9 @@ class page_output
 
 		// define submit field
 		$structure = NULL;
-		$structure["fieldname"] = "submit";
-
-		if ($this->locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This transaction has now been locked and can not be deleted.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
+		$structure["fieldname"]		= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 				
 		$this->obj_form->add_input($structure);
 
@@ -131,7 +123,15 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["transaction_delete"]	= array("code_gl", "description");
 		$this->obj_form->subforms["hidden"]		= array("id_transaction");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+		
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -148,6 +148,12 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This transaction has been locked and can no longer be removed.</p>");
+		}
 
 	}
 

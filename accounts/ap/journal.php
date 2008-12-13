@@ -104,8 +104,15 @@ class page_output
 		print "<h3>INVOICE JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this invoice.</p>";
 
-		print "<p><b><a href=\"index.php?page=accounts/ap/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=accounts/ap/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
-		
+		if (user_permissions_get("accounts_ap_write"))
+		{
+			print "<p><b><a href=\"index.php?page=accounts/ap/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=accounts/ap/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		}
+		else
+		{
+			format_msgbox("locked", "<p>Note: your permissions limit you to read-only access to the journal</p>");
+		}
+
 		// display options form
 		$this->obj_journal->render_options_form();
 		

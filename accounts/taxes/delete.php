@@ -12,8 +12,11 @@
 class page_output
 {
 	var $id;
+
 	var $obj_menu_nav;
 	var $obj_form;
+
+	var $locked;
 
 
 	function page_output()
@@ -60,6 +63,18 @@ class page_output
 
 	function execute()
 	{
+		// make sure tax does not belong to any invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_items WHERE type='tax' AND customid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+		
+	
+	
 		/*
 			Define form structure
 		*/
@@ -94,39 +109,11 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 
-
-		/*
-			Check that the tax can be deleted
-		*/
-
-		$locked = 0;
-		
-
-		// make sure tax does not belong to any invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE type='tax' AND customid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-		
-
 		// define submit field
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This tax can not be deleted because it has been used in an invoice.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 				
 		$this->obj_form->add_input($structure);
 
@@ -135,7 +122,15 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["tax_delete"]		= array("name_tax");
 		$this->obj_form->subforms["hidden"]		= array("id_tax");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -151,6 +146,11 @@ class page_output
 		
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This tax has been used in invoices or quotes and can therefore not be deleted.</p>");
+		}
 	}
 }
 

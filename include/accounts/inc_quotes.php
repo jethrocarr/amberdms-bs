@@ -82,10 +82,10 @@ function quotes_render_summarybox($id)
 		{
 			if (time_date_to_timestamp($sql_obj->data[0]["date_validtill"]) <= mktime())
 			{
-				print "<table width=\"100%\" class=\"table_highlight_info\">";
+				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Quote ". $sql_obj->data[0]["code_quote"] ." has now expired and is no longer valid.</b>";
+					print "<p><b>Quote ". $sql_obj->data[0]["code_quote"] ." has now expired and is no longer valid.</b></p>";
 					print "</td>";
 				print "</tr>";
 				print "</table>";

@@ -22,6 +22,8 @@ class invoice_form_details
 	var $invoiceid;		// ID of the invoice to edit (if any)
 	var $processpage;	// Page to submit the form to
 
+	var $locked;
+
 	var $mode;
 	
 	var $obj_form;
@@ -42,18 +44,24 @@ class invoice_form_details
 
 		
 		/*
-			Make sure invoice does exist!
+			Make sure invoice does exist and fetch locked status
 		*/
 		if ($this->mode == "edit")
 		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'";
-			$sql_obj->execute();
+			$sql_invoice_obj		= New sql_query;
+			$sql_invoice_obj->string	= "SELECT id, locked FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+			$sql_invoice_obj->execute();
 			
-			if (!$sql_obj->num_rows())
+			if (!$sql_invoice_obj->num_rows())
 			{
 				print "<p><b>Error: The requested invoice does not exist. <a href=\"index.php?page=accounts/". $this->type ."/". $this->type .".php\">Try looking on the invoice/invoice list page.</a></b></p>";
 				return 0;
+			}
+			else
+			{
+				$sql_invoice_obj->fetch_array();
+				
+				$this->locked = $sql_invoice_obj->data[0]["locked"];
 			}
 		}
 
@@ -203,8 +211,17 @@ class invoice_form_details
 		$this->obj_form->subforms[$this->type ."_invoice_other"]		= array("notes");
 
 		$this->obj_form->subforms["hidden"]					= array("id_invoice");
-		$this->obj_form->subforms["submit"]					= array("submit");
-
+	
+	
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]				= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]				= array("submit");
+		}
+		
 		return 1;
 	}
 
@@ -215,6 +232,11 @@ class invoice_form_details
 
 		// display form	
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This invoice has been locked and can no longer be edited.</p>");
+		}
 	}
 
 } // end of invoice_form_details
@@ -483,6 +505,9 @@ class invoice_form_delete
 	var $invoiceid;		// ID of the invoice to delete
 	var $processpage;	// Page to submit the form to
 
+	var $locked;
+	var $amount_paid;
+
 	var $mode;
 	
 	var $obj_form;
@@ -491,6 +516,15 @@ class invoice_form_delete
 	function execute()
 	{
 		log_debug("invoice_form_delete", "Executing execute()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT locked, amount_paid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+		
+		$this->locked		= $sql_obj->data[0]["locked"];
+		$this->amount_paid	= $sql_obj->data[0]["amount_paid"];
+
 
 		/*
 			Start Form
@@ -522,11 +556,12 @@ class invoice_form_delete
 
 
 
-		// hidden date field
+		// hidden fields
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_create";
 		$structure["type"]		= "hidden";
 		$this->obj_form->add_input($structure);
+		
 
 
 		// ID
@@ -546,14 +581,23 @@ class invoice_form_delete
 
 
 		// load data
-		$this->obj_form->sql_query = "SELECT date_create, code_invoice FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'";
+		$this->obj_form->sql_query = "SELECT date_create, code_invoice, locked, amount_paid FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'";
 		$this->obj_form->load_data();
 
 
-		$this->obj_form->subforms[$this->type ."_invoice_delete"]	= array("code_invoice", "delete_confirm");
+		$this->obj_form->subforms[$this->type ."_invoice_delete"]	= array("code_invoice");
 
-		$this->obj_form->subforms["hidden"]			= array("id_invoice", "date_create");
-		$this->obj_form->subforms["submit"]			= array("submit");
+		$this->obj_form->subforms["hidden"]				= array("id_invoice", "date_create");
+
+
+		if ($this->locked || $this->amount_paid)
+		{
+			$this->obj_form->subforms["submit"]			= array("");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]			= array("delete_confirm", "submit");
+		}
 
 	}
 
@@ -562,20 +606,17 @@ class invoice_form_delete
 	{
 		log_debug("invoice_form_delete", "Executing render_html()");
 		
-		/*
-			Verify that the invoice can be deleted, then render delete form.
-		*/
-		
-		$expirydate = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_LOCK'");
+		// display form
+		$this->obj_form->render_form();
 
-
-		if (time_date_to_timestamp($this->obj_form->structure["date_create"]["defaultvalue"]) < mktime() - time_date_to_timestamp($expirydate))
+		// display any reasons to prevent deletion
+		if ($this->locked)
 		{
-			print "<p><b>Sorry, this invoice has now locked and can not be deleted.</b></p>";
+			format_msgbox("locked", "<p>This invoice has been locked and can no longer be removed.</p>");
 		}
-		else
+		elseif ($this->amount_paid)
 		{
-			$this->obj_form->render_form();
+			format_msgbox("locked", "<p>This invoice has had payments made against it, and can therefore not be deleted.</p>");
 		}
 	}
 }

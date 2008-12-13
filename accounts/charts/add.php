@@ -65,8 +65,8 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["general"]	= array("code_chart", "description", "chart_type");
-		$this->obj_form->subforms["submit"]	= array("submit");
+		$this->obj_form->subforms["chart_details"]	= array("code_chart", "description", "chart_type");
+		$this->obj_form->subforms["submit"]		= array("submit");
 		
 		// load any data returned due to errors
 		$this->obj_form->load_data_error();

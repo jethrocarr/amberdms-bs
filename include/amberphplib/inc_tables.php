@@ -847,7 +847,7 @@ class table
 
 
 		// end of structure table
-		print "</table><br><br>";
+		print "</table><br>";
 	}
 
 

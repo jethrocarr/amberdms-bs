@@ -62,7 +62,7 @@ class page_output
 
 		// acceptable filter options
 		$structure = NULL;
-		$structure["fieldname"] = "date_stapt";
+		$structure["fieldname"] = "date_start";
 		$structure["type"]	= "date";
 		$structure["sql"]	= "date_trans >= 'value'";
 		$this->obj_table->add_filter($structure);
@@ -114,11 +114,23 @@ class page_output
 		// display table
 		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>You currently have no invoices in your database.</b></p>";
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM account_ap LIMIT 1";
+			$sql_obj->execute();
+			
+			if ($sql_obj->num_rows())
+			{
+				format_msgbox("important", "<p>Your current filter options do not match to any invoices.</p>");
+			}
+			else
+			{
+				format_msgbox("info", "<p>You currently have no AP invoices in your database.</p>");
+			}
+			
 		}
 		else
 		{

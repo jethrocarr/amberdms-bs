@@ -16,6 +16,7 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
 	var $num_trans;
 
 	function page_output()
@@ -44,15 +45,21 @@ class page_output
 
 	function check_requirements()
 	{
-		// verify that the account exists
+		// verify transaction exists and fetch locked status
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_gl WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id, locked FROM account_gl WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
 			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
 			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			$this->locked = $sql_obj->data[0]["locked"];
 		}
 
 		unset($sql_obj);
@@ -232,25 +239,12 @@ class page_output
 	
 	
 		// submit section
-		if (user_permissions_get("accounts_gl_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 		
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to this transaction.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
-
-
 		
 		// fetch the general form data
 		$this->obj_form->sql_query = "SELECT * FROM `account_gl` WHERE id='". $this->id ."' LIMIT 1";
@@ -410,13 +404,24 @@ class page_output
 		print "<tr class=\"header\">";
 		print "<td colspan=\"2\"><b>". language_translate_string($_SESSION["user"]["lang"], "general_ledger_transaction_submit") ."</b></td>";
 		print "</tr>";
-
-		$this->obj_form->render_row("submit");
-
+		
+		if (user_permissions_get("accounts_gl_write") && !$this->locked)
+		{
+			$this->obj_form->render_row("submit");
+		}
+		
 		// end table + form
 		print "</table>";		
 		print "</form>";
 
+		if (!user_permissions_get("accounts_gl_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permission to adjust this transaction</p>");
+		}
+		elseif ($this->locked)
+		{
+			format_msgbox("locked", "<p>This transaction has been locked and can no longer be adjusted.</p>");
+		}
 	}
 }
 

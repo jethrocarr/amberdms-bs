@@ -109,10 +109,21 @@ a:active {
 	background-color: #ff933c;
 }
 
-.table_highlight_info {
+.table_highlight_green {
 	padding: 4px;
 	background-color: #92dd90;
 }
+
+.table_highlight_info {
+	padding: 4px;
+	background-color: #95c7d9;
+}
+
+.table_highlight_locked {
+	padding: 4px;
+	background-color: #95c7d9;
+}
+
 
 
 

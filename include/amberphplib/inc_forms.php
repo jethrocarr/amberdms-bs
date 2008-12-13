@@ -721,8 +721,13 @@ class form_input
 
 
 		// draw each sub form
+		$num_subforms = count(array_keys($this->subforms));
+		$count;
+		
 		foreach (array_keys($this->subforms) as $form_label)
 		{
+			$count++;
+			
 			if ($form_label == "hidden")
 			{
 				/*
@@ -750,7 +755,12 @@ class form_input
 				}
 
 				// end table
-				print "</table><br>";
+				print "</table>";
+
+				if ($count != $num_subforms)
+				{
+					print "<br>";
+				}
 			}
 		}
 

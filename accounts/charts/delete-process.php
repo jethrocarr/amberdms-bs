@@ -49,17 +49,18 @@ if (user_permissions_get('accounts_charts_write'))
 	{
 		$_SESSION["error"]["message"][] = "This account can not be deleted since it has transactions belonging to it";
 	}
-			
-	// make sure chart has no items belonging to it
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	else
 	{
-		$_SESSION["error"]["message"][] = "This account can not be deleted since it has invoice items belonging to it";
+		// make sure chart has no items belonging to it
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='$id'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$_SESSION["error"]["message"][] = "This account can not be deleted since it has invoice or quote items belonging to it.";
+		}
 	}
-			
 
 
 	

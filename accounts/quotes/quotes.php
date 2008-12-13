@@ -41,7 +41,7 @@ class page_output
 		$this->obj_table->add_column("price", "amount_tax", "account_quotes.amount_tax");
 		$this->obj_table->add_column("price", "amount", "account_quotes.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_quotes.amount_total");
-		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
+		$this->obj_table->add_column("bool_tick", "sent", "account_quotes.sentmethod");
 
 		// totals
 		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total");
@@ -82,9 +82,9 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
 		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Hide Closed Quotes";
+		$structure["options"]["label"]	= "Hide Expired Quotes";
 		$structure["defaultvalue"]	= "enabled";
-		$structure["sql"]		= "account_quotes.date_validtill >= '". date("Y-m-d") ."'";
+		$structure["sql"]		= "account_quotes.date_validtill > '". date("Y-m-d") ."'";
 		$this->obj_table->add_filter($structure);
 
 		// load options
@@ -108,18 +108,41 @@ class page_output
 		// display data
 		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>You currently have no quotes in your database.</b></p>";
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM account_quotes LIMIT 1";
+			$sql_obj->execute();
+			
+			if ($sql_obj->num_rows())
+			{
+				format_msgbox("important", "<p>Your current filter options do not match to any quotes.</p>");
+			}
+			else
+			{
+				format_msgbox("info", "<p>You currently have no quotes in your database.</p>");
+			}
 		}
 		else
 		{
-			// view link
+			// details link 
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "accounts/quotes/quotes-view.php", $structure);
+			$this->obj_table->add_link("details", "accounts/quotes/quotes-view.php", $structure);
+
+			// items link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("items", "accounts/quotes/quotes-items.php", $structure);
+
+			// journal link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("journal", "accounts/quotes/journal.php", $structure);
+
+
 
 			// display the table
 			$this->obj_table->render_table_html();

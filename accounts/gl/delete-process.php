@@ -45,7 +45,7 @@ if (user_permissions_get('accounts_gl_write'))
 
 		if ($sql_obj->data[0]["locked"])
 		{
-			$_SESSION["error"]["message"][] = "This transaction can not be deleted, because it is now locked";
+			$_SESSION["error"]["message"][] = "This transaction can not be deleted, because it is locked";
 		}
 	}
 

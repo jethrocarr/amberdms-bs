@@ -107,7 +107,7 @@ function invoice_render_summarybox($type, $id)
 		{
 			if ($sql_obj->data[0]["amount_paid"] == $sql_obj->data[0]["amount_total"])
 			{
-				print "<table width=\"100%\" class=\"table_highlight_info\">";
+				print "<table width=\"100%\" class=\"table_highlight_green\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is closed (fully paid).</b>";
@@ -127,12 +127,12 @@ function invoice_render_summarybox($type, $id)
 					
 					print "<tr>";
 						print "<td>Total Due:</td>";
-						print "<td>$". $sql_obj->data[0]["amount_total"] ."</td>";
+						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $sql_obj->data[0]["amount_total"] ."</td>";
 					print "</tr>";
 					
 					print "<tr>";
 						print "<td>Total Paid:</td>";
-						print "<td>$". $sql_obj->data[0]["amount_paid"] ."</td>";
+						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $sql_obj->data[0]["amount_paid"] ."</td>";
 					print "</tr>";
 
 
@@ -141,7 +141,7 @@ function invoice_render_summarybox($type, $id)
 
 					print "<tr>";
 						print "<td>Amount Due:</td>";
-						print "<td>$". $amount_due."</td>";
+						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $amount_due."</td>";
 					print "</tr>";
 
 					

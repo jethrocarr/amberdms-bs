@@ -126,31 +126,26 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 
-	
 		// submit section
-		if (user_permissions_get("accounts_taxes_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to the accounts.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 		
 		
 		// define subforms
-		$this->obj_form->subforms["general"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
-		$this->obj_form->subforms["hidden"]	= array("id_tax");
-		$this->obj_form->subforms["submit"]	= array("submit");
+		$this->obj_form->subforms["tax_details"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
+		$this->obj_form->subforms["hidden"]		= array("id_tax");
+		
+		if (user_permissions_get("accounts_taxes_write"))
+		{
+			$this->obj_form->subforms["submit"]	= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("");
+		}
 
 		
 		// fetch the form data
@@ -165,10 +160,15 @@ class page_output
 
 		// Title + Summary
 		print "<h3>TAX DETAILS</h3><br>";
-		print "<p>This page allows you to view and adjust the selected tax.</p>";
+		print "<p>This page allows you to view and adjust the selected tax. Note that any changes to the tax rate will not affect any existing invoices.</p>";
 
 		// display the form
 		$this->obj_form->render_form();
+		
+		if (!user_permissions_get("accounts_taxes_write"))
+		{
+			format_msgbox("locked", "Sorry, you do not have permission to make changes to taxes.");
+		}
 	}
 }
 
