@@ -105,7 +105,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "id_user";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $id;
+		$structure["defaultvalue"]	= $this->id;
 		$this->obj_form->add_input($structure);	
 	
 		// submit section
