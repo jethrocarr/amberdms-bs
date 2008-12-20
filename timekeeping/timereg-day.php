@@ -281,19 +281,21 @@ class page_output
 			}
 			else
 			{
-				// edit link
-				$structure = NULL;
-				$structure["id"]["column"]	= "id";
-				$structure["date"]["value"]	= $this->date;
-				$this->obj_table_day->add_link("edit", "timekeeping/timereg-day-edit.php", $structure);
+				if (user_permissions_staff_get("timereg_write", $this->employeeid))
+				{
+					// edit link
+					$structure = NULL;
+					$structure["id"]["column"]	= "id";
+					$structure["date"]["value"]	= $this->date;
+					$this->obj_table_day->add_link("edit", "timekeeping/timereg-day-edit.php", $structure);
 				
-				// edit link
-				$structure = NULL;
-				$structure["id"]["column"]	= "id";
-				$structure["date"]["value"]	= $this->date;
-				$structure["full_link"]		= "yes";
-				$this->obj_table_day->add_link("delete", "timekeeping/timereg-day-delete-process.php", $structure);
-
+					// delete link
+					$structure = NULL;
+					$structure["id"]["column"]	= "id";
+					$structure["date"]["value"]	= $this->date;
+					$structure["full_link"]		= "yes";
+					$this->obj_table_day->add_link("delete", "timekeeping/timereg-day-delete-process.php", $structure);
+				}
 				
 
 				// display table

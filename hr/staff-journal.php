@@ -99,7 +99,10 @@ class page_output
 		print "<h3>EMPLOYEE'S JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this employee.</p>";
 
-		print "<p><b><a href=\"index.php?page=hr/staff-journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=hr/staff-journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		if (user_permissions_get("staff_write"))
+		{
+			print "<p><b><a href=\"index.php?page=hr/staff-journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=hr/staff-journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		}
 
 		// display options form
 		$this->obj_journal->render_options_form();

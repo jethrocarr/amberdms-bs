@@ -206,18 +206,21 @@ class page_output
 			}
 			
 		
-			// add view/edit link
-			$structure = NULL;
-			$structure["id"]["value"]	= $this->id;
-			$structure["groupid"]["column"]		= "id";
-			$this->obj_table->add_link("view/edit", "projects/timebilled-edit.php", $structure);
+			if (user_permissions_get("projects_write"))
+			{
+				// add view/edit link
+				$structure = NULL;
+				$structure["id"]["value"]		= $this->id;
+				$structure["groupid"]["column"]		= "id";
+				$this->obj_table->add_link("view/edit", "projects/timebilled-edit.php", $structure);
 
-
-			// add delete link
-			$structure = NULL;
-			$structure["id"]["value"]	= $this->id;
-			$structure["groupid"]["column"]		= "id";
-			$this->obj_table->add_link("delete", "projects/timebilled-delete.php", $structure);
+	
+				// add delete link
+				$structure = NULL;
+				$structure["id"]["value"]		= $this->id;
+				$structure["groupid"]["column"]		= "id";
+				$this->obj_table->add_link("delete", "projects/timebilled-delete.php", $structure);
+			}
 
 
 			// display table data
@@ -225,12 +228,15 @@ class page_output
 
 			// display CSV download link
 			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=projects/timebilled.php&id=". $this->id ."\">Export as CSV</a></p>";
-
 			
 		}
 
-		// display add time group link
-		print "<p><b><a href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group.</a></b></p>";
+
+		if (user_permissions_get("projects_write"))
+		{
+			// display add time group link
+			print "<p><b><a href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group.</a></b></p>";
+		}
 
 	}
 

@@ -15,6 +15,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
+	
 
 	function page_output()
 	{
@@ -64,6 +66,33 @@ class page_output
 	function execute()
 	{
 		/*
+			Check if the project can be deleted or not
+		*/
+
+		// see if any time has been booked to any of the phases
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM project_phases WHERE projectid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $phase_data)
+			{
+				$sql_phase_obj			= New sql_query;
+				$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."' LIMIT 1";
+				$sql_phase_obj->execute();
+
+				if ($sql_phase_obj->num_rows())
+				{
+					$this->locked = 1;
+				}
+			}
+		}
+
+	
+		/*
 			Define form structure
 		*/
 		$this->obj_form = New form_input;
@@ -103,52 +132,25 @@ class page_output
 
 
 		// submit button
-		// We check if any time bookings have been made against this project
-		// and either provide a button or a message.
-		$locked = 0;
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM project_phases WHERE projectid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-
-			foreach ($sql_obj->data as $phase_data)
-			{
-				$sql_phase_obj			= New sql_query;
-				$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."'";
-				$sql_phase_obj->execute();
-
-				if ($sql_phase_obj->num_rows())
-				{
-					$locked = 1;
-				}
-			}
-		}
-
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This project can not be deleted because time entries have been assigned to it.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-		
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 	
 		// define subforms
 		$this->obj_form->subforms["project_delete"]	= array("code_project", "name_project");
 		$this->obj_form->subforms["hidden"]		= array("id_project");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -166,6 +168,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This project now has time booked to it and can not be deleted. If the project has been finished, you can close it by setting the End Date field on the details page.</p>");
+		}
 	}
 }
 

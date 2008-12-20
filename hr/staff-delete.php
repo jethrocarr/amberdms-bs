@@ -14,6 +14,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
+
 
 	function page_output()
 	{
@@ -61,6 +63,53 @@ class page_output
 	function execute()
 	{	
 		/*
+			Check that the employee can be deleted
+		*/
+
+		// make sure employee does not belong to any AR invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ar WHERE employeeid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
+		// make sure employee does not belong to any AP invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ap WHERE employeeid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+		
+		// make sure employee does not belong to any quotes
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_quotes WHERE employeeid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
+
+		// make sure employee has no time booked
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM timereg WHERE employeeid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
+		
+	
+		/*
 			Define form structure
 		*/
 		$this->obj_form = New form_input;
@@ -95,68 +144,29 @@ class page_output
 
 
 
-		/*
-			Check that the employee can be deleted
-		*/
-
-		$locked = 0;
-		
-
-		// make sure employee does not belong to any AR invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ar WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-
-		// make sure employee does not belong to any AP invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ap WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-
-
-		// make sure employee has no time booked
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM timereg WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
 
 
 		// define submit field
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This employee can not be deleted because they belong to an invoice or has time booked.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-				
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 
 		
 		// define subforms
-		$this->obj_form->subforms["staff_delete"]		= array("name_staff");
+		$this->obj_form->subforms["staff_delete"]	= array("name_staff");
 		$this->obj_form->subforms["hidden"]		= array("id_staff");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -173,6 +183,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This employee has made various entries in the billing system and can no-longer be removed. Set the End Date field on the Employee Details page to show that the employee has left instead.</p>");
+		}
 	}
 
 } // end of page_output

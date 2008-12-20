@@ -90,6 +90,22 @@ class page_output
 	function execute()
 	{
 		/*
+			Check if the phase can be deleted
+		*/
+	
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM timereg WHERE phaseid='". $this->phaseid ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
+
+
+	
+		/*
 			Define form structure
 		*/
 		$this->obj_form = New form_input;
@@ -135,34 +151,25 @@ class page_output
 
 
 		// submit button
-		// We check if any time bookings have been made against this phase,
-		// and either provide a button or a message.
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM timereg WHERE phaseid='". $this->phaseid ."'";
-		$sql_obj->execute();
-
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
-
-		if ($sql_obj->num_rows())
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This project phase can not be deleted because time entries have been assigned to it.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-		
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 
 		// define subforms
 		$this->obj_form->subforms["phase_edit"]		= array("name_phase", "description");
 		$this->obj_form->subforms["hidden"]		= array("projectid", "phaseid");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 
 		// fetch the form data if editing
@@ -180,6 +187,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This phase can no-longer be deleted since time has now been booked against it.</p>");
+		}
 	}
 
 }

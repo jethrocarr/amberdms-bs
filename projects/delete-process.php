@@ -59,7 +59,7 @@ if (user_permissions_get('projects_write'))
 		foreach ($sql_obj->data as $phase_data)
 		{
 			$sql_phase_obj			= New sql_query;
-			$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."'";
+			$sql_phase_obj->string		= "SELECT id FROM timereg WHERE phaseid='". $phase_data["id"] ."' LIMIT 1";
 			$sql_phase_obj->execute();
 
 			if ($sql_phase_obj->num_rows())

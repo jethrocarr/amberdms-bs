@@ -97,7 +97,10 @@ class page_output
 		print "<h3>SERVICE JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this service.</p>";
 
-		print "<p><b><a href=\"index.php?page=services/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=services/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		if (user_permissions_get("services_write"))
+		{
+			print "<p><b><a href=\"index.php?page=services/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=services/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		}
 
 	
 		// display options form

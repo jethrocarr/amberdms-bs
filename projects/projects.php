@@ -40,7 +40,7 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("code_project", "name_project", "date_start", "date_end");
-		$this->obj_table->columns_order	= array("name_project");
+		$this->obj_table->columns_order		= array("name_project");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("projects");
@@ -104,10 +104,28 @@ class page_output
 		}
 		else
 		{
-			// view link
+			// details link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "projects/view.php", $structure);
+			$this->obj_table->add_link("details", "projects/view.php", $structure);
+			
+			// phases link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("phases", "projects/phases.php", $structure);
+			
+			// timebooked link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("timebooked", "projects/timebooked.php", $structure);
+			
+			// timebilled link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("timebilled", "projects/timebilled.php", $structure);
+
+
+
 
 			// display the table
 			$this->obj_table->render_table_html();

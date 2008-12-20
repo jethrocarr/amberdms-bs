@@ -24,6 +24,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
+
 
 	function page_output()
 	{
@@ -122,6 +124,17 @@ class page_output
 
 	function execute()
 	{
+	
+		/*
+			Check if time entry can be adjusted
+		*/
+		if ($this->id)
+		{
+			$this->locked = sql_get_singlevalue("SELECT locked as value FROM `timereg` WHERE id='". $this->id ."' LIMIT 1");
+		}
+
+
+	
 		/*
 			Input Form
 
@@ -215,36 +228,30 @@ class page_output
 				
 		$this->obj_form->add_input($structure);
 		
-		
-		if ($this->id)
-		{
-			$locked = sql_get_singlevalue("SELECT locked as value FROM `timereg` WHERE id='". $this->id ."' LIMIT 1");
-		}
-
-					
+						
 		// submit section
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "This time record is locked and can no-longer be adjusted.";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-		}
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
 		$this->obj_form->add_input($structure);
 		
 		
 		// define subforms
 		$this->obj_form->subforms["timereg_day"]	= array("phaseid", "date", "time_booked", "description");
 		$this->obj_form->subforms["hidden"]		= array("id_timereg", "id_employee");
-		$this->obj_form->subforms["submit"]		= array("submit");
 
-			
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("submit");
+		}
+		
+		
+		
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "SELECT id FROM `timereg` WHERE id='". $this->id ."' LIMIT 1";
 		
@@ -280,6 +287,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This time entry is part of a time group and has now been locked</p>");
+		}
 
 	}
 

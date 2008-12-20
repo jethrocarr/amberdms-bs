@@ -100,11 +100,19 @@ class products_form_details
 			
 
 		// define subforms
-		$this->obj_form->subforms["product_view"]		= array("code_product", "name_product", "account_sales", "date_current", "details");
+		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "account_sales", "date_current", "details");
 		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale");
 		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$this->obj_form->subforms["product_supplier"]	= array("vendorid", "code_product_vendor");
-		$this->obj_form->subforms["submit"]		= array("submit");
+		
+		if (user_permissions_get("products_write"))
+		{
+			$this->obj_form->subforms["submit"]		= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array();
+		}
 
 
 		/*
@@ -123,22 +131,11 @@ class products_form_details
 		else
 		{
 			// submit button
-			if (user_permissions_get("products_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$this->obj_form->add_input($structure);
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to product records.</i></p>";
-				$this->obj_form->add_input($structure);
-			}
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Save Changes";
+			$this->obj_form->add_input($structure);
 
 
 			// hidden data
@@ -174,6 +171,11 @@ class products_form_details
 		
 		// display the form
 		$this->obj_form->render_form();
+
+		if (!user_permissions_get("products_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to make modifications to this product.</p>");
+		}
 	}
 	
 } // end of products_form_details
@@ -192,11 +194,23 @@ class products_form_delete
 	var $productid;			// ID of the product entry
 	
 	var $obj_form;
+	var $locked;
 
 
 	function execute()
 	{
-		log_debug("products_form_delete", "Executing execute()");
+		/*
+			Check if product can be deleted
+		*/
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_items WHERE (type='product' OR type='time') AND customid='". $this->productid ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
 
 
 		/*
@@ -244,22 +258,8 @@ class products_form_delete
 		
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE (type='product' OR type='time') AND customid='". $this->productid ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This product can not be deleted because it has been used in an invoice.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-				
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 			
@@ -268,7 +268,15 @@ class products_form_delete
 		// define subforms
 		$this->obj_form->subforms["product_delete"]	= array("code_product", "name_product");
 		$this->obj_form->subforms["hidden"]		= array("id_product");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 
 
 		/*
@@ -285,6 +293,11 @@ class products_form_delete
 	{
 		// Display Form Information
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This product can no longer be deleted since it has been used in invoices.</p>");
+		}
 
 		return 1;
 	}

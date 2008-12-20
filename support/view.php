@@ -15,7 +15,6 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
-
 	function page_output()
 	{
 		// fetch variables
@@ -118,29 +117,25 @@ class page_output
 
 
 		// submit section
-		if (user_permissions_get("support_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to support_ticket records.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 		
 		
 		// define subforms
 		$this->obj_form->subforms["support_ticket_details"]	= array("id_support_ticket", "title", "priority", "details");
 		$this->obj_form->subforms["support_ticket_status"]	= array("status", "date_start", "date_end");
-		$this->obj_form->subforms["submit"]			= array("submit");
+		
+		if (user_permissions_get("support_write"))
+		{
+			$this->obj_form->subforms["submit"]		= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array();
+		}
 
 		
 		// fetch the form data
@@ -160,6 +155,10 @@ class page_output
 		// display the form
 		$this->obj_form->render_form();
 
+		if (!user_permissions_get("support_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to make changes to the support ticket details.</p>");
+		}
 	}
 }
 

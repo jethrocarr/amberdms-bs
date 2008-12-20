@@ -18,7 +18,7 @@ class page_output
 
 	var $obj_sql_entries;
 
-	var $locked = 0;
+	var $locked;
 
 
 	function page_output()
@@ -153,18 +153,8 @@ class page_output
 		// submit button
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
-
-		if ($this->locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-		
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 		
@@ -177,7 +167,15 @@ class page_output
 		// display the subforms
 		$this->obj_form->subforms["timebilled_details"]	= array("name_group", "name_customer", "code_invoice", "description");
 		$this->obj_form->subforms["hidden"]		= array("projectid", "groupid");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+		
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
 	}
 
 
@@ -189,6 +187,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This timegroup is now locked - if you wish to delete it, you will first need to remove it from the invoice that it belongs too.</p>");
+		}
 	}
 }
 

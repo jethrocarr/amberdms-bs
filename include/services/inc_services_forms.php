@@ -70,7 +70,15 @@ class services_form_details
 
 		// define subforms
 		$this->obj_form->subforms["service_details"]	= array("name_service", "chartid", "typeid", "description");
-		$this->obj_form->subforms["submit"]		= array("submit");
+		
+		if (user_permissions_get("services_write"))
+		{
+			$this->obj_form->subforms["submit"]	= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("");
+		}
 
 
 		/*
@@ -89,23 +97,11 @@ class services_form_details
 		else
 		{
 			// submit button
-			if (user_permissions_get("services_write"))
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "submit";
-				$structure["defaultvalue"]	= "Save Changes";
-				$this->obj_form->add_input($structure);
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "submit";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to services.</i></p>";
-				$this->obj_form->add_input($structure);
-			}
-
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Save Changes";
+			$this->obj_form->add_input($structure);
 
 			// hidden data
 			$structure = NULL;
@@ -141,6 +137,13 @@ class services_form_details
 		
 		// display form
 		$this->obj_form->render_form();
+
+		
+		if (!user_permissions_get("services_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to adjust this service.</p>");
+		}
+
 	}
 }
 
@@ -399,22 +402,11 @@ class services_form_plan
 
 
 		// submit button
-		if (user_permissions_get("services_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to services.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 
 
 		// hidden data
@@ -426,8 +418,15 @@ class services_form_plan
 		
 		// define subforms
 		$this->obj_form->subforms["hidden"]		= array("id_service");
-		$this->obj_form->subforms["submit"]		= array("submit");
-
+		
+		if (user_permissions_get("services_write"))
+		{
+			$this->obj_form->subforms["submit"]	= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
 
 
 		/*
@@ -442,6 +441,12 @@ class services_form_plan
 	{
 		// display form
 		$this->obj_form->render_form();
+	
+		if (!user_permissions_get("services_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to adjust this service.</p>");
+		}
+		
 	}
 
 } // end of services_form_plan
@@ -462,6 +467,7 @@ class services_form_delete
 	var $serviceid;			// ID of the service entry
 
 	var $obj_form;
+	var $locked;
 
 
 	function execute()
@@ -469,11 +475,25 @@ class services_form_delete
 		log_debug("services_form_delete", "Executing execute()");
 
 		/*
+			Check if service is in use/locked
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM services_customers WHERE serviceid='". $this->serviceid ."' LIMIT 1";
+		$sql_obj->execute();
+		
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+
+
+		/*
 			Define form structure
 		*/
 		$this->obj_form = New form_input;
-		$this->obj_form->formname		= "service_delete";
-		$this->obj_form->language		= $_SESSION["user"]["lang"];
+		$this->obj_form->formname	= "service_delete";
+		$this->obj_form->language	= $_SESSION["user"]["lang"];
 
 		$this->obj_form->action		= "services/delete-process.php";
 		$this->obj_form->method		= "POST";
@@ -513,9 +533,17 @@ class services_form_delete
 		$this->obj_form->load_data();
 
 
-		$this->obj_form->subforms["service_delete"]		= array("name_service", "delete_confirm");
-		$this->obj_form->subforms["hidden"]			= array("id_service");
-		$this->obj_form->subforms["submit"]			= array("submit");
+		$this->obj_form->subforms["service_delete"]	= array("name_service");
+		$this->obj_form->subforms["hidden"]		= array("id_service");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"] 	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"] 	= array("delete_confirm", "submit");
+		}
 	}
 
 
@@ -525,6 +553,11 @@ class services_form_delete
 		
 		// display form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This service can not be deleted because it is currently active by various customers.</p>");
+		}
 	}
 }
 

@@ -484,7 +484,7 @@ class journal_display extends journal_base
 		if (!$this->sql_obj->data_num_rows)
 		{
 			// TODO: detect if the journal has entries which are being hidden by the filter options
-			print "<p><b>This journal is either empty or has no entries matching your filter options</b></p>";
+			format_msgbox("important", "<p><b>This journal is either empty or has no entries matching your filter options</b></p>");
 		}
 		else
 		{

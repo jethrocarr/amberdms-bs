@@ -96,6 +96,7 @@ class page_output
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("timereg");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "timereg.id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("employeeid", "timereg.employeeid");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN time_groups ON timereg.groupid = time_groups.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
@@ -177,8 +178,9 @@ class page_output
 		else
 		{
 			$structure = NULL;
-			$structure["editid"]["column"]	= "id";
-			$structure["date"]["column"]	= "date";
+			$structure["editid"]["column"]		= "id";
+			$structure["date"]["column"]		= "date";
+			$structure["employeeid"]["column"]	= "employeeid";
 			$this->obj_table->add_link("view/edit", "timekeeping/timereg-day.php", $structure);
 
 			$this->obj_table->render_table_html();

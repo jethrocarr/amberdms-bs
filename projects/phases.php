@@ -78,7 +78,7 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("name_phase", "description");
-		$this->obj_table->columns_order	= array("name_phase");
+		$this->obj_table->columns_order		= array("name_phase");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("project_phases");
@@ -108,24 +108,30 @@ class page_output
 		}
 		else
 		{
-			// edit link
-			$structure = NULL;
-			$structure["id"]["value"]		= $this->id;
-			$structure["phaseid"]["column"]		= "id";
-			$this->obj_table->add_link("edit", "projects/phase-edit.php", $structure);
-			
-			// delete link
-			$structure = NULL;
-			$structure["id"]["value"]		= $this->id;
-			$structure["phaseid"]["column"]		= "id";
-			$this->obj_table->add_link("delete", "projects/phase-delete.php", $structure);
+			if (user_permissions_get("projects_write"))
+			{
+				// edit link
+				$structure = NULL;
+				$structure["id"]["value"]		= $this->id;
+				$structure["phaseid"]["column"]		= "id";
+				$this->obj_table->add_link("edit", "projects/phase-edit.php", $structure);
+				
+				// delete link
+				$structure = NULL;
+				$structure["id"]["value"]		= $this->id;
+				$structure["phaseid"]["column"]		= "id";
+				$this->obj_table->add_link("delete", "projects/phase-delete.php", $structure);
+			}
 
 
 			// display the table
 			$this->obj_table->render_table_html();
 
 			
-			print "<p><b><a href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Click here to add a new phase to your project</a>.</b></p>";
+			if (user_permissions_get("projects_write"))
+			{
+				print "<p><b><a href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Click here to add a new phase to your project</a>.</b></p>";
+			}
 		}
 	}
 }

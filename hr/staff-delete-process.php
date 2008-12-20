@@ -61,6 +61,15 @@ if (user_permissions_get('staff_write'))
 		$locked = 1;
 	}
 
+	// make sure employee does not belong to any quotes
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM account_quotes WHERE employeeid='$id'";
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
+	{
+		$locked = 1;
+	}
 
 	// make sure employee has no time booked
 	$sql_obj		= New sql_query;
@@ -75,7 +84,7 @@ if (user_permissions_get('staff_write'))
 
 	if ($locked)
 	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this employee because it has been added to an invoice or has time booked.";
+		$_SESSION["error"]["message"][] = "You are not able to delete this employee because they have made postings to the billing system.";
 	}
 
 

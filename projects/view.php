@@ -115,28 +115,24 @@ class page_output
 
 
 		// submit section
-		if (user_permissions_get("projects_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to project records.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
 		
 		
 		// define subforms
 		$this->obj_form->subforms["project_view"]		= array("id_project", "code_project", "name_project", "date_start", "date_end", "details");
-		$this->obj_form->subforms["submit"]		= array("submit");
+		
+		if (user_permissions_get("projects_write"))
+		{
+			$this->obj_form->subforms["submit"]		= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array();
+		}
 
 		
 		// fetch the form data
@@ -153,6 +149,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+		
+		if (!user_permissions_get("projects_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to adjust the project details.</p>");
+		}
 	}
 }
 
