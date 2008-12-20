@@ -86,17 +86,19 @@ class page_output
 
 
 
-		// fetch all the transaction information
-		$this->obj_table->generate_sql();
+		if ($this->obj_table->filter["filter_date_start"]["defaultvalue"] && $this->obj_table->filter["filter_date_end"]["defaultvalue"])
+		{
+			// fetch all the transaction information
+			$this->obj_table->generate_sql();
 
-		// add ordering rule to order by the ID - this causes all the transactions
-		// to be sorted by the other that they were addded to the database once they have
-		// been sorted by date. If this was not done, the accounts look odd with transactions being
-		// out of order.
-		$this->obj_table->sql_obj->string .= ", id ASC";
+			// add ordering rule to order by the ID - this causes all the transactions
+			// to be sorted by the other that they were addded to the database once they have
+			// been sorted by date. If this was not done, the accounts look odd with transactions being
+			// out of order.
+			$this->obj_table->sql_obj->string .= ", id ASC";
 		
-		$this->obj_table->load_data_sql();
-
+			$this->obj_table->load_data_sql();
+		}
 	}
 
 
@@ -110,29 +112,39 @@ class page_output
 		// display options form
 		$this->obj_table->render_options_form();
 
-		// label all the reference links
-		for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
-		{
-			$this->obj_table->data[$i]["code_reference"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["customid"], TRUE);
-		}
-
 
 		// display table
-		if (!count($this->obj_table->columns))
+		
+		if (!$this->obj_table->filter["filter_date_start"]["defaultvalue"] || !$this->obj_table->filter["filter_date_end"]["defaultvalue"])
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
-		}
-		elseif (!$this->obj_table->data_num_rows)
-		{
-			print "<p><b>You currently have no transactions matching the filter options in your database.</b></p>";
+			format_msgbox("important", "<p><b>Please select a time period to display using the filter options above.</b></p>");
+			return 0;
 		}
 		else
 		{
-			// display the table
-			$this->obj_table->render_table_html();
+	
+			if (!count($this->obj_table->columns))
+			{
+				format_msgbox("important", "<p>Please select some valid options to display.</p>");
+			}
+			elseif (!$this->obj_table->data_num_rows)
+			{
+				format_msgbox("info", "<p>You currently have no transactions matching the filter options in your database.</p>");;
+			}
+			else
+			{
+				// label all the reference links
+				for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
+				{
+					$this->obj_table->data[$i]["code_reference"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["customid"], TRUE);
+				}
+			
+				// display the table
+				$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/gl/gl.php\">Export as CSV</a></p>";
+				// display CSV download link
+				print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/gl/gl.php\">Export as CSV</a></p>";
+			}
 		}
 	}
 
