@@ -40,7 +40,7 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("customers_view");
+		return user_permissions_get("customers_write");
 	}
 
 

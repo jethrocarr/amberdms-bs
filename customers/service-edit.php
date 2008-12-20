@@ -2,7 +2,8 @@
 /*
 	customers/service-edit.php
 	
-	access: customers_write
+	access: customers_view
+		customers_write
 
 	Form to add or edit a customer service.
 */
@@ -227,7 +228,7 @@ class page_output
 		// define subforms
 		if ($this->services_customers_id)
 		{
-			$this->obj_form->subforms["service_edit"]		= array("serviceid", "active", "description");
+			$this->obj_form->subforms["service_edit"]	= array("serviceid", "active", "description");
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
 
 
@@ -238,12 +239,20 @@ class page_output
 		}
 		else
 		{
-			$this->obj_form->subforms["service_add"]		= array("serviceid", "date_period_first", "description");
+			$this->obj_form->subforms["service_add"]	= array("serviceid", "date_period_first", "description");
 		}
 		
 		
-		$this->obj_form->subforms["hidden"]		= array("customerid", "services_customers_id");
-		$this->obj_form->subforms["submit"]		= array("submit");
+		$this->obj_form->subforms["hidden"] = array("customerid", "services_customers_id");
+
+		if (user_permissions_get("customers_write"))
+		{
+			$this->obj_form->subforms["submit"] = array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"] = array();
+		}
 
 
 		// fetch the form data if editing
@@ -277,6 +286,12 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		
+		if (!user_permissions_get("customers_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to make changes to customer services</p>");
+		}
 	}
 
 } // end page_output

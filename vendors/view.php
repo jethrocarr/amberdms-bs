@@ -193,24 +193,12 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		// submit section
-		if (user_permissions_get("vendors_write"))
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Save Changes";
-			$this->obj_form->add_input($structure);
-		
-		}
-		else
-		{
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<p><i>Sorry, you don't have permissions to make changes to vendor records.</i></p>";
-			$this->obj_form->add_input($structure);
-		}
-
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save Changes";
+		$this->obj_form->add_input($structure);
+			
 		// hidden
 		$structure = NULL;
 		$structure["fieldname"] 	= "id_vendor";
@@ -227,7 +215,16 @@ class page_output
 		
 		$this->obj_form->subforms["address_shipping"]		= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$this->obj_form->subforms["hidden"]			= array("id_vendor");
-		$this->obj_form->subforms["submit"]			= array("submit");
+
+
+		if (user_permissions_get("vendors_write"))
+		{
+			$this->obj_form->subforms["submit"]			= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]			= array();
+		}
 
 		
 		// fetch the form data
@@ -245,6 +242,11 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if (!user_permissions_get("vendors_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permissions to adjust this vendor.</p>");
+		}
 	}
 
 

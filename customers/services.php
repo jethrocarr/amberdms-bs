@@ -130,23 +130,33 @@ class page_output
 			$structure["customerid"]["value"]	= $this->id;
 			$structure["serviceid"]["column"]	= "id";
 			$this->obj_table->add_link("periods", "customers/service-history.php", $structure);
-						
-			// delete link
-			$structure = NULL;
-			$structure["customerid"]["value"]	= $this->id;
-			$structure["serviceid"]["column"]	= "id";
-			$this->obj_table->add_link("delete", "customers/service-delete.php", $structure);
+			
+			
+			if (user_permissions_get("customers_write"))
+			{
+				// delete link
+				$structure = NULL;
+				$structure["customerid"]["value"]	= $this->id;
+				$structure["serviceid"]["column"]	= "id";
+				$this->obj_table->add_link("delete", "customers/service-delete.php", $structure);
+			}
 
 
 			// display the table
 			$this->obj_table->render_table_html();
 
-			
-			print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add a new service to your customer</a>.</b></p>";
+
+			if (user_permissions_get("customers_write"))
+			{
+				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add a new service to your customer</a>.</b></p>";
+			}
 		}
 
 		
-		print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
+		if (user_permissions_get("customers_write"))
+		{
+			print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
+		}
 
 	}
 

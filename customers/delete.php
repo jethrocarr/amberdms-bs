@@ -160,16 +160,13 @@ class page_output
 		print "<h3>DELETE CUSTOMER</h3><br>";
 		print "<p>This page allows you to delete an unwanted customers. Note that it is only possible to delete a customer if they do not belong to any invoices or time groups. If they do, you can not delete the customer, but instead you can disable the customer by setting the date_end field.</p>";
 
+
+		// display the form
+		$this->obj_form->render_form();
+		
 		if ($this->locked)
 		{
-			$this->obj_form->render_form();
-			format_msgbox("important", "<p><b>This customer can not be deleted because their account has invoices or time groups belonging to it.</b><br><br>
-							If you wish to close this customer's account, use the Customer Details page and set the date closed field.</p>");
-		}
-		else
-		{
-			// display the form
-			$this->obj_form->render_form();
+			format_msgbox("locked", "<p>This customer can not be removed because their account has invoices or time groups belonging to it.</p><p>If you wish to close this customer's account, use the Customer Details page and set the End Date field.</p>");
 		}
 	}
 

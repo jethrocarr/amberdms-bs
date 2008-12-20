@@ -13,6 +13,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $locked;
+
 
 	function page_output()
 	{
@@ -60,6 +62,18 @@ class page_output
 
 	function execute()
 	{
+
+		// make sure vendor does not belong to any invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_ap WHERE vendorid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$this->locked = 1;
+		}
+		
+	
 		/*
 			Define form structure
 		*/
@@ -94,40 +108,11 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 
-
-		/*
-			Check that the vendor can be deleted
-		*/
-
-		$locked = 0;
-		
-
-		// make sure vendor does not belong to any invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ap WHERE vendorid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$locked = 1;
-		}
-
-
 		// define submit field
 		$structure = NULL;
 		$structure["fieldname"] = "submit";
-
-		if ($locked)
-		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This vendor can not be deleted because it belongs to an invoice or time group.</i>";
-		}
-		else
-		{
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "delete";
-		}
-				
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "delete";
 		$this->obj_form->add_input($structure);
 
 
@@ -135,7 +120,15 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["vendor_delete"]	= array("name_vendor");
 		$this->obj_form->subforms["hidden"]		= array("id_vendor");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+		}
 
 		
 		// fetch the form data
@@ -148,10 +141,16 @@ class page_output
 	{
 		// title + summary	
 		print "<h3>DELETE VENDOR</h3><br>";
-		print "<p>This page allows you to delete an unwanted vendors. Note that it is only possible to delete a vendor if they do not belong to any invoices or time groups. If they do, you can not delete the vendor, but instead you can disable the vendor by setting the date_end field.</p>";
+		print "<p>This page allows you to delete an unwanted vendors.</p>";
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This vendor can not be removed because there are invoices belong to this vendor.</p>");
+		}
+
 	}
 
 

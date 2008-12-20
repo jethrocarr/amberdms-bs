@@ -116,13 +116,9 @@ class page_output
 
 
 		// display table
-		if (!count($this->obj_table->columns))
+		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
-		}
-		elseif (!$this->obj_table->data_num_rows)
-		{
-			print "<p><b>You currently have no charts in your database.</b></p>";
+			format_msgbox("important", "<p>You currently have no accounts in your database.</p>");
 		}
 		else
 		{

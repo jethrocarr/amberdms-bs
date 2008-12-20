@@ -117,10 +117,17 @@ class page_output
 		}
 		else
 		{
-			// view link
+			// details link
 			$structure = NULL;
-			$structure["id"]["column"] = "id";
-			$this->obj_table->add_link("view", "vendors/view.php", $structure);
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("details", "vendors/view.php", $structure);
+
+			// invoices link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("invoices", "vendors/invoices.php", $structure);
+
+			
 
 			// display the table
 			$this->obj_table->render_table_html();

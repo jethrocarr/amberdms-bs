@@ -227,7 +227,15 @@ class page_output
 		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
 		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$this->obj_form->subforms["hidden"]		= array("id_customer");
-		$this->obj_form->subforms["submit"]		= array("submit");
+
+		if (user_permissions_get("customers_write"))
+		{
+			$this->obj_form->subforms["submit"]		= array("submit");
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array();
+		}
 
 		
 		// fetch the form data
@@ -245,6 +253,12 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
+
+		if (!user_permissions_get("customers_write"))
+		{
+			format_msgbox("locked", "<p>Sorry, you do not have permission to edit this customer</p>");
+		}
+
 	}
 
 
