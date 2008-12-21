@@ -41,6 +41,21 @@ else
 		{
 			print "<h3>SYSTEM OVERVIEW</h3>";
 			print "<p>Overview of all features needs to go here</p>";
+
+
+			// TODO: Complete this page
+
+			/*
+				Unprocessed Invoices
+			*/
+			if (user_permissions_get("accounts_ar_view"))
+			{
+				print "<table width=\"100%\"><tr><td>";
+
+//				$sql_obj		= New sql_query;
+				
+				print "</td></tr></table>";
+			}
 		}
 	}
 }

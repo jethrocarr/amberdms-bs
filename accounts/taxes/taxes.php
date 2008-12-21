@@ -49,35 +49,9 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_taxes.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_taxes.chartid");
 
-/*
-		// acceptable filter options
-		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
-		$this->obj_table->add_filter($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
-		$this->obj_table->add_filter($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"] = "searchbox";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "name_tax LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
-		$this->obj_table->add_filter($structure);
-*/
-
-
-		// load options
-		$this->obj_table->load_options_form();
-
 		// fetch all the tax information
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
-
 
 
 	}
@@ -86,11 +60,9 @@ class page_output
 	function render_html()
 	{
 		// heading
-		print "<h3>TAXES</h3><br><br>";
-
-		// display options form
-		$this->obj_table->render_options_form();
-
+		print "<h3>TAXES</h3>";
+		print "<p>This page list all the taxes added to the system.</p>";
+		
 
 		// display table
 		if (!count($this->obj_table->columns))

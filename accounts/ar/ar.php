@@ -52,8 +52,9 @@ class page_output
 
 		
 		// defaults
-		$this->obj_table->columns	= array("code_invoice", "name_customer", "date_trans", "amount_total", "amount_paid");
-		$this->obj_table->columns_order	= array("code_invoice");
+		$this->obj_table->columns		= array("code_invoice", "name_customer", "date_trans", "amount_total", "amount_paid");
+		$this->obj_table->columns_order		= array("code_invoice");
+		$this->obj_table->columns_order_options	= array("code_invoice", "code_ordernumber", "code_ponumber", "name_customer", "name_staff", "date_trans", "date_due", "sent");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_ar");

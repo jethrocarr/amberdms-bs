@@ -41,6 +41,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("code_project", "name_project", "date_start", "date_end");
 		$this->obj_table->columns_order		= array("name_project");
+		$this->obj_table->columns_order_options	= array("code_project", "name_project", "date_start", "date_end");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("projects");

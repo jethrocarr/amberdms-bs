@@ -33,11 +33,11 @@ class page_output
 		$this->obj_table->tablename	= "account_ap";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standapd", "name_vendor", "vendors.name_vendor");
-		$this->obj_table->add_column("standapd", "name_staff", "staff.name_staff");
-		$this->obj_table->add_column("standapd", "code_invoice", "account_ap.code_invoice");
-		$this->obj_table->add_column("standapd", "code_ordernumber", "account_ap.code_ordernumber");
-		$this->obj_table->add_column("standapd", "code_ponumber", "account_ap.code_ponumber");
+		$this->obj_table->add_column("standard", "name_vendor", "vendors.name_vendor");
+		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "code_invoice", "account_ap.code_invoice");
+		$this->obj_table->add_column("standard", "code_ordernumber", "account_ap.code_ordernumber");
+		$this->obj_table->add_column("standard", "code_ponumber", "account_ap.code_ponumber");
 		$this->obj_table->add_column("date", "date_trans", "account_ap.date_trans");
 		$this->obj_table->add_column("date", "date_due", "account_ap.date_due");
 		$this->obj_table->add_column("price", "amount_tax", "account_ap.amount_tax");
@@ -50,9 +50,10 @@ class page_output
 
 		
 		// defaults
-		$this->obj_table->columns	= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid");
-		$this->obj_table->columns_order	= array("code_invoice");
-
+		$this->obj_table->columns		= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid");
+		$this->obj_table->columns_order		= array("code_invoice");
+		$this->obj_table->columns_order_options	= array("code_invoice", "code_ordernumber", "code_ponumber", "name_vendor", "name_staff", "date_trans", "date_due", "sent");
+		
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_ap");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_ap.id");

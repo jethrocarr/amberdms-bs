@@ -46,7 +46,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
-		$this->obj_table->columns_order	= array("name_staff");
+		$this->obj_table->columns_order		= array("name_staff");
+		$this->obj_table->columns_order_options	= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("staff");

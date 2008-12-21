@@ -48,8 +48,9 @@ class page_output
 
 		
 		// defaults
-		$this->obj_table->columns	= array("name_customer", "code_quote", "date_trans", "amount_total");
-		$this->obj_table->columns_order	= array("code_quote");
+		$this->obj_table->columns		= array("name_customer", "code_quote", "date_trans", "amount_total");
+		$this->obj_table->columns_order		= array("code_quote");
+		$this->obj_table->columns_order_options	= array("code_quote", "name_customer", "name_staff", "date_trans", "date_validtill", "sent");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_quotes");

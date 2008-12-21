@@ -307,7 +307,7 @@ class sql_query
 
 		Adds a select field to the database
 	*/
-	function prepare_sql_addfield($fieldname, $dbname)
+	function prepare_sql_addfield($fieldname, $dbname = NULL)
 	{
 		log_debug("sql_query", "Executing prepare_sql_addfield($fieldname, $dbname)");
 		

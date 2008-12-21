@@ -40,7 +40,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("username", "realname", "contact_email", "lastlogin_time");
-		$this->obj_table->columns_order	= array("username");
+		$this->obj_table->columns_order		= array("username");
+		$this->obj_table->columns_order_options	= array("username", "realname", "contact_email", "lastlogin_time", "lastlogin_ipaddress");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("users");

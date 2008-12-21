@@ -52,8 +52,9 @@ class page_output
 		$this->obj_table_list->add_column("standard", "address1_country", "");
 
 		// defaults
-		$this->obj_table_list->columns		= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
-		$this->obj_table_list->columns_order	= array("name_customer");
+		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
+		$this->obj_table_list->columns_order		= array("name_customer");
+		$this->obj_table_list->columns_order_options	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
 
 		// define SQL structure
 		$this->obj_table_list->sql_obj->prepare_sql_settable("customers");

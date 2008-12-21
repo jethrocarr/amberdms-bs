@@ -48,7 +48,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("title", "status", "priority");
-		$this->obj_table->columns_order	= array("status");
+		$this->obj_table->columns_order		= array("status");
+		$this->obj_table->columns_order_options	= array("title", "status", "priority", "date_start", "date_end");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("support_tickets");

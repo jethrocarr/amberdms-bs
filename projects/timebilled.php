@@ -93,7 +93,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("name_group", "name_customer", "code_invoice", "description", "time_billed", "time_not_billed");
-		$this->obj_table->columns_order	= array("name_customer", "name_group");
+		$this->obj_table->columns_order		= array("name_customer", "name_group");
+		$this->obj_table->columns_order_options	= array("name_customer", "name_group", "name_customer", "code_invoice", "description", "time_billed", "time_not_billed");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("time_groups");

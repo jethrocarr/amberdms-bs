@@ -46,8 +46,9 @@ class page_output
 		$this->obj_table->add_column("standard", "code_chart", "CONCAT_WS('--', account_charts.code_chart, account_charts.description)");
 
 		// defaults
-		$this->obj_table->columns	= array("date_trans", "code_reference", "description", "source", "debit", "credit", "code_chart");
-		$this->obj_table->columns_order	= array("date_trans");
+		$this->obj_table->columns		= array("date_trans", "code_reference", "description", "source", "debit", "credit", "code_chart");
+		$this->obj_table->columns_order		= array("date_trans");
+		$this->obj_table->columns_order_options	= array("date_trans", "code_reference", "description", "source", "code_chart");
 
 		// totals
 		$this->obj_table->total_columns	= array("debit", "credit");

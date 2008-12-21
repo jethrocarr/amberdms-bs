@@ -55,6 +55,8 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_email");
 		$this->obj_table->columns_order		= array("name_vendor");
+		$this->obj_table->columns_order_options	= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
+
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("vendors");

@@ -49,6 +49,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("code_product", "name_product", "account_sales", "price_cost", "price_sale");
 		$this->obj_table->columns_order		= array("code_product");
+		$this->obj_table->columns_order_options	= array("code_product", "name_product", "account_sales", "date_current", "quantity_instock", "quantity_vendor");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("products");

@@ -91,7 +91,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("date", "name_phase", "name_staff", "time_group", "description", "time_booked");
-		$this->obj_table->columns_order	= array("date", "name_phase");
+		$this->obj_table->columns_order		= array("date", "name_phase");
+		$this->obj_table->columns_order_options	= array("date", "name_phase", "name_staff", "time_group", "description", "time_booked");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("timereg");

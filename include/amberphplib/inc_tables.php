@@ -21,6 +21,8 @@ class table
 	
 	var $columns;				// array containing the list of all the columns to display
 	var $columns_order;			// array containing columns to order by
+	var $columns_order_options;		// array containing columns that can be sorted - if set to none, then the sortable
+						// option box will not appear
 
 	var $total_columns;			// array of columns to create totals for
 	var $total_rows;			// array of columns to create per-row totals for
@@ -720,42 +722,45 @@ class table
 
 
 		/* Order By Options */
-		print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+		if ($this->columns_order_options)
+		{
+			print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
 
-			print "<br><b>Order By:</b><br>";
+				print "<br><b>Order By:</b><br>";
 
-			// limit the number of order boxes to 4
-			$num_cols = count($columns_available);
+				// limit the number of order boxes to 4
+				$num_cols = count($this->columns_order_options);
 
-			if ($num_cols > 4)
-				$num_cols = 4;
+				if ($num_cols > 4)
+					$num_cols = 4;
 
-			
-			for ($i=0; $i < $num_cols; $i++)
-			{
-				// define dropdown
-				$structure = NULL;
-				$structure["fieldname"]		= "order_$i";
-				$structure["type"]		= "dropdown";
-				$structure["options"]["width"]	= 150;
 				
-				if ($this->columns_order[$i])
-					$structure["defaultvalue"] = $this->columns_order[$i];
-
-				$structure["values"] = $columns_available;
-
-				$form->add_input($structure);
-
-				// display drop down
-				$form->render_field($structure["fieldname"]);
-
-				if ($i < ($num_cols - 1))
+				for ($i=0; $i < $num_cols; $i++)
 				{
-					print " then ";
+					// define dropdown
+					$structure = NULL;
+					$structure["fieldname"]		= "order_$i";
+					$structure["type"]		= "dropdown";
+					$structure["options"]["width"]	= 150;
+					
+					if ($this->columns_order[$i])
+						$structure["defaultvalue"] = $this->columns_order[$i];
+
+					$structure["values"] = $this->columns_order_options;
+
+					$form->add_input($structure);
+
+					// display drop down
+					$form->render_field($structure["fieldname"]);
+
+					if ($i < ($num_cols - 1))
+					{
+						print " then ";
+					}
 				}
-			}
-			
-		print "</td>";
+				
+			print "</td>";
+		}
 
 
 		/*

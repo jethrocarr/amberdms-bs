@@ -246,6 +246,7 @@ class ledger_account_list
 		// defaults
 		$this->obj_table->columns		= array("date_trans", "item_id", "debit", "credit");
 		$this->obj_table->columns_order		= array("date_trans");
+		$this->obj_table->columns_order_options	= array("date_trans", "item_id", "source", "memo");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_trans");
@@ -384,11 +385,11 @@ class ledger_account_list
 		
 		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>No transactions which match your search criteria belong in this ledger.</b></p>";
+			format_msgbox("info", "<p>No transactions where found in the ledger with the specified filter options.</p>");
 		}
 		else
 		{

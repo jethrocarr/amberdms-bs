@@ -49,7 +49,8 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("name_service", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");
-		$this->obj_table->columns_order	= array("name_service");
+		$this->obj_table->columns_order		= array("name_service");
+		$this->obj_table->columns_order_options	= array("name_service", "chartid", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services");
