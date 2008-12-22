@@ -144,7 +144,7 @@ class template_engine
 				else
 				{
 					// remove commenting from the front of the line
-					$line = preg_replace("/^\S*/", "", $line);
+					$line = preg_replace("/^\S*\s/", "", $line);
 				
 					/*
 						For this line, run through all the rows and add a new, processed
@@ -183,10 +183,13 @@ class template_engine
 				{
 					// process any single variables in this line
 					$line_tmp = $line;
-					
-					foreach (array_keys($this->data) as $var)
+				
+					if ($this->data)
 					{
-						$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+						foreach (array_keys($this->data) as $var)
+						{
+							$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+						}
 					}
 					
 					$this->processed[] = $line_tmp;
@@ -221,25 +224,32 @@ class template_engine_latex extends template_engine
 	{
 		log_debug("template_engine_latex", "Executing prepare_escape_fields()");
 
-		$target		= array("/%/", "/_/");
-		$replace	= array("\%", "\_");
+		$target		= array('/%/', '/_/', '/\$/');
+		$replace	= array('\%', '\_', '\\\$');
 
 		// escape single fields
-		foreach (array_keys($this->data) as $var)
+		if ($this->data)
 		{
-			$this->data[$var] = preg_replace($target, $replace, $this->data[$var]);
+			foreach (array_keys($this->data) as $var)
+			{
+				$this->data[$var] = preg_replace($target, $replace, $this->data[$var]);
+			}
 		}
 
+
 		// escape arrays
-		foreach (array_keys($this->data_array) as $fieldname)
+		if ($this->data_array)
 		{
-			for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
+			foreach (array_keys($this->data_array) as $fieldname)
 			{
-				$line_tmp = $line;
-						
-				foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
+				for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
 				{
-					$this->data_array[$fieldname][$j][$var] = preg_replace($target, $replace, $this->data_array[$fieldname][$j][$var]);
+					$line_tmp = $line;
+						
+					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
+					{
+						$this->data_array[$fieldname][$j][$var] = preg_replace($target, $replace, $this->data_array[$fieldname][$j][$var]);
+					}
 				}
 			}
 		}

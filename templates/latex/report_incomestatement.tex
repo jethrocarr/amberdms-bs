@@ -1,0 +1,76 @@
+%%
+%% GENERIC ENGLISH INCOME STATEMENT REPORT
+%%
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1cm,bmargin=1cm,lmargin=1cm,rmargin=1cm}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{setspace}
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+%% A simple dot to overcome graphicx limitations
+\newcommand{\lyxdot}{.}
+
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+%%\noindent \includegraphics{\lyxdot \lyxdot [companylogo]}
+
+
+\noindent \textbf{INCOME STATEMENT}
+
+\noindent \vspace{10mm}
+
+
+\noindent \begin{tabular}{ll}
+\textbf{Period Start Date} & (date\_start) \tabularnewline
+\textbf{Period End Date} & (date\_end) \tabularnewline
+\textbf{Date Created} & (date\_created) \tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \textbf{INCOME}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.8\columnwidth}>{\raggedright}p{0.2\columnwidth}}
+%% foreach table_income
+%% (name_chart) & (amount)\tabularnewline
+%% end
+\cline{2-2} 
+\textbf{Total Income} & (amount\_total\_income)\tabularnewline
+\end{tabular}
+
+\noindent \vspace{5mm}
+
+
+\noindent \textbf{Expenses}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.8\columnwidth}>{\raggedright}p{0.2\columnwidth}}
+%% foreach table_expense
+%% (name_chart) & (amount)\tabularnewline
+%% end
+\cline{2-2} 
+\textbf{Total Expenses} & (amount\_total\_expense)\tabularnewline
+\end{tabular}
+
+\noindent \vspace{5mm}
+
+
+\noindent \begin{tabular}{>{\raggedright}p{0.8\columnwidth}>{\raggedright}p{0.2\columnwidth}}
+\textbf{Total Income/Loss} & (amount\_total\_final)\tabularnewline
+\end{tabular}
+
+
+
+
+\end{document}

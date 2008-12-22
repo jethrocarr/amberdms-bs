@@ -1,0 +1,22 @@
+"INCOME STATEMENT"
+
+"Period Start Date","(date_start)"
+"Period End Date","(date_end)"
+"Date Created","(date_created)"
+
+"Income"
+# foreach table_income
+# "(name_chart)","(amount)"
+# end
+"Total:","(amount_total_income)"
+
+
+"Expenses"
+# foreach table_expense
+# "(name_chart)","(amount)"
+# end
+"Total:","(amount_total_expense)"
+
+
+"Final Total","(amount_total_final)"
+
