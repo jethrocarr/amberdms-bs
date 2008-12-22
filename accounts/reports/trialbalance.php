@@ -12,6 +12,11 @@ class page_output
 {
 	var $obj_table;
 
+	var $date_start;
+	var $date_end;
+	
+	var $obj_form;
+
 
 	function check_permissions()
 	{
@@ -27,6 +32,84 @@ class page_output
 
 	function execute()
 	{
+		/*
+			Date selection form
+		*/
+
+		// fetch existing dates
+		$this->date_start	= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_start_yyyy"] ."-". $_GET["date_start_mm"] ."-". $_GET["date_start_dd"]);
+		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
+	
+		if (!$this->date_start || $this->date_start == "--")
+		{
+			if ($_SESSION["account_reports"]["date_start"])
+			{
+				$this->date_start = $_SESSION["account_reports"]["date_start"];
+			}
+			else
+			{
+				$this->date_start = NULL;
+			}
+		}
+		
+		if (!$this->date_end || $this->date_end == "--")
+		{
+			if ($_SESSION["account_reports"]["date_end"])
+			{
+				$this->date_end = $_SESSION["account_reports"]["date_end"];
+			}
+			else
+			{
+				$this->date_end = NULL;
+			}
+		}
+
+		// save to session vars
+		$_SESSION["account_reports"]["date_start"]	= $this->date_start;
+		$_SESSION["account_reports"]["date_end"]	= $this->date_end;
+
+
+		// define form
+		$this->obj_form = New form_input;
+		$this->obj_form->method = "get";
+		$this->obj_form->action = "index.php";
+
+		$this->obj_form->formname = "accounts_report_trialbalance";
+		$this->obj_form->language = $_SESSION["user"]["lang"];
+
+		// hidden values
+		$structure = NULL;
+		$structure["fieldname"] 	= "page";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $_GET["page"];
+		$this->obj_form->add_input($structure);
+
+
+
+		// date selection
+		$structure = NULL;
+		$structure["fieldname"] 	= "date_start";
+		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= $this->date_start;
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "date_end";
+		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= $this->date_end;
+		$this->obj_form->add_input($structure);
+
+		// submit
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Apply Filter Options";
+		$this->obj_form->add_input($structure);
+	
+
+
+
+	
 		// establish a new table object
 		$this->obj_table = New table;
 
@@ -55,26 +138,6 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
 
 
-		// acceptable filter options
-		// note the lack of SQL statements - this is because the values of these
-		// filters are used by the seporate SQL statement for querying account credit/debit.
-		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
-		$this->obj_table->add_filter($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
-		$this->obj_table->add_filter($structure);
-	
-
-		// load options
-		$this->obj_table->load_options_form();
-
-
-
-
 		// fetch all the chart information
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
@@ -90,16 +153,17 @@ class page_output
 		$sql_amount_obj->prepare_sql_addfield("debit", "SUM(amount_debit)");
 		
 		
-		if ($this->obj_table->filter["filter_date_start"]["defaultvalue"])
+		if ($this->date_start)
 		{
-			$sql_amount_obj->prepare_sql_addwhere("date_trans >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'");
+			$sql_amount_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
 		}
 		
 		
-		if ($this->obj_table->filter["filter_date_end"]["defaultvalue"])
+		if ($this->date_end)
 		{
-			$sql_amount_obj->prepare_sql_addwhere("date_trans <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'");
+			$sql_amount_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
 		}
+		
 		
 		$sql_amount_obj->prepare_sql_addgroupby("chartid");
 		$sql_amount_obj->generate_sql();
@@ -132,10 +196,31 @@ class page_output
 		print "<h3>TRIAL BALANCE</h3>";
 		print "<p>This page lists all the accounts which transactions are filed against and provides a basic overview of the current state of the financials.</p>";
 
-		// display options form
-		$this->obj_table->render_options_form();
 
-		// display table
+		/*
+			Date selection form
+		*/
+
+		print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\">";
+		
+		$this->obj_form->render_field("page");
+		
+		print "<table width=\"100%\" class=\"table_highlight\">";
+		print "<tr>";
+			$this->obj_form->render_row("date_start");
+			$this->obj_form->render_row("date_end");
+			$this->obj_form->render_row("submit");
+		print "</tr>";
+		print "</table>";
+
+		print "</form>";
+		print "<br>";
+
+
+
+		/*
+			Display Table
+		*/
 		if (!$this->obj_table->data_num_rows)
 		{
 			format_msgbox("important", "<p>You currently have no accounts in your database.</p>");

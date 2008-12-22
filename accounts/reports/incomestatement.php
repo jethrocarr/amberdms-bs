@@ -15,6 +15,7 @@ class page_output
 
 	var $date_start;
 	var $date_end;
+	var $mode;
 
 	var $obj_form;
 	
@@ -35,18 +36,23 @@ class page_output
 	{
 
 		/*
-			Date selection form
+			Filter selection form
 		*/
 
-		// fetch existing dates
+		// fetch existing values
 		$this->date_start	= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_start_yyyy"] ."-". $_GET["date_start_mm"] ."-". $_GET["date_start_dd"]);
 		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
+		$this->mode		= security_script_input("/^\S*$/", $_GET["mode"]);
 	
 		if (!$this->date_start || $this->date_start == "--")
 		{
 			if ($_SESSION["account_reports"]["date_start"])
 			{
 				$this->date_start = $_SESSION["account_reports"]["date_start"];
+			}
+			else
+			{
+				$this->date_start = NULL;
 			}
 		}
 		
@@ -55,6 +61,10 @@ class page_output
 			if ($_SESSION["account_reports"]["date_end"])
 			{
 				$this->date_end = $_SESSION["account_reports"]["date_end"];
+			}
+			else
+			{
+				$this->date_end = NULL;
 			}
 		}
 
@@ -95,10 +105,19 @@ class page_output
 		$structure["defaultvalue"]	= $this->date_end;
 		$this->obj_form->add_input($structure);
 
+		// mode selection
+		$structure = NULL;
+		$structure["fieldname"]		= "mode";
+		$structure["type"]		= "radio";
+		$structure["values"]		= array("Accrual/Invoice", "Cash");
+		$structure["defaultvalue"]	= "Accrual/Invoice";
+		$this->obj_form->add_input($structure);
+
+		// submit
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Apply Date Selection";
+		$structure["defaultvalue"]	= "Apply Filter Options";
 		$this->obj_form->add_input($structure);
 	
 	
@@ -252,6 +271,7 @@ class page_output
 		print "<tr>";
 			$this->obj_form->render_row("date_start");
 			$this->obj_form->render_row("date_end");
+			$this->obj_form->render_row("mode");
 			$this->obj_form->render_row("submit");
 		print "</tr>";
 		print "</table>";
