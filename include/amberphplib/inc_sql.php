@@ -283,6 +283,13 @@ class sql_query
 				}
 			}
 		}
+	
+
+		// add limit (if any)
+		if ($this->sql_structure["limit"])
+		{
+			$this->string .= " LIMIT ". $this->sql_structure["limit"];
+		}
 		
 		return 1;
 	}
@@ -405,6 +412,18 @@ class sql_query
 		$this->sql_structure["groupby"][] = $sqlquery;
 	}
 
+
+	/*
+		prepare_sql_setlimit($num)
+
+		Limit to $num rows
+	*/
+	function prepare_sql_setlimit($num)
+	{
+		log_debug("sql_query", "Executing prepare_sql_setlimit($num)");
+
+		$this->sql_structure["limit"] = $num;
+	}
 
 
 
