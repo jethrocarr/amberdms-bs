@@ -339,6 +339,7 @@ class invoice_list_payments
 		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
 		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_items.chartid");
 		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
+		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
 		$item_list->sql_obj->prepare_sql_addwhere("type='payment'");
 
 		// run SQL query
@@ -838,7 +839,7 @@ class invoice_form_item
 		$form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
 
 
-		if ($this->item_type == "time" && count($form->structure["timeregid"]["values"]) == 0)
+		if ($this->item_type == "time" && count($form->structure["timegroupid"]["values"]) == 0)
 		{
 			$form->subforms["submit"]			= array();
 			$form->render_form();
@@ -943,7 +944,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 
 			// fetch information from form
-			$data["amount"]		= security_form_input_predefined("money", "amount", 1, "");
+			$data["amount"]		= security_form_input_predefined("money", "amount", 0, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
 			
@@ -956,7 +957,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 			
 			// fetch information from form
-			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
+			$data["price"]		= security_form_input_predefined("money", "price", 0, "");
 			$data["quantity"]	= security_form_input_predefined("int", "quantity", 1, "");
 			$data["units"]		= security_form_input_predefined("any", "units", 0, "");
 			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
@@ -971,7 +972,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 		
 			// fetch information from form
-			$data["price"]		= security_form_input_predefined("money", "price", 1, "");
+			$data["price"]		= security_form_input_predefined("money", "price", 0, "");
 			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
 			$data["timegroupid"]	= security_form_input_predefined("int", "timegroupid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");

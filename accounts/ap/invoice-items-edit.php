@@ -121,7 +121,7 @@ class page_output
 		print "<h3>ADD/EDIT INVOICE ITEM</h3><br>";
 		print "<p>This page allows you to make changes to an invoice item.</p>";
 
-		invoice_render_summarybox("ap", $id);
+		invoice_render_summarybox("ap", $this->id);
 
 		$this->obj_form_item->render_html();
 	}

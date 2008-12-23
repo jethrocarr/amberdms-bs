@@ -199,15 +199,15 @@ class taxes_report_transactions
 					Option #1 will be more efficent initally, but could cause huge slowdowns once users
 					end up with large databases of many/complex invoices.
 
-					Option #2 may be a bit inefficent on large queries, but at worst the user will only
-					be looking at between 1 to 12 months worth of invoices.
+					Option #2 may be a bit inefficent on large queries, but at worst the user will most
+					likely only be looking at between 1 to 12 months worth of invoices.
 
 					Possibly some tests should be carried out in order to determine the optimal query method
 					here.
 				*/
 			
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='". $this->taxid ."' AND invoiceid='". $this->obj_table->data[$i]["id"] ."'";
+				$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='". $this->taxid ."' AND invoicetype='". $this->type ."' AND invoiceid='". $this->obj_table->data[$i]["id"] ."'";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 

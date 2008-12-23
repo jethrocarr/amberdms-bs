@@ -81,11 +81,26 @@ function invoice_generate_invoiceid($type)
 
 function invoice_render_summarybox($type, $id)
 {
-	log_debug("inc_invoices", "invoice_render_summarybox($id, $type)");
+	log_debug("inc_invoices", "invoice_render_summarybox($type, $id)");
 
 	// fetch invoice information
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT date_sent, sentmethod, code_invoice, amount_total, amount_paid FROM account_$type WHERE id='$id' LIMIT 1";
+	$sql_obj = New sql_query;
+	$sql_obj->prepare_sql_settable("account_$type");
+
+	if ($type == "ar")
+	{
+		$sql_obj->prepare_sql_addfield("date_sent");
+		$sql_obj->prepare_sql_addfield("sentmethod");
+	}
+	
+	$sql_obj->prepare_sql_addfield("code_invoice");
+	$sql_obj->prepare_sql_addfield("amount_total");
+	$sql_obj->prepare_sql_addfield("amount_paid");
+
+	$sql_obj->prepare_sql_addwhere("id='$id'");
+	$sql_obj->prepare_sql_setlimit("1");
+
+	$sql_obj->generate_sql();
 	$sql_obj->execute();
 
 	if ($sql_obj->num_rows())
@@ -144,19 +159,22 @@ function invoice_render_summarybox($type, $id)
 						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $amount_due."</td>";
 					print "</tr>";
 
-					
-					print "<tr>";
-						print "<td>Date Sent:</td>";
-
-						if ($sql_obj->data[0]["sentmethod"] == "")
-						{
-							print "<td><i>Has not been sent to customer</i></td>";
-						}
-						else
-						{
-							print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
-						}
-					print "</tr>";
+				
+					if ($type == "ar")
+					{
+						print "<tr>";
+							print "<td>Date Sent:</td>";
+	
+							if ($sql_obj->data[0]["sentmethod"] == "")
+							{
+								print "<td><i>Has not been sent to customer</i></td>";
+							}
+							else
+							{
+								print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
+							}
+						print "</tr>";
+					}
 									
 					print "</tr></table>";
 					
@@ -1084,7 +1102,7 @@ class invoice_items
 					// 2. AUTOMATIC CALC
 					
 					// fetch total of billable items
-					$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax'");
+					$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax' AND type!='payment'");
 
 					// calculate taxable amount
 					$this->data["amount"]	= $amount * ($this->data["taxrate"] / 100);

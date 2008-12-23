@@ -112,7 +112,7 @@ class page_output
 		print "<h3>ADD/EDIT INVOICE PAYMENT</h3><br>";
 		print "<p>This page allows you to make changes to an invoice payment.</p>";
 
-		invoice_render_summarybox("ar", $id);
+		invoice_render_summarybox("ar", $this->id);
 
 		$this->obj_form_item->render_html();
 	}
