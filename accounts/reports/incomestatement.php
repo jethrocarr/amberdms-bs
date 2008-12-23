@@ -43,7 +43,19 @@ class page_output
 		$this->date_start	= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_start_yyyy"] ."-". $_GET["date_start_mm"] ."-". $_GET["date_start_dd"]);
 		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
 		$this->mode		= security_script_input("/^\S*$/", $_GET["mode"]);
-	
+
+		if (!$this->mode)
+		{
+			if ($_SESSION["account_reports"]["mode"])
+			{
+				$this->mode = $_SESSION["account_reports"]["mode"];
+			}
+			else
+			{
+				$this->mode = "Accrual/Invoice";
+			}
+		}
+
 		if (!$this->date_start || $this->date_start == "--")
 		{
 			if ($_SESSION["account_reports"]["date_start"])
@@ -71,6 +83,7 @@ class page_output
 		// save to session vars
 		$_SESSION["account_reports"]["date_start"]	= $this->date_start;
 		$_SESSION["account_reports"]["date_end"]	= $this->date_end;
+		$_SESSION["account_reports"]["mode"]		= $this->mode;
 
 
 							
@@ -110,7 +123,7 @@ class page_output
 		$structure["fieldname"]		= "mode";
 		$structure["type"]		= "radio";
 		$structure["values"]		= array("Accrual/Invoice", "Cash");
-		$structure["defaultvalue"]	= "Accrual/Invoice";
+		$structure["defaultvalue"]	= $this->mode;
 		$this->obj_form->add_input($structure);
 
 		// submit
@@ -163,64 +176,234 @@ class page_output
 
 		/*
 			Amounts
+
+			This section needs to total up the the amounts in each account - however, we are unable to just
+			pull the information from account_trans, because we need to be able to fetch either the invoiced/accural
+			amount OR the cash (ie: paid) amount.
+
+			The reports for taxes can handle it simpler, by just calcuating the invoice item total, but we also have
+			to include general ledger transactions.
+
+			Accural/Invoice:
+				1. Run though all invoices
+				2. Add item amounts to accounts
+				3. Run through all general ledger transactions
+				4. Add GL amounts to accounts
+
+			Cash:
+				1. Run through all invoices
+				2. If invoices are fully paid, then add item amounts to accounts.
+				3. Impossible to handle partially paid invoices properly, so we ignore them.
+				4. Run through all general ledger transactions
+				5. Add GL amounts to accounts.
+
+				Note: The date checks are made against the invoice date, not the payment date.
 		*/
 
-		// fetch amounts for all charts in advance - this
-		// is better than running a query per chart just to get all the totals
-		$sql_amount_obj = New sql_query;
+
+		//
+		// AR INVOICES
+		//
+		$sql_obj = New sql_query;
 		
-		$sql_amount_obj->prepare_sql_settable("account_trans");
-		$sql_amount_obj->prepare_sql_addfield("chartid");
-		$sql_amount_obj->prepare_sql_addfield("credit", "SUM(amount_credit)");
-		$sql_amount_obj->prepare_sql_addfield("debit", "SUM(amount_debit)");
-		
-		
+		$sql_obj->prepare_sql_settable("account_ar");
+		$sql_obj->prepare_sql_addfield("id");
+
+		// date options
 		if ($this->date_start)
 		{
-			$sql_amount_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
+			$sql_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
 		}
-		
 		
 		if ($this->date_end)
 		{
-			$sql_amount_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
+			$sql_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
 		}
-	
-		
-		$sql_amount_obj->prepare_sql_addgroupby("chartid");
-		$sql_amount_obj->generate_sql();
-		$sql_amount_obj->execute();
 
-		if ($sql_amount_obj->num_rows())
+
+		// paid invoices only
+		if ($this->mode == "Cash")
 		{
-			$sql_amount_obj->fetch_array();
-
-
-			// run through income
-			for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
-			{
-				foreach ($sql_amount_obj->data as $data_amount)
-				{
-					if ($data_amount["chartid"] == $this->data_income[$i]["id"])
-					{
-						$this->data_income[$i]["amount"] = $data_amount["credit"] - $data_amount["debit"];
-					}
-				}
-			}
-
-
-			// run through expenses
-			for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
-			{
-				foreach ($sql_amount_obj->data as $data_amount)
-				{
-					if ($data_amount["chartid"] == $this->data_expense[$i]["id"])
-					{
-						$this->data_expense[$i]["amount"] = $data_amount["debit"] - $data_amount["credit"];
-					}
-				}
-			}
+			$sql_obj->prepare_sql_addwhere("amount_total=amount_paid");
 		}
+
+		// run through invoices
+		$sql_obj->generate_sql();
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_invoice)
+			{
+				// fetch all items for this invoice type
+				$sql_item_obj		= New sql_query;
+				$sql_item_obj->string	= "SELECT chartid, amount FROM account_items WHERE invoiceid='". $data_invoice["id"] ."' AND invoicetype='ar'";
+				$sql_item_obj->execute();
+
+				if ($sql_item_obj->num_rows())
+				{
+					$sql_item_obj->fetch_array();
+
+					foreach ($sql_item_obj->data as $data_item)
+					{
+
+						// run through income charts
+						for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
+						{
+							if ($data_item["chartid"] == $this->data_income[$i]["id"])
+							{
+								$this->data_income[$i]["amount"] += $data_item["amount"];
+							}
+							
+						} // end of loop through charts
+
+					} // end of invoice item loop
+					
+				} // end if invoice items
+				
+			} // end of invoice loop
+			
+		} // end if invoices
+
+		unset($sql_obj);
+
+
+
+		//
+		// AP INVOICES
+		//
+		$sql_obj = New sql_query;
+		
+		$sql_obj->prepare_sql_settable("account_ap");
+		$sql_obj->prepare_sql_addfield("id");
+
+		// date options
+		if ($this->date_start)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
+		}
+		
+		if ($this->date_end)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
+		}
+
+
+		// paid invoices only
+		if ($this->mode == "Cash")
+		{
+			$sql_obj->prepare_sql_addwhere("amount_total=amount_paid");
+		}
+
+		// run through invoices
+		$sql_obj->generate_sql();
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_invoice)
+			{
+				// fetch all items for this invoice type
+				$sql_item_obj		= New sql_query;
+				$sql_item_obj->string	= "SELECT chartid, amount FROM account_items WHERE invoiceid='". $data_invoice["id"] ."' AND invoicetype='ap'";
+				$sql_item_obj->execute();
+
+				if ($sql_item_obj->num_rows())
+				{
+					$sql_item_obj->fetch_array();
+
+					foreach ($sql_item_obj->data as $data_item)
+					{
+						// run through expense charts
+						for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
+						{
+							if ($data_item["chartid"] == $this->data_expense[$i]["id"])
+							{
+								$this->data_expense[$i]["amount"] += $data_item["amount"];
+							}
+							
+						} // end of loop through charts
+
+					} // end of invoice item loop
+					
+				} // end if invoice items
+				
+			} // end of invoice loop
+			
+		} // end if invoices
+
+		unset($sql_obj);
+
+
+
+
+		//
+		// GL TRANSACTIONS
+		//
+		// Fetch all the GL transactions during this period and add to totals.
+		//
+
+		$sql_obj = New sql_query;
+		
+		$sql_obj->prepare_sql_settable("account_trans");
+		$sql_obj->prepare_sql_addfield("chartid");
+		$sql_obj->prepare_sql_addfield("amount_debit");
+		$sql_obj->prepare_sql_addfield("amount_credit");
+		$sql_obj->prepare_sql_addwhere("type='gl'");
+
+		// date options
+		if ($this->date_start)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
+		}
+		
+		if ($this->date_end)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
+		}
+
+
+		// run through GL entries
+		$sql_obj->generate_sql();
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_trans)
+			{
+				// run through income charts
+				for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
+				{
+					if ($data_trans["chartid"] == $this->data_expense[$i]["id"])
+					{
+						$this->data_expense[$i]["amount"] += $data_trans["amount_credit"];
+					}
+							
+				} // end of loop through income charts
+
+			
+				// run through expense charts
+				for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
+				{
+					if ($data_trans["chartid"] == $this->data_expense[$i]["id"])
+					{
+						$this->data_expense[$i]["amount"] += $data_trans["amount_debit"];
+					}
+							
+				} // end of loop through expense charts
+					
+			} // end of transaction loop
+			
+		} // end if transaction exist
+
+
+
 
 
 		/*
@@ -376,6 +559,9 @@ class page_output
 			Fill in template fields
 		*/
 
+		// mode
+		$template_csv->prepare_add_field("mode", $this->mode);
+		
 		// dates
 		$template_csv->prepare_add_field("date_start", $this->date_start);
 		$template_csv->prepare_add_field("date_end", $this->date_end);
@@ -451,6 +637,8 @@ class page_output
 			Fetch data + define fields
 		*/
 
+		// mode
+		$template_pdf->prepare_add_field("mode", $this->mode);
 
 		// dates
 		$template_pdf->prepare_add_field("date\_start", $this->date_start);
