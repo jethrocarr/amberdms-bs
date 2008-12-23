@@ -123,7 +123,7 @@ class page_output
 
 					// checkbox - checked or unchecked
 					$sql_obj_checked = New sql_query;
-					$sql_obj_checked->string = "SELECT id FROM account_charts_menus WHERE chartid='". $id ."' AND menuid='". $data_menu["id"] ."'";
+					$sql_obj_checked->string = "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."'";
 					$sql_obj_checked->execute();
 
 					if ($sql_obj_checked->num_rows())
