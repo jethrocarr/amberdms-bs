@@ -1,0 +1,29 @@
+"BALANCE SHEET"
+
+"As At","(date_end)"
+"Date Created","(date_created)"
+
+"Assets"
+# foreach table_assets
+# "(name_chart)","(amount)"
+# end
+"Total:","(amount_total_assets)"
+
+
+"Liabilities"
+# foreach table_liabilities
+# "(name_chart)","(amount)"
+# end
+"Total:","(amount_total_liabilities)"
+
+"Equity"
+# foreach table_equity
+# "(name_chart)","(amount)"
+# end
+"Current Earnings","(amount_total_current_earnings)"
+"Total:","(amount_total_equity)"
+
+
+
+"Total Liabilities + Equity","(amount_total_liabilities_and_equity)"
+

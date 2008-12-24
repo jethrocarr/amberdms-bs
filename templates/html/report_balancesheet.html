@@ -1,0 +1,45 @@
+<!-- BALANCE SHEET REPORT TEMPLATE -->
+
+<table class="table_content" width="100%">
+	<tr class="header"><td colspan="2"><b>Assets:</b></td></tr>
+<!-- foreach table_assets -->
+	<tr><td width="80%">(name_chart)</td><td width="20%">(amount)</td></tr>
+<!-- end -->
+	<tr class="footer"><td width="80%"><b>Total:</b></td><td width="20%">(amount_total_assets)</td></tr>
+</table>
+
+<br><br>
+
+<table class="table_content" width="100%">
+	<tr class="header"><td colspan="2"><b>Liabilities:</b></td></tr>
+<!-- foreach table_liabilities -->
+	<tr><td width="80%">(name_chart)</td><td width="20%">(amount)</td></tr>
+<!-- end -->
+	<tr class="footer"><td width="80%"><b>Total:</b></td><td width="20%">(amount_total_liabilities)</td></tr>
+</table>
+
+<br><br>
+
+
+<table class="table_content" width="100%">
+	<tr class="header"><td colspan="2"><b>Equity:</b></td></tr>
+<!-- foreach table_equity -->
+	<tr><td width="80%">(name_chart)</td><td width="20%">(amount)</td></tr>
+<!-- end -->
+	<tr><td width="80%">Current Earnings</td><td width="20%">(amount_total_current_earnings)</td></tr>
+	<tr class="footer"><td width="80%"><b>Total:</b></td><td width="20%">(amount_total_equity)</td></tr>
+</table>
+
+<br><br>
+
+
+
+
+<br><br>
+
+<table width="100%" border="0" class="table_content">
+	<tr class="header"><td colspan="2"><b>Final Total</b></td></tr>
+	<tr class="footer"><td width="80%"><b>Total Liabilities + Equity</b></td><td width="20%"><b>(amount_total_liabilities_and_equity)</b></td></tr>
+</table>
+
+
