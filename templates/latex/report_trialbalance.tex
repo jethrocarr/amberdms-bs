@@ -1,0 +1,59 @@
+%%
+%% GENERIC ENGLISH TRIAL BALANCE REPORT
+%%
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1cm,bmargin=1cm,lmargin=1cm,rmargin=1cm}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{setspace}
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+%% A simple dot to overcome graphicx limitations
+\newcommand{\lyxdot}{.}
+
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+%%\noindent \includegraphics{\lyxdot \lyxdot [companylogo]}
+
+
+\noindent \textbf{TRIAL BALANCE}
+
+\noindent \vspace{10mm}
+
+
+\noindent \begin{tabular}{ll}
+\textbf{Period Start Date} & (date\_start) \tabularnewline
+\textbf{Period End Date} & (date\_end) \tabularnewline
+\textbf{Date Created} & (date\_created) \tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.3\columnwidth}>{\raggedright}p{0.2\columnwidth}>{\raggedright}p{0.2\columnwidth}>{\raggedright}p{0.2\columnwidth}}
+\cline{1-5} 
+\textbf{Account} & \textbf{Description} & \textbf{Account Type} & \textbf{Debit} & \textbf{Credit}\tabularnewline
+\cline{1-5} 
+%% foreach table_data
+%% (code_chart) & (description) & (chart_type) & (debit) & (credit)\tabularnewline
+%% end
+\cline{1-5} 
+ & & & \textbf{(amount\_total\_debit)} & \textbf{(amount\_total\_credit)}\tabularnewline
+\cline{1-5} 
+\end{tabular}
+
+\noindent \vspace{5mm}
+
+
+
+\end{document}

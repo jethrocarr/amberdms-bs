@@ -230,8 +230,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
+			// display CSV + PDF download links
 			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/trialbalance.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/trialbalance.php\">Export as PDF</a></p>";
 		}
 	}
 
@@ -239,6 +240,74 @@ class page_output
 	function render_csv()
 	{
 		$this->obj_table->render_table_csv();
+	}
+
+
+	function render_pdf()
+	{
+		// prepare table data
+		$this->obj_table->render_table_prepare();
+	
+		// start the PDF object
+		$template_pdf = New template_engine_latex;
+
+		// load template
+		$template_pdf->prepare_load_template("templates/latex/report_trialbalance.tex");
+
+
+		/*
+			Fetch data + define fields
+		*/
+
+		// dates
+		$template_pdf->prepare_add_field("date\_start", $this->date_start);
+		$template_pdf->prepare_add_field("date\_end", $this->date_end);
+		$template_pdf->prepare_add_field("date\_created", date("Y-m-d"));
+
+
+		// totals
+		$template_pdf->prepare_add_field("amount\_total\_credit", $this->obj_table->data_render["total"]["credit"]);
+		$template_pdf->prepare_add_field("amount\_total\_debit", $this->obj_table->data_render["total"]["debit"]);
+
+
+		// table rows
+		$structure_main = NULL;
+	
+		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+		{
+			$structure = array();
+
+			$structure["code_chart"]	= $this->obj_table->data_render[$i]["code_chart"];
+			$structure["description"]	= $this->obj_table->data_render[$i]["description"];
+			$structure["chart_type"]	= $this->obj_table->data_render[$i]["chart_type"];
+			$structure["credit"]		= $this->obj_table->data_render[$i]["credit"];
+			$structure["debit"]		= $this->obj_table->data_render[$i]["debit"];
+
+			$structure_main[] = $structure;
+		}
+
+		$template_pdf->prepare_add_array("table_data", $structure_main);
+
+
+		/*
+			Output PDF
+		*/
+
+		// perform string escaping for latex
+		$template_pdf->prepare_escape_fields();
+		
+		// fill template
+		$template_pdf->prepare_filltemplate();
+
+		// generate PDF output
+		$template_pdf->generate_pdf();
+
+		// display PDF
+		print $template_pdf->output;
+//		foreach ($template_pdf->processed as $line)
+//		{
+//			print $line;
+//		}
 	}
 }
 
