@@ -43,6 +43,7 @@ class table
 	var $option = array();			// fixed options to add to the option form
 
 	var $data;				// table content
+	var $data_render;			// processed table content
 	var $data_num_rows;			// number of rows
 
 	var $sql_obj;				// object used for SQL string, queries and data
@@ -856,73 +857,30 @@ class table
 	}
 
 
-
 	/*
-		render_table_html()
+		render_table_prepare()
 
-		This function renders the entire table in HTML format.
+		This function calculates all the totals and generates the rendered values. This function is called
+		by the render_table_html + render_table_csv functions to do all the hard work for them, and is
+		also useful when generating custom table ouput for generating all the totals and formating options.
 	*/
-	function render_table_html()
+	function render_table_prepare()
 	{
-		log_debug("table", "Executing render_table_html()");
+		log_debug("table", "Executing render_table_prepare()");
 
+		
 		// translate the column labels
 		$this->render_column_names();
 
-		// display header row
-		print "<table class=\"table_content\" width=\"100%\">";
-		print "<tr>";
 
-		foreach ($this->columns as $column)
-		{
-			// add a custom link if one has been specified, otherwise
-			// just display the standard name
-			if ($this->structure[$column]["custom"]["link"])
-			{
-				print "<td class=\"header\"><b><a class=\"header_link\" href=\"". $this->structure[$column]["custom"]["link"] ."\">". $this->render_columns[$column] ."</a></b></td>";
-			}
-			else
-			{
-				print "<td class=\"header\"><b>". $this->render_columns[$column] ."</b></td>";
-			}
-		}
-		
-		// title for optional total column (displayed when row totals are active)
-		if ($this->total_rows)
-			print "<td class=\"header\"><b>Total:</b></td>";
-	
-		// filler for optional link column
-		if ($this->links)
-			print "<td class=\"header\"></td>";
-
-
-		print "</tr>";
-
-		// display data
+		// format data rows
 		for ($i=0; $i < $this->data_num_rows; $i++)
 		{
-			print "<tr>";
-
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				$content = $this->render_field($columns, $i);
-
-				// handle bool images
-				if ($this->structure[$columns]["type"] == "bool_tick")
-				{
-					if ($content == "Y")
-					{
-						$content = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
-					}
-					else
-					{
-						$content = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
-					}
-				}
-
-				// display
-				print "<td valign=\"top\">$content</td>";
+				// format content
+				$this->data_render[$i][$columns] = $this->render_field($columns, $i);
 			}
 
 
@@ -1023,8 +981,130 @@ class table
 				// this is assumed to be correct, since only the same type of column should ever be totaled
 				$this->structure["total"]["type"] = $this->structure[ $this->total_rows[0] ]["type"];
 
-				
-				print "<td><b>". $this->render_field("total", $i) ."</b></td>";
+
+				// format row total
+				$this->data_render[$i]["total"] = $this->render_field("total", $i);
+			}
+		}
+
+
+		// calculate totals for columns
+		if ($this->total_columns)
+		{
+			foreach ($this->columns as $column)
+			{
+				if (in_array($column, $this->total_columns))
+				{
+					$this->data["total"][$column] = 0;
+					
+					for ($i=0; $i < $this->data_num_rows; $i++)
+					{
+						$this->data["total"][$column] += $this->data[$i][$column];
+					}
+
+					$this->data_render["total"][$column] = $this->render_field($column, "total");
+				}
+			}
+
+			// optional: totals for rows
+			if ($this->total_rows)
+			{
+				// we have already calculated the final total for ledger
+				// totals, so only calculate for non-ledger items.
+				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
+				{
+					$this->data["total"]["total"] = 0;
+					
+					// total all the total columns
+					foreach ($this->total_columns as $column)
+					{
+						$this->data_render["total"]["total"] += $this->data["total"][$column];
+					}
+				}
+
+				$this->data_render["total"]["total"] = $this->render_field("total", "total");
+			}
+		}
+
+
+	} // end of render_table_prepare
+
+
+
+	/*
+		render_table_html()
+
+		This function renders the entire table in HTML format.
+	*/
+	function render_table_html()
+	{
+		log_debug("table", "Executing render_table_html()");
+
+
+		// calculate all the totals and prepare processed values
+		$this->render_table_prepare();
+		
+		// display header row
+		print "<table class=\"table_content\" width=\"100%\">";
+		print "<tr>";
+
+		foreach ($this->columns as $column)
+		{
+			// add a custom link if one has been specified, otherwise
+			// just display the standard name
+			if ($this->structure[$column]["custom"]["link"])
+			{
+				print "<td class=\"header\"><b><a class=\"header_link\" href=\"". $this->structure[$column]["custom"]["link"] ."\">". $this->render_columns[$column] ."</a></b></td>";
+			}
+			else
+			{
+				print "<td class=\"header\"><b>". $this->render_columns[$column] ."</b></td>";
+			}
+		}
+		
+		// title for optional total column (displayed when row totals are active)
+		if ($this->total_rows)
+			print "<td class=\"header\"><b>Total:</b></td>";
+	
+		// filler for optional link column
+		if ($this->links)
+			print "<td class=\"header\"></td>";
+
+
+		print "</tr>";
+
+		// display data
+		for ($i=0; $i < $this->data_num_rows; $i++)
+		{
+			print "<tr>";
+
+			// content for columns
+			foreach ($this->columns as $columns)
+			{
+				$content = $this->data_render[$i][$columns];
+
+				// handle bool images
+				if ($this->structure[$columns]["type"] == "bool_tick")
+				{
+					if ($content == "Y")
+					{
+						$content = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
+					}
+					else
+					{
+						$content = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
+					}
+				}
+
+				// display
+				print "<td valign=\"top\">$content</td>";
+			}
+
+
+			// optional: row totals column
+			if ($this->total_rows)
+			{
+				print "<td><b>". $this->data_render[$i]["total"] ."</b></td>";
 			}
 
 			
@@ -1103,14 +1183,7 @@ class table
 		
 				if (in_array($column, $this->total_columns))
 				{
-					$this->data["total"][$column] = 0;
-					
-					for ($i=0; $i < $this->data_num_rows; $i++)
-					{
-						$this->data["total"][$column] += $this->data[$i][$column];
-					}
-
-					print "<b>". $this->render_field($column, "total") ."</b>";
+					print "<b>". $this->data_render["total"][$column] ."</b>";
 				}
 		
 				print "</td>";
@@ -1119,20 +1192,7 @@ class table
 			// optional: totals for rows
 			if ($this->total_rows)
 			{
-				// we have already calculated the final total for ledger
-				// totals, so only calculate for non-ledger items.
-				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
-				{
-					$this->data["total"]["total"] = 0;
-					
-					// total all the total columns
-					foreach ($this->total_columns as $column)
-					{
-						$this->data["total"]["total"] += $this->data["total"][$column];
-					}
-				}
-
-				print "<td class=\"footer\"><b>". $this->render_field("total", "total") ."</b></td>";
+				print "<td class=\"footer\"><b>". $this->data_render["total"]["total"] ."</b></td>";
 			}
 
 
@@ -1159,8 +1219,8 @@ class table
 	{
 		log_debug("table", "Executing render_table_csv()");
 
-		// translate the column labels
-		$this->render_column_names();
+		// calculate all the totals and prepare processed values
+		$this->render_table_prepare();
 
 		// display header row
 		foreach ($this->columns as $column)
@@ -1184,109 +1244,14 @@ class table
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				print "\"". $this->render_field($columns, $i) ."\",";
+				print "\"". $this->data_render[$i][$columns] ."\",";
 			}
 
 
 			// optional: row totals column
 			if ($this->total_rows)
 			{
-				switch ($this->total_rows_mode)
-				{
-					/*
-						SUBTOTAL
-
-						Add all the columns for the row together, but don't increment
-						them at all.
-					*/
-					case "subtotal":
-					
-						$this->data[$i]["total"] = 0;
-	
-						foreach ($this->total_rows as $total_col)
-						{
-							// add to the total
-							$this->data[$i]["total"] += $this->data[$i][$total_col];
-						}
-					break;
-
-
-					/*
-						INCREMENTING
-
-						We keep track of the previous row's value and add it to the total
-						for the current row.
-					*/
-					case "incrementing":
-					
-						$this->data[$i]["total"] = $total_rows_incrementing;
-
-						foreach ($this->total_rows as $total_col)
-						{
-							// add to the total
-							$this->data[$i]["total"] += $this->data[$i][$total_col];
-						}
-
-						// add to row incrementing total
-						$total_rows_incrementing = $this->data[$i]["total"];
-					break;
-
-
-					/*
-						LEDGER
-						
-						For ledger row totals, we need to total up to show the account balance. We
-						can either add credit or add debit as different modes are needed, depending
-						on the account type.
-
-						Because it's a ledger, we then set the final total row value
-						to be equal to the final total from the ledger.
-					*/
-					case "ledger_add_credit":
-					case "ledger_add_debit":
-					
-						$this->data[$i]["total"] = $total_rows_incrementing;
-						
-							
-						if ($this->total_rows_mode == "ledger_add_credit")
-						{
-							// add the credit column
-							$this->data[$i]["total"] += $this->data[$i]["credit"];
-	
-							// subtract the debit column
-							$this->data[$i]["total"] -= $this->data[$i]["debit"];
-						}
-						else
-						{
-							// add the debit column
-							$this->data[$i]["total"] += $this->data[$i]["debit"];
-	
-							// subtract the credit column
-							$this->data[$i]["total"] -= $this->data[$i]["credit"];
-						}
-
-						// add to row incrementing total
-						$total_rows_incrementing = $this->data[$i]["total"];
-
-						// set the total summary row, since it can't be incremented further on
-						// like normal totals.
-						$this->data["total"]["total"] = $total_rows_incrementing;
-						
-					break;
-
-
-					default:
-						log_debug("inc_tables", "Error: Unrecognised row total mode ". $this->total_rows_mode ."");
-					break;
-				}
-
-
-				// make the type of the column the same as one of the columns to be totaled
-				// this is assumed to be correct, since only the same type of column should ever be totaled
-				$this->structure["total"]["type"] = $this->structure[ $this->total_rows[0] ]["type"];
-
-				
-				print "\"". $this->render_field("total", $i) ."\",";
+				print "\"". $this->data_render[$i]["total"] ."\",";
 			}
 	
 		}
@@ -1302,14 +1267,7 @@ class table
 				
 				if (in_array($column, $this->total_columns))
 				{
-					$this->data["total"][$column] = 0;
-					
-					for ($i=0; $i < $this->data_num_rows; $i++)
-					{
-						$this->data["total"][$column] += $this->data[$i][$column];
-					}
-
-					print $this->render_field($column, "total");
+					print $this->data_render["total"][$column];
 				}
 
 				print "\",";
@@ -1318,30 +1276,13 @@ class table
 			// optional: totals for rows
 			if ($this->total_rows)
 			{
-				// we have already calculated the final total for ledger
-				// totals, so only calculate for non-ledger items.
-				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
-				{
-					$this->data["total"]["total"] = 0;
-					
-					// total all the total columns
-					foreach ($this->total_columns as $column)
-					{
-						$this->data["total"]["total"] += $this->data["total"][$column];
-					}
-				}
-
-				print "\"". $this->render_field("total", "total") ."\",";
+				print "\"". $this->data_render["total"]["total"] ."\",";
 			}
 
 			print "\n";
 		}
 	
 	} // end of render_table_csv
-
-
-
-
 
 
 
