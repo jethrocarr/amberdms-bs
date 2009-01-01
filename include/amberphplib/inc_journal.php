@@ -1388,7 +1388,7 @@ class journal_process extends journal_base
 					$filesize_max_human	= format_size_human($filesize_max);
 					$filesize_upload_human	= format_size_human($_FILES['upload']['size']);	
 			
-					$_SESSION["error"]["message"] .= "Files must be no larger than $filesize_max_human. You attempted to upload a $filesize_upload_human file.";
+					log_write("error", "journal_process", "Files must be no larger than $filesize_max_human. You attempted to upload a $filesize_upload_human file.");
 					$_SESSION["error"]["upload-error"] = 1;
 				}
 			}
