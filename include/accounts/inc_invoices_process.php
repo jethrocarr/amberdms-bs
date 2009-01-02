@@ -214,6 +214,7 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 	if ($data["formname"] == "invoice_export_email")
 	{
 		// send email
+		$data["sender"]		= security_form_input_predefined("any", "sender", 1, "");
 		$data["subject"]	= security_form_input_predefined("any", "subject", 1, "");
 		$data["email_to"]	= security_form_input_predefined("any", "email_to", 1, "");
 		$data["email_cc"]	= security_form_input_predefined("any", "email_cc", 0, "");
@@ -292,7 +293,19 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 
 
 			// fetch sender address
-			$data["from"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+			//
+			// users have the choice of sending as the company or as their own staff email address & name.
+			//
+			if ($data["sender"] == "system")
+			{
+				// send as the system
+				$data["from"] = sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." <". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") .">";
+			}
+			else
+			{
+				// send as the user
+				$data["from"] = user_information("realname") . " <". user_information("contact_email") .">";
+			}
 			
 
 			$mail_headers = array(

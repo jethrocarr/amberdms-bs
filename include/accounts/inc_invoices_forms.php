@@ -309,6 +309,19 @@ class invoice_form_export
 
 		// general
 		$structure = NULL;
+		$structure["fieldname"] 	= "sender";
+		$structure["type"]		= "radio";
+		$structure["defaultvalue"]	= "system";
+		
+		$structure["values"]		= array("system", "user");
+		
+		$structure["translations"]["system"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." &lt;". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") ."&gt;";
+		$structure["translations"]["user"]	= user_information("realname") . " &lt;". user_information("contact_email") ."&gt;";
+		
+		$this->obj_form_email->add_input($structure);
+
+		
+		$structure = NULL;
 		$structure["fieldname"] 	= "subject";
 		$structure["type"]		= "input";
 
@@ -466,6 +479,7 @@ class invoice_form_export
 			print "<h3>Email PDF:</h3>";
 			print "<form method=\"". $this->obj_form_email->method ."\" action=\"". $this->obj_form_email->action ."\">";
 			print "<table width=\"100%\">";
+			$this->obj_form_email->render_row("sender");
 			$this->obj_form_email->render_row("subject");
 			$this->obj_form_email->render_row("email_to");
 			$this->obj_form_email->render_row("email_cc");
