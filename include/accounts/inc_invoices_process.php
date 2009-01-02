@@ -335,6 +335,34 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 			$sql_obj->execute();
 
 
+			/*
+				Add the email information to the journal
+			*/
+
+			$journal = New journal_process;
+		
+			$journal->prepare_set_journalname("account_". $invoice->type);
+			$journal->prepare_set_customid($invoice->id);
+			$journal->prepare_set_type("text");
+		
+			$journal->prepare_set_title("EMAIL: ". $data["subject"]);
+
+			$data["content"] = NULL;
+			$data["content"] .= "To: ". $data["email_to"] ."\n";
+			$data["content"] .= "Cc: ". $data["email_cc"] ."\n";
+			$data["content"] .= "Bcc: ". $data["email_bcc"] ."\n";
+			$data["content"] .= "From: ". $data["from"] ."\n";
+			$data["content"] .= "\n";
+			$data["content"] .= $data["message"];
+			$data["content"] .= "\n\n";
+			$data["content"] .= "[invoice attachment scrubbed]";
+			
+			
+			$journal->prepare_set_content($data["content"]);
+
+			$journal->action_create();
+
+
 			// cleanup - remove the temporary files
 			log_debug("inc_invoices_process", "Performing cleanup - removing temporary file $tmp_filename");
 			unlink($tmp_filename);
