@@ -254,121 +254,13 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 	{
 		if ($data["formname"] == "invoice_export_email")
 		{
-			// send email
-
 			/*
 				Generate a PDF of the invoice and email it to the customer
 			*/
 
-			log_debug("inc_invoices_process", "Generating invoice PDF for emailing");
-
-			// generate PDF
 			$invoice->load_data();
-			$invoice->generate_pdf();
+			$invoice->email_invoice($data["sender"], $data["email_to"], $data["email_cc"], $data["email_bcc"], $data["subject"], $data["message"]);
 
-			// save to a temporary file
-			$tmp_filename = file_generate_name("/tmp/invoice_". $invoice->data["code_invoice"] ."", "pdf");
-
-			if (!$fhandle = fopen($tmp_filename, "w"))
-			{
-				die("fatal error occured whilst writing to file $tmp_filename");
-			}
-			
-			fwrite($fhandle, $invoice->obj_pdf->output);
-			fclose($fhandle);
-
-
-
-			/*
-				Email the invoice
-			*/
-
-			log_debug("inc_invoices_process", "Sending email");
-
-			
-			
-			// external dependency of Mail_Mime
-			include('Mail.php');
-			include('Mail/mime.php');
-
-
-			// fetch sender address
-			//
-			// users have the choice of sending as the company or as their own staff email address & name.
-			//
-			if ($data["sender"] == "system")
-			{
-				// send as the system
-				$data["from"] = sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." <". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") .">";
-			}
-			else
-			{
-				// send as the user
-				$data["from"] = user_information("realname") . " <". user_information("contact_email") .">";
-			}
-			
-
-			$mail_headers = array(
-					'From'   	=> $data["from"],
-					'Subject'	=> $data["subject"],
-					'Cc'		=> $data["email_cc"],
-					'Bcc'		=> $data["email_bcc"]
-			);
-
-			$mail_mime = new Mail_mime("\n");
-			
-			$mail_mime->setTXTBody($data["message"]);
-			$mail_mime->addAttachment($tmp_filename, 'application/pdf');
-
-			$mail_body	= $mail_mime->get();
-		 	$mail_headers	= $mail_mime->headers($mail_headers);
-
-			$mail		= & Mail::factory('mail');
-			$mail->send($data["email_to"], $mail_headers, $mail_body);
-
-
-			/*
-				Mark the invoice as having been sent
-			*/
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE account_". $invoice->type ." SET date_sent='". date("Y-m-d") ."', sentmethod='email' WHERE id='". $invoice->id ."'";
-			$sql_obj->execute();
-
-
-			/*
-				Add the email information to the journal
-			*/
-
-			$journal = New journal_process;
-		
-			$journal->prepare_set_journalname("account_". $invoice->type);
-			$journal->prepare_set_customid($invoice->id);
-			$journal->prepare_set_type("text");
-		
-			$journal->prepare_set_title("EMAIL: ". $data["subject"]);
-
-			$data["content"] = NULL;
-			$data["content"] .= "To: ". $data["email_to"] ."\n";
-			$data["content"] .= "Cc: ". $data["email_cc"] ."\n";
-			$data["content"] .= "Bcc: ". $data["email_bcc"] ."\n";
-			$data["content"] .= "From: ". $data["from"] ."\n";
-			$data["content"] .= "\n";
-			$data["content"] .= $data["message"];
-			$data["content"] .= "\n\n";
-			$data["content"] .= "[invoice attachment scrubbed]";
-			
-			
-			$journal->prepare_set_content($data["content"]);
-
-			$journal->action_create();
-
-
-			// cleanup - remove the temporary files
-			log_debug("inc_invoices_process", "Performing cleanup - removing temporary file $tmp_filename");
-			unlink($tmp_filename);
-
-
-			// success
 			$_SESSION["notification"]["message"][] = "Email sent successfully.";
 		}
 		else
