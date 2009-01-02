@@ -20,11 +20,37 @@ class template_engine
 {
 	var $data;		// data for standard fields
 	var $data_array;	// data for array field	
+	var $data_files;	// data for files
 
 	var $template;		// template contents
 	var $processed;		// processed lines of the templates (template with field data merged)
 
 	var $output;		// field to hold processed information (eg: binary file data)
+
+
+	/*
+		Constructor/Destructors
+	*/
+	function template_engine()
+	{
+		log_debug("template_engine", "Executing template_engine()");
+		
+		// make sure we call the destructor on shutdown to cleanup all the tmp files.
+		register_shutdown_function(array(&$this, 'destructor'));
+        }
+
+	function destructor()
+	{
+		log_debug("template_engine", "Executing destructor()");
+		
+		// remove any temporary files
+		foreach (array_keys($this->data_files) as $var)
+		{
+			log_debug("template_engine", "Removing tmp file ". $this->data_files[$var]["filename"] ."");
+			unlink($this->data_files[$var]["filename"]);
+		}
+	}
+
 
 
 	/*
@@ -80,6 +106,57 @@ class template_engine
 
 
 	/*
+		prepare_add_file
+
+		Add a new file to the template.
+
+		Values
+		fieldname		name of the field to replace with the tmp filename
+		file_extension		extension of the file to create
+		
+		file_type		type of the file in the file_uploads table
+		file_id			ID of the file in the file_uploads table
+
+		Return
+		0			failure
+		1			success
+	*/
+	function prepare_add_file($fieldname, $file_extension, $file_type, $file_id)
+	{
+		log_debug("template_engine", "Executing prepare_add_file($fieldname, $file_extension, $file_type, $file_id)");
+		
+		
+		$tmp_filename = file_generate_name("/tmp/$fieldname", $file_extension);
+
+		
+		// output file data
+		$file_obj = New file_process;
+
+		$file_obj->fetch_information_by_type("COMPANY_LOGO", 0);
+		$file_obj->write_filedata($tmp_filename);
+
+
+		// work out the filename without path or extension
+		//
+		// we have to do this, since latex will not tolerate file extensions in the filename when
+		// the file is referenced in the tex data.
+		//
+		preg_match("/\S*\/(\S*).$file_extension$/", $tmp_filename, $matches);
+				
+		$tmp_filename_short = $matches[1];
+		
+
+		// map fieldname to filename
+		$this->data_files[$fieldname]["filename"]	= $tmp_filename;
+		$this->data_files[$fieldname]["filename_short"]	= $tmp_filename_short;
+
+		log_debug("template_engine", "Wrote tempory file $tmp_filename with shortname of $tmp_filename_short");
+		
+		return 1;
+	}
+
+
+	/*
 		prepare_add_array
 
 		Add a new array to the template - this will tell the code to create
@@ -126,20 +203,21 @@ class template_engine
 		log_debug("template_engine", "Executing prepare_filltemplate()");
 
 		$fieldname	= "";
-		$inloop		= 0;
+		$in_foreach	= 0;
+		$in_if		= 0;
 		
 		for ($i=0; $i < count($this->template); $i++)
 		{
 			$line = $this->template[$i];
 
 			
-			// if $inloop is set, then this line should be repeated for each row in the array
-			if ($inloop)
+			// if $in_foreach is set, then this line should be repeated for each row in the array
+			if ($in_foreach)
 			{
 				// check for loop end
 				if (preg_match("/^\S*\send/", $line))
 				{
-					$inloop = 0;
+					$in_foreach = 0;
 				}
 				else
 				{
@@ -166,24 +244,22 @@ class template_engine
 				}
 				
 			}
-			else
+
+			// if $in_if is set, then the lines should only be set and uncommented if the if statement is true
+			if ($in_if)
 			{
-				// NOT IN LOOP SECTION
-
-				// check for loop start
-				if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
+				// check for if end
+				if (preg_match("/^\S*\send/", $line))
 				{
-					$fieldname = $matches[1];
-				
-					log_debug("template_engine","Processing array field $fieldname");
-
-					$inloop = 1;
+					$in_if = 0;
 				}
 				else
 				{
-					// process any single variables in this line
-					$line_tmp = $line;
+
+					// remove commenting from the front of the line
+					$line_tmp = preg_replace("/^\S*\s/", "", $line);
 				
+					// process any single variables in this line
 					if ($this->data)
 					{
 						foreach (array_keys($this->data) as $var)
@@ -191,7 +267,76 @@ class template_engine
 							$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
 						}
 					}
+
+					// process any files in this line
+					if ($this->data_files)
+					{
+						foreach (array_keys($this->data_files) as $var)
+						{
+							$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+						}
+					}
 					
+					$this->processed[] = $line_tmp;
+
+				}
+			}
+
+		
+			if (!$in_if && !$in_foreach)
+			{
+				// NOT IN LOOP SECTIONS
+
+
+				if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
+				{
+					// check for foreach loop
+					$fieldname = $matches[1];
+				
+					log_debug("template_engine","Processing array field $fieldname");
+
+					$in_foreach = 1;
+				}
+				elseif (preg_match("/^\S*\sif\s(\S*)/", $line, $matches))
+				{
+					// check for if loop
+					$fieldname = $matches[1];
+
+					log_debug("template_engine","Processing if field $fieldname");
+
+					if ($this->data[$fieldname] || $this->data_files[$fieldname])
+					{
+						log_debug("template_engine", "File $fieldname has been set, processing optional lines.");
+						$in_if = 1;
+					}
+					else
+					{
+						log_debug("template_engine", "File $fieldname has not been set, so will not display if section of template");
+					}
+				}
+				else
+				{
+					$line_tmp = $line;
+				
+					// process any single variables in this line
+					if ($this->data)
+					{
+						foreach (array_keys($this->data) as $var)
+						{
+							$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+						}
+					}
+
+					// process any files in this line
+					if ($this->data_files)
+					{
+						foreach (array_keys($this->data_files) as $var)
+						{
+							$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+						}
+					}
+
+
 					$this->processed[] = $line_tmp;
 				}
 			}
@@ -271,22 +416,9 @@ class template_engine_latex extends template_engine
 	{
 		log_debug("template_engine_latex", "Executing generate_pdf()");
 
-		// calculate a temporary filename
-		$uniqueid = 0;
-		while ($tmp_filename == "")
-		{
-			if (file_exists("/tmp/amberdms_billing_system_". mktime() ."-$uniqueid"))
-			{
-				// the filename has already been used, try incrementing
-				$uniqueid++;
-			}
-			else
-			{
-				// found an avaliable ID
-				$tmp_filename = "/tmp/amberdms_billing_system_". mktime() ."-$uniqueid";
-			}
-		}
 
+		// generate unique tmp filename
+		$tmp_filename = file_generate_name("/tmp/amberdms_billing_system");
 
 		// write out template data
 		if (!$handle = fopen("$tmp_filename.tex", "w"))
@@ -323,6 +455,7 @@ class template_engine_latex extends template_engine
 			$this->output = file_get_contents("$tmp_filename.pdf");
 
 			// remove temporary files from disk
+			unlink("$tmp_filename");
 			unlink("$tmp_filename.aux");
 			unlink("$tmp_filename.log");
 			unlink("$tmp_filename.tex");
