@@ -74,7 +74,7 @@ class page_output
 		$this->obj_form_invoice			= New invoice_form_export;
 		$this->obj_form_invoice->type		= "ar";
 		$this->obj_form_invoice->invoiceid	= $this->id;
-		$this->obj_form_invoice->page_export	= "accounts/ar/invoice-export.php";
+		$this->obj_form_invoice->processpage	= "accounts/ar/invoice-export-process.php";
 		
 		$this->obj_form_invoice->execute();
 	}
