@@ -342,9 +342,9 @@ class invoice_form_export
 		$this->obj_form_email->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"] 	= "message";
+		$structure["fieldname"] 	= "email_message";
 		$structure["type"]		= "textarea";
-		$structure["defaultvalue"]	= "";
+		$structure["defaultvalue"]	= "Invoice attached in PDF format";
 		$this->obj_form_email->add_input($structure);
 		
 		// hidden
@@ -470,7 +470,7 @@ class invoice_form_export
 			$this->obj_form_email->render_row("email_to");
 			$this->obj_form_email->render_row("email_cc");
 			$this->obj_form_email->render_row("email_bcc");
-			$this->obj_form_email->render_row("message");
+			$this->obj_form_email->render_row("email_message");
 			print "</table>";
 		
 			$this->obj_form_email->render_field("formname");

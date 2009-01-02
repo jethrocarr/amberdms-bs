@@ -214,6 +214,11 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 	if ($data["formname"] == "invoice_export_email")
 	{
 		// send email
+		$data["subject"]	= security_form_input_predefined("any", "subject", 1, "");
+		$data["email_to"]	= security_form_input_predefined("any", "email_to", 1, "");
+		$data["email_cc"]	= security_form_input_predefined("any", "email_cc", 0, "");
+		$data["email_bcc"]	= security_form_input_predefined("any", "email_bcc", 0, "");
+		$data["message"]	= security_form_input_predefined("any", "email_message", 1, "");
 		
 	}
 	else
@@ -249,7 +254,81 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 		if ($data["formname"] == "invoice_export_email")
 		{
 			// send email
+
+			/*
+				Generate a PDF of the invoice and email it to the customer
+			*/
+
+			log_debug("inc_invoices_process", "Generating invoice PDF for emailing");
+
+			// generate PDF
+			$invoice->load_data();
+			$invoice->generate_pdf();
+
+			// save to a temporary file
+			$tmp_filename = file_generate_name("/tmp/invoice_". $invoice->data["code_invoice"] ."", "pdf");
+
+			if (!$fhandle = fopen($tmp_filename, "w"))
+			{
+				die("fatal error occured whilst writing to file $tmp_filename");
+			}
 			
+			fwrite($fhandle, $invoice->obj_pdf->output);
+			fclose($fhandle);
+
+
+
+			/*
+				Email the invoice
+			*/
+
+			log_debug("inc_invoices_process", "Sending email");
+
+			
+			
+			// external dependency of Mail_Mime
+			include('Mail.php');
+			include('Mail/mime.php');
+
+
+			// fetch sender address
+			$data["from"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+			
+
+			$mail_headers = array(
+					'From'   	=> $data["from"],
+					'Subject'	=> $data["subject"],
+					'Cc'		=> $data["email_cc"],
+					'Bcc'		=> $data["email_bcc"]
+			);
+
+			$mail_mime = new Mail_mime("\n");
+			
+			$mail_mime->setTXTBody($data["message"]);
+			$mail_mime->addAttachment($tmp_filename, 'application/pdf');
+
+			$mail_body	= $mail_mime->get();
+		 	$mail_headers	= $mail_mime->headers($mail_headers);
+
+			$mail		= & Mail::factory('mail');
+			$mail->send($data["email_to"], $mail_headers, $mail_body);
+
+
+			/*
+				Mark the invoice as having been sent
+			*/
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE account_". $invoice->type ." SET date_sent='". date("Y-m-d") ."', sentmethod='email' WHERE id='". $invoice->id ."'";
+			$sql_obj->execute();
+
+
+			// cleanup - remove the temporary files
+			log_debug("inc_invoices_process", "Performing cleanup - removing temporary file $tmp_filename");
+			unlink($tmp_filename);
+
+
+			// success
+			$_SESSION["notification"]["message"][] = "Email sent successfully.";
 		}
 		else
 		{
@@ -275,7 +354,7 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 
 
 			// PDF headers
-			$filename = "amberdms_bs_". mktime() .".pdf";
+			$filename = "/tmp/invoice_". $invoice->data["code_invoice"] .".pdf";
 			
 			// required for IE, otherwise Content-disposition is ignored
 			if (ini_get('zlib.output_compression'))
