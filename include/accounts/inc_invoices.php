@@ -229,7 +229,7 @@ class invoice
 		
 		// fetch invoice information from DB.
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT * FROM account_". $this->type ." WHERE id='". $this->id ."'";
+		$sql_obj->string	= "SELECT * FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -242,7 +242,7 @@ class invoice
 			$sql_obj->fetch_array();
 
 			// save all the data into class variables
-			$this->data = $sql_obj->data;
+			$this->data = $sql_obj->data[0];
 
 			unset($sql_obj);
 		}
@@ -604,23 +604,26 @@ class invoice
 	function generate_pdf()
 	{
 		log_debug("invoice_form_export", "Executing prepare_generate_pdf()");
-		
+
 		// start the PDF object
-		$this->obj_pdf = New template_engine_latex;
+		// note: the & allows decontructors to operate
+		$this->obj_pdf =& New template_engine_latex;
 
 		// load template
 		$this->obj_pdf->prepare_load_template("../../templates/latex/". $this->type ."_invoice.tex");
 
 
 		/*
-			Fetch data + define fields
+			Customer Data
 		*/
+		
 
 		// fetch customer data
 		$sql_customer_obj		= New sql_query;
 		$sql_customer_obj->string	= "SELECT name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
 		$sql_customer_obj->execute();
 		$sql_customer_obj->fetch_array();
+
 
 		// customer fields
 		$this->obj_pdf->prepare_add_field("customer\_name", $sql_customer_obj->data[0]["name_customer"]);
@@ -637,6 +640,40 @@ class invoice
 		
 		$this->obj_pdf->prepare_add_field("customer\_address1\_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
 
+
+
+		/*
+			Company Data
+		*/
+		
+		// company logo
+		$this->obj_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
+		
+		// fetch company data
+		$sql_company_obj		= New sql_query;
+		$sql_company_obj->string	= "SELECT name, value FROM config WHERE name LIKE '%COMPANY%'";
+		$sql_company_obj->execute();
+		$sql_company_obj->fetch_array();
+
+		foreach ($sql_company_obj->data as $data_db)
+		{
+			$data_company[ strtolower($data_db["name"]) ] = $data_db["value"];
+		}
+
+		// company fields
+		$this->obj_pdf->prepare_add_field("company\_name", $data_company["company_name"]);
+		
+		$this->obj_pdf->prepare_add_field("company\_contact\_email", $data_company["company_contact_email"]);
+		$this->obj_pdf->prepare_add_field("company\_contact\_phone", $data_company["company_contact_phone"]);
+		$this->obj_pdf->prepare_add_field("company\_contact\_fax", $data_company["company_contact_fax"]);
+		
+		$this->obj_pdf->prepare_add_field("company\_address1\_street", $data_company["company_address1_street"]);
+		$this->obj_pdf->prepare_add_field("company\_address1\_city", $data_company["company_address1_city"]);
+		$this->obj_pdf->prepare_add_field("company\_address1\_state", $data_company["company_address1_state"]);
+		$this->obj_pdf->prepare_add_field("company\_address1\_country", $data_company["company_address1_country"]);
+		$this->obj_pdf->prepare_add_field("company\_address1\_zipcode", $data_company["company_address1_zipcode"]);
+
+		
 
 		/*
 			Invoice Data (exc items/taxes)
@@ -793,6 +830,11 @@ class invoice
 		// fill template
 		$this->obj_pdf->prepare_filltemplate();
 
+		// Useful for debugging - shows the processed latex data before it is turned into a PDF.
+		//print "<pre>";
+		//print_r($this->obj_pdf->processed);
+		//print "</pre>";
+		
 		// generate PDF output
 		$this->obj_pdf->generate_pdf();
 
