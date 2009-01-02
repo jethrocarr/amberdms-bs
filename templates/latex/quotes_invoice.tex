@@ -15,16 +15,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
 %% Because html converters don't know tabularnewline
 \providecommand{\tabularnewline}{\\}
-%% A simple dot to overcome graphicx limitations
-\newcommand{\lyxdot}{.}
 
 
 \makeatother
 
 \usepackage{babel}
 
+
 \begin{document}
-%%\noindent \includegraphics{\lyxdot \lyxdot [companylogo]}
+\noindent \includegraphics{(company_logo)}
+		
 
 \noindent \begin{tabular}{>{\centering}p{0.5\columnwidth}>{\centering}p{0.5\columnwidth}}
 \noindent \begin{flushleft}
@@ -49,6 +49,8 @@
 & \begin{flushleft}
 \textbf{From:}
 
+(company\_name)
+
 (company\_address1\_street)
 
 (company\_address1\_city)
@@ -61,14 +63,19 @@
 
 \vspace{5mm}
 
-(company\_contactdetails)
+\begin{tabular}{ll}
+\textbf{Email} & (company\_contact\_email) \tabularnewline
+\textbf{Phone} & (company\_contact\_phone) \tabularnewline
+%% if company\_contact\_fax
+%% \textbf{Fax} & (company\_contact\_fax) \tabularnewline
+%% end
+\end{tabular}
 
 \par\end{flushleft}
 \tabularnewline
 \end{tabular}
 
 \noindent \vspace{10mm}
-
 
 \noindent \textbf{QUOTATION}
 
