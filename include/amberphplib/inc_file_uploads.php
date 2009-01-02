@@ -474,7 +474,128 @@ class file_process extends file_base
 		}
 	}
 
+
+
+	/*
+		write_filedata
+
+		Writes the contents of the file data to a file on the server's filesystem. This is useful when generating documents and need
+		to include images out of the file upload system.
+
+		NOTE: fetch_information_by_SOMETHING must be called to load required database
+		before executing this function
+
+		Fields
+		$filename		File to write to
+
+		Return codes:
+		0	failure
+		1	success
+	*/
+		
+	function write_filedata($filename)
+	{
+		log_debug("file_process", "Executing write_filedata($filename)");
+
+		// check that values required are provided
+		// if there were not and we didn't have this check, we would see some very weird bugs.
+		if (!$this->data["id"] || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
+		{
+			log_debug("file_information", "Error: function fetch_information_by_SOMETHING must be executed before function render_filedata");
+			return 0;
+		}
+
+		if (!$filename)
+		{
+			log_debug("file_information", "Error: A filename must be supplied.");
+			return 0;
+		}
+
 	
+
+		
+		/*
+			Output File Data
+
+			Each file in the DB has a field to show where the file is located, so if a user
+			has some files on disk and some in the DB, we can handle it accordingly.
+		*/
+
+		log_debug("file_information", "Fetching file ". $this->data["id"] ." from location ". $this->data["file_location"] ."");
+		
+		if ($this->data["file_location"] == "db")
+		{
+			// open output file
+			if (!$fhandle = fopen($filename, "w"))
+			{
+				log_write("error", "file_information", "Unable to open output file \"$filename\" for writing.");
+				return 0;
+			}
+	
+		
+			/*
+				Fetch file data from database
+			*/
+		
+			// fetch a list of all the rows with file data from the file_upload_data directory
+			$sql_obj = New sql_query;
+			$sql_obj->string = "SELECT id FROM file_upload_data WHERE fileid='". $this->data["id"] ."' ORDER BY id";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				die("No data found for file". $this->data["id"] ."");
+			}
+
+			$sql_obj->fetch_array();
+
+			// create an array of all the IDs
+			$file_data_ids = array();
+			foreach ($sql_obj->data as $data)
+			{
+				$file_data_ids[] = $data["id"];
+			}
+
+			
+			// fetch the data for each ID
+			foreach ($file_data_ids as $id)
+			{
+				$sql_obj = New sql_query;
+				$sql_obj->string = "SELECT data FROM file_upload_data WHERE id='$id' LIMIT 1";
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+
+				fwrite($fhandle, $sql_obj->data[0]["data"]);
+			}
+		
+			// close the output file
+			fclose($fhandle);
+		}
+		else
+		{
+			/*
+				Output data from filesystem
+			*/
+			// get file from filesystem
+			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
+			
+			if (file_exists($file_path))
+			{
+				// copy the file
+				if (!copy($file_path, $filename))
+				{
+					log_write("error", "file_information", "A fatal error occured trying to copy file \"$file_path\" to \"$filename\"");
+				}
+			}
+			else
+			{
+				die("FATAL ERROR: File ". $this->data["id"] . " $file_path is missing or inaccessible.");
+			}
+		}
+
+	}
+
+
 } // end of file_process class
 
 
