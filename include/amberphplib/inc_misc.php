@@ -387,4 +387,53 @@ function log_debug_render()
 	print "</table>";
 }
 
+
+/*
+	FILESYSTEM FUNCTIONS
+*/
+
+
+/*
+	file_generate_name
+
+	Generates a unique name based on the base name provided and touches it to reserve it.
+
+	Fields
+	basename		Base of the filename
+	extension		Extension for the file (if any)
+
+	Returns
+	string			Name for an avaliable file
+*/
+function file_generate_name($basename, $extension = NULL)
+{
+	log_debug("inc_misc", "Executing file_generate_name($basename, $extension)");
+	
+
+	if ($extension)
+	{
+		$extension = ".$extension";
+	}
+
+	// calculate a temporary filename
+	$uniqueid = 0;
+	while ($complete == "")
+	{
+		$filename = $basename ."_". mktime() ."_$uniqueid" . $extension;
+
+		if (file_exists($filename))
+		{
+			// the filename has already been used, try incrementing
+			$uniqueid++;
+		}
+		else
+		{
+			// found an avaliable ID
+			touch($filename);
+			return $filename;
+		}
+	}
+}
+
+
 ?>
