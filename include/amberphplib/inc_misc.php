@@ -117,7 +117,14 @@ function format_text_display($text)
 {
 	log_debug("misc", "Executing format_text_display($text)");
 	
-	return str_replace("\n", "<br>", $text);
+	// replace unrenderable html tags of > and <
+	$text = str_replace(">", "&gt;", $text);
+	$text = str_replace("<", "&lt;", $text);
+	
+	// fix newlines last
+	$text = str_replace("\n", "<br>", $text);
+
+	return $text;
 }
 
 
