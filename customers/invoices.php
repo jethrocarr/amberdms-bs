@@ -81,13 +81,14 @@ class page_output
 		$this->obj_table->add_column("price", "amount", "account_ar.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_ar.amount_total");
 		$this->obj_table->add_column("price", "amount_paid", "account_ar.amount_paid");
+		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
 
 		// totals
 		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
 
 		
 		// defaults
-		$this->obj_table->columns	= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid");
+		$this->obj_table->columns	= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid", "sent");
 		$this->obj_table->columns_order	= array("code_invoice");
 
 		// define SQL structure
