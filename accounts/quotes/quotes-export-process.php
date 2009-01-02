@@ -23,8 +23,8 @@ if (user_permissions_get('accounts_quotes_write'))
 	*/
 
 	// edit invoice
-	$returnpage_error	= "accounts/quotes/invoice-export.php";
-	$returnpage_success	= "accounts/quotes/invoice-export.php";
+	$returnpage_error	= "accounts/quotes/quotes-export.php";
+	$returnpage_success	= "accounts/quotes/quotes-export.php";
 
 	invoice_form_export_process("quotes", $returnpage_error, $returnpage_success);
 }
