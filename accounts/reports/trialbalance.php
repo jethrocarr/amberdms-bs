@@ -259,6 +259,9 @@ class page_output
 			Fetch data + define fields
 		*/
 
+		// company logo
+		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
+
 		// dates
 		$template_pdf->prepare_add_field("date\_start", $this->date_start);
 		$template_pdf->prepare_add_field("date\_end", $this->date_end);

@@ -705,6 +705,9 @@ class page_output
 			Fill in template fields
 		*/
 
+		// company logo
+		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
+
 		// mode
 		$template_pdf->prepare_add_field("mode", $this->mode);
 		
