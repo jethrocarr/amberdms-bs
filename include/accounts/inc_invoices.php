@@ -672,6 +672,11 @@ class invoice
 		$this->obj_pdf->prepare_add_field("company\_address1\_state", $data_company["company_address1_state"]);
 		$this->obj_pdf->prepare_add_field("company\_address1\_country", $data_company["company_address1_country"]);
 		$this->obj_pdf->prepare_add_field("company\_address1\_zipcode", $data_company["company_address1_zipcode"]);
+		
+		if ($this->type == "ar")
+		{
+			$this->obj_pdf->prepare_add_field("company\_payment\_details", $data_company["company_payment_details"]);
+		}
 
 		
 

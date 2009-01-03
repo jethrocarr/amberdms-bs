@@ -52,9 +52,19 @@ class page_output
 			foreach ($sql_obj->data as $data)
 			{
 				$structure = NULL;
-				$structure["fieldname"] 	= $data["name"];
-				$structure["type"]		= "input";
-				$structure["defaultvalue"]	= $data["value"];
+				$structure["fieldname"] = $data["name"];
+
+				if ($structure["fieldname"] == "COMPANY_ADDRESS1_STREET" || $structure["fieldname"] == "COMPANY_PAYMENT_DETAILS")
+				{
+					$structure["type"] = "textarea";
+				}
+				else
+				{
+					// default to standard input
+					$structure["type"] = "input";
+				}
+				
+				$structure["defaultvalue"] = $data["value"];
 				$this->obj_form->add_input($structure);
 		
 				$this->obj_form->subforms["program_options"][]	= $data["name"];
