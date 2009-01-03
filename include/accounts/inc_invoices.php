@@ -610,8 +610,16 @@ class invoice
 		$this->obj_pdf =& New template_engine_latex;
 
 		// load template
-		$this->obj_pdf->prepare_load_template("../../templates/latex/". $this->type ."_invoice.tex");
+		if (file_exists("../../templates/latex/". $this->type ."_invoice.tex"))
+		{
+			$this->obj_pdf->prepare_load_template("../../templates/latex/". $this->type ."_invoice.tex");
+		}
+		else
+		{
+			$this->obj_pdf->prepare_load_template("../templates/latex/". $this->type ."_invoice.tex");
+		}
 
+		
 
 		/*
 			Customer Data

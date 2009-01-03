@@ -339,7 +339,7 @@ function service_invoices_generate($customerid = NULL)
 		Run through all the customers
 	*/
 	$sql_customers_obj		= New sql_query;
-	$sql_customers_obj->string	= "SELECT id, code_customer FROM customers";
+	$sql_customers_obj->string	= "SELECT id, code_customer, name_contact, contact_email FROM customers";
 
 	if ($customerid)
 		$sql_customers_obj->string .= " WHERE id='$customerid'";
@@ -735,12 +735,25 @@ function service_invoices_generate($customerid = NULL)
 				} // end of processing periods
 
 
-				/*
-						Send the invoice to the customer
-				*/
-					
-				// TODO: write this.
 
+				/*
+						Send the invoice to the customer as a PDF via email
+				*/
+
+		
+				// load completed invoice data
+				$invoice	= New invoice;
+				$invoice->id	= $invoiceid;
+				$invoice->type	= "ar";
+				$invoice->load_data();
+
+				// send email
+				$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
+
+				// complete
+				unset ($invoice);
+
+				
 
 				// complete for this customer
 				$_SESSION["notification"]["message"][] = "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created";
