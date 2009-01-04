@@ -55,6 +55,7 @@ class journal_base
 
 		// content
 		$this->sql_obj->prepare_sql_addfield("id", "");
+		$this->sql_obj->prepare_sql_addfield("locked", "");
 		$this->sql_obj->prepare_sql_addfield("customid", "");
 		$this->sql_obj->prepare_sql_addfield("type", "");
 		$this->sql_obj->prepare_sql_addfield("userid", "");
