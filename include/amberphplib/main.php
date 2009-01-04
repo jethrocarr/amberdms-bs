@@ -40,19 +40,32 @@ function log_write($type, $category, $content)
 		$log_record["time"]	= ((float)$usec + (float)$sec);
 		
 		$_SESSION["user"]["log_debug"][] = $log_record;
+		
+		// print log messages when running from CLI
+		if ($_SESSION["mode"] == "cli")
+			print "Debug: $content\n";
 	}
 
 	// also add error messages to the error array
 	if ($type == "error")
 	{
 		$_SESSION["error"]["message"][] = $content;
+		
+		// print log messages when running from CLI
+		if ($_SESSION["mode"] == "cli")
+			print "Error: $content\n";
 	}
 
 	// also add notification messages to the notification array
 	if ($type == "notification")
 	{
 		$_SESSION["notification"]["message"][] = $content;
+		
+		// print log messages when running from CLI
+		if ($_SESSION["mode"] == "cli")
+			print "$content\n";
 	}
+
 }
 
 
