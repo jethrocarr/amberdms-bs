@@ -419,31 +419,27 @@ class journal_base
 
 		if ($this->structure["id"])
 		{
+			// verify that the journal requested exists by fetching the lock status
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT timestamp FROM `journal` WHERE id='". $this->structure["id"] ."' LIMIT 1";
+			$sql_obj->string	= "SELECT locked FROM `journal` WHERE id='". $this->structure["id"] ."' LIMIT 1";
 			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
 			{
-				// we have verified that the entry exists, we need to check the timestamp
-				$sql_obj->fetch_array();
+				// we have verified that the entry exists, now we return different return codes
+				// depending whether the entry is locked or not.
 				
-				// the lock value is configurable, let's check if it's correct.
-				// note: if the journallock is set to 0, it means there is no locking of journal entries
-				$journallock = sql_get_singlevalue("SELECT value FROM `config` WHERE name='JOURNAL_LOCK'");
-
-				if ($journallock)
+				$sql_obj->fetch_array();
+			
+				if ($sql_obj->data[0]["locked"])
 				{
-					if ((mktime() - (86400 * $journallock)) < $sql_obj->data[0]["timestamp"])
-					{
-						// journal entry is valid and editable
-						return 1;
-					}
-					else
-					{
-						// journal entry is valid, but has now locked
-						return 2;
-					}
+					// journal entry is valid, but has now locked
+					return 2;
+				}
+				else
+				{
+					// journal entry is valid and editable
+					return 1;
 				}
 			}
 		}
@@ -499,20 +495,11 @@ class journal_display extends journal_base
 				// if this journal entry was added by this user, allow it to be edited
 				if ($data["userid"] == $_SESSION["user"]["id"])
 				{
-					// fetch the journal lock value
-					// 0 == no locking of journal entries
-					// # == number of days after creation to lock
-
-					$journallock = sql_get_singlevalue("SELECT value FROM `config` WHERE name='JOURNAL_LOCK'");
-
-					if ($journallock)
+					if (!$data["locked"])
 					{
-						if ((mktime() - (86400 * $journallock)) < $data["timestamp"])
-						{
-							// user is able to edit/delete this entry
-							$editlink = "(<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=edit\">edit</a> || ";
-							$editlink .= "<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=delete\">delete</a>)";
-						}
+						// user is able to edit/delete this entry
+						$editlink = "(<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=edit\">edit</a> || ";
+						$editlink .= "<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=delete\">delete</a>)";
 					}
 				}
 		
