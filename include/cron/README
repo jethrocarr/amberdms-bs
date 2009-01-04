@@ -1,0 +1,5 @@
+This directory contains scripts executed by cron on a daily basis for performing auditing, nightly invoicing and service management tasks.
+
+If installed from an Amberdms-provided package, there should already be a file in /etc/cron.d/ to run the scripts - if not, then refer
+to the product documentation for installation instructions.
+
