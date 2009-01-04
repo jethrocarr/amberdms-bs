@@ -27,7 +27,11 @@ $config["db_pass"] = "";				// MySQL password (if any)
 // Connect to the MySQL database
 include("database.php");
 
-// Initate session variables
-session_start();
+// Initate session variables (for webpages only)
+if ($_SERVER['SERVER_NAME'])
+{
+	session_start();
+}
+
 
 ?>
