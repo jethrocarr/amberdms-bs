@@ -213,7 +213,8 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
-		if ($services_customers_id)
+
+		if ($this->services_customers_id)
 		{
 			$structure["defaultvalue"]	= "Save Changes";
 		}

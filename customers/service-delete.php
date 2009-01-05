@@ -117,13 +117,13 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "customerid";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $customerid;
+		$structure["defaultvalue"]	= $this->customerid;
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"]		= "services_customers_id";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $services_customers_id;
+		$structure["defaultvalue"]	= $this->services_customers_id;
 		$this->obj_form->add_input($structure);
 		
 

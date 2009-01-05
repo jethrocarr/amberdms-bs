@@ -115,7 +115,10 @@ class page_output
 		{
 			format_msgbox("important", "<p><b>This customer is not currently subscribed to any services.</b></p>");
 
-			print "<p><b><a href=\"index.php?page=customers/service-edit.php&id=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
+			if (user_permissions_get("customers_write"))
+			{
+				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
+			}
 		}
 		else
 		{
@@ -149,13 +152,8 @@ class page_output
 			if (user_permissions_get("customers_write"))
 			{
 				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add a new service to your customer</a>.</b></p>";
+				print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
 			}
-		}
-
-		
-		if (user_permissions_get("customers_write"))
-		{
-			print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
 		}
 
 	}
