@@ -26,7 +26,7 @@ require("inc_services_usage.php");
 	Values
 	customerid		(optional) ID of the customer account to generate new period
 				information for. If blank, will execute for all customers.
-
+				
 	Results
 	0			failure
 	1			success
@@ -324,6 +324,9 @@ function service_periods_add($services_customers_id, $billing_mode)
 	Values
 	customerid		(optional) ID of the customer account to generate new period
 				information for. If blank, will execute for all customers.
+
+	logmode			(optional) Mode either "web" or "script". This causes logging to be
+				either printed directly or displayed to screen.
 
 	Results
 	0			failure
@@ -756,7 +759,7 @@ function service_invoices_generate($customerid = NULL)
 				
 
 				// complete for this customer
-				$_SESSION["notification"]["message"][] = "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created";
+				log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
 
 
 			} // end of processing customers

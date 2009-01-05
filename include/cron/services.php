@@ -15,8 +15,9 @@
 require("../config.php");
 require("../amberphplib/main.php");
 
-
-// include service logic
+// custom includes
+require("../accounts/inc_ledger.php");
+require("../accounts/inc_invoices.php");
 require("../services/inc_services_invoicegen.php");
 
 
