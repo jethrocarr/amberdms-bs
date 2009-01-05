@@ -29,6 +29,8 @@ class page_output
 	var $obj_form_employee;
 	var $obj_table_week;
 
+	var $config_timesheet_booktofuture;
+
 
 	function page_output()
 	{
@@ -80,6 +82,8 @@ class page_output
 		$_SESSION["timereg"]["weekofyear"]	= $this->date_selected_weekofyear;
 
 		
+		// get future booking config option
+		$this->config_timesheet_booktofuture	= sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_BOOKTOFUTURE'");
 	}
 
 	function check_permissions()
@@ -417,9 +421,25 @@ class page_output
 		print "(". $this->date_selected_start ." to ". $this->date_selected_end .")<br>";
 		print "<br>";
 	
+		
 		print "<p><b>";
-		print "<a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_previousweek ."&year=". $date_option_previousyear ."\">Previous Week</a> || ";
-		print "<a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week</a>";
+		print "&lt;&lt; <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_previousweek ."&year=". $date_option_previousyear ."\">Previous Week</a>";
+
+		// check for date in the future
+		if ($this->config_timesheet_booktofuture == "disabled")
+		{
+			if (time_date_to_timestamp(time_calculate_weekstart($date_option_nextweek, $date_option_nextyear)) < mktime())
+			{
+				// end date is in not in the future
+				print " || <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week</a> &gt;&gt;";
+		
+			}
+		}
+		else
+		{
+			print " || <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week</a> &gt;&gt;";
+		}
+
 		print "</b></p>";
 		
 		print "</td></tr></table><br>";
@@ -455,27 +475,50 @@ class page_output
 		if ($this->employeeid)
 		{
 			// custom labels and links
+			if ($this->config_timesheet_booktofuture == "disabled")
+			{
+				if (time_date_to_timestamp($this->date_selected_daysofweek[0]) < mktime())
+					$this->obj_table_week->custom_column_link("monday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[0] ."");
+
+				if (time_date_to_timestamp($this->date_selected_daysofweek[1]) < mktime())
+					$this->obj_table_week->custom_column_link("tuesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[1] ."");
+
+				if (time_date_to_timestamp($this->date_selected_daysofweek[2]) < mktime())
+					$this->obj_table_week->custom_column_link("wednesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[2] ."");
+				
+				if (time_date_to_timestamp($this->date_selected_daysofweek[3]) < mktime())
+					$this->obj_table_week->custom_column_link("thursday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[3] ."");
+				
+				if (time_date_to_timestamp($this->date_selected_daysofweek[4]) < mktime())
+					$this->obj_table_week->custom_column_link("friday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[4] ."");
+				
+				if (time_date_to_timestamp($this->date_selected_daysofweek[5]) < mktime())
+					$this->obj_table_week->custom_column_link("saturday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[5] ."");
+				
+				if (time_date_to_timestamp($this->date_selected_daysofweek[6]) < mktime())
+					$this->obj_table_week->custom_column_link("sunday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[6] ."");
+			}
+			else
+			{
+				// add links
+				$this->obj_table_week->custom_column_link("monday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[0] ."");
+				$this->obj_table_week->custom_column_link("tuesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[1] ."");
+				$this->obj_table_week->custom_column_link("wednesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[2] ."");
+				$this->obj_table_week->custom_column_link("thursday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[3] ."");
+				$this->obj_table_week->custom_column_link("friday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[4] ."");
+				$this->obj_table_week->custom_column_link("saturday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[5] ."");
+				$this->obj_table_week->custom_column_link("sunday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[6] ."");
+			}
+			
+			
+			// column labels
 			$this->obj_table_week->custom_column_label("monday", "Monday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[0] .")</font>");
-			$this->obj_table_week->custom_column_link("monday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[0] ."");
-
 			$this->obj_table_week->custom_column_label("tuesday", "Tuesday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[1] .")</font>");
-			$this->obj_table_week->custom_column_link("tuesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[1] ."");
-
 			$this->obj_table_week->custom_column_label("wednesday", "Wednesday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[2] .")</font>");
-			$this->obj_table_week->custom_column_link("wednesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[2] ."");
-			
 			$this->obj_table_week->custom_column_label("thursday", "Thursday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[3] .")</font>");
-			$this->obj_table_week->custom_column_link("thursday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[3] ."");
-			
 			$this->obj_table_week->custom_column_label("friday", "Friday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[4] .")</font>");
-			$this->obj_table_week->custom_column_link("friday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[4] ."");
-			
 			$this->obj_table_week->custom_column_label("saturday", "Saturday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[5] .")</font>");
-			$this->obj_table_week->custom_column_link("saturday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[5] ."");
-			
 			$this->obj_table_week->custom_column_label("sunday", "Sunday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[6] .")</font>");
-			$this->obj_table_week->custom_column_link("sunday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[6] ."");
-			
 
 		
 			// display week time table

@@ -100,6 +100,16 @@ if (user_permissions_get('timekeeping'))
 	}
 	
 
+	// make sure user is not trying to book time in the future if the option isn't enabled
+	if (sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_BOOKTOFUTURE'") == "disabled")
+	{
+		if (time_date_to_timestamp($data["date"]) > mktime())
+		{
+			log_write("error", "timereg_day_edit-process", "You are not permitted to book time in the future. If you wish to change this behaviour, adjust the TIMESHEET_BOOKTOFUTURE option in the configuration.");
+			$_SESSION["error"]["date-error"] = 1;
+		}
+	}
+
 
 
 	/// if there was an error, go back to the entry page

@@ -24,6 +24,8 @@ class page_output
 	var $obj_form_employee;
 	var $obj_table_day;
 
+	var $config_timesheet_booktofuture;
+
 
 	function page_output()
 	{
@@ -67,6 +69,10 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Weekview", "page=timekeeping/timereg.php&year=". $_SESSION["timereg"]["year"] ."&weekofyear=". $_SESSION["timereg"]["weekofyear"]."");
 		$this->obj_menu_nav->add_item("Day View", "page=timekeeping/timereg-day.php&date=". $this->date ."", TRUE);
+		
+		
+		// get future booking config option
+		$this->config_timesheet_booktofuture	= sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_BOOKTOFUTURE'");
 	}
 
 
@@ -105,7 +111,17 @@ class page_output
 				return 0;
 			}
 		}
-		
+
+		// prevent access to a date in the future
+		if ($this->config_timesheet_booktofuture == "disabled")
+		{
+			if (time_date_to_timestamp($this->date) > mktime())
+			{
+				log_write("error", "page_output", "You are unable to book time to days in future. If you wish to change this behaviour, adjust the TIMESHEET_BOOKTOFUTURE configuration option.");
+				return 0;
+			}
+		}
+
 		return 1;
 	}
 
@@ -240,8 +256,20 @@ class page_output
 		$date_next	= date("Y-m-d", $date_next);
 
 		print "<p><b>";
-		print "<a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_previous&employeeid=". $this->employeeid ."\">Previous Day</a> || ";
-		print "<a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day</a>";
+		print "&lt;&lt; <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_previous&employeeid=". $this->employeeid ."\">Previous Day</a>";
+
+		if ($this->config_timesheet_booktofuture == "disabled")
+		{
+			if (time_date_to_timestamp($date_next) < mktime())
+			{
+				print " || <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day</a> &gt;&gt;";
+			}
+		}
+		else
+		{
+			print " || <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day</a> &gt;&gt;";
+		}
+
 		print "</b></p><br>";
 
 
