@@ -1469,9 +1469,18 @@ class invoice_items
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TIMEGROUPID', '". $this->data["timegroupid"] ."')";
 			$sql_obj->execute();
 
+			// fetch the current lock status of the time group
+			// if it's set to 1, we want to keep that. otherwise, we want to set it to 2
+			$locked = sql_get_singlevalue("SELECT locked as value FROM time_groups WHERE id='". $this->data["timegroupid"] ."'");
+
+			if ($locked == 0)
+			{
+				$locked = 2;
+			}
+
 			// update the time_group with the status, invoiceid and itemid
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE time_groups SET invoiceid='". $this->id_invoice ."', invoiceitemid='". $this->id_item ."', locked='1' WHERE id='". $this->data["timegroupid"] ."'";
+			$sql_obj->string	= "UPDATE time_groups SET invoiceid='". $this->id_invoice ."', invoiceitemid='". $this->id_item ."', locked='". $locked ."' WHERE id='". $this->data["timegroupid"] ."'";
 			$sql_obj->execute();
 		}
 
@@ -1834,8 +1843,17 @@ class invoice_items
 		{
 			$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='TIMEGROUPID'");
 		
+			// fetch the current lock status of the time group
+			// if it's set to 1, we want to keep that, otherwise if 2, set to 0
+			$locked = sql_get_singlevalue("SELECT locked as value FROM time_groups WHERE id='$groupid'");
+
+			if ($locked == 2)
+			{
+				$locked = 0;
+			}
+
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='0' WHERE id='$groupid'";
+			$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='$locked' WHERE id='$groupid'";
 			$sql_obj->execute();
 		}
 	
