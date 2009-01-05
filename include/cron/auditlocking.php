@@ -7,6 +7,7 @@
 	* invoices (any invoice fully paid more than ACCOUNTS_INVOICE_LOCK days ago)
 	* GL transactions (any transation made more than ACCOUNTS_GL_LOCK days ago)
 	* journals (any journal posted more than JOURNAL_LOCK days ago)
+	* time entries (any more than TIMESHEET_LOCK days ago)
 
 	Locking is irreversable but helps prevent unwanted changes to completed invoices and prevents adjustments
 	being made to old journal postings.
@@ -96,6 +97,28 @@ if ($lockdays)
 	// lock any journal entries older than $locking_time
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= "UPDATE journal SET locked='1' WHERE locked='0' AND timestamp < '$locking_time'";
+	$sql_obj->execute();
+	
+} // end of lockdays
+
+
+/*
+	Lock Time Entries
+*/
+
+print "Locking timesheets/time entries\n";
+
+// fetch number of days to perform locking for
+$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_LOCK'");
+
+if ($lockdays)
+{
+	// calculate locking date
+	$locking_date = date("Y-m-d", mktime() - (86400 * $lockdays));
+
+	// lock any time entries older than $locking_date
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "UPDATE timereg SET locked='1' WHERE date < '$locking_date'";
 	$sql_obj->execute();
 	
 } // end of lockdays
