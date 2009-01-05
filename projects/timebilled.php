@@ -193,7 +193,7 @@ class page_output
 		// display table data
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>There is currently no time registered to this project that matches your filter options.</b></p>";
+			format_msgbox("info", "<p>There is currently no time registered to this project that matches your filter options.</p>");
 		}
 		else
 		{

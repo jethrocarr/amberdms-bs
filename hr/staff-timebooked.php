@@ -156,7 +156,7 @@ class page_output
 		// Display table data
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>There is currently no time booked by this employee that matches your filter options.</b></p>";
+			format_msgbox("info", "<p>There is currently no time booked by this employee that matches your filter options.</p>");
 		}
 		else
 		{

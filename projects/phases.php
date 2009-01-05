@@ -104,7 +104,7 @@ class page_output
 
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>You currently have no phases belonging to this project. <a href=\"index.php?page=projects/phase-edit.php&projectid=". $this->id ."\">Click here to add a phase to your project</a>.</b></p>";
+			format_msgbox("important", "<p>You currently have no phases belonging to this project. <a href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Click here to add a phase to your project</a>.</p>");
 		}
 		else
 		{
