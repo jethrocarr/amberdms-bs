@@ -6,6 +6,7 @@
 	is used by both the AR and AP pages.
 */
 
+require("../../include/accounts/inc_ledger.php");
 require("../../include/accounts/inc_invoices.php");
 
 

@@ -452,7 +452,16 @@ class invoice
 		// set any default field if they have been left blank
 		$this->prepare_set_defaults();
 
-		// update the invoice details
+
+		// fetch the original dest_account value - we will use it after we update the invoice details
+		$this->data["dest_account_orig"] = sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+
+
+
+
+		/*
+			Update the invoice details
+		*/
 		$sql_obj = New sql_query;
 			
 		if ($this->type == "ap")
@@ -489,10 +498,40 @@ class invoice
 			log_write("error", "invoice", "Unable to update database with new invoice information");
 			return 0;
 		}
-		else
+
+
+
+		/*
+			Check for changes to the destination account
+
+			This is very important - if the user changes the destination account, we need to update all the entries
+			in the account_trans table for this invoice.
+
+			To make it easy, we call the invoice_items class and execute the action_update_ledger function to
+			re-create all ledger entries.
+		*/
+
+
+		if ($this->data["dest_account_orig"] != $this->data["dest_account"])
 		{
-			return 1;
+			log_debug("invoice", "dest_account has changed, calling action_update_ledger to update all the ledger transactions");
+			
+			// re-create all the ledger entries
+			$invoice_items			= New invoice_items;
+			
+			$invoice_items->type_invoice	= $this->type;
+			$invoice_items->id_invoice	= $this->id;
+
+			$invoice_items->action_update_ledger();
+
+			unset($invoice_items);
 		}
+
+
+
+	
+		return 1;
+		
 		
 	} // end of action_update
 
