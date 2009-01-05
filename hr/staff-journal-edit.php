@@ -32,6 +32,7 @@ class page_output
 		$this->obj_menu_nav = New menu_nav;
 
 		$this->obj_menu_nav->add_item("Employee's Details", "page=hr/staff-view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Timesheet", "page=hr/staff-timebooked.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Employee's Journal", "page=hr/staff-journal.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Delete Employee", "page=hr/staff-delete.php&id=". $this->id ."");
 	}
