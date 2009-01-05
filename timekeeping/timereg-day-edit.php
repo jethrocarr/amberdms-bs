@@ -25,7 +25,8 @@ class page_output
 	var $obj_form;
 
 	var $locked;
-
+	var $groupid;
+	
 
 	function page_output()
 	{
@@ -130,7 +131,19 @@ class page_output
 		*/
 		if ($this->id)
 		{
-			$this->locked = sql_get_singlevalue("SELECT locked as value FROM `timereg` WHERE id='". $this->id ."' LIMIT 1");
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT locked, groupid FROM `timereg` WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				$this->locked	= $sql_obj->data[0]["locked"];		// so we can tell if the time is locked
+				$this->groupid	= $sql_obj->data[0]["groupid"];		// tells us what group id the time belongs to
+			}
+
+			unset($sql_obj);
 		}
 
 
@@ -290,7 +303,20 @@ class page_output
 
 		if ($this->locked)
 		{
-			format_msgbox("locked", "<p>This time entry is part of a time group and has now been locked</p>");
+			if ($this->groupid)
+			{
+				// fetch the details about the group
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT name_group, projectid FROM time_groups WHERE id='". $this->groupid ."' LIMIT 1";
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+
+				format_msgbox("locked", "<p>This time entry is part of <a href=\"index.php?page=projects/timebilled-edit.php&id=". $sql_obj->data[0]["projectid"] ."&groupid=". $this->groupid ."\">time group \"". $sql_obj->data[0]["name_group"] ."\"</a> and can no longer be edited.</p>");
+			}
+			else
+			{
+				format_msgbox("locked", "<p>This time entry has now been locked and can no longer be adjusted.</p>");
+			}
 		}
 
 	}
