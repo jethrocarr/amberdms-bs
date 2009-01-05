@@ -221,7 +221,13 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 		$data["email_cc"]	= security_form_input_predefined("any", "email_cc", 0, "");
 		$data["email_bcc"]	= security_form_input_predefined("any", "email_bcc", 0, "");
 		$data["message"]	= security_form_input_predefined("any", "email_message", 1, "");
-		
+	
+
+		// check if email sending is permitted
+		if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") != "enabled")
+		{
+			log_write("error", "inc_invoices_process", "Sorry, the ability to email invoices has been disabled. Please contact your system administrator if you require this feature to be enabled.");
+		}
 	}
 	else
 	{
@@ -239,6 +245,7 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 	{
 		$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - ". $invoice->id ." - does not exist in this system.";
 	}
+
 
 
 

@@ -738,28 +738,32 @@ function service_invoices_generate($customerid = NULL)
 				} // end of processing periods
 
 
+				// invoice creation complete
+				log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
+
 
 				/*
 						Send the invoice to the customer as a PDF via email
 				*/
 
-		
-				// load completed invoice data
-				$invoice	= New invoice;
-				$invoice->id	= $invoiceid;
-				$invoice->type	= "ar";
-				$invoice->load_data();
+				if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") == "enabled")
+				{
+					if (sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_AUTOEMAIL'") == "enabled")
+					{
+						// load completed invoice data
+						$invoice	= New invoice;
+						$invoice->id	= $invoiceid;
+						$invoice->type	= "ar";
+						$invoice->load_data();
 
-				// send email
-				$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
+						// send email
+						$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
 
-				// complete
-				unset ($invoice);
-
-				
-
-				// complete for this customer
-				log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
+						// complete
+						unset ($invoice);
+						log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $customer_data["contact_email"] .")");
+					}
+				}
 
 
 			} // end of processing customers

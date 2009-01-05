@@ -477,21 +477,30 @@ class invoice_form_export
 
 		print "<td width=\"100%\">";
 			print "<h3>Email PDF:</h3>";
-			print "<form method=\"". $this->obj_form_email->method ."\" action=\"". $this->obj_form_email->action ."\">";
-			print "<table width=\"100%\">";
-			$this->obj_form_email->render_row("sender");
-			$this->obj_form_email->render_row("subject");
-			$this->obj_form_email->render_row("email_to");
-			$this->obj_form_email->render_row("email_cc");
-			$this->obj_form_email->render_row("email_bcc");
-			$this->obj_form_email->render_row("email_message");
-			print "</table>";
+
+			// check if we are permitted to send emails
+			if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") == "enabled")
+			{
+				print "<form method=\"". $this->obj_form_email->method ."\" action=\"". $this->obj_form_email->action ."\">";
+				print "<table width=\"100%\">";
+				$this->obj_form_email->render_row("sender");
+				$this->obj_form_email->render_row("subject");
+				$this->obj_form_email->render_row("email_to");
+				$this->obj_form_email->render_row("email_cc");
+				$this->obj_form_email->render_row("email_bcc");
+				$this->obj_form_email->render_row("email_message");
+				print "</table>";
 		
-			$this->obj_form_email->render_field("formname");
-			$this->obj_form_email->render_field("id_invoice");
-			$this->obj_form_email->render_field("submit");
+				$this->obj_form_email->render_field("formname");
+				$this->obj_form_email->render_field("id_invoice");
+				$this->obj_form_email->render_field("submit");
 			
-			print "</form>";
+				print "</form>";
+			}
+			else
+			{
+				format_msgbox("locked", "<p>The ability to email PDFs has been disabled by the administrator.</p>");
+			}
 		print "</td>";	
 		
 		print "</tr></table>";
