@@ -213,24 +213,15 @@ class page_output
 		// submit button
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";
-
-		if ($this->locked)
+		$structure["type"]		= "submit";
+			
+		if ($this->groupid)
 		{
-			$structure["type"]		= "message";
-			$structure["defaultvalue"]	= "<i>This time group has now been locked and can no longer be adjusted - if you need to make changes, you will need to remove this time group from the invoice it belongs to.</i>";
+			$structure["defaultvalue"]	= "Save Changes";
 		}
 		else
 		{
-			$structure["type"]		= "submit";
-			
-			if ($this->groupid)
-			{
-				$structure["defaultvalue"]	= "Save Changes";
-			}
-			else
-			{
-				$structure["defaultvalue"]	= "Create Time Group";
-			}
+			$structure["defaultvalue"]	= "Create Time Group";
 		}
 		
 		$this->obj_form->add_input($structure);
@@ -380,15 +371,24 @@ class page_output
 		print "</tr>";
 
 		// display all the rows
-		$this->obj_form->render_row("submit");
-
+		if (!$this->locked)
+		{
+			$this->obj_form->render_row("submit");
+		}
 
 		// end table
-		print "</table><br>";
+		print "</table>";
 
 
 		// end form
 		print "</form>";
+
+
+		// locked
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This time group has now been locked and can no longer be adjusted.</p>");
+		}
 
 	}
 	

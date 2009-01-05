@@ -86,6 +86,7 @@ if (user_permissions_get('projects_write'))
 	$sql_entries_obj->prepare_sql_settable("timereg");
 	
 	$sql_entries_obj->prepare_sql_addfield("id", "");
+	$sql_entries_obj->prepare_sql_addfield("locked", "");
 	$sql_entries_obj->prepare_sql_addfield("groupid", "");
 	$sql_entries_obj->prepare_sql_addfield("billable", "");
 	$sql_entries_obj->prepare_sql_addfield("time_booked", "");
@@ -213,16 +214,37 @@ if (user_permissions_get('projects_write'))
 							if ($entries_data["billable"] != $data["time_entries"][ $entries_data["id"] ]["billable"])
 							{
 								// the billable status of this entry has changed.
+
+								if ($entries_data["locked"] == "1")
+								{
+									$locked = "1";
+								}
+								else
+								{
+									$locked = "2";
+								}
+								
 								$sql_obj		= New sql_query;
-								$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='1' WHERE id='". $entries_data["id"] ."'";
+								$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."'";
 								$sql_obj->execute();
 							}
 						}
 						else
 						{
 							// the user has removed this entry from the group
+							if ($entries_data["locked"] == "1")
+							{
+								// keep the entry locked
+								$locked = "1";
+							}
+							else
+							{
+								// time entry was locked by this group, we can unlock it
+								$locked = "0";
+							}
+							
 							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='0' WHERE id='". $entries_data["id"] ."'";
+							$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='$locked' WHERE id='". $entries_data["id"] ."'";
 							$sql_obj->execute();
 						}
 					}
@@ -231,8 +253,19 @@ if (user_permissions_get('projects_write'))
 						if ($data["time_entries"][ $entries_data["id"] ])
 						{
 							// the entry has been added to the group.
+
+							if ($entries_data["locked"] == "1")
+							{
+								$locked = "1";
+							}
+							else
+							{
+								$locked = "2";
+							}
+								
+							
 							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='1' WHERE id='". $entries_data["id"] ."'";
+							$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."'";
 							$sql_obj->execute();
 						}
 					}
