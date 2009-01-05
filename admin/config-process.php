@@ -18,21 +18,94 @@ if (user_permissions_get("admin"))
 	////// INPUT PROCESSING ////////////////////////
 
 
-	// fetch all the option field names and then get the processed field data
-	$sql_config_obj		= New sql_query;
-	$sql_config_obj->string	= "SELECT name FROM config";
-	$sql_config_obj->execute();
+	// fetch all the data
+	$data["COMPANY_NAME"]			= security_form_input_predefined("any", "COMPANY_NAME", 1, "");
+	$data["COMPANY_CONTACT_EMAIL"]		= security_form_input_predefined("email", "COMPANY_CONTACT_EMAIL", 1, "");
+	$data["COMPANY_CONTACT_PHONE"]		= security_form_input_predefined("any", "COMPANY_CONTACT_PHONE", 1, "");
+	$data["COMPANY_CONTACT_FAX"]		= security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 1, "");
+	$data["COMPANY_ADDRESS1_STREET"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_STREET", 1, "");
+	$data["COMPANY_ADDRESS1_CITY"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_CITY", 1, "");
+	$data["COMPANY_ADDRESS1_STATE"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_STATE", 0, "");
+	$data["COMPANY_ADDRESS1_COUNTRY"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_COUNTRY", 1, "");
+	$data["COMPANY_ADDRESS1_ZIPCODE"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_ZIPCODE", 0, "");
+	$data["COMPANY_PAYMENT_DETAILS"]	= security_form_input_predefined("any", "COMPANY_PAYMENT_DETAILS", 1, "");
+	
+	$data["ACCOUNTS_AP_INVOICENUM"]		= security_form_input_predefined("int", "ACCOUNTS_AP_INVOICENUM", 1, "");
+	$data["ACCOUNTS_AR_INVOICENUM"]		= security_form_input_predefined("int", "ACCOUNTS_AR_INVOICENUM", 1, "");
+	$data["ACCOUNTS_GL_TRANSNUM"]		= security_form_input_predefined("int", "ACCOUNTS_GL_TRANSNUM", 1, "");
+	$data["ACCOUNTS_QUOTES_NUM"]		= security_form_input_predefined("int", "ACCOUNTS_QUOTES_NUM", 1, "");
+	$data["CODE_ACCOUNT"]			= security_form_input_predefined("int", "CODE_ACCOUNT", 1, "");
+	$data["CODE_CUSTOMER"]			= security_form_input_predefined("int", "CODE_CUSTOMER", 1, "");
+	$data["CODE_VENDOR"]			= security_form_input_predefined("int", "CODE_VENDOR", 1, "");
+	$data["CODE_PRODUCT"]			= security_form_input_predefined("int", "CODE_PRODUCT", 1, "");
+	$data["CODE_PROJECT"]			= security_form_input_predefined("int", "CODE_PROJECT", 1, "");
 
-	if ($sql_config_obj->num_rows())
+	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
+	$data["ACCOUNTS_TERMS_DAYS"]			= security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
+	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= security_form_input_predefined("any", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
+	
+	$data["TIMESHEET_BOOKTOFUTURE"]		= security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
+	
+	$data["CURRENCY_DEFAULT_NAME"]		= security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
+	$data["CURRENCY_DEFAULT_SYMBOL"]	= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
+	
+	$data["ACCOUNTS_INVOICE_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_INVOICE_LOCK", 0, "");
+	$data["ACCOUNTS_GL_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_GL_LOCK", 0, "");
+	$data["JOURNAL_LOCK"]			= security_form_input_predefined("int", "JOURNAL_LOCK", 0, "");
+	$data["TIMESHEET_LOCK"]			= security_form_input_predefined("int", "TIMESHEET_LOCK", 0, "");
+	
+	$data["BLACKLIST_ENABLE"]		= security_form_input_predefined("any", "BLACKLIST_ENABLE", 0, "");
+	$data["BLACKLIST_LIMIT"]		= security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
+	
+	$data["UPLOAD_MAXBYTES"]		= security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
+	$data["APP_PDFLATEX"]			= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+	
+	// only fetch dangerous options if support for it is enabled
+	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 	{
-		$sql_config_obj->fetch_array();
-		
-		// structure the results into a form we can then use to fill the fields in the form
-		foreach ($sql_config_obj->data as $data_config)
-		{
-			$data[ $data_config["name"] ] = security_form_input_predefined("any", $data_config["name"], 0, "");
-		}
+		$data["EMAIL_ENABLE"]		= security_form_input_predefined("any", "EMAIL_ENABLE", 0, "");
+		$data["DATA_STORAGE_LOCATION"]	= security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
+		$data["DATA_STORAGE_METHOD"]	= security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
 	}
+
+
+	// modifiy checkbox values
+	if ($data["TIMESHEET_BOOKTOFUTURE"] == "on")
+	{
+		$data["TIMESHEET_BOOKTOFUTURE"] = "enabled";
+	}
+	else
+	{
+		$data["TIMESHEET_BOOKTOFUTURE"] = "disabled";
+	}
+		
+	if ($data["ACCOUNTS_INVOICE_AUTOEMAIL"] == "on")
+	{
+		$data["ACCOUNTS_INVOICE_AUTOEMAIL"] = "enabled";
+	}
+	else
+	{
+		$data["ACCOUNTS_INVOICE_AUTOEMAIL"] = "disabled";
+	}
+	
+	if ($data["BLACKLIST_ENABLE"] == "on")
+	{
+		$data["BLACKLIST_ENABLE"] = "enabled";
+	}
+	else
+	{
+		$data["BLACKLIST_ENABLE"] = "disabled";
+	}
+
+	if ($data["EMAIL_ENABLE"] == "on")
+	{
+		$data["EMAIL_ENABLE"] = "enabled";
+	}
+	else
+	{
+		$data["EMAIL_ENABLE"] = "disabled";
+	}
+		
 
 
 	// Process file upload data
@@ -79,12 +152,15 @@ if (user_permissions_get("admin"))
 	
 		/*
 			Update all the config fields
+
+			We have already loaded the data for all the fields, so simply need to go and set all the values
+			based on the naming of the $data array.
 		*/
 
-		foreach ($sql_config_obj->data as $data_config)
+		foreach (array_keys($data) as $data_key)
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE config SET value='". $data[ $data_config["name"] ] ."' WHERE name='". $data_config["name"] ."'";
+			$sql_obj->string	= "UPDATE config SET value='". $data[$data_key] ."' WHERE name='$data_key'";
 			$sql_obj->execute();
 		}
 

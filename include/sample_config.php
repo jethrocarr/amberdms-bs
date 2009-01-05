@@ -17,6 +17,19 @@ $config["db_user"] = "root";				// MySQL user
 $config["db_pass"] = "";				// MySQL password (if any)
 
 
+/*
+	Dangerous Config Options
+
+	Enable this to allow more dangerous program options to be adjusted via the config page
+	on the web interface - options such as paths, emailing and more.
+
+	It is recommended to only have this enabled during inital program configuration.
+*/
+
+$config["dangerous_conf_options"] = "enabled";
+
+
+
 
 /*
 	Fixed options
