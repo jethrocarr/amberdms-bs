@@ -962,8 +962,8 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 	form_helper_prepare_timezonedropdown($fieldname)
 
 	This function produces a dropdown suitable for option fields where users need to select a timezone. This function
-	conforms to the rest of the code giving a fixed text field when running on PHP < 5.1.0 (since timezones can't be change)
-	but providing a dropdown of all the timezones in the system when running on PHP > 5.1.0.
+	conforms to the rest of the code giving a fixed text field when running on PHP < 5.2.0 (since timezones can't be changed)
+	but providing a dropdown of all the timezones in the system when running on PHP > 5.2.0.
 
 	Returns the structure
 */
@@ -971,21 +971,21 @@ function form_helper_prepare_timezonedropdown($fieldname)
 {
 	log_debug("form", "Executing form_helper_prepare_timezonedropdown($fieldname)");
 
-	if (version_compare(PHP_VERSION, '5.1.0') === 1)
+	if (version_compare(PHP_VERSION, '5.2.0') === 1)
 	{
-		// running on PHP 5.1.0+
+		// running on PHP 5.2.0+
 		$structure = NULL;
 		$structure["fieldname"]			= $fieldname;
 		$structure["type"]			= "dropdown";
 			
-		foreach (timezone_abbreviations_list() as $timezone)
+		foreach (DateTimeZone::listAbbreviations as $timezone)
 		{
 			$structure["values"][] = $timezone["timezone_id"];
 		}
 	}
 	else
 	{
-		// running on PHP version older than 5.1.0
+		// running on PHP version older than 5.2.0
 		$structure = NULL;
 		$structure["fieldname"]			= $fieldname;
 		$structure["type"]			= "text";
