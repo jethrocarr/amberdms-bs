@@ -987,7 +987,7 @@ function form_helper_prepare_timezonedropdown($fieldname)
 	{
 		// running on PHP version older than 5.1.0
 		$structure = NULL;
-		$structure["fieldname"]			= "TIMEZONE_DEFAULT";
+		$structure["fieldname"]			= $fieldname;
 		$structure["type"]			= "text";
 	}
 
