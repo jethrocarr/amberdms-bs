@@ -128,6 +128,31 @@ if (user_permissions_get('admin'))
 
 			if ($id)
 			{
+				// Load the user with default configuration - set the configuration values to the
+				// system defaults when possible. The admin can always change them once the account creation is complete.
+			
+				// language
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'lang', 'en_us')";
+				$sql_obj->execute();
+
+				// date format
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT'") ."')";
+				$sql_obj->execute();
+
+				// timezone
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'timezone', '". sql_get_singlevalue("SELECT value FROM config WHERE name='TIMEZONE_DEFAULT'") ."')";
+				$sql_obj->execute();
+
+				// debugging
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'debug', 'disabled')";
+				$sql_obj->execute();
+			
+
+			
 				// assign the user "disabled" permissions
 				$mysql_string = "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '1')";
 				
@@ -138,6 +163,7 @@ if (user_permissions_get('admin'))
 				}
 				else
 				{
+					// complete
 					$_SESSION["notification"]["message"][] = "Successfully created user account. Note that the user is disabled by default, you will need to use the User Permissions page to assign them access rights.";
 					journal_quickadd_event("users", $id, "Created user account.");
 				}
