@@ -471,10 +471,42 @@ class form_input
 					$date_a = split("-", $this->structure[$fieldname]["defaultvalue"]);
 				}
 
-				print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
-				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
-				print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
-				print " <i>(dd/mm/yyyy)</i>";
+				// get the format the date field needs to be shown in
+				if ($_SESSION["user"]["dateformat"])
+				{
+					// fetch from user preferences
+					$format = $_SESSION["user"]["dateformat"];
+				}
+				else
+				{
+					// user hasn't chosen a default time format yet - use the system default
+					$format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
+				}
+
+				switch ($format)
+				{
+					case "mm-dd-yyyy":
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
+						print " <i>(mm/dd/yyyy)</i>";
+					break;
+
+					case "dd-mm-yyyy":
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
+						print " <i>(dd/mm/yyyy)</i>";
+					break;
+					
+					case "yyyy-mm-dd":
+					default:
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\"> ";
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\">";
+						print " <i>(yyyy/mm/dd)</i>";
+					break;
+				}
 
 				// TODO: it would be good to have a javascript calender pop-up to use here.
 			break;

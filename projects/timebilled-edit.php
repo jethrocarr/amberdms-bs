@@ -328,7 +328,7 @@ class page_output
 			foreach ($this->obj_sql_entries->data as $data)
 			{
 				print "<tr>";
-					print "<td>". $data["date"] ."</td>";
+					print "<td>". time_format_humandate($data["date"]) ."</td>";
 					print "<td>". $data["name_phase"] ."</td>";
 					print "<td>". $data["name_staff"] ."</td>";
 					print "<td>". $data["description"] ."</td>";

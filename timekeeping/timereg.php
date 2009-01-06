@@ -418,7 +418,7 @@ class page_output
 		print "<table class=\"table_highlight\" width=\"100%\"><tr><td width=\"100%\">";
 		
 		print "<b>WEEK ". $this->date_selected_weekofyear .", ". $this->date_selected_year ."</b><br>";
-		print "(". $this->date_selected_start ." to ". $this->date_selected_end .")<br>";
+		print "(". time_format_humandate($this->date_selected_start) ." to ". time_format_humandate($this->date_selected_end) .")<br>";
 		print "<br>";
 	
 		
@@ -512,13 +512,13 @@ class page_output
 			
 			
 			// column labels
-			$this->obj_table_week->custom_column_label("monday", "Monday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[0] .")</font>");
-			$this->obj_table_week->custom_column_label("tuesday", "Tuesday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[1] .")</font>");
-			$this->obj_table_week->custom_column_label("wednesday", "Wednesday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[2] .")</font>");
-			$this->obj_table_week->custom_column_label("thursday", "Thursday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[3] .")</font>");
-			$this->obj_table_week->custom_column_label("friday", "Friday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[4] .")</font>");
-			$this->obj_table_week->custom_column_label("saturday", "Saturday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[5] .")</font>");
-			$this->obj_table_week->custom_column_label("sunday", "Sunday<br><font style=\"font-size: 8px;\">(". $this->date_selected_daysofweek[6] .")</font>");
+			$this->obj_table_week->custom_column_label("monday", "Monday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[0]) .")</font>");
+			$this->obj_table_week->custom_column_label("tuesday", "Tuesday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[1]) .")</font>");
+			$this->obj_table_week->custom_column_label("wednesday", "Wednesday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[2]) .")</font>");
+			$this->obj_table_week->custom_column_label("thursday", "Thursday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[3]) .")</font>");
+			$this->obj_table_week->custom_column_label("friday", "Friday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[4]) .")</font>");
+			$this->obj_table_week->custom_column_label("saturday", "Saturday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[5]) .")</font>");
+			$this->obj_table_week->custom_column_label("sunday", "Sunday<br><font style=\"font-size: 8px;\">(". time_format_humandate($this->date_selected_daysofweek[6]) .")</font>");
 
 		
 			// display week time table

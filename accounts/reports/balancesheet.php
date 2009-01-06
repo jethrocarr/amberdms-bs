@@ -612,8 +612,8 @@ class page_output
 		$template_csv->prepare_add_field("mode", $this->mode);
 		
 		// dates
-		$template_csv->prepare_add_field("date_end", $this->date_end);
-		$template_csv->prepare_add_field("date_created", date("Y-m-d"));
+		$template_csv->prepare_add_field("date_end", time_format_humandate($this->date_end));
+		$template_csv->prepare_add_field("date_created", time_format_humandate());
 
 
 		// totals
@@ -712,8 +712,8 @@ class page_output
 		$template_pdf->prepare_add_field("mode", $this->mode);
 		
 		// dates
-		$template_pdf->prepare_add_field("date\_end", $this->date_end);
-		$template_pdf->prepare_add_field("date\_created", date("Y-m-d"));
+		$template_pdf->prepare_add_field("date\_end", time_format_humandate($this->date_end));
+		$template_pdf->prepare_add_field("date\_created", time_format_humandate());
 
 
 		// totals

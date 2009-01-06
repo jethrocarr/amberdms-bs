@@ -133,11 +133,6 @@ class page_output
 	
 		// security options
 		$structure = NULL;
-		$structure["fieldname"]			= "UPLOAD_MAXBYTES";
-		$structure["type"]			= "input";
-		$this->obj_form->add_input($structure);
-		
-		$structure = NULL;
 		$structure["fieldname"]			= "BLACKLIST_ENABLE";
 		$structure["type"]			= "checkbox";
 		$structure["options"]["label"]		= "Enable to prevent brute-force login attempts";
@@ -149,6 +144,19 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 
+
+		// misc
+		$structure = NULL;
+		$structure["fieldname"]			= "DATEFORMAT";
+		$structure["type"]			= "radio";
+		$structure["values"]			= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]			= "UPLOAD_MAXBYTES";
+		$structure["type"]			= "input";
+		$this->obj_form->add_input($structure);
+		
 
 
 
@@ -244,15 +252,6 @@ class page_output
 
 
 	
-	
-		// app and file paths
-		$structure = NULL;
-		$structure["fieldname"]			= "APP_PDFLATEX";
-		$structure["type"]			= "input";
-		$this->obj_form->add_input($structure);
-	
-
-
 		// dangerous options
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{
@@ -272,6 +271,12 @@ class page_output
 			$structure["fieldname"]			= "DATA_STORAGE_LOCATION";
 			$structure["type"]			= "input";
 			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"]			= "APP_PDFLATEX";
+			$structure["type"]			= "input";
+			$this->obj_form->add_input($structure);
+
 		}
 
 	
@@ -291,12 +296,12 @@ class page_output
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
-		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT", "UPLOAD_MAXBYTES");
-		$this->obj_form->subforms["config_paths"]		= array("APP_PDFLATEX");
+		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
+		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{
-			$this->obj_form->subforms["config_dangerous"]	= array("EMAIL_ENABLE", "DATA_STORAGE_LOCATION", "DATA_STORAGE_METHOD");
+			$this->obj_form->subforms["config_dangerous"]	= array("APP_PDFLATEX", "EMAIL_ENABLE", "DATA_STORAGE_LOCATION", "DATA_STORAGE_METHOD");
 		}
 		
 		$this->obj_form->subforms["submit"]			= array("submit");

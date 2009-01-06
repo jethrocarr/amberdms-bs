@@ -485,7 +485,8 @@ class table
 				}
 				else
 				{
-					$result = $this->data[$row][$column];
+					// format the date and display
+					$result = time_format_humandate($this->data[$row][$column]);
 				}
 			break;
 

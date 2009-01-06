@@ -48,6 +48,7 @@ if (user_permissions_get('admin'))
 	if ($mode == "edit")
 	{
 		$data["option_lang"]		= security_form_input_predefined("any", "option_lang", 1, "");
+		$data["option_dateformat"]	= security_form_input_predefined("any", "option_dateformat", 1, "");
 		$data["option_debug"]		= security_form_input_predefined("any", "option_debug", 0, "");
 	}
 
@@ -193,6 +194,12 @@ if (user_permissions_get('admin'))
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'lang', '". $data["option_lang"] ."')";
 			$sql_obj->execute();
+
+			// date format
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". $data["option_dateformat"] ."')";
+			$sql_obj->execute();
+
 
 
 			// debugging

@@ -130,7 +130,9 @@ class page_output
 		$this->obj_form->subforms["user_info"]		= array("time", "ipaddress");
 
 
-		// options
+		// OPTIONS:
+
+		// language
 		$structure = form_helper_prepare_radiofromdb("option_lang", "SELECT name as id, name as label FROM language_avaliable ORDER BY name");
 		$structure["defaultvalue"] = $options["lang"];
 		$this->obj_form->add_input($structure);
@@ -138,6 +140,20 @@ class page_output
 		$this->obj_form->subforms["user_options"][]	= "option_lang";
 
 
+		// date format
+		$structure = NULL;
+		$structure["fieldname"]		= "option_dateformat";
+		$structure["type"]		= "radio";
+		$structure["values"]		= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$structure["defaultvalue"]	= $options["dateformat"];
+		$this->obj_form->add_input($structure);
+			
+		$this->obj_form->subforms["user_options"][]	= "option_dateformat";
+
+
+
+
+		// debugging
 		if (user_permissions_get("admin"))
 		{
 			// only administrators can enable debugging

@@ -177,6 +177,7 @@ function format_msgbox($type, $text)
 
 /* TIME FUNCTION */
 
+
 /*
 	time_date_to_timestamp($date)
 
@@ -208,6 +209,66 @@ function time_format_hourmins($seconds)
 
 	return "$hours:$excess_minutes";
 }
+
+
+/*
+	time_format_humandate
+
+	Provides a date formated in the user's perferred way. If no date is provided, will return the current date.
+
+	Values
+	date		Format YYYY-MM-DD (optional)
+
+	Returns
+	string		Date in human-readable format.
+*/
+function time_format_humandate($date = NULL)
+{
+	log_debug("misc", "Executing time_format_humandate($date)");
+
+	if ($date)
+	{
+		// convert date to timestamp so we can work with it
+		$timestamp = time_date_to_timestamp($date);
+	}
+	else
+	{
+		// no date supplied - generate current timestamp
+		$timestamp = mktime();
+	}
+
+
+	if ($_SESSION["user"]["dateformat"])
+	{
+		// fetch from user preferences
+		$format = $_SESSION["user"]["dateformat"];
+	}
+	else
+	{
+		// user hasn't chosen a default time format yet - use the system
+		// default
+		$format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
+	}
+
+
+	// convert to human readable format
+	switch ($format)
+	{
+		case "mm-dd-yyyy":
+			return date("m-d-Y", $timestamp);
+		break;
+
+		case "dd-mm-yyyy":
+			return date("d-m-Y", $timestamp);
+		break;
+		
+		case "yyyy-mm-dd":
+		default:
+			return date("Y-m-d", $timestamp);
+		break;
+	}
+}
+
 
 
 /*

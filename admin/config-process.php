@@ -58,7 +58,7 @@ if (user_permissions_get("admin"))
 	$data["BLACKLIST_LIMIT"]		= security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
 	
 	$data["UPLOAD_MAXBYTES"]		= security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
-	$data["APP_PDFLATEX"]			= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+	$data["DATEFORMAT"]			= security_form_input_predefined("any", "DATEFORMAT", 1, "");
 	
 	// only fetch dangerous options if support for it is enabled
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
@@ -66,6 +66,7 @@ if (user_permissions_get("admin"))
 		$data["EMAIL_ENABLE"]		= security_form_input_predefined("any", "EMAIL_ENABLE", 0, "");
 		$data["DATA_STORAGE_LOCATION"]	= security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
 		$data["DATA_STORAGE_METHOD"]	= security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
+		$data["APP_PDFLATEX"]		= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
 	}
 
 

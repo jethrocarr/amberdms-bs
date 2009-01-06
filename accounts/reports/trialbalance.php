@@ -263,9 +263,9 @@ class page_output
 		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
 
 		// dates
-		$template_pdf->prepare_add_field("date\_start", $this->date_start);
-		$template_pdf->prepare_add_field("date\_end", $this->date_end);
-		$template_pdf->prepare_add_field("date\_created", date("Y-m-d"));
+		$template_pdf->prepare_add_field("date\_start", time_format_humandate($this->date_start));
+		$template_pdf->prepare_add_field("date\_end", time_format_humandate($this->date_end));
+		$template_pdf->prepare_add_field("date\_created", time_format_humandate());
 
 
 		// totals

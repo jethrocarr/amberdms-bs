@@ -563,9 +563,9 @@ class page_output
 		$template_csv->prepare_add_field("mode", $this->mode);
 		
 		// dates
-		$template_csv->prepare_add_field("date_start", $this->date_start);
-		$template_csv->prepare_add_field("date_end", $this->date_end);
-		$template_csv->prepare_add_field("date_created", date("Y-m-d"));
+		$template_csv->prepare_add_field("date_start", time_format_humandate($this->date_start));
+		$template_csv->prepare_add_field("date_end", time_format_humandate($this->date_end));
+		$template_csv->prepare_add_field("date_created", time_format_humandate());
 
 		// totals
 		$template_csv->prepare_add_field("amount_total_income", $this->data_totals["income"]);
@@ -644,9 +644,9 @@ class page_output
 		$template_pdf->prepare_add_field("mode", $this->mode);
 
 		// dates
-		$template_pdf->prepare_add_field("date\_start", $this->date_start);
-		$template_pdf->prepare_add_field("date\_end", $this->date_end);
-		$template_pdf->prepare_add_field("date\_created", date("Y-m-d"));
+		$template_pdf->prepare_add_field("date\_start", time_format_humandate($this->date_start));
+		$template_pdf->prepare_add_field("date\_end", time_format_humandate($this->date_end));
+		$template_pdf->prepare_add_field("date\_created", time_format_humandate());
 
 
 		// totals
