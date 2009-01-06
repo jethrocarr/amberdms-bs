@@ -200,6 +200,10 @@ if (user_permissions_get('admin'))
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". $data["option_dateformat"] ."')";
 			$sql_obj->execute();
 
+			// timezone
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'timezone', '". $data["option_timezone"] ."')";
+			$sql_obj->execute();
 
 
 			// debugging

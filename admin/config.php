@@ -145,7 +145,10 @@ class page_output
 
 
 
-		// misc
+		// misc	
+		$structure = form_helper_prepare_timezonedropdown("TIMEZONE_DEFAULT");
+		$this->obj_form->add_input($structure);
+		
 		$structure = NULL;
 		$structure["fieldname"]			= "DATEFORMAT";
 		$structure["type"]			= "radio";
@@ -297,7 +300,7 @@ class page_output
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
-		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT");
+		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{

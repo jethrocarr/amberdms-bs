@@ -28,6 +28,7 @@ if (user_online())
 	$data["option_lang"]		= security_form_input_predefined("any", "option_lang", 1, "");
 	$data["option_debug"]		= security_form_input_predefined("any", "option_debug", 0, "");
 	$data["option_dateformat"]	= security_form_input_predefined("any", "option_dateformat", 1, "");
+	$data["option_timezone"]	= security_form_input_predefined("any", "option_timezone", 1, "");
 
 
 
@@ -101,7 +102,12 @@ if (user_online())
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'lang', '". $data["option_lang"] ."')";
 		$sql_obj->execute();
-		
+	
+		// timezone
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'timezone', '". $data["option_timezone"] ."')";
+		$sql_obj->execute();
+			
 		// dateformat
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". $data["option_dateformat"] ."')";

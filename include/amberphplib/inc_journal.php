@@ -527,7 +527,7 @@ class journal_display extends journal_base
 					Format Fields
 				*/
 				$content	= format_text_display($data["content"]);
-				$post_time 	= date("d F Y H:i:s", $data["timestamp"]);
+				$post_time 	= date("d F Y H:i:s", time_calculate_timestamp_gmttolocal($data["timestamp"]));
 
 
 				/*

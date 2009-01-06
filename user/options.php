@@ -151,6 +151,12 @@ class page_output
 		$this->obj_form->subforms["user_options"][]	= "option_dateformat";
 
 
+		// timezone
+		$structure 			= form_helper_prepare_timezonedropdown("option_timezone");
+		$structure["defaultvalue"]	= $options["timezone"];
+		$this->obj_form->add_input($structure);
+		
+		$this->obj_form->subforms["user_options"][]	= "option_timezone";
 
 
 		// debugging

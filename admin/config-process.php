@@ -59,6 +59,7 @@ if (user_permissions_get("admin"))
 	
 	$data["UPLOAD_MAXBYTES"]		= security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
 	$data["DATEFORMAT"]			= security_form_input_predefined("any", "DATEFORMAT", 1, "");
+	$data["TIMEZONE_DEFAULT"]		= security_form_input_predefined("any", "TIMEZONE_DEFAULT", 1, "");
 	
 	// only fetch dangerous options if support for it is enabled
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")

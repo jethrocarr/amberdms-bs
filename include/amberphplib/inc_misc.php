@@ -270,7 +270,6 @@ function time_format_humandate($date = NULL)
 }
 
 
-
 /*
 	time_calculate_weekstart($date_selected_weekofyear, $date_selected_year)
 
@@ -323,6 +322,8 @@ function time_calculate_daysofweek($date_selected_start)
 
 	return $days;
 }
+
+
 
 
 

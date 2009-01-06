@@ -113,4 +113,50 @@ require("inc_journal.php");
 require("inc_menus.php");
 
 
+
+
+/*
+	Configure Local Timezone
+
+	Decent timezone handling was only implemented with PHP 5.1.0, so the ability to select the user's localtime zone
+	is limited to users running this software on PHPv5 servers.
+
+	Users of earlier versions will be limited to just using the localtime of the server - the effort required
+	to try and add timezone for older users (mainly PHPv4) is not worthwhile when everyone should be moving to PHP 5.1.0+
+*/
+
+if (version_compare(PHP_VERSION, '5.1.0') === 1)
+{
+	log_debug("start", "Setting timezone based on user/system configuration");
+	
+	// fetch config option
+	if ($_SESSION["user"]["timezone"])
+	{
+		// fetch from user preferences
+		$timezone = $_SESSION["user"]["timezone"];
+	}
+	else
+	{
+		// user hasn't chosen a default time format yet - use the system default
+		$timezone = sql_get_singlevalue("SELECT value FROM config WHERE name='TIMEZONE_DEFAULT' LIMIT 1");
+	}
+
+	// if set to SYSTEM just use the default of the server, otherwise
+	// we need to set the timezone here.
+	if ($timezone != "SYSTEM")
+	{
+		// note: we use ini_set rather than date_default_timezone_set here, since date_default_timezone_set
+		// was only added in PHP 5.2.0, and a lot of servers are only running 5.1.0+ (eg: RHEL 5)
+		if (!ini_set("date.timezone", $timezone))
+		{
+			log_write("error", "start", "A problem occured trying to set timezone to \"$timezone\"");
+		}
+	}
+
+	unset($timezone);
+}
+
+
+
+
 ?>
