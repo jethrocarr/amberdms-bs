@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="services_usage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/services/usage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/services/usage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<message name='set_usage_record_request'>
+		<part name='collector' type='xsd:string'/>
+		<part name='customer_id' type='xsd:int'/>
+		<part name='date' type='xsd:string'/>
+		<part name='usage1' type='xsd:string'/>
+		<part name='usage2' type='xsd:string'/>
+	</message>
+
+	<message name='set_usage_record_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+	
+	<portType name='services_usage_porttype'>
+		<operation name='set_usage_record'>
+			<input message='tns:set_usage_record_request'/>
+			<output message='tns:set_usage_record_response'/>
+		</operation>
+	</portType>
+
+	<binding name='services_usage_binding' type='tns:services_usage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+			
+		<operation name='set_usage_record'>
+			<soap:operation soapAction='services_usage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:services_usage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:services_usage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+	</binding>
+
+<service name='services_usage_service'>
+  <port name='services_usage_port' binding='services_usage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/services/usage.php'/>
+  </port>
+</service>
+</definitions>
