@@ -54,7 +54,7 @@ class services_usage
 			{
 				if ($data[$key] == "error")
 				{
-					throw new SoapFault("Sender", "Invalid input for field $key");
+					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
 			}
 
@@ -77,7 +77,7 @@ class services_usage
 
 			if (!$sql_obj->num_rows())
 			{
-				throw new SoapFault("Sender", "Provided services_customers_id ID of '". $data["services_customers_id"] ."' does not exist");
+				throw new SoapFault("Sender", "INVALID_SERVICES_CUSTOMERS_ID");
 			}
 
 			unset($sql_obj);
@@ -99,7 +99,7 @@ class services_usage
 							.")";
 			if (!$sql_obj->execute())
 			{
-				throw new SoapFault("Sender", "Unexpected error whilst create new usage record in DB");
+				throw new SoapFault("Sender", "UNEXPECTED_DB_ERROR");
 			}
 
 			return 1;

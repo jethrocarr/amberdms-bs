@@ -41,19 +41,19 @@ class authenticate
 		}
 		else
 		{
-			// failed authentication - use SoapFault to gracefully return a human-readable errror
+			// failed authentication - use SoapFault to gracefully return an error which the client app can process
 			switch ($result)
 			{
 				case "-2":
-					throw new SoapFault("Sender", "The requested user has been disabled - contact the system administrator to get the user re-enabled");
+					throw new SoapFault("Sender", "USER_DISABLED");
 				break;
 
 				case "-1":
-					throw new SoapFault("Sender", "User account has been blacklisted for excessive incorrect login attempts from your IP");
+					throw new SoapFault("Sender", "BLACKLISTED");
 				break;
 
 				case "0":
-					throw new SoapFault("Sender", "Invalid username/password");
+					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
 				break;
 			}
 		}
