@@ -977,10 +977,14 @@ function form_helper_prepare_timezonedropdown($fieldname)
 		$structure = NULL;
 		$structure["fieldname"]			= $fieldname;
 		$structure["type"]			= "dropdown";
+		$structure["values"][]			= "SYSTEM";
 			
-		foreach (DateTimeZone::listAbbreviations as $timezone)
+		$timezones = DateTimeZone::listIdentifiers();
+		sort($timezones);
+
+		foreach ($timezones as $timezone)
 		{
-			$structure["values"][] = $timezone["timezone_id"];
+			$structure["values"][]		= $timezone;
 		}
 	}
 	else

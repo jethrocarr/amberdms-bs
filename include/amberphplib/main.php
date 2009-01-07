@@ -146,9 +146,13 @@ if (version_compare(PHP_VERSION, '5.2.0') === 1)
 	// we need to set the timezone here.
 	if ($timezone != "SYSTEM")
 	{
-		if (!date_default_timezone($timezone))
+		if (!date_default_timezone_set($timezone))
 		{
 			log_write("error", "start", "A problem occured trying to set timezone to \"$timezone\"");
+		}
+		else
+		{
+			log_debug("start", "Timezone set to \"$timezone\" successfully");
 		}
 	}
 
