@@ -82,7 +82,11 @@ function user_online()
 	* If enabled, it performs brute-force blacklisting defense, and will block authentication attempts from blacklisted IP addresses.
 	* Checks the username/password and authenticates the user.
 
-	The function returns 1 on success or 0 on failure.
+	Return Codes
+	-2	User account has been disabled
+	-1	IP is blacklisted due to brute-force attempts
+	0	Invalid username/password
+	1	Success
 */
 function user_login($username, $password)
 {
@@ -121,7 +125,7 @@ function user_login($username, $password)
 					// the last 5 days, block the user.
 					
 					$_SESSION["error"]["message"] = array("For brute-force security reasons, you have been locked out of the system interface.");
-					return 0;
+					return -1;
 				}
 				elseif ($mysql_blacklist_data["time"] < (time() - 432000))
 				{
@@ -171,7 +175,7 @@ function user_login($username, $password)
 			{
 				// user has been disabled
 				$_SESSION["error"]["message"] = array("Your user account has been disabled. Please contact the system administrator to get it unlocked.");
-				return 0;
+				return -2;
 			}
 			else
 			{
