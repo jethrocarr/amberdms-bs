@@ -342,4 +342,87 @@ function security_script_input($expression, $value)
 }
 
 
+
+/*
+	security_script_predefined ($value)
+	
+	Wrapper function for the security_script_input function with various
+	pre-defined checks. This function is simular in to security_form_predefined but
+	is simpler since it doesn't have all the complex error handling code
+
+	"type" options:
+	* any		Allow any input (note: HTML tags will still be stripped)
+	* date		Only permit YYYY-MM-DD format
+	* hourmins	Convert hours:minutes time format into seconds
+	* email		Standard email address
+	* int		Standard integer
+	* money		0.2f floating point money value - the security function will perform padding
+	* float		Floating point integer
+	* ipv4		XXX.XXX.XXX.XXX IPv4 syntax
+
+	For further details, refer to the commentsfor the security_form_input function.
+*/
+function security_script_input_predefined ($type, $value)
+{
+	$expression = NULL;
+
+	// run through the actions for each item type and work out an expression to use
+	switch ($type)
+	{
+		case "any":
+			$expression = "/^[\S\s]*$/";
+		break;
+
+		case "date":
+			$expression = "/^[0-9]{4}-[0-9]*-[0-9]*$/";
+		break;
+
+		case "hourmins":
+			// hourmins is a special field - we want to take
+			// two fields (hours + mins) and add then together
+			// to produce the number of seconds.
+
+			// calculate the time in seconds
+			$time = split(":", $value);
+			$value	= ($time[1] * 60) + (($time[0] * 60) * 60);
+
+			$expression = "/^[0-9]*$/";
+		break;
+
+		case "int":
+			$expression = "/^[0-9]*$/";
+		break;
+
+		case "money":
+			$expression = "/^[0-9]*.[0-9]*$/";
+
+			// perform padding
+			$value = sprintf("%0.2f", $value);
+		break;
+
+		case "float":
+			$expression = "/^[0-9]*.[0-9]*$/";
+		break;
+		
+		case "email":
+			$expression = "/^([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+$/";
+		break;
+
+		case "ipv4":
+			$expression = "/^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:[.](?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/";
+		break;
+
+		default:
+			print "Warning: No such security check for type $type<br>";
+			$expression = "/^[\S\s]*$/";
+		break;
+
+	}
+
+	return security_script_input($expression, $value);
+}
+
+
+
+
 ?>
