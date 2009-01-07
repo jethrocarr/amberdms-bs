@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="authenticate"
+	targetNamespace="http://www.amberdms.com/billing_system/api/authenticate/authenticate.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/authenticate/authenticate.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<message name='login_request'>
+		<part name='account' type='xsd:string'/>
+		<part name='username' type='xsd:string'/>
+		<part name='password' type='xsd:string'/>
+	</message>
+
+	<message name='login_response'>
+		<part name='sessionid' type='xsd:string'/>
+	</message>
+
+
+	<portType name='authenticate_porttype'>
+		<operation name='login'>
+			<input message='tns:login_request'/>
+			<output message='tns:login_response'/>
+		</operation>
+	</portType>
+
+	<binding name='authenticate_binding' type='tns:authenticate_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+			
+		<operation name='login'>
+			<soap:operation soapAction='authenticate'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:authenticate' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:authenticate' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+	</binding>
+
+	<service name='authenticate_service'>
+		<port name='authenticate_port' binding='authenticate_binding'>
+			<soap:address location='http://www.amberdms.com/billing_system/api/authenticate/authenticate.php'/>
+		</port>
+	</service>
+
+</definitions>
