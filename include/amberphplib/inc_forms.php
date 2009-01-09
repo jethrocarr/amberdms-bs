@@ -331,9 +331,19 @@ class form_input
 			default:
 			
 				// field name
-				$translation = language_translate($this->language, array($fieldname));
+				if (!$this->structure[$fieldname]["options"]["no_translate_fieldname"])
+				{
+					$translation = language_translate_string($this->language, $fieldname);
+				}
+				else
+				{
+					// translation disabled
+					$translation = $fieldname;
+				}
+
+
 				print "<td width=\"30%\" valign=\"top\">";
-				print $translation[$fieldname];
+				print $translation;
 				
 				if ($this->structure[$fieldname]["options"]["req"])
 					print " *";
@@ -388,19 +398,20 @@ class form_input
 			
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
-						["req"]			Set to "yes" to mark the field as being required
-						["max_length"]		Max length for input types
-						["width"]		Width of field object.
-						["height"]		Height of field object.
-						["label"]		Label field for checkboxes to use instead of a translation
-						["noselectoption"]	Set to yes to prevent the display of a "select:" heading in dropdowns
-									and to automatically select the first entry in the list.
-									^ - OBSOLETE: this option should be replaced by autoselect option		
-						["autoselect"]		Enabling this option will cause a radio or dropdown with just a single
-									entry to auto-select the single entry.
+						["no_translate_fieldname"]	Set to "yes" to disable language translation for field names
+						["req"]				Set to "yes" to mark the field as being required
+						["max_length"]			Max length for input types
+						["width"]			Width of field object.
+						["height"]			Height of field object.
+						["label"]			Label field for checkboxes or i to use instead of a translation
+						["noselectoption"]		Set to yes to prevent the display of a "select:" heading in dropdowns
+										and to automatically select the first entry in the list.
+										^ - OBSOLETE: this option should be replaced by autoselect option		
+						["autoselect"]			Enabling this option will cause a radio or dropdown with just a single
+										entry to auto-select the single entry.
 		
-			$option_array["values"] = array();		Array of values - used for radio or dropdown type fields
-			$option_array["translations"] = array();	Associate array used for labeling the values in radio or dropdown type fields
+			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
+			$option_array["translations"] = array();		Associate array used for labeling the values in radio or dropdown type fields
 		
 	*/
 	function render_field ($fieldname)
