@@ -916,7 +916,17 @@ class invoice
 	function email_invoice($email_sender, $email_to, $email_cc, $email_bcc, $email_subject, $email_message)
 	{
 		log_debug("invoice", "Executing email_invoice([options])");
-	
+
+
+		// external dependency of Mail_Mime
+		@include('Mail.php');
+		if (!@include('Mail/mime.php'))
+		{
+			log_write("error", "invoice", "Unable to find Mail::Mime module required for sending email");
+			return 0;
+		}
+
+
 	
 		/*
 			Generate a PDF of the invoice and save to tmp file
@@ -953,12 +963,6 @@ class invoice
 		*/
 		
 		log_debug("invoice", "Sending email");
-
-		// external dependency of Mail_Mime
-		include('Mail.php');
-		include('Mail/mime.php');
-
-
 		// fetch sender address
 		//
 		// users have the choice of sending as the company or as their own staff email address & name.
