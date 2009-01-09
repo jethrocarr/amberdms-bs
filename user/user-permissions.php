@@ -72,16 +72,17 @@ class page_output
 		$this->obj_form->method = "post";
 
 
-		$mysql_string		= "SELECT * FROM `permissions`";
+		$mysql_string		= "SELECT * FROM `permissions` ORDER BY value='disabled' DESC, value='admin' DESC, value";
 		$mysql_perms_results	= mysql_query($mysql_string);
 		
 		while ($mysql_perms_data = mysql_fetch_array($mysql_perms_results))
 		{
 			// define the checkbox
 			$structure = NULL;
-			$structure["fieldname"]		= $mysql_perms_data["value"];
-			$structure["type"]		= "checkbox";
-			$structure["options"]["label"]	= $mysql_perms_data["description"];
+			$structure["fieldname"]				= $mysql_perms_data["value"];
+			$structure["type"]				= "checkbox";
+			$structure["options"]["label"]			= $mysql_perms_data["description"];
+			$structure["options"]["no_translate_fieldname"]	= "yes";
 
 			// check if the user has this permission
 			$mysql_string			= "SELECT id FROM `users_permissions` WHERE userid='". $this->id ."' AND permid='". $mysql_perms_data["id"] ."'";
