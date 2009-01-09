@@ -114,9 +114,9 @@ class hr_staff_manage_soap
 			$obj_employee->data["date_start"]		= security_script_input_predefined("date", $date_start);
 			$obj_employee->data["date_end"]			= security_script_input_predefined("date", $date_end);
 
-			foreach (array_keys($data) as $key)
+			foreach (array_keys($obj_employee->data) as $key)
 			{
-				if ($data[$key] == "error")
+				if ($obj_employee->data[$key] == "error")
 				{
 					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
@@ -204,14 +204,10 @@ class hr_staff_manage_soap
 			*/
 			$obj_employee->id				= security_script_input_predefined("int", $id);
 
-			foreach (array_keys($data) as $key)
+			if (!$obj_employee || $obj_employee == "error")
 			{
-				if ($data[$key] == "error")
-				{
-					throw new SoapFault("Sender", "INVALID_INPUT");
-				}
+				throw new SoapFault("Sender", "INVALID_INPUT");
 			}
-
 
 
 			/*
