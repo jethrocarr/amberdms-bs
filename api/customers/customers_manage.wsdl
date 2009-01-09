@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="customers_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/customers/customers_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/customers/customers_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+
+	<message name='get_customer_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_customer_details_response'>
+		<part name='code_customer' type='xsd:string'/>
+		<part name='name_customer' type='xsd:string'/>
+		<part name='name_contact' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+		<part name='tax_number' type='xsd:string'/>
+		<part name='tax_default' type='xsd:string'/>
+		<part name='tax_default_label' type='xsd:string'/>
+		<part name='address1_street' type='xsd:string'/>
+		<part name='address1_city' type='xsd:string'/>
+		<part name='address1_state' type='xsd:string'/>
+		<part name='address1_country' type='xsd:string'/>
+		<part name='address1_zipcode' type='xsd:string'/>
+		<part name='address2_street' type='xsd:string'/>
+		<part name='address2_city' type='xsd:string'/>
+		<part name='address2_state' type='xsd:string'/>
+		<part name='address2_country' type='xsd:string'/>
+		<part name='address2_zipcode' type='xsd:string'/>
+	</message>
+
+
+	<message name='set_customer_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='code_customer' type='xsd:string'/>
+		<part name='name_customer' type='xsd:string'/>
+		<part name='name_contact' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+		<part name='tax_number' type='xsd:string'/>
+		<part name='tax_default' type='xsd:string'/>
+		<part name='address1_street' type='xsd:string'/>
+		<part name='address1_city' type='xsd:string'/>
+		<part name='address1_state' type='xsd:string'/>
+		<part name='address1_country' type='xsd:string'/>
+		<part name='address1_zipcode' type='xsd:string'/>
+		<part name='address2_street' type='xsd:string'/>
+		<part name='address2_city' type='xsd:string'/>
+		<part name='address2_state' type='xsd:string'/>
+		<part name='address2_country' type='xsd:string'/>
+		<part name='address2_zipcode' type='xsd:string'/>
+	</message>
+
+	<message name='set_customer_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_customer_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_customer_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='customers_manage_porttype'>
+		<operation name='get_customer_details'>
+			<input message='tns:get_customer_details_request'/>
+			<output message='tns:get_customer_details_response'/>
+		</operation>
+
+		<operation name='set_customer_details'>
+			<input message='tns:set_customer_details_request'/>
+			<output message='tns:set_customer_details_response'/>
+		</operation>
+
+		<operation name='delete_customer'>
+			<input message='tns:delete_customer_request'/>
+			<output message='tns:delete_customer_response'/>
+		</operation>
+	</portType>
+
+	<binding name='customers_manage_binding' type='tns:customers_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+				
+		<operation name='get_customer_details'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+			
+		<operation name='set_customer_details'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	
+		<operation name='delete_customer'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='customers_manage_service'>
+  <port name='customers_manage_port' binding='customers_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/customers/customers_manage.php'/>
+  </port>
+</service>
+</definitions>
