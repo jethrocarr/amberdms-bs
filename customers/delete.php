@@ -7,12 +7,17 @@
 	Allows an unwanted customer to be deleted.
 */
 
-	
+
+// custom includes
+require("include/customers/inc_customers.php");
+
+
 class page_output
 {
 	var $id;
 	var $obj_menu_nav;
 	var $obj_form;
+	var $obj_customer;
 
 	var $locked;		// hold locked status of customer
 
@@ -21,6 +26,10 @@ class page_output
 	{
 		// fetch variables
 		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// create customer object
+		$this->obj_customer		= New customer;
+		$this->obj_customer->id		= $this->id;
 
 
 		// define the navigiation menu
@@ -42,18 +51,15 @@ class page_output
 
 	function check_requirements()
 	{
-		// verifiy that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// check if the customer exists
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
-		unset($sql_obj);
+		// check if the customer can be deleted
+		$this->locked = $this->obj_customer->check_delete_lock();
+
 
 		return 1;
 	}
@@ -95,31 +101,6 @@ class page_output
 		$structure["options"]["label"]	= "Yes, I wish to delete this customer and realise that once deleted the data can not be recovered.";
 		$this->obj_form->add_input($structure);
 
-
-
-		/*
-			Check that the customer can be deleted
-		*/
-
-		// make sure customer does not belong to any invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ar WHERE customerid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-
-		// make sure customer has no time groups assigned to it
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM time_groups WHERE customerid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
 
 
 		// define submit field

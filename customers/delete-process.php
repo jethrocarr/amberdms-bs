@@ -8,15 +8,24 @@
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../include/config.php");
+require("../include/amberphplib/main.php");
+
+// custom includes
+require("../include/customers/inc_customers.php");
 
 
 if (user_permissions_get('customers_write'))
 {
-	/////////////////////////
+	$obj_customer = New customer;
 
-	$id				= security_form_input_predefined("int", "id_customer", 1, "");
+
+	/*
+		Load POST data
+	*/
+
+	$obj_customer->id		= security_form_input_predefined("int", "id_customer", 1, "");
+
 
 	// these exist to make error handling work right
 	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 0, "");
@@ -25,86 +34,48 @@ if (user_permissions_get('customers_write'))
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
+
+	/*
+		Error Handling
+	*/
+
+
 	// make sure the customer actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `customers` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_customer->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The customer you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The customer you have attempted to edit - ". $obj_customer->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
-			
-
-	// make sure customer does not belong to any invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_ar WHERE customerid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// check if the customer can be safely deleted
+	if ($obj_customer->check_delete_lock())
 	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this customer because it has been added to an invoice.";
+		log_write("error", "process", "This customer can not be removed because their account has invoices or time groups belonging to it.");
 	}
-
-	// make sure customer has no time groups assigned to it
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM time_groups WHERE customerid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
-	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this customer because it has been added to an time group;.";
-	}
-
 
 	
 
-	/// if there was an error, go back to the entry page
+	// return to the input page in the event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["customer_delete"] = "failed";
-		header("Location: ../index.php?page=customers/delete.php&id=$id");
-		exit(0);
-		
-	}
-	else
-	{
-
-		/*
-			Delete Customer
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM customers WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the customer";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Customer has been successfully deleted.";
-		}
-
-
-
-		/*
-			Delete Journal
-		*/
-		journal_delete_entire("customers", $id);
-
-
-
-		// return to customers list
-		header("Location: ../index.php?page=customers/customers.php");
+		header("Location: ../index.php?page=customers/delete.php&id=". $obj_customer->id);
 		exit(0);
 	}
 
-	/////////////////////////
+
+
+	/*
+		Delete Customer
+	*/
+
+	// delete customer
+	$obj_customer->action_delete();
+
+
+	// return to customers list
+	header("Location: ../index.php?page=customers/customers.php");
+	exit(0);
 	
 }
 else
