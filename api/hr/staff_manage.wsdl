@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="hr_staff_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/hr/staff_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/hr/staff_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+
+	<message name='get_employee_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_employee_details_response'>
+		<part name='name_staff' type='xsd:string'/>
+		<part name='staff_code' type='xsd:string'/>
+		<part name='staff_position' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+	</message>
+
+
+
+	<message name='set_employee_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='name_staff' type='xsd:string'/>
+		<part name='staff_code' type='xsd:string'/>
+		<part name='staff_position' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+	</message>
+
+	<message name='set_employee_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_employee_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_employee_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='hr_staff_manage_porttype'>
+		<operation name='get_employee_details'>
+			<input message='tns:get_employee_details_request'/>
+			<output message='tns:get_employee_details_response'/>
+		</operation>
+
+		<operation name='set_employee_details'>
+			<input message='tns:set_employee_details_request'/>
+			<output message='tns:set_employee_details_response'/>
+		</operation>
+
+		<operation name='delete_employee'>
+			<input message='tns:delete_employee_request'/>
+			<output message='tns:delete_employee_response'/>
+		</operation>
+	</portType>
+
+	<binding name='hr_staff_manage_binding' type='tns:hr_staff_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+				
+		<operation name='get_employee_details'>
+			<soap:operation soapAction='hr_staff_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+			
+		<operation name='set_employee_details'>
+			<soap:operation soapAction='hr_staff_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	
+		<operation name='delete_employee'>
+			<soap:operation soapAction='hr_staff_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:hr_staff_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='hr_staff_manage_service'>
+  <port name='hr_staff_manage_port' binding='hr_staff_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/hr/staff_manage.php'/>
+  </port>
+</service>
+</definitions>
