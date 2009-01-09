@@ -366,6 +366,12 @@ function security_script_input_predefined ($type, $value)
 {
 	$expression = NULL;
 
+	// don't bother processing empty variables, just return blank
+	if ($value == "")
+	{
+		return $value;
+	}
+
 	// run through the actions for each item type and work out an expression to use
 	switch ($type)
 	{
