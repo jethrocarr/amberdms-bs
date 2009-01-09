@@ -11,12 +11,22 @@
 include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
+// custom includes
+include_once("../include/hr/inc_staff.php");
+
 
 if (user_permissions_get('staff_write'))
 {
-	/////////////////////////
+	// prepare object
+	$obj_employee		= New hr_staff;
 
-	$id				= security_form_input_predefined("int", "id_staff", 1, "");
+
+	/*
+		Load POST data
+	*/
+
+	$obj_employee->id		= security_form_input_predefined("int", "id_staff", 1, "");
+
 
 	// these exist to make error handling work right
 	$data["name_staff"]		= security_form_input_predefined("any", "name_staff", 0, "");
@@ -25,78 +35,32 @@ if (user_permissions_get('staff_write'))
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
+
+	/*
+		Error Handling
+	*/
+
 	// make sure the employee actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `staff` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_employee->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The employee you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "staff-edit-process", "The employee you have attempted to delete - ". $obj_employee->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
 
-	$locked = 0;
-	
-	// make sure employee does not belong to any AR invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_ar WHERE employeeid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// make sure employee is not locked
+	if ($obj_employee->check_lock())
 	{
-		$locked = 1;
-	}
-
-	// make sure employee does not belong to any AP invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_ap WHERE employeeid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
-	{
-		$locked = 1;
-	}
-
-	// make sure employee does not belong to any quotes
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_quotes WHERE employeeid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
-	{
-		$locked = 1;
-	}
-
-	// make sure employee has no time booked
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM timereg WHERE employeeid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
-	{
-		$locked = 1;
+		log_write("error", "staff-delete-process", "You are not able to delete this employee because they have made postings to the billing system.");
 	}
 
 
-	if ($locked)
-	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this employee because they have made postings to the billing system.";
-	}
-
-
-	
-
-	/// if there was an error, go back to the entry page
+	// return to entry page in event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["staff_delete"] = "failed";
-		header("Location: ../index.php?page=hr/staff-delete.php&id=$id");
+		header("Location: ../index.php?page=hr/staff-delete.php&id=". $obj_employee->id ."");
 		exit(0);
-		
 	}
 	else
 	{
@@ -104,39 +68,8 @@ if (user_permissions_get('staff_write'))
 		/*
 			Delete Employee
 		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM staff WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the employee";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Employee has been successfully deleted.";
-		}
 
-
-		/*
-			Delete User <-> Employee permissions mappings
-		*/
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM users_permissions_staff WHERE staffid='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the user-employee permissions mappings";
-		}
-
-
-
-		/*
-			Delete Journal
-		*/
-		journal_delete_entire("staff", $id);
-
+		$obj_employee->action_delete();
 
 
 		// return to products list

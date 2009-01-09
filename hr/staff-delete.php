@@ -7,6 +7,9 @@
 	Allows an unwanted employee to be deleted.
 */
 
+// custom includes
+require("include/hr/inc_staff.php");
+
 
 class page_output
 {
@@ -67,46 +70,12 @@ class page_output
 			Check that the employee can be deleted
 		*/
 
-		// make sure employee does not belong to any AR invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ar WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
+		$obj_employee		= New hr_staff;
+		$obj_employee->id	= $this->id;
 
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
+		$this->locked		= $obj_employee->check_lock();
 
-		// make sure employee does not belong to any AP invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ap WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-		
-		// make sure employee does not belong to any quotes
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_quotes WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-
-
-		// make sure employee has no time booked
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM timereg WHERE employeeid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
+		unset($obj_employee);
 
 		
 	
