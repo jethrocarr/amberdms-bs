@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="vendors_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/vendors/vendors_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/vendors/vendors_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+
+	<message name='get_vendor_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_vendor_details_response'>
+		<part name='code_vendor' type='xsd:string'/>
+		<part name='name_vendor' type='xsd:string'/>
+		<part name='name_contact' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+		<part name='tax_number' type='xsd:string'/>
+		<part name='tax_default' type='xsd:string'/>
+		<part name='tax_default_label' type='xsd:string'/>
+		<part name='address1_street' type='xsd:string'/>
+		<part name='address1_city' type='xsd:string'/>
+		<part name='address1_state' type='xsd:string'/>
+		<part name='address1_country' type='xsd:string'/>
+		<part name='address1_zipcode' type='xsd:string'/>
+		<part name='address2_street' type='xsd:string'/>
+		<part name='address2_city' type='xsd:string'/>
+		<part name='address2_state' type='xsd:string'/>
+		<part name='address2_country' type='xsd:string'/>
+		<part name='address2_zipcode' type='xsd:string'/>
+	</message>
+
+
+	<message name='set_vendor_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='code_vendor' type='xsd:string'/>
+		<part name='name_vendor' type='xsd:string'/>
+		<part name='name_contact' type='xsd:string'/>
+		<part name='contact_email' type='xsd:string'/>
+		<part name='contact_phone' type='xsd:string'/>
+		<part name='contact_fax' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
+		<part name='tax_number' type='xsd:string'/>
+		<part name='tax_default' type='xsd:string'/>
+		<part name='address1_street' type='xsd:string'/>
+		<part name='address1_city' type='xsd:string'/>
+		<part name='address1_state' type='xsd:string'/>
+		<part name='address1_country' type='xsd:string'/>
+		<part name='address1_zipcode' type='xsd:string'/>
+		<part name='address2_street' type='xsd:string'/>
+		<part name='address2_city' type='xsd:string'/>
+		<part name='address2_state' type='xsd:string'/>
+		<part name='address2_country' type='xsd:string'/>
+		<part name='address2_zipcode' type='xsd:string'/>
+	</message>
+
+	<message name='set_vendor_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_vendor_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_vendor_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='vendors_manage_porttype'>
+		<operation name='get_vendor_details'>
+			<input message='tns:get_vendor_details_request'/>
+			<output message='tns:get_vendor_details_response'/>
+		</operation>
+
+		<operation name='set_vendor_details'>
+			<input message='tns:set_vendor_details_request'/>
+			<output message='tns:set_vendor_details_response'/>
+		</operation>
+
+		<operation name='delete_vendor'>
+			<input message='tns:delete_vendor_request'/>
+			<output message='tns:delete_vendor_response'/>
+		</operation>
+	</portType>
+
+	<binding name='vendors_manage_binding' type='tns:vendors_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+				
+		<operation name='get_vendor_details'>
+			<soap:operation soapAction='vendors_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+			
+		<operation name='set_vendor_details'>
+			<soap:operation soapAction='vendors_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	
+		<operation name='delete_vendor'>
+			<soap:operation soapAction='vendors_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:vendors_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='vendors_manage_service'>
+  <port name='vendors_manage_port' binding='vendors_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/vendors/vendors_manage.php'/>
+  </port>
+</service>
+</definitions>
