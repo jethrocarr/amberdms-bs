@@ -1,22 +1,30 @@
 <?php
 /*
-	products/delete-process.php
+	vendors/delete-process.php
 
 	access: vendors_write
 
-	Deletes a vendor provided that the vendor has not been added to any invoices.
+	Deletes a vendor provided that the vendor has not been assigned to any products or invoices.
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../include/config.php");
+require("../include/amberphplib/main.php");
+
+// custom includes
+require("../include/vendors/inc_vendors.php");
 
 
 if (user_permissions_get('vendors_write'))
 {
-	/////////////////////////
+	$obj_vendor = New vendor;
 
-	$id				= security_form_input_predefined("int", "id_vendor", 1, "");
+
+	/*
+		Load POST Data
+	*/
+
+	$obj_vendor->id			= security_form_input_predefined("int", "id_vendor", 1, "");
 
 	// these exist to make error handling work right
 	$data["name_vendor"]		= security_form_input_predefined("any", "name_vendor", 0, "");
@@ -24,76 +32,46 @@ if (user_permissions_get('vendors_write'))
 	// confirm deletion
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
+
+
+	/*
+		Error Handling
+	*/
 	
 	// make sure the vendor actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `vendors` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_vendor->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The vendor you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The vendor you have attempted to edit - ". $obj_vendor->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
-			
-
-	// make sure vendor does not belong to any AP invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_ap WHERE vendorid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// make sure vendor can be safely deleted
+	if ($obj_vendor->check_delete_lock())
 	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this vendor because it has been added to an invoice.";
+		log_write("error", "process", "The vendor can not be deleted since there are invoices or products assigned to the vendor.");
 	}
-	
 
-	/// if there was an error, go back to the entry page
+
+	// return to the entry page in the event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["vendor_delete"] = "failed";
-		header("Location: ../index.php?page=vendors/delete.php&id=$id");
-		exit(0);
-		
-	}
-	else
-	{
-
-		/*
-			Delete Customer
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM vendors WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the vendor";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Vendor has been successfully deleted.";
-		}
-
-
-
-		/*
-			Delete Journal
-		*/
-		journal_delete_entire("vendors", $id);
-
-
-
-		// return to products list
-		header("Location: ../index.php?page=vendors/vendors.php");
+		header("Location: ../index.php?page=vendors/delete.php&id=". $obj_vendor->id);
 		exit(0);
 	}
 
-	/////////////////////////
-	
+
+
+	/*
+		Delete Vendor
+	*/
+
+	// perform delete action
+	$obj_vendor->action_delete();
+
+	// return to products list
+	header("Location: ../index.php?page=vendors/vendors.php");
+	exit(0);
 }
 else
 {

@@ -7,11 +7,16 @@
 	Allows an unwanted vendor to be deleted.
 */
 
+// custom includes
+require("include/vendors/inc_vendors.php");
+
+
 class page_output
 {
 	var $id;
 	var $obj_menu_nav;
 	var $obj_form;
+	var $obj_vendor;
 
 	var $locked;
 
@@ -21,6 +26,10 @@ class page_output
 		// fetch variables
 		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
 
+		// create vendor obj
+		$this->obj_vendor	= New vendor;
+		$this->obj_vendor->id	= $this->id;
+		
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
@@ -42,18 +51,14 @@ class page_output
 	function check_requirements()
 	{
 		// verify that vendor exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $this->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		if (!$this->obj_vendor->verify_id())
 		{
-			log_write("error", "page_output", "The requested vendor (". $this->id .") does not exist - possibly the vendor has been deleted.");
+			log_write("error", "check_requirements", "The requested vendor - ". $this->id . " - does not exist");
 			return 0;
 		}
 
-		unset($sql_obj);
-
+		// get lock status for deletion
+		$this->locked = $this->obj_vendor->check_delete_lock();
 
 		return 1;
 	}
@@ -62,18 +67,6 @@ class page_output
 
 	function execute()
 	{
-
-		// make sure vendor does not belong to any invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ap WHERE vendorid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-		
-	
 		/*
 			Define form structure
 		*/
@@ -148,7 +141,7 @@ class page_output
 
 		if ($this->locked)
 		{
-			format_msgbox("locked", "<p>This vendor can not be removed because there are invoices belong to this vendor.</p>");
+			format_msgbox("locked", "<p>This vendor can not be removed because the vendor is assigned to invoices or products.</p>");
 		}
 
 	}
