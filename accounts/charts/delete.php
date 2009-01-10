@@ -7,11 +7,17 @@
 	Allows an unwanted chart to be deleted.
 */
 
+
+// custom includes
+require("include/accounts/inc_charts.php");
+
+
 class page_output
 {
 	var $id;
 	var $obj_menu_nav;
 	var $obj_form;
+	var $obj_chart;
 
 	var $locked;
 	
@@ -20,6 +26,10 @@ class page_output
 	{
 		// fetch variables
 		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// create chart object
+		$this->obj_chart	= New chart;
+		$this->obj_chart->id	= $this->id;
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -41,11 +51,7 @@ class page_output
 	function check_requirements()
 	{
 		// verify that the account exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_charts WHERE id='". $this->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		if (!$this->obj_chart->verify_id())
 		{
 			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
 			return 0;
@@ -54,42 +60,15 @@ class page_output
 		unset($sql_obj);
 
 
+		// check the lock status of the account
+		$this->locked = $this->obj_chart->check_delete_lock();
+
 		return 1;
 	}
 
 
 	function execute()
 	{
-		/*
-			Check if account should be locked
-
-			If the account has transactions or items belonging to it, then it must be locked
-		*/
-
-		
-		// check the ledger - this will catch all general transactions and invoices
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-	
-		// check the items - this will catch quotes which won't have any entry in the ledger table
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='". $this->id ."'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$this->locked = 1;
-		}
-		
-
-
-	
 		/*
 			Define form structure
 		*/
@@ -170,7 +149,7 @@ class page_output
 
 		if ($this->locked)
 		{
-			format_msgbox("locked", "<p>This invoice has been locked and can no longer be removed.</p>");
+			format_msgbox("locked", "<p>This account is locked and can not be removed.</p>");
 		}
 
 	}

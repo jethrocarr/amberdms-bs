@@ -8,15 +8,23 @@
 */
 
 // includes
-include_once("../../include/config.php");
-include_once("../../include/amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
+
+// custom includes
+require("../../include/accounts/inc_charts.php");
 
 
 if (user_permissions_get('accounts_charts_write'))
 {
-	/////////////////////////
+	$obj_chart = New chart;
 
-	$id				= security_form_input_predefined("int", "id_chart", 1, "");
+
+	/*
+		Load POST Data
+	*/
+
+	$obj_chart->id			= security_form_input_predefined("int", "id_chart", 1, "");
 
 	// these exist to make error handling work right
 	$data["code_chart"]		= security_form_input_predefined("any", "code_chart", 0, "");
@@ -25,80 +33,47 @@ if (user_permissions_get('accounts_charts_write'))
 	// confirm deletion
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
+
+
+	/*
+	
+		Error Handling
+	*/
 	
 	// make sure the chart actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `account_charts` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_chart->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The account you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The account you have attempted to edit - ". $obj_chart->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
-
-	// make sure chart has no transactions in it
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_trans WHERE chartid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// make sure chart is safe to delete
+	if ($obj_chart->check_delete_lock())
 	{
-		$_SESSION["error"]["message"][] = "This account can not be deleted since it has transactions belonging to it";
-	}
-	else
-	{
-		// make sure chart has no items belonging to it
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE chartid='$id'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$_SESSION["error"]["message"][] = "This account can not be deleted since it has invoice or quote items belonging to it.";
-		}
+		log_write("error", "process", "The account can not be deleted because it is locked.");
 	}
 
 
-	
-	/// if there was an error, go back to the entry page
+
+	// return to the input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["chart_delete"] = "failed";
-		header("Location: ../../index.php?page=accounts/charts/delete.php&id=$id");
-		exit(0);
-		
-	}
-	else
-	{
-
-		/*
-			Delete Account
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_charts WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the account";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Account has been successfully deleted.";
-		}
-
-
-		// return to chart of accounts
-		header("Location: ../../index.php?page=accounts/charts/charts.php");
+		header("Location: ../../index.php?page=accounts/charts/delete.php&id=". $obj_chart->id);
 		exit(0);
 	}
 
-	/////////////////////////
-	
+
+
+	/*
+		Delete Account
+	*/
+
+	$obj_chart->action_delete();
+			
+	// return to chart of accounts
+	header("Location: ../../index.php?page=accounts/charts/charts.php");
+	exit(0);
 }
 else
 {
