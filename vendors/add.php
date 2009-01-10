@@ -77,14 +77,14 @@ class page_output
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_start";
-		$structure["type"]		= "input";
+		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= date("Y-m-d");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "input";
+		$structure["type"]	= "date";
 		$this->obj_form->add_input($structure);
 
 
