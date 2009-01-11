@@ -29,7 +29,7 @@ function user_online()
 		return 0;
 		
 	// get user auth data
-	$mysql_string	= "SELECT id, time FROM `users` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 0, 1";
+	$mysql_string	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 0, 1";
 	$mysql_result	= mysql_query($mysql_string);
 	$mysql_num_rows	= mysql_num_rows($mysql_result);
 
@@ -48,7 +48,7 @@ function user_online()
 			if (($time -  $mysql_data["time"]) > 1800)
 			{
 				// update time field
-				$mysql_string = "UPDATE `users` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."'";
+				$mysql_string = "UPDATE `users_sessions` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."'";
 				mysql_query($mysql_string);
 			}
 
@@ -196,6 +196,14 @@ function user_login($username, $password)
 				// * An exploit elsewhere in this application which allows the changing of any session variable will
 				//   not allow a user to gain different authentication rights.
 				//
+				// The authentication key is stored in the seporate users_sessions tables, which is capable
+				// of supporting concurrent logins. The session table will automatically clean out any expired
+				// session records whenever a user logs in.
+				//
+				// Note: The users_sessions table is intentionally not a memory table, in order to support this application
+				// when running on load-balancing clusters with replicated MySQL databases. If this application is
+				// running on a standalone server only, a memory table would have been acceptable.
+				//
 				
 				// generate an authentication key
                                 $feed = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -209,9 +217,37 @@ function user_login($username, $password)
 				$ipaddress	= $_SERVER["REMOTE_ADDR"];
 				$time		= time();
 
-				// update user's login data
-				$mysql_string = "UPDATE `users` SET authkey='$authkey', ipaddress='$ipaddress', time='$time' WHERE id='" . $mysql_data["id"] . "'";
+
+				// perform session table cleanup - remove any records older than 12 hours
+				$time_expired = $time - 43200;
+
+				$mysql_string = "DELETE FROM `users_sessions` WHERE time < '$time_expired'";
 				mysql_query($mysql_string);
+
+
+				// if concurrent logins is not enabled, delete any old sessions belonging to this user.
+				if (sql_get_singlevalue("SELECT value FROM users_options WHERE userid='". $mysql_data["id"] ."' AND name='concurrent_logins' LIMIT 1") != "on")
+				{
+					log_write("debug", "inc_users", "User account does not permit concurrent logins, removing all old sessions");
+
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "DELETE FROM `users_sessions` WHERE userid='". $mysql_data["id"] ."'";
+					$sql_obj->execute();
+				}
+
+
+
+				// create session entry for user login
+				$mysql_string = "INSERT INTO `users_sessions` (userid, authkey, ipaddress, time) VALUES ('". $mysql_data["id"] ."', '$authkey', '$ipaddress', '$time')";
+				mysql_query($mysql_string);
+
+
+
+
+				// update user's last-login data
+				$mysql_string = "UPDATE `users` SET ipaddress='$ipaddress', time='$time' WHERE id='" . $mysql_data["id"] . "'";
+				mysql_query($mysql_string);
+
 
 				// set session variables
 				$_SESSION["user"]["id"]		= $mysql_data["id"];
@@ -303,9 +339,14 @@ function user_logout()
 {
 	if ($_SESSION["user"]["name"])
 	{
+		// remove session entry from DB
+		$mysql_string = "DELETE FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' LIMIT 1";
+		mysql_query($mysql_string);
+
 		// log the user out.
 		$_SESSION["user"] = array();
 		$_SESSION["form"] = array();
+
 		return 1;		
 	}
 

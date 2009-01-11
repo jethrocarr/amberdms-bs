@@ -47,9 +47,10 @@ if (user_permissions_get('admin'))
 	// account options are for edits only
 	if ($mode == "edit")
 	{
-		$data["option_lang"]		= security_form_input_predefined("any", "option_lang", 1, "");
-		$data["option_dateformat"]	= security_form_input_predefined("any", "option_dateformat", 1, "");
-		$data["option_debug"]		= security_form_input_predefined("any", "option_debug", 0, "");
+		$data["option_lang"]			= security_form_input_predefined("any", "option_lang", 1, "");
+		$data["option_dateformat"]		= security_form_input_predefined("any", "option_dateformat", 1, "");
+		$data["option_debug"]			= security_form_input_predefined("any", "option_debug", 0, "");
+		$data["option_concurrent_logins"]	= security_form_input_predefined("any", "option_concurrent_logins", 0, "");
 	}
 
 
@@ -150,7 +151,12 @@ if (user_permissions_get('admin'))
 				$sql_obj		= New sql_query;
 				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'debug', 'disabled')";
 				$sql_obj->execute();
-			
+
+				// concurrent logins
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'concurrent_logins', 'disabled')";
+				$sql_obj->execute();
+					
 
 			
 				// assign the user "disabled" permissions
@@ -182,17 +188,10 @@ if (user_permissions_get('admin'))
 			}
 
 			// update the account details
-			//
-			// We kick the user when we update these details, since values such as the username
-			// will be saved in the user's session arrays and we don't want any weird errors.
-			//
-			// By setting authkey to nothing, the user will be kicked.
-			//
 			$mysql_string = "UPDATE `users` SET "
 					."username='". $data["username"] ."', "
 					."realname='". $data["realname"] ."', "
-					."contact_email='". $data["contact_email"] ."', "
-					."authkey='' "
+					."contact_email='". $data["contact_email"] ."' "
 					."WHERE id='$id'";
 			
 			if (!mysql_query($mysql_string))
@@ -236,8 +235,20 @@ if (user_permissions_get('admin'))
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'debug', '". $data["option_debug"] ."')";
 			$sql_obj->execute();
-			
+
+			// concurrent logins
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'concurrent_logins', '". $data["option_concurrent_logins"] ."')";
+			$sql_obj->execute();
+
 		}
+
+		// Because we have changed the users details such as their username, we need to kill all the user's
+		// sessions to prevent any undesired issues from occuring.
+
+		$mysql_string = "DELETE FROM `users_sessions` WHERE userid='$id'";
+		mysql_query($mysql_string);
+
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-view.php&id=$id");
