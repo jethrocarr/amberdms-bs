@@ -146,7 +146,7 @@ class customers_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_customer->id				= security_script_input_predefined("int", $id_customer);
+			$obj_customer->id				= security_script_input_predefined("int", $id);
 			
 			$obj_customer->data["code_customer"]		= security_script_input_predefined("any", $code_customer);
 			$obj_customer->data["name_customer"]		= security_script_input_predefined("any", $name_customer);
@@ -264,12 +264,9 @@ class customers_manage_soap
 			*/
 			$obj_customer->id = security_script_input_predefined("int", $id);
 
-			foreach (array_keys($data) as $key)
+			if (!$obj_customer->id || $obj_customer->id == "error")
 			{
-				if ($data[$key] == "error")
-				{
-					throw new SoapFault("Sender", "INVALID_INPUT");
-				}
+				throw new SoapFault("Sender", "INVALID_INPUT");
 			}
 
 

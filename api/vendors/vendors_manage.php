@@ -146,7 +146,7 @@ class vendors_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_vendor->id					= security_script_input_predefined("int", $id_vendor);
+			$obj_vendor->id					= security_script_input_predefined("int", $id);
 			
 			$obj_vendor->data["code_vendor"]		= security_script_input_predefined("any", $code_vendor);
 			$obj_vendor->data["name_vendor"]		= security_script_input_predefined("any", $name_vendor);
@@ -256,12 +256,9 @@ class vendors_manage_soap
 			*/
 			$obj_vendor->id = security_script_input_predefined("int", $id);
 
-			foreach (array_keys($data) as $key)
+			if (!$obj_vendor->id || $obj_vendor->id == "error")
 			{
-				if ($data[$key] == "error")
-				{
-					throw new SoapFault("Sender", "INVALID_INPUT");
-				}
+				throw new SoapFault("Sender", "INVALID_INPUT");
 			}
 
 

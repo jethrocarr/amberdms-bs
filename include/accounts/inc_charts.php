@@ -218,7 +218,7 @@ class chart
 		log_debug("inc_charts", "Executing load_data()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT * FROM charts WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT * FROM account_charts WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
