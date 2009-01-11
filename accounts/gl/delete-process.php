@@ -8,102 +8,68 @@
 */
 
 // includes
-include_once("../../include/config.php");
-include_once("../../include/amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
+
+// custom includes
+require("../../include/accounts/inc_gl.php");
+
 
 
 if (user_permissions_get('accounts_gl_write'))
 {
-	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_transaction", 1, "");
+	$obj_gl = New gl_transaction;
+
+
+	/*
+		Import POST Data
+	*/
+
+	$obj_gl->id				= security_form_input_predefined("int", "id_transaction", 1, "");
 
 	// these exist to make error handling work right
-	$data["code_gl"]		= security_form_input_predefined("any", "code_gl", 0, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$obj_gl->data["code_gl"]		= security_form_input_predefined("any", "code_gl", 0, "");
+	$obj_gl->data["description"]		= security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_gl->data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 
-	//// ERROR CHECKING ///////////////////////
-
+	/*
+		Error Handling
+	*/
 
 	// make sure the transaction actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id, locked FROM `account_gl` WHERE id='$id' LIMIT 1";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_gl->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The transaction you have attempted to edit - $id - does not exist in this system.";
-	}
-	else
-	{
-		$sql_obj->fetch_array();
-
-		if ($sql_obj->data[0]["locked"])
-		{
-			$_SESSION["error"]["message"][] = "This transaction can not be deleted, because it is locked";
-		}
+		log_write("error", "process", "The transaction you have attempted to edit - ". $obj_gl->id ." - does not exist in this system.");
 	}
 
-	
-	/// if there was an error, go back to the entry page
+	if ($obj_gl->check_delete_lock())
+	{
+		log_write("error", "process", "This transaction can not be deleted, because it is locked");
+	}
+
+
+	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["transaction_delete"] = "failed";
-		header("Location: ../../index.php?page=accounts/gl/delete.php&id=$id");
-		exit(0);
-		
-	}
-	else
-	{
-		/*
-			Delete general ledger details
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_gl WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the transaction";
-		}
-
-
-		/*
-			Delete transaction items
-		*/
-		
-		$sql_obj		= New sql_query();
-		$sql_obj->string	= "DELETE FROM account_trans WHERE type='gl' AND customid='$id'";
-		$sql_obj->execute();
-		
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the transaction items.";
-		}
-
-
-
-
-		/*
-			Complete
-		*/
-		
-		if (!$_SESSION["error"]["message"])
-		{
-			$_SESSION["notification"]["message"][] = "Transaction has been successfully deleted.";
-		}
-		
-		header("Location: ../../index.php?page=accounts/gl/gl.php");
+		header("Location: ../../index.php?page=accounts/gl/delete.php&id=". $obj_gl->id);
 		exit(0);
 	}
 
-	/////////////////////////
-	
+
+	/*
+		Action
+	*/
+
+	$obj_gl->action_delete();
+
+	header("Location: ../../index.php?page=accounts/gl/gl.php");
+	exit(0);
 }
 else
 {
