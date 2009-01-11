@@ -29,12 +29,37 @@
 				</all>
 			</complexType>
 
+
+			<complexType name="chart_menu_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="chart_menu_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="chart_menu_row">
+				<all>
+					<element name="id" type="xsd:int"/>
+					<element name="value" type="xsd:string"/>
+					<element name="groupname" type="xsd:string"/>
+					<element name="description" type="xsd:string"/>
+				</all>
+			</complexType>
+
+
+
 		</schema>
 	</types>
  
-	<message name="get_chart_type_list_response">
+	<message name="list_chart_type_response">
 		<part name="return" type="xsd1:chart_type_list"/>
 	</message>
+
+	<message name="list_chart_menu_response">
+		<part name="return" type="xsd1:chart_menu_list"/>
+	</message>
+
 
 	<message name='get_chart_details_request'>
 		<part name='id' type='xsd:int'/>
@@ -46,6 +71,16 @@
 		<part name='chart_type' type='xsd:int'/>
 		<part name='chart_type_label' type='xsd:string'/>
 	</message>
+
+
+	<message name='get_chart_menu_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_chart_menu_response'>
+		<part name='return' type='xsd1:chart_menu_list'/>
+	</message>
+
 
 
 	<message name='set_chart_details_request'>
@@ -60,6 +95,18 @@
 	</message>
 
 
+	<message name='set_chart_menuoption_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='menuvalue' type='xsd:string'/>
+		<part name='status' type='xsd:string'/>
+	</message>
+
+	<message name='set_chart_menuoption_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
 	<message name='delete_chart_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
@@ -72,18 +119,33 @@
 
 	<portType name='accounts_charts_manage_porttype'>
 
-		<operation name='get_chart_type_list'>
-			<output message='tns:get_chart_type_list_response'/>
+		<operation name='list_chart_type'>
+			<output message='tns:list_chart_type_response'/>
 		</operation>
+
+		<operation name='list_chart_menu'>
+			<output message='tns:list_chart_type_response'/>
+		</operation>
+
 
 		<operation name='get_chart_details'>
 			<input message='tns:get_chart_details_request'/>
 			<output message='tns:get_chart_details_response'/>
 		</operation>
 
+		<operation name='get_chart_menu'>
+			<input message='tns:get_chart_menu_request'/>
+			<output message='tns:get_chart_menu_response'/>
+		</operation>
+
 		<operation name='set_chart_details'>
 			<input message='tns:set_chart_details_request'/>
 			<output message='tns:set_chart_details_response'/>
+		</operation>
+
+		<operation name='set_chart_menuoption'>
+			<input message='tns:set_chart_menuoption_request'/>
+			<output message='tns:set_chart_menuoption_response'/>
 		</operation>
 
 		<operation name='delete_chart'>
@@ -96,13 +158,20 @@
 	<binding name='accounts_charts_manage_binding' type='tns:accounts_charts_manage_porttype'>
 		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
 
-		<operation name='get_chart_type_list'>
+		<operation name='list_chart_type'>
 			<soap:operation soapAction='accounts_charts_manage'/>
 			<output>
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
-				
+
+		<operation name='list_chart_menu'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+							
 		<operation name='get_chart_details'>
 			<soap:operation soapAction='accounts_charts_manage'/>
 			<input>
@@ -113,7 +182,18 @@
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
-			
+
+		<operation name='get_chart_menu'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+					
 		<operation name='set_chart_details'>
 			<soap:operation soapAction='accounts_charts_manage'/>
 			<input>
@@ -125,7 +205,17 @@
 			</output>
 		</operation>
 
-	
+		<operation name='set_chart_menuoption'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
 		<operation name='delete_chart'>
 			<soap:operation soapAction='accounts_charts_manage'/>
 			<input>

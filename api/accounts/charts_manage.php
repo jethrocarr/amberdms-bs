@@ -25,14 +25,14 @@ class accounts_charts_manage_soap
 {
 
 	/*
-		get_chart_type_list
+		list_chart_type
 
-		Return a list of all the avaliable charts
+		Returns a list of all available chart types in the account_chart_type table.
 	*/
 
-	function get_chart_type_list()
+	function list_chart_type()
 	{
-		log_debug("charts_manage_soap", "Executing get_chart_type_list()");
+		log_debug("charts_manage_soap", "Executing list_chart_type()");
 
 		if (user_permissions_get("accounts_charts_view"))
 		{
@@ -62,7 +62,51 @@ class accounts_charts_manage_soap
 			throw new SoapFault("Sender", "ACCESS_DENIED");
 		}
 
-	} // end of get_chart_type_list
+	} // end of list_chart_type
+
+
+
+	/*
+		list_chart_menu
+
+		Returns a list of the available menu options in the account_chart_menu table.
+	*/
+
+	function list_chart_menu()
+	{
+		log_debug("charts_manage_soap", "Executing list_chart_menu()");
+
+		if (user_permissions_get("accounts_charts_view"))
+		{
+			// fetch chart data
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id, value, groupname, description FROM account_chart_menu";
+			$sql_obj->execute();
+			$sql_obj->fetch_array();
+
+
+			// package data into array for passing back to SOAP client
+			$return = NULL;
+			foreach ($sql_obj->data as $data)
+			{
+				$return_tmp			= NULL;
+				$return_tmp["id"]		= $data["id"];
+				$return_tmp["value"]		= $data["value"];
+				$return_tmp["groupname"]	= $data["groupname"];
+				$return_tmp["description"]	= $data["description"];
+
+				$return[] = $return_tmp;
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of list_chart_menu
+
 
 
 
@@ -126,6 +170,77 @@ class accounts_charts_manage_soap
 		}
 
 	} // end of get_chart_details
+
+
+	/*
+		get_chart_menu
+
+		Returns a list of all the menu options belonging to the provided account.
+	*/
+
+	function get_chart_menu($id)
+	{
+		log_debug("charts_manage_soap", "Executing get_chart_menu()");
+
+		if (user_permissions_get("accounts_charts_view"))
+		{
+			$obj_chart = New chart;
+
+			// sanitise input
+			$obj_chart->id = security_script_input_predefined("int", $id);
+
+			if (!$obj_chart->id || $obj_chart->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+			// verify that the ID is valid
+			if (!$obj_chart->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// fetch list of all charts
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id, value, groupname, description FROM account_chart_menu";
+			$sql_obj->execute();
+			$sql_obj->fetch_array();
+
+
+			// package data into array for passing back to SOAP client, but only include
+			// menu options which are enabled for this chart
+			$return = NULL;
+			foreach ($sql_obj->data as $data)
+			{
+				$sql_option_obj		= New sql_query;
+				$sql_option_obj->string	= "SELECT id FROM account_charts_menus WHERE chartid='". $obj_chart->id ."' AND menuid='". $data["id"] ."'";
+				$sql_option_obj->execute();
+
+				if ($sql_option_obj->num_rows())
+				{
+					$return_tmp			= NULL;
+					$return_tmp["id"]		= $data["id"];
+					$return_tmp["value"]		= $data["value"];
+					$return_tmp["groupname"]	= $data["groupname"];
+					$return_tmp["description"]	= $data["description"];
+
+					$return[] = $return_tmp;
+				}
+
+				unset($sql_option_obj);
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_chart_menu
+
 
 
 
@@ -210,6 +325,80 @@ class accounts_charts_manage_soap
 
 	} // end of set_chart_details
 
+
+
+	/*
+		set_chart_menuoption
+
+		Turn menu options on/off for the selected chart.
+
+		Returns
+		0	failure
+		#	ID of the chart
+	*/
+	function set_chart_menuoption($id, $menuvalue, $status)
+	{
+		log_debug("accounts_charts_manage", "Executing set_chart_menuoption($id, values...)");
+
+		if (user_permissions_get("accounts_charts_write"))
+		{
+			$obj_chart = New chart;
+
+			
+			/*
+				Load SOAP Data
+			*/
+			$obj_chart->id				= security_script_input_predefined("int", $id);
+
+			if (!$obj_chart->id || $obj_chart->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+			$data["menu_value"]			= security_script_input_predefined("any", $menuvalue);
+			$data["status"]				= security_script_input_predefined("any", $status);
+			
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+
+			/*
+				Error Handling
+			*/
+
+			// verify chart ID
+			if (!$obj_chart->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			/*
+				Perform Changes
+			*/
+
+			if ($obj_chart->action_update_menu_singleoption($data["menu_value"], $data["status"]))
+			{
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_chart_menuoption
 
 
 
