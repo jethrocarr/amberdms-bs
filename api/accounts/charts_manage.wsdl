@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="accounts_charts_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/accounts/charts_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/accounts/charts_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+	<types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://www.amberdms.com/billing_system/api/accounts/charts_manage.wsdl"
+		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+
+			<complexType name="chart_type_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="chart_type_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="chart_type_row">
+				<all>
+					<element name="id" type="xsd:string"/>
+					<element name="value" type="xsd:string"/>
+					<element name="total_mode" type="xsd:string"/>
+				</all>
+			</complexType>
+
+		</schema>
+	</types>
+ 
+	<message name="get_chart_type_list_response">
+		<part name="return" type="xsd1:chart_type_list"/>
+	</message>
+
+	<message name='get_chart_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_chart_details_response'>
+		<part name='code_chart' type='xsd:int'/>
+		<part name='description' type='xsd:string'/>
+		<part name='chart_type' type='xsd:int'/>
+		<part name='chart_type_label' type='xsd:string'/>
+	</message>
+
+
+	<message name='set_chart_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='code_chart' type='xsd:int'/>
+		<part name='description' type='xsd:string'/>
+		<part name='chart_type' type='xsd:int'/>
+	</message>
+
+	<message name='set_chart_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_chart_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_chart_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='accounts_charts_manage_porttype'>
+
+		<operation name='get_chart_type_list'>
+			<output message='tns:get_chart_type_list_response'/>
+		</operation>
+
+		<operation name='get_chart_details'>
+			<input message='tns:get_chart_details_request'/>
+			<output message='tns:get_chart_details_response'/>
+		</operation>
+
+		<operation name='set_chart_details'>
+			<input message='tns:set_chart_details_request'/>
+			<output message='tns:set_chart_details_response'/>
+		</operation>
+
+		<operation name='delete_chart'>
+			<input message='tns:delete_chart_request'/>
+			<output message='tns:delete_chart_response'/>
+		</operation>
+
+	</portType>
+
+	<binding name='accounts_charts_manage_binding' type='tns:accounts_charts_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+
+		<operation name='get_chart_type_list'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+				
+		<operation name='get_chart_details'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+			
+		<operation name='set_chart_details'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	
+		<operation name='delete_chart'>
+			<soap:operation soapAction='accounts_charts_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_charts_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='accounts_charts_manage_service'>
+  <port name='accounts_charts_manage_port' binding='accounts_charts_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/accounts/charts_manage.php'/>
+  </port>
+</service>
+</definitions>
