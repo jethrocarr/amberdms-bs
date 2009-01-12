@@ -96,7 +96,7 @@ class chart
 
 		Results
 		0	Failure to find the ID
-		1	Success - employee exists
+		1	Success - chart exists
 	*/
 
 	function verify_id()

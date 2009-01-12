@@ -28,7 +28,7 @@ class customer
 
 		Results
 		0	Failure to find the ID
-		1	Success - employee exists
+		1	Success - customer exists
 	*/
 
 	function verify_id()
@@ -158,7 +158,7 @@ class customer
 	/*
 		check_delete_lock
 
-		Checks if the employee is safe to delete or not
+		Checks if the customer is safe to delete or not
 
 		Results
 		0	Unlocked
