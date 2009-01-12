@@ -8,85 +8,74 @@
 */
 
 // includes
-include_once("../../include/config.php");
-include_once("../../include/amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
+
+// custom includes
+require("../../include/accounts/inc_taxes.php");
+
 
 
 if (user_permissions_get('accounts_taxes_write'))
 {
-	/////////////////////////
+	$obj_tax = New tax;
 
-	$id				= security_form_input_predefined("int", "id_tax", 1, "");
+
+	/*
+		Import POST Data
+	*/
+
+	$obj_tax->id				= security_form_input_predefined("int", "id_tax", 1, "");
 
 	// these exist to make error handling work right
-	$data["name_tax"]		= security_form_input_predefined("any", "name_tax", 0, "");
+	$obj_tax->data["name_tax"]		= security_form_input_predefined("any", "name_tax", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_tax->data["delete_confirm"]	= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
-	
+
+
+	/*
+		Error Handling
+	*/
+
 	// make sure the tax actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `account_taxes` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_tax->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The tax you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The tax you have attempted to edit - ". $obj_tax->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
-
-
-	// make sure tax does not belong to any invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_items WHERE type='tax' AND customid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// make sure tax is safe to delete
+	if ($obj_tax->check_delete_lock())
 	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this tax because it has been added to an invoice.";
+		log_write("error", "process", "This tax can not be deleted due to it being used by invoices.");
 	}
 
 
-	
-	/// if there was an error, go back to the entry page
+	// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["tax_delete"] = "failed";
-		header("Location: ../../index.php?page=accounts/taxes/delete.php&id=$id");
+		header("Location: ../../index.php?page=accounts/taxes/delete.php&id=". $obj_tax->id);
 		exit(0);
 		
 	}
-	else
-	{
-
-		/*
-			Delete Customer
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_taxes WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the tax";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Tax has been successfully deleted.";
-		}
 
 
-		// return to taxes list
-		header("Location: ../../index.php?page=accounts/taxes/taxes.php");
-		exit(0);
-	}
 
-	/////////////////////////
-	
+	/*
+		Apply Changes
+	*/
+
+
+	$obj_tax->action_delete();
+
+
+	// return to taxes list
+	header("Location: ../../index.php?page=accounts/taxes/taxes.php");
+	exit(0);
+
 }
 else
 {

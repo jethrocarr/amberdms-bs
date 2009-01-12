@@ -2,8 +2,7 @@
 /*
 	include/accounts/inc_taxes
 
-	Proves functions for working with taxes, in particular it provides
-	a function for generating tax reports.
+	Provides functions and classes for working with taxes.
 */
 
 
@@ -266,6 +265,331 @@ class taxes_report_transactions
 
 	
 } // end of taxes_report_transactions
+
+
+
+
+
+/*
+	CLASS: tax
+
+	Provides functions for managing taxes.
+*/
+
+class tax
+{
+	var $id;		// holds tax ID.
+	var $data;		// holds values of record fields
+
+
+
+	/*
+		verify_id
+
+		Checks that the provided ID is a valid tax
+
+		Results
+		0	Failure to find the ID
+		1	Success - tax exists
+	*/
+
+	function verify_id()
+	{
+		log_debug("inc_taxes", "Executing verify_id()");
+
+		if ($this->id)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM `account_taxes` WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				return 1;
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id
+
+
+
+	/*
+		verify_name_tax
+
+		Checks that the name_tax value supplied has not already been taken.
+
+		Results
+		0	Failure - name in use
+		1	Success - name is available
+	*/
+
+	function verify_name_tax()
+	{
+		log_debug("inc_taxes", "Executing verify_name_tax()");
+
+		$sql_obj			= New sql_query;
+		$sql_obj->string		= "SELECT id FROM `account_taxes` WHERE name_tax='". $this->data["name_tax"] ."' ";
+
+		if ($this->id)
+			$sql_obj->string	.= " AND id!='". $this->id ."'";
+
+		$sql_obj->string		.= " LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 0;
+		}
+		
+		return 1;
+
+	} // end of verify_name_tax
+
+
+
+	/*
+		verify_valid_chart
+
+		Makes sure that the chartid for this tax is valid.
+
+		Results
+		0	Failure - invalid chart
+		1	Success - acceptable chart
+	*/
+
+	function verify_valid_chart()
+	{
+		log_debug("inc_taxes", "Executing verify_valid_chart)");
+
+
+		// make sure the selected chart exists
+		$sql_obj = New sql_query;
+		$sql_obj->string = "SELECT id FROM account_charts WHERE id='". $this->data["chartid"] ."' LIMIT 1";
+		$sql_obj->execute();
+	
+		if ($sql_obj->num_rows())
+		{
+			return 1;
+		}
+
+
+		// failure
+		return 0;
+
+	} // end of verify_valid_chart
+
+
+
+	/*
+		check_delete_lock
+
+		Checks if a tax is safe to delete or not.
+
+		Results
+		0	Unlocked
+		1	Locked
+	*/
+
+	function check_delete_lock()
+	{
+		log_debug("inc_taxes", "Executing check_delete_lock()");
+
+
+		// check if tax belongs to any invoices
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_items WHERE type='tax' AND customid='". $this->id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 1;
+		}
+
+		unset($sql_obj);
+
+
+		// unlocked
+		return 0;
+
+	}  // end of check_delete_lock
+
+
+
+	/*
+		load_data
+
+		Load the tax's information into the $this->data array.
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function load_data()
+	{
+		log_debug("inc_taxes", "Executing load_data()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT * FROM account_taxes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			$this->data = $sql_obj->data[0];
+
+			return 1;
+		}
+
+		// failure
+		return 0;
+
+	} // end of load_data
+
+
+
+
+
+	/*
+		action_create
+
+		Create a new tax based on the data in $this->data
+
+		Results
+		0	Failure
+		#	Success - return ID
+	*/
+	function action_create()
+	{
+		log_debug("inc_taxes", "Executing action_create()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO `account_taxes` (name_tax) VALUES ('". $this->data["name_tax"]. "')";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_taxes", "Unexpected DB error whilst attempting to create a new tax");
+			return 0;
+		}
+
+		$this->id = $sql_obj->fetch_insert_id();
+
+		return $this->id;
+
+	} // end of action_create
+
+
+
+
+	/*
+		action_update
+
+		Update tax details based on data in $this->data. If no ID is provided,
+		it will first call the action_create function.
+
+		Returns
+		0	failure
+		#	success - returns the ID
+	*/
+	function action_update()
+	{
+		log_debug("inc_taxes", "Executing action_update()");
+
+
+		// if no ID exists, create a new tax first
+		if (!$this->id)
+		{
+			$mode = "create";
+
+			if (!$this->action_create())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			$mode = "update";
+		}
+
+
+		// update
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE `account_taxes` SET "
+						."name_tax='". $this->data["name_tax"] ."', "
+						."taxrate='". $this->data["taxrate"] ."', "
+						."chartid='". $this->data["chartid"] ."', "
+						."taxnumber='". $this->data["taxnumber"] ."', "
+						."description='". $this->data["description"] ."' "
+						."WHERE id='$this->id'";
+
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_taxes", "Unexpected DB error attempting to update tax information");
+			return 0;
+		}
+
+		unset($sql_obj);
+
+
+
+		// return notification
+		if ($mode == "update")
+		{
+			log_write("notification", "inc_taxes", "Tax successfully updated.");
+		}
+		else
+		{
+			log_write("notification", "inc_taxes", "Tax successfully created.");
+		}
+
+
+		// success
+		return $this->id;
+
+	} // end of action_update
+
+
+
+	/*
+		action_delete
+
+		Deletes a tax
+
+		Note: the check_delete_lock function should be executed before calling this function to ensure database integrity.
+
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_delete()
+	{
+		log_debug("inc_taxes", "Executing action_delete()");
+
+
+		/*
+			Delete Tax
+		*/
+			
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM account_taxes WHERE id='". $this->id ."'";
+			
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_taxes", "A fatal SQL error occured whilst trying to delete the tax");
+			return 0;
+		}
+
+
+		log_write("notification", "inc_taxes", "Tax has been successfully deleted.");
+
+		return 1;
+	}
+
+
+} // end of class:tax
 
 
 
