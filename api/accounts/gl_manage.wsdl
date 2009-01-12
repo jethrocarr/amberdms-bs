@@ -1,0 +1,221 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="accounts_gl_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/accounts/gl_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/accounts/gl_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+	<types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://www.amberdms.com/billing_system/api/accounts/gl_manage.wsdl"
+		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+
+			<complexType name="gl_trans_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="gl_trans_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="gl_trans_row">
+				<all>
+					<element name="id" type="xsd:int"/>
+					<element name="chartid" type="xsd:int"/>
+					<element name="debit" type="xsd:string"/>
+					<element name="credit" type="xsd:string"/>
+					<element name="source" type="xsd:string"/>
+					<element name="description" type="xsd:string"/>
+				</all>
+			</complexType>
+
+
+
+		</schema>
+	</types>
+ 
+	<message name='get_gl_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_gl_details_response'>
+		<part name='code_gl' type='xsd:string'/>
+		<part name='date_trans' type='xsd:string'/>
+		<part name='employeeid' type='xsd:int'/>
+		<part name='employeeid_label' type='xsd:string'/>
+		<part name='description' type='xsd:string'/>
+		<part name='notes' type='xsd:string'/>
+	</message>
+
+
+	<message name='get_gl_trans_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_gl_trans_response'>
+		<part name='return' type='xsd1:gl_trans_list'/>
+	</message>
+
+
+
+	<message name='prepare_gl_details_request'>
+		<part name='code_gl' type='xsd:string'/>
+		<part name='date_trans' type='xsd:string'/>
+		<part name='employeeid' type='xsd:int'/>
+		<part name='description' type='xsd:string'/>
+		<part name='description_useall' type='xsd:string'/>
+		<part name='notes' type='xsd:string'/>
+	</message>
+
+	<message name='prepare_gl_details_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+	<message name='prepare_gl_addtrans_request'>
+		<part name='chartid' type='xsd:int'/>
+		<part name='credit' type='xsd:string'/>
+		<part name='debit' type='xsd:string'/>
+		<part name='source' type='xsd:string'/>
+		<part name='description' type='xsd:string'/>
+	</message>
+
+	<message name='prepare_gl_addtrans_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+	<message name='set_gl_save_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='set_gl_save_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_gl_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_gl_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='accounts_gl_manage_porttype'>
+
+		<operation name='get_gl_details'>
+			<input message='tns:get_gl_details_request'/>
+			<output message='tns:get_gl_details_response'/>
+		</operation>
+
+		<operation name='get_gl_trans'>
+			<input message='tns:get_gl_trans_request'/>
+			<output message='tns:get_gl_trans_response'/>
+		</operation>
+
+		<operation name='prepare_gl_details'>
+			<input message='tns:prepare_gl_details_request'/>
+			<output message='tns:prepare_gl_details_response'/>
+		</operation>
+
+		<operation name='prepare_gl_addtrans'>
+			<input message='tns:prepare_gl_addtrans_request'/>
+			<output message='tns:prepare_gl_addtrans_response'/>
+		</operation>
+
+		<operation name='set_gl_save'>
+			<input message='tns:set_gl_save_request'/>
+			<output message='tns:set_gl_save_response'/>
+		</operation>
+
+
+		<operation name='delete_gl'>
+			<input message='tns:delete_gl_request'/>
+			<output message='tns:delete_gl_response'/>
+		</operation>
+
+	</portType>
+
+	<binding name='accounts_gl_manage_binding' type='tns:accounts_gl_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+
+		<operation name='get_gl_details'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='get_gl_trans'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+					
+		<operation name='prepare_gl_details'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='prepare_gl_addtrans'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_gl_save'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='delete_gl'>
+			<soap:operation soapAction='accounts_gl_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_gl_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='accounts_gl_manage_service'>
+  <port name='accounts_gl_manage_port' binding='accounts_gl_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/accounts/gl_manage.php'/>
+  </port>
+</service>
+</definitions>
