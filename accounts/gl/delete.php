@@ -47,7 +47,7 @@ class page_output
 
 		if (!$sql_obj->num_rows())
 		{
-			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
+			log_write("error", "page_output", "The requested transaction (". $this->id .") does not exist - possibly the transaction has been deleted.");
 			return 0;
 		}
 		else
