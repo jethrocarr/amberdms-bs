@@ -50,13 +50,6 @@ if (user_permissions_get('accounts_gl_write'))
 		$obj_gl->data["trans"][$i]["description"]	= security_form_input_predefined("any", "trans_". $i ."_description", 0, "");
 
 
-		// if enabled, overwrite any description fields of transactions with the master one
-		if ($obj_gl->data["description_useall"] == "on")
-		{
-			$obj_gl->data["trans"][$i]["description"] = $obj_gl->data["description"];
-		}
-
-
 		// make sure both account and an amount have been supplied together
 		if ($obj_gl->data["trans"][$i]["account"] && !$obj_gl->data["trans"][$i]["debit"] && !$obj_gl->data["trans"][$i]["credit"] )
 		{
@@ -64,9 +57,10 @@ if (user_permissions_get('accounts_gl_write'))
 			$_SESSION["error"]["trans_". $i ."-error"] = 1;
 		}
 
+
+		// make sure an account has been supplied
 		if ($obj_gl->data["trans"][$i]["debit"] != "0.00" || $obj_gl->data["trans"][$i]["credit"] != "0.00")
 		{
-//			print "debug -- debit: ". $data["trans"][$i]["debit"] .", credit: ". $data["trans"][$i]["credit"];
 
 			if (!$obj_gl->data["trans"][$i]["account"])
 			{
@@ -74,45 +68,18 @@ if (user_permissions_get('accounts_gl_write'))
 				$_SESSION["error"]["trans_". $i ."-error"] = 1;
 			}
 		}
+
+
+		// make sure that both debit and credit are not set for one transaction
+		if ($obj_gl->data["trans"][$i]["debit"] > 0 && $obj_gl->data["trans"][$i]["credit"] > 0)
+		{
+			$_SESSION["error"]["message"][] = "One transaction row can not have both credit and debit amounts";
+			$_SESSION["error"]["trans_". $i ."-error"] = 1;
+		}
 	}
 
 
-
-	/*
-		Data Processing
-	*/
-
-	// add transaction rows to total credits and debits
-	for ($i = 0; $i < $obj_gl->data["num_trans"]; $i++)
-	{
-		$obj_gl->data["total_credit"]	+= $obj_gl->data["trans"][$i]["credit"];
-		$obj_gl->data["total_debit"]	+= $obj_gl->data["trans"][$i]["debit"];
-	}
-
-	// total credit and debits need to match up
-	if ($obj_gl->data["total_credit"] != $obj_gl->data["total_debit"])
-	{
-		log_write("error", "process", "The total credits and total debits need to be equal before the transaction can be saved.");
-	}
-
-	// make sure some values have been supplied
-	if ($obj_gl->data["total_credit"] == "0.00" && $obj_gl->data["total_debit"] == "0.00")
-	{
-		log_write("error", "process", "You must enter some transaction information before you can save this transaction.");
-		$_SESSION["error"]["trans_0-error"] = 1;
-		$_SESSION["error"]["trans_1-error"] = 1;
-	}
-
-	// pad values
-	$obj_gl->data["total_credit"]		= sprintf("%0.2f", $obj_gl->data["total_credit"]);
-	$obj_gl->data["total_debit"]		= sprintf("%0.2f", $obj_gl->data["total_debit"]);
-
-	// set returns
-	$_SESSION["error"]["total_credit"]	= $obj_gl->data["total_credit"];
-	$_SESSION["error"]["total_debit"]	= $obj_gl->data["total_debit"];
-
-
-
+	
 
 
 
@@ -128,7 +95,14 @@ if (user_permissions_get('accounts_gl_write'))
 		{
 			log_write("error", "process", "The transaction you have attempted to edit - ". $obj_gl->id ." - does not exist in this system.");
 		}
+
+		// check if transaction is locked
+		if ($obj_gl->check_lock())
+		{
+			log_write("error", "process", "The transaction you have attempted to edit is locked and can not be modified.");
+		}
 	}
+
 
 
 	// make sure we don't choose a transaction code number that is already in use
@@ -142,7 +116,23 @@ if (user_permissions_get('accounts_gl_write'))
 	}
 
 
-	// return to input page in even of an error
+	// verify transaction data
+	if ($obj_gl->data["num_trans"])
+	{
+		if (!$obj_gl->verify_valid_trans())
+		{
+			// set returns
+			$_SESSION["error"]["total_credit"]	= $obj_gl->data["total_credit"];
+			$_SESSION["error"]["total_debit"]	= $obj_gl->data["total_debit"];
+
+			// highlight the first two transaction rows
+			$_SESSION["error"]["trans_0-error"] = 1;
+			$_SESSION["error"]["trans_1-error"] = 1;
+		}
+	}
+
+
+	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{
 		if ($obj_gl->id)

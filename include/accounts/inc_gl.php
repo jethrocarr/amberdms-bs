@@ -91,6 +91,61 @@ class gl_transaction
 
 
 	/*
+		verify_valid_trans
+
+		Checks that all the transactions currently defined in $this->data are balanced
+		and therefore valid.
+
+		Results
+		-1	Failure - no transaction values
+		0	Failure - transactions unbalanced
+		1	Success
+	*/
+	
+	function verify_valid_trans()
+	{
+
+		/*
+			Check Balance
+		*/
+
+		// add transaction rows to total credits and debits
+		for ($i = 0; $i < $this->data["num_trans"]; $i++)
+		{
+			$this->data["total_credit"]	+= $this->data["trans"][$i]["credit"];
+			$this->data["total_debit"]	+= $this->data["trans"][$i]["debit"];
+		}
+
+		// pad values
+		$this->data["total_credit"]		= sprintf("%0.2f", $this->data["total_credit"]);
+		$this->data["total_debit"]		= sprintf("%0.2f", $this->data["total_debit"]);
+
+		// total credit and debits need to match up
+		if ($this->data["total_credit"] != $this->data["total_debit"])
+		{
+			log_write("error", "process", "The total credits and total debits need to be balance before the transaction can be saved.");
+			return 0;
+		}
+
+
+		/*
+			Check that financial figures have been supplied
+		*/
+
+		// make sure some values have been supplied
+		if ($this->data["total_credit"] == "0.00" && $this->data["total_debit"] == "0.00")
+		{
+			log_write("error", "process", "You must enter some transaction information before you can save this transaction.");
+			return -1;
+		}
+
+		// success
+		return 1;
+
+	} // end of verify_valid_trans
+
+
+	/*
 		check_lock
 
 		Returns whether the transaction is locked or not.
@@ -349,7 +404,11 @@ class gl_transaction
 		Post all the transaction rows to the database
 
 		Structure:
-		$this->data["num_trans"]		== number of transaction rows
+
+		$this->data["num_trans"]			number of transaction rows
+		$this->data["description_useall"]		set to "on" to replace all transaction
+								descriptions with $this->data["description"]
+
 		$this->data["trans"][$i]["date_trans"]
 		$this->data["trans"][$i]["account"]
 		$this->data["trans"][$i]["credit"]
@@ -367,17 +426,23 @@ class gl_transaction
 		log_debug("inc_gl", "Executing action_update_rows()");
 
 
-
-
-		// delete existing transactions
+		// delete all existing transactions
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM account_trans WHERE type='gl' AND customid='". $this->id ."'";
 		$sql_obj->execute();
 	
 
-		// post all transactions
+		// run through all transactions
 		for ($i = 0; $i < $this->data["num_trans"]; $i++)
 		{
+			// if enabled, overwrite any description fields of transactions with the master one
+			if ($this->data["description_useall"] == "on")
+			{
+				$this->data["trans"][$i]["description"] = $this->data["description"];
+			}
+
+
+			// post transaction
 			if ($this->data["trans"][$i]["account"])
 			{
 				if ($this->data["trans"][$i]["debit"] != "0.00")
