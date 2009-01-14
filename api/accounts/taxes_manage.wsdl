@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="accounts_taxes_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/accounts/taxes_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/accounts/taxes_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+	<message name='get_tax_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_tax_details_response'>
+		<part name='name_tax' type='xsd:string'/>
+		<part name='taxrate' type='xsd:string'/>
+		<part name='chartid' type='xsd:int'/>
+		<part name='chartid_label' type='xsd:string'/>
+		<part name='taxnumber' type='xsd:string'/>
+		<part name='description' type='xsd:string'/>
+	</message>
+
+
+	<message name='set_tax_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='name_tax' type='xsd:string'/>
+		<part name='taxrate' type='xsd:string'/>
+		<part name='chartid' type='xsd:int'/>
+		<part name='taxnumber' type='xsd:string'/>
+		<part name='description' type='xsd:string'/>
+	</message>
+
+	<message name='set_tax_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_tax_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_tax_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='accounts_taxes_manage_porttype'>
+
+		<operation name='get_tax_details'>
+			<input message='tns:get_tax_details_request'/>
+			<output message='tns:get_tax_details_response'/>
+		</operation>
+
+		<operation name='set_tax_details'>
+			<input message='tns:set_tax_details_request'/>
+			<output message='tns:set_tax_details_response'/>
+		</operation>
+
+		<operation name='delete_tax'>
+			<input message='tns:delete_tax_request'/>
+			<output message='tns:delete_tax_response'/>
+		</operation>
+
+	</portType>
+
+	<binding name='accounts_taxes_manage_binding' type='tns:accounts_taxes_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+
+		<operation name='get_tax_details'>
+			<soap:operation soapAction='accounts_taxes_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_tax_details'>
+			<soap:operation soapAction='accounts_taxes_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='delete_tax'>
+			<soap:operation soapAction='accounts_taxes_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_taxes_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='accounts_taxes_manage_service'>
+  <port name='accounts_taxes_manage_port' binding='accounts_taxes_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/accounts/taxes_manage.php'/>
+  </port>
+</service>
+</definitions>
