@@ -25,6 +25,7 @@
 				<all>
 					<element name="id" type="xsd:int"/>
 					<element name="chartid" type="xsd:int"/>
+					<element name="chartid_label" type="xsd:string"/>
 					<element name="debit" type="xsd:string"/>
 					<element name="credit" type="xsd:string"/>
 					<element name="source" type="xsd:string"/>

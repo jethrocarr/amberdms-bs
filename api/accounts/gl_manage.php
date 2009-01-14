@@ -199,6 +199,11 @@ class accounts_gl_manage_soap
 
 			return 1;
 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
 
 	} // end of prepare_gl_details
 
@@ -287,6 +292,10 @@ class accounts_gl_manage_soap
 			}
 
 			return 1;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
 		}
 
 	} // end of prepare_gl_addtrans
