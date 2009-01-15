@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions name="products_manage"
+	targetNamespace="http://www.amberdms.com/billing_system/api/products/products_manage.wsdl"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.amberdms.com/billing_system/api/products/products_manage.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+	<message name='get_product_details_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_product_details_response'>
+		<part name='code_product' type='xsd:string'/>
+		<part name='name_product' type='xsd:string'/>
+		<part name='details' type='xsd:string'/>
+		<part name='price_cost' type='xsd:string'/>
+		<part name='price_sale' type='xsd:string'/>
+		<part name='date_current' type='xsd:string'/>
+		<part name='quantity_instock' type='xsd:int'/>
+		<part name='quantity_vendor' type='xsd:int'/>
+		<part name='vendorid' type='xsd:int'/>
+		<part name='vendorid_label' type='xsd:string'/>
+		<part name='code_product_vendor' type='xsd:string'/>
+		<part name='account_sales' type='xsd:int'/>
+		<part name='account_sales_label' type='xsd:string'/>
+	</message>
+
+
+	<message name='set_product_details_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='code_product' type='xsd:string'/>
+		<part name='name_product' type='xsd:string'/>
+		<part name='details' type='xsd:string'/>
+		<part name='price_cost' type='xsd:string'/>
+		<part name='price_sale' type='xsd:string'/>
+		<part name='date_current' type='xsd:string'/>
+		<part name='quantity_instock' type='xsd:int'/>
+		<part name='quantity_vendor' type='xsd:int'/>
+		<part name='vendorid' type='xsd:int'/>
+		<part name='code_product_vendor' type='xsd:string'/>
+		<part name='account_sales' type='xsd:int'/>
+	</message>
+
+	<message name='set_product_details_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_product_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='delete_product_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
+	<portType name='products_manage_porttype'>
+
+		<operation name='get_product_details'>
+			<input message='tns:get_product_details_request'/>
+			<output message='tns:get_product_details_response'/>
+		</operation>
+
+		<operation name='set_product_details'>
+			<input message='tns:set_product_details_request'/>
+			<output message='tns:set_product_details_response'/>
+		</operation>
+
+		<operation name='delete_product'>
+			<input message='tns:delete_product_request'/>
+			<output message='tns:delete_product_response'/>
+		</operation>
+
+	</portType>
+
+	<binding name='products_manage_binding' type='tns:products_manage_porttype'>
+		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+
+		<operation name='get_product_details'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_product_details'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='delete_product'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+	</binding>
+
+<service name='products_manage_service'>
+  <port name='products_manage_port' binding='products_manage_binding'>
+    <soap:address location='http://www.amberdms.com/billing_system/api/products/products_manage.php'/>
+  </port>
+</service>
+</definitions>
