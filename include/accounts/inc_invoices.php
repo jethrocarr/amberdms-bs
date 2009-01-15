@@ -216,6 +216,121 @@ class invoice
 
 
 	/*
+		verify_invoice
+
+		Checks that the provided ID & type point to a valid invoice
+
+		Results
+		0	Failure to find the invoice
+		1	Success - invoice exists
+	*/
+
+	function verify_invoice()
+	{
+		log_debug("inc_invoice", "Executing verify_invoice()");
+
+		if ($this->id)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				return 1;
+			}
+		}
+
+		return 0;
+
+	} // end of verify_invoice
+
+
+	/*
+		check_lock
+
+		Returns whether the invoice is locked or not.
+
+		Results
+		0	Unlocked
+		1	Locked
+		2	Failure (fail safe by reporting lock)
+	*/
+
+	function check_lock()
+	{
+		log_debug("inc_gl", "Executing check_lock()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT locked FROM `account_". $this->type ."` WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			return $sql_obj->data[0]["locked"];
+		}
+
+		// failure
+		return 2;
+
+	}  // end of check_lock
+
+
+	/*
+		check_delete_lock
+
+		Checks if the invoice is able to be deleted or not and returns the lock status.
+
+		Results
+		0	Unlocked
+		1	Locked
+		2	Failure (fail safe by reporting lock)
+	*/
+
+	function check_delete_lock()
+	{
+		log_debug("inc_gl", "Executing check_delete_lock()");
+
+		// fetch lock status
+		if ($lock = $this->check_lock())
+		{
+			return $lock;
+		}
+		
+
+		// check if the invoice is paid at all
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT amount_paid FROM `account_". $this->type ."` WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			if ($sql_obj->data[0]["amount_paid"] > 0)
+			{
+				// payment exists, therefore invoice is locked
+				return 1;
+			}
+		}
+		else
+		{
+			// failure
+			return 2;
+		}
+
+
+		// unlocked
+		return 0;
+
+	}  // end of check_delete_lock
+
+
+
+
+	/*
 		load_data
 
 		Loads the invoice data from the MySQL database.
