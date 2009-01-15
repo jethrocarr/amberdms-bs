@@ -613,7 +613,7 @@ class invoice_form_delete
 		$this->obj_form->subforms["hidden"]				= array("id_invoice", "date_create");
 
 
-		if ($this->locked || $this->amount_paid)
+		if ($this->locked || $this->amount_paid > 0)
 		{
 			$this->obj_form->subforms["submit"]			= array("");
 		}
@@ -637,7 +637,7 @@ class invoice_form_delete
 		{
 			format_msgbox("locked", "<p>This invoice has been locked and can no longer be removed.</p>");
 		}
-		elseif ($this->amount_paid)
+		elseif ($this->amount_paid > 0)
 		{
 			format_msgbox("locked", "<p>This invoice has had payments made against it, and can therefore not be deleted.</p>");
 		}
