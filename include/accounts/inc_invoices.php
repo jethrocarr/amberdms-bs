@@ -1248,6 +1248,37 @@ class invoice_items
 
 
 
+	/*
+		check_lock
+
+		Returns whether the invoice that this item belongs to is locked or not.
+
+		Results
+		0	Unlocked
+		1	Locked
+		2	Failure (fail safe by reporting lock)
+	*/
+
+	function check_lock()
+	{
+		log_debug("inc_gl", "Executing check_lock()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT locked FROM `account_". $this->type_invoice ."` WHERE id='". $this->id_invoice ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			return $sql_obj->data[0]["locked"];
+		}
+
+		// failure
+		return 2;
+
+	}  // end of check_lock
+
 
 
 
