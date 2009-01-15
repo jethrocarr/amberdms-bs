@@ -8,97 +8,81 @@
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../include/config.php");
+require("../include/amberphplib/main.php");
+
+// custom includes
+require("../include/products/inc_products.php");
 
 
 if (user_permissions_get('products_write'))
 {
-	/////////////////////////
+	$obj_product = New product;
 
-	$id				= security_form_input_predefined("int", "id_product", 0, "");
+
+	/*
+		Import POST Data
+	*/
+
+	$obj_product->id				= security_form_input_predefined("int", "id_product", 0, "");
 	
-	$data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
-	$data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
-	$data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
+	$obj_product->data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
+	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
+	$obj_product->data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
 
-	$data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
-	$data["details"]		= security_form_input_predefined("any", "details", 0, "");
+	$obj_product->data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
+	$obj_product->data["details"]			= security_form_input_predefined("any", "details", 0, "");
 	
-	$data["price_cost"]		= security_form_input_predefined("float", "price_cost", 0, "");
-	$data["price_sale"]		= security_form_input_predefined("float", "price_sale", 0, "");
+	$obj_product->data["price_cost"]		= security_form_input_predefined("money", "price_cost", 0, "");
+	$obj_product->data["price_sale"]		= security_form_input_predefined("money", "price_sale", 0, "");
 	
-	$data["quantity_instock"]	= security_form_input_predefined("int", "quantity_instock", 0, "");
-	$data["quantity_vendor"]	= security_form_input_predefined("int", "quantity_vendor", 0, "");
+	$obj_product->data["quantity_instock"]		= security_form_input_predefined("int", "quantity_instock", 0, "");
+	$obj_product->data["quantity_vendor"]		= security_form_input_predefined("int", "quantity_vendor", 0, "");
+
+	$obj_product->data["vendorid"]			= security_form_input_predefined("int", "vendorid", 0, "");
+	$obj_product->data["code_product_vendor"]	= security_form_input_predefined("any", "code_product_vendor", 0, "");
 
 
-	$data["vendorid"]		= security_form_input_predefined("int", "vendorid", 0, "");
-	$data["code_product_vendor"]	= security_form_input_predefined("any", "code_product_vendor", 0, "");
+
+	/*
+		Error Handling
+	*/
 
 
-	// are we editing an existing product or adding a new one?
-	if ($id)
+
+	// make sure the product actually exists
+	if ($obj_product->id)
 	{
-		$mode = "edit";
-
-		// make sure the product actually exists
-		$mysql_string		= "SELECT id FROM `products` WHERE id='$id'";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
-
-		if (!$mysql_num_rows)
+		if (!$obj_product->verify_id())
 		{
-			$_SESSION["error"]["message"][] = "The product you have attempted to edit - $id - does not exist in this system.";
+			log_write("error", "process", "The product you have attempted to edit - ". $obj_product->id ." - does not exist in this system.");
 		}
 	}
-	else
-	{
-		$mode = "add";
-	}
 
-
-		
-	//// ERROR CHECKING ///////////////////////
 
 	// make sure we don't choose a product code that has already been choosen
-	if ($data["code_product"])
+	if (!$obj_product->verify_code_product())
 	{
-		$mysql_string	= "SELECT id FROM `products` WHERE code_product='". $data["code_product"] ."'";
-		if ($id)
-			$mysql_string .= " AND id!='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if ($mysql_num_rows)
-		{
-			$_SESSION["error"]["message"][] = "This product code is already used for another product - please choose a unique identifier.";
-			$_SESSION["error"]["code_product-error"] = 1;
-		}
+		log_write("error", "process", "This product code is already used for another product - please choose a unique identifier.");
+		$_SESSION["error"]["code_product-error"] = 1;
 	}
-
 
 
 	// make sure we don't choose a product name that has already been taken
-	$mysql_string	= "SELECT id FROM `products` WHERE name_product='". $data["name_product"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-	if ($mysql_num_rows)
+	if (!$obj_product->verify_name_product())
 	{
-		$_SESSION["error"]["message"][] = "This product name is already used for another product - please choose a unique name.";
+		log_write("error", "process", "This product name is already used for another product - please choose a unique name.");
 		$_SESSION["error"]["name_product-error"] = 1;
 	}
 
 
-	/// if there was an error, go back to the entry page
+	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{
 		if ($mode == "edit")
 		{
 			$_SESSION["error"]["form"]["product_view"] = "failed";
-			header("Location: ../index.php?page=products/view.php&id=$id");
+			header("Location: ../index.php?page=products/view.php&id=". $obj_product->id);
 			exit(0);
 		}
 		else
@@ -108,70 +92,18 @@ if (user_permissions_get('products_write'))
 			exit(0);
 		}
 	}
-	else
-	{
-		// set a default code
-		if (!$data["code_product"])
-		{
-			$data["code_product"] = config_generate_uniqueid("CODE_PRODUCT", "SELECT id FROM products WHERE code_product='VALUE'");
-		}
 
-	
-		if ($mode == "add")
-		{
-			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `products` (name_product) VALUES ('".$data["name_product"]."')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
 
-			$id = mysql_insert_id();
-		}
+	/*
+		Process Data
+	*/
 
-		if ($id)
-		{
-			// update product details
-			$mysql_string = "UPDATE `products` SET "
-						."name_product='". $data["name_product"] ."', "
-						."code_product='". $data["code_product"] ."', "
-						."account_sales='". $data["account_sales"] ."', "
-						."date_current='". $data["date_current"] ."', "
-						."details='". $data["details"] ."', "
-						."price_cost='". $data["price_cost"] ."', "
-						."price_sale='". $data["price_sale"] ."', "
-						."quantity_instock='". $data["quantity_instock"] ."', "
-						."quantity_vendor='". $data["quantity_vendor"] ."', "
-						."vendorid='". $data["vendorid"] ."', "
-						."code_product_vendor='". $data["code_product_vendor"] ."' "
-						."WHERE id='$id'";
-						
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
-			else
-			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Product successfully created.";
-					journal_quickadd_event("products", $id, "Product successfully created.");
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Product successfully updated.";
-					journal_quickadd_event("products", $id, "Product successfully updated.");
-				}
-			}
-		}
+	$obj_product->action_update();
 
-		// display updated details
-		header("Location: ../index.php?page=products/view.php&id=$id");
-		exit(0);
-	}
+	// display updated details
+	header("Location: ../index.php?page=products/view.php&id=". $obj_product->id);
+	exit(0);
 
-	/////////////////////////
-	
 }
 else
 {

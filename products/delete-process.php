@@ -8,92 +8,74 @@
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../include/config.php");
+require("../include/amberphplib/main.php");
+
+// custom includes
+require("../include/products/inc_products.php");
+
 
 
 if (user_permissions_get('products_write'))
 {
-	/////////////////////////
+	$obj_product = New product;
 
-	$id				= security_form_input_predefined("int", "id_product", 0, "");
+
+	/*
+		Import POST Data
+	*/
+
+	$obj_product->id				= security_form_input_predefined("int", "id_product", 0, "");
 
 	// these exist to make error handling work right
-	$data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
-	$data["name_product"]		= security_form_input_predefined("any", "name_product", 0, "");
+	$obj_product->data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
+	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_product->data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
-	
-	// make sure the product actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `products` WHERE id='$id'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+
+
+	/*
+		Error Handling
+	*/
+
+
+	// check that the product exists
+	if (!$obj_product->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The product you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The product you have attempted to edit - ". $obj_product->id ." - does not exist in this system.");
 	}
 
 
-		
-	//// ERROR CHECKING ///////////////////////
-
-
-	// check if the product belongs to any invoices
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_items WHERE (type='product' OR type='time') AND customid='$id'";
-	$sql_obj->execute();
-
-	if ($sql_obj->num_rows())
+	// check that the product is safe to delete
+	if ($obj_product->check_delete_lock())
 	{
-		$_SESSION["error"]["message"][] = "You are not able to delete this product because it has been added to an invoice.";
+		log_write("error", "process", "This product is locked and can not be deleted.");
 	}
 	
 
-	/// if there was an error, go back to the entry page
+	// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["product_delete"] = "failed";
-		header("Location: ../index.php?page=products/delete.php&id=$id");
+		header("Location: ../index.php?page=products/delete.php&id=". $obj_product->id);
 		exit(0);
 		
 	}
-	else
-	{
-
-		/*
-			Delete Product
-		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM products WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the product";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Product has been successfully deleted.";
-		}
 
 
 
-		/*
-			Delete Product Journal
-		*/
-		journal_delete_entire("products", $id);
+	/*
+		Delete Product
+	*/
+	
+	$obj_product->action_delete();
 
 
-
-		// return to products list
-		header("Location: ../index.php?page=products/products.php");
-		exit(0);
-	}
-
-	/////////////////////////
+	// return to products list
+	header("Location: ../index.php?page=products/products.php");
+	exit(0);
 	
 }
 else
