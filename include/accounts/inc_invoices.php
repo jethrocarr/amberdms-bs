@@ -513,7 +513,7 @@ class invoice
 			$defaulttax = sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $this->data["customerid"] ."'");
 		}
 
-		if ($defaulttax)
+		if ($defaulttax && $this->data["autotaxes"] != "off")
 		{
 			// add a tax item to this invoice
 			$item_tax			= New invoice_items;
