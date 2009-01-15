@@ -365,7 +365,7 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 
 	// we don't use this value (since we can't trust it) but we need to read it
 	// in here to work around a limitation in the Amberphplib framework
-	$data["date_create"]		= security_form_input_predefined("any", "date_create", 1, "");
+	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
 
 
 	/*
