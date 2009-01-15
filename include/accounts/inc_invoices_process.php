@@ -82,15 +82,19 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	{
 		$mode = "edit";
 
-		// make sure the account actually exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `account_". $invoice->type ."` WHERE id='". $invoice->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// make sure the invoice actually exists
+		if (!$invoice->verify_invoice())
 		{
-			$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - ". $invoice->id ." - does not exist in this system.";
+			log_write("error", "process", "The invoice you have attempted to edit - ". $invoice->id ." - does not exist in this system.");
 		}
+
+
+		// check if invoice is locked or not
+		if ($invoice->check_lock())
+		{
+			log_write("error", "process", "The invoice can not be edited because it is locked.");
+		}
+
 	}
 	else
 	{
@@ -347,79 +351,70 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 {
 	log_debug("inc_invoices_forms", "Executing invoice_form_delete_process($type, $mode, $returnpage_error, $returnpage_success)");
 
+
+	$invoice	= New invoice;
+	$invoice->type	= $type;
+
 	
 	/*
-		Fetch all form data
+		Import POST Data
 	*/
-
-
-	// get form data
-	$id				= security_form_input_predefined("int", "id_invoice", 1, "");
+	
+	$invoice->id			= security_form_input_predefined("int", "id_invoice", 1, "");
 	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	// we don't use this value (since we can't trust it) but we need to read it
 	// in here to work around a limitation in the Amberphplib framework
 	$data["date_create"]		= security_form_input_predefined("any", "date_create", 1, "");
 
-	//// ERROR CHECKING ///////////////////////
+
+	/*
+		Error Handling
+	*/
+
 	
 	// make sure the invoice actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id, date_create FROM `account_$type` WHERE id='$id' LIMIT 1";
-	$sql_obj->execute();
-
-	if (!$sql_obj->num_rows())
+	if (!$invoice->verify_invoice())
 	{
-		$_SESSION["error"]["message"][] = "The invoice you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The invoice you have attempted to delete - ". $invoice->id ." - does not exist in this system.");
 	}
-	else
+
+
+	// check if invoice is locked or not
+	if ($invoice->check_delete_lock())
 	{
-		$sql_obj->fetch_array();
-
-		// make sure the invoice can actually be deleted
-		$expirydate = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_LOCK'");
-
-		if (time_date_to_timestamp($sql_obj->data[0]["date_create"]) < mktime() - time_date_to_timestamp($expirydate))
-		{
-			$_SESSION["error"]["message"][] = "The invoice requested can not be deleted, it is now older than $expirydate days and is therefore locked";
-		}
+		log_write("error", "process", "The invoice can not be deleted because it is locked.");
 	}
 		
 
 
-	/// if there was an error, go back to the entry page
+	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"][$type ."_invoice_delete"] = "failed";
-		header("Location: ../../index.php?page=$returnpage_error&id=$id");
+		header("Location: ../../index.php?page=$returnpage_error&id=". $invoice->id);
 		exit(0);
+	}
+
+
+	/*
+		Delete Invoice
+	*/
+	
+	if ($invoice->action_delete())
+	{
+		$_SESSION["notification"]["message"][] = "Invoice has been successfully deleted.";
 	}
 	else
 	{
-
-		/*
-			Delete Invoice
-		*/
-		$invoice	= New invoice;
-		$invoice->id	= $id;
-		$invoice->type	= $type;
-
-		if ($invoice->action_delete())
-		{
-			$_SESSION["notification"]["message"][] = "Invoice has been successfully deleted.";
-		}
-		else
-		{
-			$_SESSION["error"]["message"][] = "Some problems were experienced while deleting the invoice.";
-		}
+		$_SESSION["error"]["message"][] = "Some problems were experienced while deleting the invoice.";
+	}
 
 		
-		// display updated details
-		header("Location: ../../index.php?page=$returnpage_success&id=$id");
-		exit(0);
+	// display updated details
+	header("Location: ../../index.php?page=$returnpage_success&id=$id");
+	exit(0);
 			
-	} // end if passed tests
-
 
 } // end if invoice_form_delete_process
 
