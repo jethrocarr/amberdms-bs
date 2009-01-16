@@ -293,37 +293,7 @@ class invoice
 	{
 		log_debug("inc_gl", "Executing check_delete_lock()");
 
-		// fetch lock status
-		if ($lock = $this->check_lock())
-		{
-			return $lock;
-		}
-		
-
-		// check if the invoice is paid at all
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT amount_paid FROM `account_". $this->type ."` WHERE id='". $this->id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-
-			if ($sql_obj->data[0]["amount_paid"] > 0)
-			{
-				// payment exists, therefore invoice is locked
-				return 1;
-			}
-		}
-		else
-		{
-			// failure
-			return 2;
-		}
-
-
-		// unlocked
-		return 0;
+		return $this->check_lock();
 
 	}  // end of check_delete_lock
 
@@ -688,40 +658,41 @@ class invoice
 			log_write("error", "invoice", "Problem occured whilst deleting invoice from acccount_". $this->type ." in DB");
 		}
 
-		// delete all the item options
-		$sql_item_obj		= New sql_query;
-		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
-		$sql_item_obj->execute();
-		
+		// delete all the invoice items.
+		//
+		// we do this by using the invoice_items::action_delete() function, since there are number of complex
+		// steps when deleting certain invoice items (such as time items)
 
-		if ($sql_item_obj->num_rows())
-		{
-			$sql_item_obj->fetch_array();
-
-			foreach ($sql_item_obj->data as $data)
-			{
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data["id"] ."'";
-				
-				if (!$sql_obj->execute())
-				{
-					$error = 1;
-					log_write("error", "invoice", "Problem occured whilst deleting invoice item option records from DB");
-				}
-			}
-		}
-
-
-		// delete all the invoice items
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
-		
+		$sql_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
+				
 		if (!$sql_obj->execute())
 		{
 			$error = 1;
-			log_write("error", "invoice", "Problem occured whilst deleting invoice item from DB");
+			log_write("error", "invoice", "Problem occured whilst deleting invoice items from DB");
 		}
-		
+		else
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data)
+			{
+				// delete each invoice one-at-a-time.
+				$obj_invoice_item			= New invoice_items;
+
+				$obj_invoice_item->type_invoice		= $this->type;
+				$obj_invoice_item->id_invoice		= $this->id;
+				$obj_invoice_item->id_item		= $data["id"];
+				$obj_invoice_item->action_delete();
+
+				unset($obj_invoice_item);
+			}
+		}
+
+		unset($sql_obj);
+
+
+
 		// delete invoice journal entries
 		journal_delete_entire("account_". $this->type ."", $this->id);
 
@@ -1542,7 +1513,7 @@ class invoice_items
 
 		Returns
 		0		failure
-		1		success
+		#		success - return the item ID
 	*/
 	function action_create()
 	{
@@ -1561,8 +1532,12 @@ class invoice_items
 
 			if ($this->action_update())
 			{
-				log_debug("invoice_items", "Successfully created new invoice item ". $this->id_item ."");
-				return 1;
+//				// notify success
+//				log_write("notification", "invoice_items", "Successfully created new invoice item");
+//				journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
+
+
+				return $this->id_item;
 			}
 		}
 
@@ -1580,7 +1555,7 @@ class invoice_items
 
 		Returns
 		0		failure
-		1		success
+		#		success - return item ID
 	*/
 	function action_update()
 	{
@@ -1673,8 +1648,12 @@ class invoice_items
 			$sql_obj->execute();
 		}
 
+		
+		// success
+		log_write("notification", "invoice_items", "Successfully updated invoice item");
+		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully updated");
 	
-		return 1;	
+		return $this->id_item;	
 		
 	} // end of action_update
 	
@@ -2023,7 +2002,14 @@ class invoice_items
 	function action_delete()
 	{
 		log_debug("invoice_items", "Executing action_delete()");
-		
+	
+		// we may need to fetch the item type, since often this is not passed
+		// to the delete function
+		if (!$this->type_item)
+		{
+			$this->type_item = sql_get_singlevalue("SELECT type as value FROM account_items WHERE id='". $this->id_item ."' LIMIT 1");
+		}
+
 
 		/*
 			Unlock time_groups if required
@@ -2070,6 +2056,13 @@ class invoice_items
 			return 0;
 		}
 
+
+
+		/*
+			Update Journal
+		*/
+
+		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully deleted");
 
 		return 1;
 	}

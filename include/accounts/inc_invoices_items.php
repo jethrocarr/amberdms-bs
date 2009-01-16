@@ -1094,21 +1094,6 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			Return to success page
 		*/
 
-		if (!$_SESSION["error"]["messages"])
-		{
-			if ($mode == "add")
-			{
-				$_SESSION["notification"]["message"][] = "Item successfully created.";
-				journal_quickadd_event("account_". $item->type_invoice ."", $item->id_invoice, "Item successfully created");
-			}
-			else
-			{
-				$_SESSION["notification"]["message"][] = "Item successfully updated.";
-				journal_quickadd_event("account_". $item->type_invoice ."", $item->id_invoice, "Item successfully updated");
-			}
-		}
-				
-
 		// display updated details
 		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice."");
 		exit(0);
@@ -1223,13 +1208,8 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		$item->action_update_total();
 
 
-		// return with success
-		if (!$_SESSION["error"]["message"])
-		{
-			$_SESSION["notification"]["message"][] = "Item deleted successfully";
-			journal_quickadd_event("account_". $item->type_invoice ."", $item->id_invoice, "Item successfully deleted");
-		}
-		
+		// success
+		$_SESSION["notification"]["message"][] = "Item deleted successfully";
 		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice ."");
 		exit(0);
 	}
