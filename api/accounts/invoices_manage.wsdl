@@ -29,6 +29,8 @@
 					<element name="customid_label" type="xsd:string"/>
 					<element name="chartid" type="xsd:int"/>
 					<element name="chartid_label" type="xsd:string"/>
+					<element name="timegroupid" type="xsd:int"/>
+					<element name="timegroupid_label" type="xsd:string"/>
 					<element name="quantity" type="xsd:int"/>
 					<element name="units" type="xsd:string"/>
 					<element name="amount" type="xsd:string"/>
@@ -166,23 +168,50 @@
 	</message>
 
 
-	<message name='set_invoice_item_request'>
+	<message name='set_invoice_item_standard_request'>
 		<part name='id' type='xsd:int'/>
 		<part name='invoicetype' type='xsd:string'/>
 		<part name="itemid" type="xsd:int"/>
-		<part name="type" type="xsd:string"/>
-		<part name="customid" type="xsd:int"/>
 		<part name="chartid" type="xsd:int"/>
-		<part name="quantity" type="xsd:int"/>
-		<part name="units" type="xsd:string"/>
 		<part name="amount" type="xsd:string"/>
-		<part name="price" type="xsd:string"/>
 		<part name="description" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_item_response'>
+	<message name='set_invoice_item_standard_response'>
 		<part name='itemid' type='xsd:int'/>
 	</message>
+
+
+	<message name='set_invoice_item_product_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='invoicetype' type='xsd:string'/>
+		<part name="itemid" type="xsd:int"/>
+		<part name="price" type="xsd:string"/>
+		<part name="quantity" type="xsd:int"/>
+		<part name="units" type="xsd:string"/>
+		<part name="productid" type="xsd:int"/>
+		<part name="description" type="xsd:string"/>
+	</message>
+
+	<message name='set_invoice_item_product_response'>
+		<part name='itemid' type='xsd:int'/>
+	</message>
+
+
+	<message name='set_invoice_item_time_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='invoicetype' type='xsd:string'/>
+		<part name="itemid" type="xsd:int"/>
+		<part name="price" type="xsd:string"/>
+		<part name="productid" type="xsd:int"/>
+		<part name="timegroupid" type="xsd:int"/>
+		<part name="description" type="xsd:string"/>
+	</message>
+
+	<message name='set_invoice_item_time_response'>
+		<part name='itemid' type='xsd:int'/>
+	</message>
+
 
 
 	<message name='set_invoice_tax_request'>
@@ -262,9 +291,19 @@
 			<output message='tns:set_invoice_details_response'/>
 		</operation>
 
-		<operation name='set_invoice_item'>
-			<input message='tns:set_invoice_item_request'/>
-			<output message='tns:set_invoice_item_response'/>
+		<operation name='set_invoice_item_standard'>
+			<input message='tns:set_invoice_item_standard_request'/>
+			<output message='tns:set_invoice_item_standard_response'/>
+		</operation>
+
+		<operation name='set_invoice_item_product'>
+			<input message='tns:set_invoice_item_product_request'/>
+			<output message='tns:set_invoice_item_product_response'/>
+		</operation>
+
+		<operation name='set_invoice_item_time'>
+			<input message='tns:set_invoice_item_time_request'/>
+			<output message='tns:set_invoice_item_time_response'/>
 		</operation>
 
 		<operation name='set_invoice_tax'>
@@ -338,6 +377,61 @@
 		</operation>
 					
 		<operation name='set_invoice_details'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_invoice_item_standard'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_invoice_item_product'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_invoice_item_time'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_invoice_tax'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='set_invoice_payment'>
 			<soap:operation soapAction='accounts_invoices_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

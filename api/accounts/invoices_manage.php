@@ -183,41 +183,52 @@ class accounts_invoices_manage_soap
 					case "product":
 						// Fetch product name
 						$data["customid_label"] = sql_get_singlevalue("SELECT name_product as value FROM products WHERE id='". $data["customid"] ."' LIMIT 1");
+
+						// blank a few fields
+						$data["timegroupid"]		= "";
+						$data["timegroupid_label"]	= "";
 					break;
 
 
 					case "time":
+						// fetch product name
+						$data["customid_label"] = sql_get_singlevalue("SELECT name_product as value FROM products WHERE id='". $data["customid"] ."' LIMIT 1");
+
 						// Fetch time group ID
-						$groupid		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TIMEGROUPID'");
-						$data["customid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+						$data["timegroupid"]		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TIMEGROUPID'");
+						$data["timegroupid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='". $data["timegroupid"] ."' LIMIT 1");
 					break;
 
 
 					case "standard":
 
 						// blank a few fields
-						$data["customid_label"] = "";
-						$data["price"]		= "";
-						$data["quantity"]	= "";
-						$data["units"]		= "";
+						$data["customid_label"] 	= "";
+						$data["price"]			= "";
+						$data["quantity"]		= "";
+						$data["units"]			= "";
+						$data["timegroupid"]		= "";
+						$data["timegroupid_label"]	= "";
 					break;
 				}
 
 
 				// create return structure
-				$return_tmp			= NULL;
+				$return_tmp				= NULL;
 
-				$return_tmp["itemid"]		= $data["id"];
-				$return_tmp["type"]		= $data["type"];
-				$return_tmp["customid"]		= $data["customid"];
-				$return_tmp["customid_label"]	= $data["customid_label"];
-				$return_tmp["chartid"]		= $data["chartid"];
-				$return_tmp["chartid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $data["chartid"] ."'");
-				$return_tmp["quantity"]		= $data["quantity"];
-				$return_tmp["units"]		= $data["units"];
-				$return_tmp["amount"]		= $data["amount"];
-				$return_tmp["price"]		= $data["price"];
-				$return_tmp["description"]	= $data["description"];
+				$return_tmp["itemid"]			= $data["id"];
+				$return_tmp["type"]			= $data["type"];
+				$return_tmp["customid"]			= $data["customid"];
+				$return_tmp["customid_label"]		= $data["customid_label"];
+				$return_tmp["chartid"]			= $data["chartid"];
+				$return_tmp["chartid_label"]		= sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $data["chartid"] ."'");
+				$return_tmp["timegroupid"]		= $data["timegroupid"];
+				$return_tmp["timegroupid_label"]	= $data["timegroupid_label"];
+				$return_tmp["quantity"]			= $data["quantity"];
+				$return_tmp["units"]			= $data["units"];
+				$return_tmp["amount"]			= $data["amount"];
+				$return_tmp["price"]			= $data["price"];
+				$return_tmp["description"]		= $data["description"];
 
 				$return[] = $return_tmp;
 			}
@@ -412,8 +423,6 @@ class accounts_invoices_manage_soap
 	} // end of get_invoice_payments
 
 
-
-
 	/*
 		set_invoice_details
 
@@ -569,28 +578,24 @@ class accounts_invoices_manage_soap
 
 
 
-	/*
-		set_invoice_item
 
-		Create/updates an invoice item (either standard, product or time)
+	/*
+		set_invoice_item_standard
+
+		Creates/Updates a standard invoice item
 
 		Returns
 		0	failure
 		#	ID of the item
 	*/
-	function set_invoice_item($id,
+	function set_invoice_item_standard($id,
 					$invoicetype,
 					$itemid,
-					$type,
-					$customid,
 					$chartid,
-					$quantity,
-					$units,
 					$amount,
-					$price,
 					$description)
 	{
-		log_debug("accounts_invoices_manage", "Executing set_invoice_item($id, $invoicetype, values...)");
+		log_debug("accounts_invoices_manage", "Executing set_invoice_item_standard($id, $invoicetype, values...)");
 
 
 		// check the invoicetype
@@ -602,12 +607,12 @@ class accounts_invoices_manage_soap
 
 		if (user_permissions_get("accounts_". $invoicetype ."_write"))
 		{
-			$obj_invoice_item			= New invoice_item;
+			$obj_invoice_item			= New invoice_items;
+
 			$obj_invoice_item->type_invoice		= $invoicetype;
 			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $id_item);
-			$obj_invoice_item->type_item		= security_script_input_predefined("any", $type);
-
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "standard";
 
 			/*
 				Error Handling
@@ -635,245 +640,683 @@ class accounts_invoices_manage_soap
 			}
 
 
+
 			/*
-				Load SOAP data, depending on the item type
+				Load SOAP data
 			*/
 
-			$obj_invoice_item->data["customid"]	= security_script_input_predefined("any", $customid);
-			$obj_invoice_item->data["chartid"]	= security_script_input_predefined("any", $chartid);
-			$obj_invoice_item->data["quantity"]	= security_script_input_predefined("any", $quantity);
-			$obj_invoice_item->data["units"]	= security_script_input_predefined("any", $units);
-			$obj_invoice_item->data["amount"]	= security_script_input_predefined("any", $amount);
-			$obj_invoice_item->data["price"]	= security_script_input_predefined("any", $price);
-			$obj_invoice_item->data["description"]	= security_script_input_predefined("any", $description);
 
+			$data["amount"]		= security_script_input_predefined("money", $amount);
+			$data["chartid"]	= security_script_input_predefined("int", $chartid);
+			$data["description"]	= security_script_input_predefined("any", $description);
 
-			foreach (array_keys($obj_invoice_item->data) as $key)
+			foreach (array_keys($data) as $key)
 			{
-				if ($obj_invoice_item->data[$key] == "error")
+				if ($data[$key] == "error")
 				{
 					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
 			}
 
-			
-			switch($obj_invoice_item->type_item)
-			{
-				case "standard":
-					/*
-						STANDARD ITEMS
-					*/
 
-					// fetch information from form
-					$data["amount"]		= security_script_input_predefined("money", $amount);
-					$data["chartid"]	= security_script_input_predefined("int", $chartid);
-					$data["description"]	= security_script_input_predefined("any", $description);
-					
-				break;
-
-
-				case "product":
-					/*
-						PRODUCT ITEMS
-					*/
-					
-					// fetch information from form
-					$data["price"]		= security_script_input_predefined("money", $price);
-					$data["quantity"]	= security_script_input_predefined("int", $quantity);
-					$data["units"]		= security_script_input_predefined("any", $units);
-					$data["customid"]	= security_script_input_predefined("int", $productid);
-					$data["description"]	= security_script_input_predefined("any", $description);
-
-				break;
-
-
-				case "time":
-					/*
-						TIME ITEMS
-					*/
-				
-					// fetch information from form
-					$data["price"]		= security_script_input_predefined("money", $price);
-					$data["customid"]	= security_script_input_predefined("int", $productid);
-					$data["timegroupid"]	= security_script_input_predefined("int", $timegroupid);
-					$data["description"]	= security_script_input_predefined("any", $description);
-					$data["units"]		= "hours";
-					
-				break;
-
-
-
-				case "tax":
-					/*
-						TAX ITEMS
-					*/
-
-					// fetch key information from form
-					$data["customid"]	= security_script_input_predefined("int", "tax_id", 1, "");
-					$data["manual_option"]	= security_script_input_predefined("any", "manual_option", 0, "");
-
-					if ($data["manual_option"])
-					{
-						$data["manual_amount"]	= security_script_input_predefined("money", "manual_amount", 1, "You must enter a value if you choose to calculate the tax amount manually.");
-					}
-
-				break;
-
-
-				case "payment":
-					/*
-						PAYMENT ITEM
-					*/
-
-					// fetch information from form
-					$data["date_trans"]	= security_script_input_predefined("date", "date_trans", 1, "");
-					$data["amount"]		= security_script_input_predefined("money", "amount", 1, "");
-					$data["chartid"]	= security_script_input_predefined("int", "chartid", 1, "");
-					$data["source"]		= security_script_input_predefined("any", "source", 1, "");
-					$data["description"]	= security_script_input_predefined("any", "description", 0, "");
-					
-				break;
-
-
-				default:
-					$_SESSION["error"]["message"][] = "Unknown item type passed to processing form.";
-				break;
-			}
-			
-
-
-			/*
-				Process data
-			*/
+			// process the data
 			if (!$obj_invoice_item->prepare_data($data))
 			{
-				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
 			}
 
 
 
+
 			/*
-				APPLY ITEM CHANGES
+				Apply Data
 			*/
-	
+
 			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->action_update())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+			}
+			else
 			{
 				if (!$obj_invoice_item->action_create())
 				{
 					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 				}
-
-			}
-			else
-			{
-				if (!$item->action_update())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
 			}
 
 
 
-			/*
-				Re-calculate taxes, totals and ledgers as required
-			*/
+			// Re-calculate taxes, totals and ledgers as required
+			// (does not need to be done for tax or payment items)
 			
-			if ($obj_invoice_item->type_item != "tax" && $obj_invoice_item->type_item != "payment")
-			{
-				$obj_invoice_item->action_update_tax();
-			}
-
+			$obj_invoice_item->action_update_tax();
 			$obj_invoice_item->action_update_total();
 
 
 
-			/*
-				Generate ledger entries.
-
-				(Note that for quotes, we do NOT generate ledger entries, since a quote
-				should have no impact on the accounts)
-			*/
-
-			if ($obj_invoice_item->type_invoice != "quotes")
-			{
-				$obj_invoice_item->action_update_ledger();
-			}
+			// Generate ledger entries.
+			$obj_invoice_item->action_update_ledger();
 
 
-
-			/*
-				Update the journal
-			*/
-
-	
+			// complete
+			return $obj_invoice_item->id_item;
 
 
-
-			/*
-				Perform Changes
-			*/
-
-			if ($obj_invoice->id)
-			{
-				// update existing invoice
-				if ($obj_invoice->action_update())
-				{
-					return $obj_invoice->id;
-				}
-				else
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
-			}
-			else
-			{
-				// create new invoice
-				if ($obj_invoice->action_create())
-				{
-					return $obj_invoice->id;
-				}
-				else
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
-			}
  		}
 		else
 		{
 			throw new SoapFault("Sender", "ACCESS DENIED");
 		}
 
-	} // end of set_invoice_details
+	} // end of set_invoice_item_standard
+
+
+
+
+	/*
+		set_invoice_item_product
+
+		Creates/Updates a product invoice item
+
+		Returns
+		0	failure
+		#	ID of the item
+	*/
+	function set_invoice_item_product($id,
+					$invoicetype,
+					$itemid,
+					$price,
+					$quantity,
+					$units,
+					$productid,
+					$description)
+	{
+		log_debug("accounts_invoices_manage", "Executing set_invoice_item_product($id, $invoicetype, values...)");
+
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $invoicetype;
+			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "product";
+
+			/*
+				Error Handling
+			*/
+
+			// verify invoice existance
+			if (!$obj_invoice_item->verify_invoice())
+			{
+				throw new SoapFault("Sender", "INVALID_INVOICE");
+			}
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+			// verify item existance (if editing one)
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->verify_item())
+				{
+					throw new SoapFault("Sender", "INVALID_ITEMID");
+				}
+			}
+
+
+
+			/*
+				Load SOAP data
+			*/
+
+
+			$data["price"]		= security_script_input_predefined("money", $price);
+			$data["quantity"]	= security_script_input_predefined("int", $quantity);
+			$data["units"]		= security_script_input_predefined("any", $units);
+			$data["customid"]	= security_script_input_predefined("int", $productid);
+			$data["description"]	= security_script_input_predefined("any", $description);
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			// process the data
+			if (!$obj_invoice_item->prepare_data($data))
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
+			}
+
+
+
+
+			/*
+				Apply Data
+			*/
+
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->action_update())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+			}
+			else
+			{
+				if (!$obj_invoice_item->action_create())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+			}
+
+
+
+			// Re-calculate taxes, totals and ledgers as required
+			$obj_invoice_item->action_update_tax();
+			$obj_invoice_item->action_update_total();
+
+
+
+			// Generate ledger entries.
+			$obj_invoice_item->action_update_ledger();
+
+
+			// complete
+			return $obj_invoice_item->id_item;
+
+
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_invoice_item_product
+
+
+
+	/*
+		set_invoice_item_time
+
+		Creates/Updates a time invoice item
+
+		Returns
+		0	failure
+		#	ID of the item
+	*/
+	function set_invoice_item_time($id,
+					$invoicetype,
+					$itemid,
+					$price,
+					$productid,
+					$timegroupid,
+					$description)
+	{
+		log_debug("accounts_invoices_manage", "Executing set_invoice_item_time($id, $invoicetype, values...)");
+
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $invoicetype;
+			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "time";
+
+			/*
+				Error Handling
+			*/
+
+			// verify invoice existance
+			if (!$obj_invoice_item->verify_invoice())
+			{
+				throw new SoapFault("Sender", "INVALID_INVOICE");
+			}
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+			// verify item existance (if editing one)
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->verify_item())
+				{
+					throw new SoapFault("Sender", "INVALID_ITEMID");
+				}
+			}
+
+
+
+			/*
+				Load SOAP data
+			*/
+
+
+			$data["price"]		= security_script_input_predefined("money", $price);
+			$data["customid"]	= security_script_input_predefined("int", $productid);
+			$data["timegroupid"]	= security_script_input_predefined("int", $timegroupid);
+			$data["description"]	= security_script_input_predefined("any", $description);
+			$data["units"]		= "hours";
+
+
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			// fetch the customer ID for this invoice, so we can create
+			// an array of acceptable time groups
+			$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_". $obj_invoice_item->type_invoice ." WHERE id='". $obj_invoice_item->id_invoice ."' LIMIT 1");
+					
+
+			// make sure the time_group is valid/available
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM time_groups "
+						."WHERE customerid='$customerid' "
+						."AND (invoiceitemid='0' OR invoiceitemid='". $obj_invoice_item->id_item ."') "
+						."AND id='". $data["timegroupid"] ."'";
+
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				throw new SoapFault("Sender", "INVALID_TIMEGROUPID");
+			}
+
+			unset($sql_obj);
+
+
+
+			// process the data
+			if (!$obj_invoice_item->prepare_data($data))
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
+			}
+
+
+
+
+			/*
+				Apply Data
+			*/
+
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->action_update())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+			}
+			else
+			{
+				if (!$obj_invoice_item->action_create())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+			}
+
+
+
+			// Re-calculate taxes, totals and ledgers as required
+			$obj_invoice_item->action_update_tax();
+			$obj_invoice_item->action_update_total();
+
+
+
+			// Generate ledger entries.
+			$obj_invoice_item->action_update_ledger();
+
+
+			// complete
+			return $obj_invoice_item->id_item;
+
+
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_invoice_item_time
+
+
+
+	/*
+		set_invoice_tax
+
+		Creates/Updates a tax item.
+
+		Returns
+		0	failure
+		#	ID of the item
+	*/
+	function set_invoice_tax($id,
+					$invoicetype,
+					$itemid,
+					$taxid,
+					$manual_option,
+					$manual_amount)
+	{
+		log_debug("accounts_invoices_manage", "Executing set_invoice_tax($id, $invoicetype, values...)");
+
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $invoicetype;
+			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "tax";
+
+			/*
+				Error Handling
+			*/
+
+			// verify invoice existance
+			if (!$obj_invoice_item->verify_invoice())
+			{
+				throw new SoapFault("Sender", "INVALID_INVOICE");
+			}
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+			// verify item existance (if editing one)
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->verify_item())
+				{
+					throw new SoapFault("Sender", "INVALID_ITEMID");
+				}
+			}
+
+
+
+			/*
+				Load SOAP data
+			*/
+
+			$data["customid"]	= security_script_input_predefined("int", $taxid);
+			$data["manual_option"]	= security_script_input_predefined("any", $manual_option);
+
+			if ($data["manual_option"])
+			{
+				$data["manual_amount"]	= security_script_input_predefined("money", $manual_amount);
+			}
+
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			// process the data
+			if (!$obj_invoice_item->prepare_data($data))
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
+			}
+
+
+
+
+			/*
+				Apply Data
+			*/
+
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->action_update())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+			}
+			else
+			{
+				if (!$obj_invoice_item->action_create())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+			}
+
+			// update invoice totals
+			$obj_invoice_item->action_update_total();
+
+			// Generate ledger entries.
+			$obj_invoice_item->action_update_ledger();
+
+
+			// complete
+			return $obj_invoice_item->id_item;
+
+
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_invoice_tax
+
+
+
+	/*
+		set_invoice_payment
+
+		Creates/Updates a payment item.
+
+		Returns
+		0	failure
+		#	ID of the item
+	*/
+	function set_invoice_payment($id,
+					$invoicetype,
+					$itemid,
+					$date_trans,
+					$chartid,
+					$amount,
+					$source,
+					$description)
+	{
+		log_debug("accounts_invoices_manage", "Executing set_invoice_payment($id, $invoicetype, values...)");
+
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $invoicetype;
+			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "payment";
+
+			/*
+				Error Handling
+			*/
+
+			// verify invoice existance
+			if (!$obj_invoice_item->verify_invoice())
+			{
+				throw new SoapFault("Sender", "INVALID_INVOICE");
+			}
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+			// verify item existance (if editing one)
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->verify_item())
+				{
+					throw new SoapFault("Sender", "INVALID_ITEMID");
+				}
+			}
+
+
+
+			/*
+				Load SOAP data
+			*/
+
+			$data["date_trans"]	= security_script_input_predefined("date", $date_trans);
+			$data["chartid"]	= security_script_input_predefined("int", $chartid);
+			$data["amount"]		= security_script_input_predefined("money", $amount);
+			$data["source"]		= security_script_input_predefined("any", $source);
+			$data["description"]	= security_script_input_predefined("any", $description);
+
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			// process the data
+			if (!$obj_invoice_item->prepare_data($data))
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
+			}
+
+
+
+
+			/*
+				Apply Data
+			*/
+
+			if ($obj_invoice_item->id_item)
+			{
+				if (!$obj_invoice_item->action_update())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+			}
+			else
+			{
+				if (!$obj_invoice_item->action_create())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+			}
+
+			// update invoice totals
+			$obj_invoice_item->action_update_total();
+
+			// Generate ledger entries.
+			$obj_invoice_item->action_update_ledger();
+
+
+			// complete
+			return $obj_invoice_item->id_item;
+
+
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_invoice_payment
 
 
 
 	/*
 		delete_invoice
 
-		Deletes an invoice, provided that the invoice is not locked.
+		Deletes the selected invoice, provided that is not locked.
 
 		Returns
 		0	failure
 		1	success
 	*/
-	function delete_invoice($id)
+	function delete_invoice($id, $invoicetype)
 	{
-		log_debug("invoices", "Executing delete_invoice_details($id, values...)");
+		log_debug("accounts_invoices_manage", "Executing delete_invoice($id, $invoicetype)");
 
-		if (user_permissions_get("accounts_invoices_write"))
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
 		{
-			$obj_invoice = New invoice;
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
 
-			
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice		= New invoice;
+
 			/*
 				Load SOAP Data
 			*/
-			$obj_invoice->id = security_script_input_predefined("int", $id);
-
-			if (!$obj_invoice->id || $obj_invoice->id == "error")
-			{
-				throw new SoapFault("Sender", "INVALID_INPUT");
-			}
+			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->type	= $invoicetype;
 
 
 
@@ -881,14 +1324,13 @@ class accounts_invoices_manage_soap
 				Error Handling
 			*/
 
-			// verify invoice ID
-			if (!$obj_invoice->verify_id())
+			// verify invoice existance
+			if (!$obj_invoice->verify_invoice())
 			{
-				throw new SoapFault("Sender", "INVALID_ID");
+				throw new SoapFault("Sender", "INVALID_INVOICE");
 			}
-
-
-			// check that the invoice can be safely deleted
+			
+			// make sure invoice is safe to delete
 			if ($obj_invoice->check_delete_lock())
 			{
 				throw new SoapFault("Sender", "LOCKED");
@@ -899,6 +1341,7 @@ class accounts_invoices_manage_soap
 			/*
 				Perform Changes
 			*/
+
 			if ($obj_invoice->action_delete())
 			{
 				return 1;
@@ -907,13 +1350,94 @@ class accounts_invoices_manage_soap
 			{
 				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
- 		}
+		}
 		else
 		{
 			throw new SoapFault("Sender", "ACCESS DENIED");
 		}
 
 	} // end of delete_invoice
+
+
+
+	/*
+		delete_invoice_item
+
+		Deletes the selected invoice item, provided that the invoice is not locked
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function delete_invoice_item($itemid)
+	{
+		log_debug("accounts_invoices_manage", "Executing delete_invoice_itemid($itemid)");
+
+		// sanatise item ID
+		$itemid = security_script_input_predefined("any", $itemid);
+
+		// fetch the invoice ID and type
+		$sql_item_obj		= New sql_query;
+		$sql_item_obj->string	= "SELECT invoiceid, invoicetype FROM account_items WHERE id='". $itemid ."' LIMIT 1";
+		$sql_item_obj->execute();
+
+		if (!$sql_item_obj->num_rows())
+		{
+			throw new SoapFault("Sender", "INVALID_ITEMID");
+		}
+
+		$sql_item_obj->fetch_array();
+
+
+		// check the invoicetype
+		if ($sql_item_obj->data[0]["invoicetype"] != "ar" && $sql_item_obj->data[0]["invoicetype"] != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $sql_item_obj->data[0]["invoicetype"] ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $sql_item_obj->data[0]["invoicetype"];
+			$obj_invoice_item->id_invoice		= $sql_item_obj->data[0]["invoiceid"];
+			$obj_invoice_item->id_item		= $itemid;
+
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+
+			/*
+				Perform Changes
+			*/
+
+			if ($obj_invoice_item->action_delete())
+			{
+				// Re-calculate taxes, totals and ledgers as required
+				$obj_invoice_item->action_update_tax();
+				$obj_invoice_item->action_update_total();
+
+				// Generate ledger entries.
+				$obj_invoice_item->action_update_ledger();
+
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of delete_invoice_item
 
 
 
