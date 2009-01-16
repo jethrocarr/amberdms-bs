@@ -1394,13 +1394,6 @@ class accounts_invoices_manage_soap
 		$sql_item_obj->fetch_array();
 
 
-		// check the invoicetype
-		if ($sql_item_obj->data[0]["invoicetype"] != "ar" && $sql_item_obj->data[0]["invoicetype"] != "ap")
-		{
-			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
-		}
-
-
 		if (user_permissions_get("accounts_". $sql_item_obj->data[0]["invoicetype"] ."_write"))
 		{
 			$obj_invoice_item			= New invoice_items;
