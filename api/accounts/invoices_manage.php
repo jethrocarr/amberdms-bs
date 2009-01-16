@@ -877,7 +877,12 @@ class accounts_invoices_manage_soap
 
 
 		// check the invoicetype
-		if ($invoicetype != "ar" && $invoicetype != "ap")
+		if ($invoicetype == "ap")
+		{
+			throw new SoapFault("Sender", "NOT_AVAILABLE_FOR_INVOICE_TYPE");
+		}
+
+		if ($invoicetype != "ar")
 		{
 			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
 		}
