@@ -106,7 +106,7 @@ class services_usage
 		}
 		else
 		{
-			throw new SoapFault("Sender", "ACCESS DENIED");
+			throw new SoapFault("Sender", "ACCESS_DENIED");
 		}
 	}
 }
