@@ -183,13 +183,14 @@ class accounts_gl_manage_soap
 
 		if (user_permissions_get("accounts_gl_write"))
 		{
+			$this->data["code_gl"]			= security_script_input_predefined("any", $code_gl);
 			$this->data["date_trans"]		= security_script_input_predefined("any", $date_trans);
 			$this->data["employeeid"]		= security_script_input_predefined("int", $employeeid);
 			$this->data["description"]		= security_script_input_predefined("any", $description);
 			$this->data["description_useall"]	= security_script_input_predefined("any", $description_useall);
 			$this->data["notes"]			= security_script_input_predefined("any", $notes);
 			
-			foreach (array("date_trans", "employeeid", "description", "description_useall", "notes") as $key)
+			foreach (array("code_gl", "date_trans", "employeeid", "description", "description_useall", "notes") as $key)
 			{
 				if ($this->data[$key] == "error")
 				{
