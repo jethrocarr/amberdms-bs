@@ -307,6 +307,8 @@ class accounts_gl_manage_soap
 		Takes all the GL transaction information in $this->data and creates or updates a GL
 		transaction from it.
 
+		Clears the prepared data when finished.
+
 		Returns
 		0	Failure
 		#	Success - ID of the GL transaction
@@ -384,6 +386,9 @@ class accounts_gl_manage_soap
 
 			if ($obj_gl->action_update())
 			{
+				// clear the prepared data
+				$this->data = array();
+
 				return $obj_gl->id;
 			}
 			else
