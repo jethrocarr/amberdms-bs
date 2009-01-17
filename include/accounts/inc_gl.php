@@ -356,11 +356,11 @@ class gl_transaction
 
 
 		/*
-			All charts require a code_chart value. If one has not been provided, automatically
+			All charts require a code_gl value. If one has not been provided, automatically
 			generate one
 		*/
 
-		if (!$this->data["code_chart"])
+		if (!$this->data["code_gl"])
 		{
 			$this->data["code_gl"] = config_generate_uniqueid("ACCOUNTS_GL_TRANSNUM", "SELECT id FROM account_gl WHERE code_gl='VALUE'");
 		}
