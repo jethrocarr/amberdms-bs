@@ -130,7 +130,7 @@ if ($page_valid)
 		ini_set('zlib.output_compression', 'Off');
 
 	// set the relevant content type
-	$file_extension = strtolower(substr(strrchr($this->data["file_name"],"."),1));
+	$file_extension = strtolower(substr(strrchr($filename,"."),1));
 
 	switch ($file_extension)
 	{

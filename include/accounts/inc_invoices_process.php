@@ -105,11 +105,11 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	// invoice must be provided by edit page, but not by add invoice, since we can just generate a new one
 	if ($mode == "add")
 	{
-		$this->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
+		$invoice->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
 	}
 	else
 	{
-		$this->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
+		$invoice->data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 1, "");
 	}
 
 
