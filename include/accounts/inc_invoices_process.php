@@ -153,6 +153,10 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			{
 				$_SESSION["error"]["message"] = "An error occured whilst attempting to create the invoice";
 			}
+
+			// display items page
+			$returnpage_success = ereg_replace("view", "items", $returnpage_success);
+			header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
 		}
 		else
 		{
@@ -166,11 +170,13 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			{
 				$_SESSION["error"]["message"] = "An error occured whilst attempting to update the invoice";
 			}
+
+		
+			// display updated details
+			header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
 		}
 
 		
-		// display updated details
-		header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
 		exit(0);
 			
 

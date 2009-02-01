@@ -114,7 +114,7 @@ function invoice_render_summarybox($type, $id)
 			print "<tr>";
 				print "<td>";
 				print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." has no items on it</b>";
-				print "<p>This invoice needs to have some items added to it using the links in the nav menu above.</p>";
+				print "<p>This invoice is currently empty, add some items to it using the Invoice Items page.</p>";
 				print "</td>";
 			print "</tr>";
 			print "</table>";
