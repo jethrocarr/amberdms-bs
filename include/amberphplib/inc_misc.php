@@ -324,6 +324,36 @@ function time_calculate_daysofweek($date_selected_start)
 }
 
 
+/*
+	time_calculate_weeknum($date)
+
+	Calculates what week the supplied date is in. If not date is supplied, then
+	returns the current week.
+*/
+function time_calculate_weeknum($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_weeknum($date)");
+
+	if (!$date)
+	{
+		$date = date("Y-m-d");
+	}
+
+
+	/*
+		Use the SQL database to get the week number based on ISO 8601
+		selection criteria.
+
+		Note that we intentionally use SQL instead of the php date("W") function, since
+		in testing the date("W") function has been found to beinconsistant on different systems.
+
+		TODO: Investigate further what is wrong with PHP date("W")
+	*/
+	return sql_get_singlevalue("SELECT WEEK('$date',1) as value");
+}
+
+	
+
 
 
 

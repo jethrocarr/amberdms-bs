@@ -73,7 +73,7 @@ class page_output
 			}
 			else
 			{
-				$this->date_selected_weekofyear = date("W") - 1;
+				$this->date_selected_weekofyear = time_calculate_weeknum();
 
 			}
 		}
