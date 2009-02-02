@@ -180,6 +180,93 @@ class invoice_list_items
 
 		if (!$this->locked)
 		{
+			/*
+				Display the new item form
+			*/
+
+			$form = New form_input;
+			$form->formname		= $this->type ."_invoice_". $this->mode;
+			$form->language		= $_SESSION["user"]["lang"];
+	
+			$form->action		= ereg_replace("edit", "add-process", $this->page_view);
+			$form->method		= "POST";
+
+			// basic details
+			$structure = NULL;
+			$structure["fieldname"] 	= "id";
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $this->invoiceid;
+			$form->add_input($structure);
+
+
+			// item dropdown
+			$structure = NULL;
+			$structure["fieldname"] 	= "item";
+			$structure["type"]		= "dropdown";
+
+			$structure["values"][]			= "standard";
+			$structure["translations"]["standard"]	= "Standard Transaction";
+			
+			if ($this->type == "ar")
+			{
+				$structure["values"][]			= "time";
+				$structure["translations"]["time"]	= "Time Item";
+			}
+
+			// fetch all the products for the drop down
+			$sql_products_obj		= New sql_query;
+			$sql_products_obj->string	= "SELECT id, code_product, name_product FROM products ORDER BY name_product";
+			$sql_products_obj->execute();
+			
+			if ($sql_products_obj->num_rows())
+			{
+				$sql_products_obj->fetch_array();
+
+				foreach ($sql_products_obj->data as $data)
+				{
+					$structure["values"][]				= $data["id"];
+					$structure["translations"][ $data["id"] ]	= $data["code_product"] ."--". $data["name_product"];
+				}
+			}
+
+
+			$form->add_input($structure);
+
+
+			// submit support
+			$structure = NULL;
+			$structure["fieldname"] 	= "submit";
+			$structure["type"]		= "submit";
+			$structure["defaultvalue"]	= "Add";
+			$form->add_input($structure);
+
+
+
+			// display the form
+			print "<form method=\"". $form->method ."\" action=\"". $form->action ."\">";
+			print "<table><tr>";
+
+				print "<td>";
+				$form->render_field("item");
+				print "</td>";
+
+				print "<td>";
+				$form->render_field("submit");
+				print "</td>";
+
+			print "</tr></table>";
+			
+			$form->render_field("id");
+
+			print "</form>";
+
+		
+
+
+
+			/*
+
+
 			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=standard\">Add standard transaction item</a></b></p>";
 			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=product\">Add product item</a></b></p>";
 
@@ -187,6 +274,8 @@ class invoice_list_items
 			{
 				print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=time\">Add time item</a></b></p>";
 			}
+
+			*/
 		}
 
 
@@ -429,6 +518,7 @@ class invoice_form_item
 	
 	var $processpage;	// Page to process the submitted form
 	var $item_type;		// Type of item
+	var $productid;		// ID of the product for seeding the form
 
 	var $mode;
 	
@@ -437,8 +527,8 @@ class invoice_form_item
 
 	function execute()
 	{
-		log_debug("invoice_form_items", "Executing execute()");
-		
+		log_debug("invoice_form_item", "Executing execute()");
+
 		// TODO: fix up this class to comply with the standard coding style of the rest of the application
 	
 		// do nothing
@@ -448,7 +538,7 @@ class invoice_form_item
 
 	function render_html()
 	{
-		log_debug("inc_invoices_details", "Executing invoice_form_items_render($type, $id, $processpage)");
+		log_debug("invoice_form_item", "Executing render_html()");
 
 
 		// determine the mode
@@ -572,8 +662,21 @@ class invoice_form_item
 				// define form layout
 				$form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description");
 
-				// SQL query
-				$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+				// fetch data
+				//
+				// if the item is new, use the this->item field to fetch the default product details, otherwise
+				// fetch the details for the existing item
+				//
+				if ($this->itemid)
+				{
+					$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+				}
+				else
+				{
+					$form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+
+					$form->structure["quantity"]["defaultvalue"] = 1;
+				}
 
 
 			
@@ -866,6 +969,91 @@ class invoice_form_item
 */
 
 
+
+
+/*
+	invoice_form_items_add_process($type, $returnpage_error, $returnpage_success)
+
+	Wrapper page - this page takes data in from the main invoice items page when creating
+	new items, extracts the details and then redirects the user to the item creation page.
+
+	Eg:
+	invoice-items.php -> invoice-items-add-process.php -> invoice-items-edit.php
+
+	Values
+	type			"ar" or "ap" invoice
+	returnpage_error	Page to return to in event of errors or updates
+	returnpage_success	Page to return to if successful.
+*/
+function invoice_form_items_add_process($type,  $returnpage_error, $returnpage_success)
+{
+	log_debug("inc_invoices_items", "Executing invoice_form_items_add_process($type, $returnpage_error, $returnpage_success)");
+
+	
+	/*
+		Import POST data
+	*/
+	
+	$item		= security_form_input_predefined("any", "item", 1, "You must select the type of item to add to the invoice");
+	$invoiceid	= security_form_input_predefined("any", "id", 1, "You must select an invoice before accessing this page");
+
+
+	/*
+		Process item value
+	*/
+	if ($item)
+	{
+
+		if ($item == "standard")
+		{
+			$item_type = "standard";
+		}
+		elseif ($item == "time")
+		{
+			$item_type = "time";
+		}
+		else
+		{
+			// must be a product - check that the product exists
+			$sql_product_obj		= New sql_query;
+			$sql_product_obj->string	= "SELECT id FROM products WHERE id='". $item ."'";
+			$sql_product_obj->execute();
+
+			if (!$sql_product_obj->num_rows())
+			{
+				log_write("error", "invoice_form_item", "The requested item does not exist");
+			}
+
+			$item_type	= "product";
+			$productid	= $item;
+		}
+	}
+
+
+
+	/*
+		Error Handling
+	*/
+
+	if ($_SESSION["error"]["message"])
+	{
+		header("Location: ../../index.php?page=$returnpage_error&id=$invoiceid");
+		exit(0);
+	}
+
+
+
+	/*
+		Success
+	*/
+
+	header("Location: ../../index.php?page=$returnpage_success&id=$invoiceid&type=$item_type&productid=$productid");
+	exit(0);
+
+
+
+
+} // end of invoice_form_items_add_process
 
 
 

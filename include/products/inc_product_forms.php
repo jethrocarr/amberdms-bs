@@ -49,6 +49,15 @@ class products_form_details
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"] 		= "units";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["max_length"]	= 10;
+		$structure["options"]["req"]		= "yes";
+		$this->obj_form->add_input($structure);
+
+
 		$structure = charts_form_prepare_acccountdropdown("account_sales", 2);
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
@@ -100,7 +109,7 @@ class products_form_details
 			
 
 		// define subforms
-		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "account_sales", "date_current", "details");
+		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "date_current", "details");
 		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale");
 		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$this->obj_form->subforms["product_supplier"]	= array("vendorid", "code_product_vendor");

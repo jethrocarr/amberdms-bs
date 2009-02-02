@@ -28,6 +28,7 @@ if (user_permissions_get('products_write'))
 	
 	$obj_product->data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
 	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
+	$obj_product->data["units"]			= security_form_input_predefined("any", "units", 1, "");
 	$obj_product->data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
 
 	$obj_product->data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
@@ -79,7 +80,7 @@ if (user_permissions_get('products_write'))
 	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{
-		if ($mode == "edit")
+		if ($obj_product->id)
 		{
 			$_SESSION["error"]["form"]["product_view"] = "failed";
 			header("Location: ../index.php?page=products/view.php&id=". $obj_product->id);

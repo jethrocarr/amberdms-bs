@@ -279,6 +279,7 @@ class product
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `products` SET "
 						."name_product='". $this->data["name_product"] ."', "
+						."units='". $this->data["units"] ."', "
 						."code_product='". $this->data["code_product"] ."', "
 						."account_sales='". $this->data["account_sales"] ."', "
 						."date_current='". $this->data["date_current"] ."', "
