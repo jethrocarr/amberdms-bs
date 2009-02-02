@@ -153,16 +153,8 @@ class invoice_form_details
 			$structure = charts_form_prepare_acccountdropdown("dest_account", "ar_summary_account");
 		}
 			
-		if ($structure["values"])
-		{
-			if (count(array_keys($structure["values"])) == 1)
-			{
-				// if there is only 1 tax option avaliable, select it as the default
-				$structure["options"]["noselectoption"] = "yes";
-			}
-		}
-		
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
