@@ -116,7 +116,7 @@ class page_output
 			
 				// delete link
 				$structure = NULL;
-				$structure["id"]["value"]	= $this->invoiceid;
+				$structure["id"]["value"]	= $this->productid;
 				$structure["itemid"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
 
