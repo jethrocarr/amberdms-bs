@@ -30,6 +30,7 @@ class page_output
 		$this->obj_menu_nav = New menu_nav;
 
 		$this->obj_menu_nav->add_item("Product Details", "page=products/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Product Taxes", "page=products/taxes.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Product Journal", "page=products/journal.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Delete Product", "page=products/delete.php&id=". $this->id ."");
 	}
