@@ -388,7 +388,7 @@ class vendor
 
 
 		/*
-			Delete Customer
+			Delete Vendor
 		*/
 			
 		$sql_obj		= New sql_query;
@@ -397,6 +397,19 @@ class vendor
 		if (!$sql_obj->execute())
 		{
 			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the vendor");
+			return 0;
+		}
+
+
+		/*
+			Delete vendor taxes
+		*/
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM vendors_taxes WHERE vendorid='". $this->id ."'";
+			
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the taxes assigned to the vendor");
 			return 0;
 		}
 

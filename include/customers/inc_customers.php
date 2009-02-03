@@ -432,6 +432,20 @@ class customer
 
 
 		/*
+			Delete customer taxes
+		*/
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM customers_taxes WHERE customerid='". $this->id ."'";
+			
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the taxes assigned to the customer.");
+			return 0;
+		}
+
+
+
+		/*
 			Delete Journal
 		*/
 		journal_delete_entire("customers", $this->id);
