@@ -49,7 +49,6 @@ class invoice_list_items
 			Create table of standard object data
 		*/
 
-		$_SESSION["notification"]["message"] = array("Updated tax value with custom input");
 		// establish a new table object
 		$this->obj_table_standard		= New table;
 
@@ -1660,7 +1659,7 @@ function invoice_form_tax_override_process($returnpage)
 			$item->action_update();
 
 			// done
-			$_SESSION["notification"]["message"] = array("Updated tax value with custom input");
+			$_SESSION["notification"]["message"] = array("Updated tax value with custom input.");
 		}
 
 
