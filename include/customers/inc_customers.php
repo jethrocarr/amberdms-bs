@@ -354,6 +354,51 @@ class customer
 	} // end of action_update
 
 
+	/*
+		action_update_taxes
+
+		Updates the customer tax selection options
+	*/
+	function action_update_taxes()
+	{
+		log_debug("inc_customers", "Executing action_update_taxes()");
+
+
+		// delete existing tax options
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM customers_taxes WHERE customerid='". $this->id ."'";
+		$sql_obj->execute();
+
+		// if the customer has selected a default tax, make sure the default tax is enabled.
+		if ($this->data["tax_default"])
+		{
+			$this->data["tax_". $this->data["tax_default"] ] = "on";
+		}
+
+		// run through all the taxes and if the user has selected the tax to be enabled, enable it
+		$sql_taxes_obj		= New sql_query;
+		$sql_taxes_obj->string	= "SELECT id FROM account_taxes";
+		$sql_taxes_obj->execute();
+
+		if ($sql_taxes_obj->num_rows())
+		{
+			$sql_taxes_obj->fetch_array();
+
+			foreach ($sql_taxes_obj->data as $data_tax)
+			{
+				if ($this->data["tax_". $data_tax["id"]])
+				{
+					// enable tax for customer
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "INSERT INTO customers_taxes (customerid, taxid) VALUES ('". $this->id ."', '". $data_tax["id"] ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
+
+		return 1;
+	}
+
 
 	/*
 		action_delete
