@@ -531,7 +531,7 @@ class table
 				}
 				else
 				{
-					$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data[$row][$column]);
+					$result = format_money($this->data[$row][$column]);
 				}
 			break;
 
