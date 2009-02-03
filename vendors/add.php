@@ -87,6 +87,9 @@ class page_output
 		$structure["type"]	= "date";
 		$this->obj_form->add_input($structure);
 
+		$this->obj_form->subforms["vendor_view"]		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
+
+
 
 		// taxes
 		$structure = NULL;
@@ -97,6 +100,47 @@ class page_output
 		$structure = NULL;
 		$structure = form_helper_prepare_dropdownfromdb("tax_default", "SELECT id, name_tax as label FROM account_taxes");
 		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["vendor_taxes"] = array("tax_number", "tax_default");
+
+
+
+		// list all the taxes so the user can enable or disable the taxes
+		$sql_tax_obj		= New sql_query;
+		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->execute();
+
+		if ($sql_tax_obj->num_rows())
+		{
+			// user note
+			$structure = NULL;
+			$structure["fieldname"] 		= "tax_message";
+			$structure["type"]			= "message";
+			$structure["defaultvalue"]		= "<p>Select all the taxes below which apply to this vendor. Any taxes not selected, will not be added to invoices for this customer.</p>";
+			$this->obj_form->add_input($structure);
+				
+			$this->obj_form->subforms["vendor_taxes"][] = "tax_message";
+
+
+			// run through all the taxes
+			$sql_tax_obj->fetch_array();
+
+			foreach ($sql_tax_obj->data as $data_tax)
+			{
+				// define tax checkbox
+				$structure = NULL;
+				$structure["fieldname"] 		= "tax_". $data_tax["id"];
+				$structure["type"]			= "checkbox";
+				$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+				$structure["options"]["no_fieldname"]	= "enable";
+
+				// add to form
+				$this->obj_form->add_input($structure);
+				$this->obj_form->subforms["vendor_taxes"][] = "tax_". $data_tax["id"];
+			}
+		}
+
+
 
 
 		// billing address
@@ -125,6 +169,9 @@ class page_output
 		$structure["type"]	= "input";
 		$this->obj_form->add_input($structure);
 		
+		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
+
+
 
 		// shipping address
 		$structure = NULL;
@@ -151,7 +198,9 @@ class page_output
 		$structure["fieldname"] = "address2_zipcode";
 		$structure["type"]	= "input";
 		$this->obj_form->add_input($structure);
-		
+	
+		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+
 
 		// submit button
 		$structure = NULL;
@@ -162,10 +211,6 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["vendor_view"]		= array("code_vendor", "name_vendor", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
-		$this->obj_form->subforms["vendor_taxes"]		= array("tax_number", "tax_default");
-		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
-		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 		$this->obj_form->subforms["submit"]		= array("submit");
 	
 		// load any data returned due to errors

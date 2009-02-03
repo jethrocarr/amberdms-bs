@@ -51,6 +51,23 @@ if (user_permissions_get('vendors_write'))
 	$obj_vendor->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
 
 
+	// get tax selection options
+	$sql_taxes_obj		= New sql_query;
+	$sql_taxes_obj->string	= "SELECT id FROM account_taxes";
+	$sql_taxes_obj->execute();
+
+	if ($sql_taxes_obj->num_rows())
+	{
+		$sql_taxes_obj->fetch_array();
+
+		foreach ($sql_taxes_obj->data as $data_tax)
+		{
+			$obj_vendor->data["tax_". $data_tax["id"] ] = security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+		}
+	}
+
+
+
 
 	/*
 		Error Handling
@@ -106,6 +123,7 @@ if (user_permissions_get('vendors_write'))
 	*/
 
 	$obj_vendor->action_update();
+	$obj_vendor->action_update_taxes();
 
 
 	// display updated details
