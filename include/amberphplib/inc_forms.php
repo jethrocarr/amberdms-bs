@@ -330,32 +330,45 @@ class form_input
 
 			default:
 			
-				// field name
-				if (!$this->structure[$fieldname]["options"]["no_translate_fieldname"])
+				if ($this->structure[$fieldname]["options"]["no_fieldname"])
 				{
-					$translation = language_translate_string($this->language, $fieldname);
+					// display the form field, but do no display the column for the fieldname
+					print "<td cellspan=\"2\" width=\"100%\">";
+
+					$this->render_field($fieldname);
+
+					print "</td>";
 				}
 				else
 				{
-					// translation disabled
-					$translation = $fieldname;
+					// field name
+					if (!$this->structure[$fieldname]["options"]["no_translate_fieldname"])
+					{
+						$translation = language_translate_string($this->language, $fieldname);
+					}
+					else
+					{
+						// translation disabled
+						$translation = $fieldname;
+					}
+
+
+					print "<td width=\"30%\" valign=\"top\">";
+					print $translation;
+					
+					if ($this->structure[$fieldname]["options"]["req"])
+						print " *";
+					
+					print "</td>";
+
+					// display form input field
+					print "<td width=\"70%\">";
+
+					$this->render_field($fieldname);
+		
+					print "</td>";
 				}
 
-
-				print "<td width=\"30%\" valign=\"top\">";
-				print $translation;
-				
-				if ($this->structure[$fieldname]["options"]["req"])
-					print " *";
-				
-				print "</td>";
-
-				// display form input field
-				print "<td width=\"70%\">";
-
-				$this->render_field($fieldname);
-
-				print "</td>";
 			break;
 
 		}
@@ -399,6 +412,7 @@ class form_input
 			$option_array["defaultvalue"]		Default value (if any)
 			$option_array["options"]
 						["no_translate_fieldname"]	Set to "yes" to disable language translation for field names
+						["no_fieldname"]		Do not render a field name and shift the data left by 1 column
 						["req"]				Set to "yes" to mark the field as being required
 						["max_length"]			Max length for input types
 						["width"]			Width of field object.
