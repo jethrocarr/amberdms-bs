@@ -473,39 +473,6 @@ class invoice
 		}
 
 
-		// if the customer/vendor has a default tax configured, then we need to add a tax item to the invoice.
-		if ($this->type == "ap")
-		{
-			$defaulttax = sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $this->data["vendorid"] ."'");
-		}
-		else
-		{
-			$defaulttax = sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $this->data["customerid"] ."'");
-		}
-
-		if ($defaulttax && $this->data["autotaxes"] != "off")
-		{
-			// add a tax item to this invoice
-			$item_tax			= New invoice_items;
-			$item_tax->id_invoice		= $this->id;
-			$item_tax->type_invoice		= $this->type;
-			$item_tax->type_item		= "tax";
-
-			$itemdata			= array();
-			$itemdata["customid"]		= $defaulttax;
-
-			$item_tax->prepare_data($itemdata);
-
-			if (!$item_tax->action_create())
-			{
-				return 0;
-			}
-
-			// note: normally we would generate ledger and total amounts here, but
-			// because there are no other items at this stage, tax amount and all
-			// totals will be equal to zero.
-		}
-		
 
 		log_debug("invoice", "Successfully created new invoice ". $this->id ."");
 		return 1;
@@ -924,7 +891,6 @@ class invoice
 		$sql_tax_obj			= New sql_query;
 		$sql_tax_obj->string		= "SELECT "
 							."account_items.amount, "
-							."account_items.description, "
 							."account_taxes.name_tax, "
 							."account_taxes.taxnumber "
 							."FROM "
@@ -934,6 +900,7 @@ class invoice
 							."invoiceid='". $this->id ."' "
 							."AND invoicetype='". $this->type ."' "
 							."AND type='tax'";
+
 		$sql_tax_obj->execute();
 
 		if ($sql_tax_obj->num_rows())
@@ -946,7 +913,6 @@ class invoice
 				$structure = array();
 			
 				$structure["name_tax"]		= $taxdata["name_tax"];
-				$structure["description"]	= $taxdata["description"];
 				$structure["taxnumber"]		= $taxdata["taxnumber"];
 				$structure["amount"]		= $taxdata["amount"];
 
@@ -1286,9 +1252,18 @@ class invoice_items
 					STANDARD ITEMS
 				*/
 
-				$this->data["amount"]		= $data["amount"];
-				$this->data["chartid"]		= $data["chartid"];
-				$this->data["description"]	= $data["description"];
+				// very simple, just copy the data across
+				foreach (array_keys($data) as $i)
+				{
+					$this->data[ $i ] = $data[ $i ];
+				}
+
+//				$this->data["amount"]		= $data["amount"];
+//				$this->data["chartid"]		= $data["chartid"];
+//				$this->data["description"]	= $data["description"];
+
+
+
 			break;
 			
 
@@ -1411,72 +1386,6 @@ class invoice_items
 			break;
 
 
-
-
-			case "tax":
-				/*
-					TAX ITEMS
-
-					We need to either use the manual amounts provided, or calculate the tax amount.
-				*/
-
-				// fetch key information from form
-				$this->data["customid"]		= $data["customid"];
-				$this->data["manual_option"]	= $data["manual_option"];
-
-
-				// fetch information about the tax - we need to know the account and taxrate
-				$sql_tax_obj		= New sql_query;
-				$sql_tax_obj->string	= "SELECT chartid, taxrate FROM account_taxes WHERE id='". $this->data["customid"] ."' LIMIT 1";
-				$sql_tax_obj->execute();
-
-				if (!$sql_tax_obj->num_rows())
-				{
-					$_SESSION["error"]["message"][] = "Unknown tax requested!";
-					return 0;
-				}
-				else
-				{
-					$sql_tax_obj->fetch_array();
-					
-					$this->data["chartid"] = $sql_tax_obj->data[0]["chartid"];
-					$this->data["taxrate"] = $sql_tax_obj->data[0]["taxrate"];
-				}
-
-
-
-				// calculate tax, either:
-				//	1. manual amount provided
-				//	2. automatic based on the percentage provided
-				if ($this->data["manual_option"])
-				{
-					// 1. MANUAL AMOUNT
-					
-					// save manual value
-					$this->data["amount"]	= $data["manual_amount"];
-
-					// label it for the ledgers
-					$this->data["description"] = "Manual tax calculation";
-				}
-				else
-				{
-					// 2. AUTOMATIC CALC
-					
-					// fetch total of billable items
-					$amount	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax' AND type!='payment'");
-
-					// calculate taxable amount
-					$this->data["amount"]	= $amount * ($this->data["taxrate"] / 100);
-					$this->data["amount"]	= sprintf("%0.2f", $this->data["amount"]);
-
-					
-					// label it for the ledgers
-					$this->data["description"] = "Automatic tax calculation at rate of ". $this->data["taxrate"] ."%";
-				}
-				
-			break;
-
-
 			case "payment":
 				/*
 					PAYMENT ITEM
@@ -1553,6 +1462,12 @@ class invoice_items
 		Updates the invoice item information.
 
 
+		Note: This does not update the invoice details, taxes or ledger, the following functions
+		need to be called afterwards:
+		* action_update_tax
+		* action_update_total
+		* action_update_ledger
+
 		Returns
 		0		failure
 		#		success - return item ID
@@ -1602,12 +1517,30 @@ class invoice_items
 		$sql_obj->execute();
 
 
-		// flag tax item as manual if required
-		if ($this->type_item == "tax" && $this->data["manual_option"] == "on")
+		// create options for standard transactions
+		if ($this->type_item == "standard")
 		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TAX_CALC_MODE', 'manual')";
-			$sql_obj->execute();
+			// fetch list of tax IDs
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+			$sql_tax_obj->execute();
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					if ($this->data["tax_". $data_tax["id"] ])
+					{
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TAX_CHECKED', '". $data_tax["id"] ."')";
+						$sql_obj->execute();
+					}
+				}
+
+			} // end of loop through taxes
+
 		}
 
 		// create options for payments
@@ -1625,7 +1558,7 @@ class invoice_items
 		}
 
 
-		// options for time items
+		// create options for time items
 		if ($this->type_item == "time")
 		{
 			// create options entry for the timegroupid
@@ -1648,7 +1581,7 @@ class invoice_items
 			$sql_obj->execute();
 		}
 
-		
+
 		// success
 		log_write("notification", "invoice_items", "Successfully updated invoice item");
 		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully updated");
@@ -1657,6 +1590,211 @@ class invoice_items
 		
 	} // end of action_update
 	
+
+
+	/*
+		action_update_tax
+	
+		This function runs through the invoice items and re-generates all the taxes
+		on the invoice.
+	
+		Note that it does NOT update the tax totals on the invoice itself or the ledger, so you MUST run
+		the following functions afterwards:
+		* action_update_totals
+		* action_update_ledger
+
+		Return Codes
+		0		failure
+		1		success
+	*/
+	function action_update_tax()
+	{
+		log_debug("invoice_items", "Executing action_update_tax()");
+
+
+		/*
+			Delete all taxes currently on the selected invoice.
+		*/
+
+		log_write("debug", "invoice_items", "Removing existing tax items...");
+
+
+		$sql_items_obj		= New sql_query;
+		$sql_items_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type='tax'";
+		$sql_items_obj->execute();
+
+		if ($sql_items_obj->num_rows())
+		{
+			$sql_items_obj->fetch_array();
+
+			foreach ($sql_items_obj->data as $data_item)
+			{
+				// delete the tax items
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "DELETE FROM account_items WHERE id='". $data_item["id"] ."'";
+				$sql_obj->execute();
+
+				// delete the tax items options
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data_item["id"] ."'";
+				$sql_obj->execute();
+			}
+		}
+
+
+
+
+
+		/*
+			Run though all the non-tax & non-payment items and get their tax details. This creates
+			an associative array of tax information which we can then use to create aggregated tax
+			items.
+		*/
+
+		$tax_structure = NULL;
+
+		log_write("debug", "invoice_items", "Totalling different taxes and item values...");
+
+		$sql_items_obj		= New sql_query;
+		$sql_items_obj->string	= "SELECT id, type, customid, amount, quantity FROM account_items WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax' AND type!='payment'";
+		$sql_items_obj->execute();
+
+		if ($sql_items_obj->num_rows())
+		{
+			$sql_items_obj->fetch_array();
+
+			foreach ($sql_items_obj->data as $data)
+			{
+				if ($data["type"] == "time" || $data["type"] == "product")
+				{
+					/*
+						HANDLE TAXES FOR PRODUCT-BASED ITEMS
+					*/
+
+
+					// fetch the taxes for the selected product
+					$sql_product_tax_obj		= New sql_query;
+					$sql_product_tax_obj->string	= "SELECT taxid, manual_option, manual_amount FROM `products_taxes` WHERE productid='". $data["customid"] ."'";
+					$sql_product_tax_obj->execute();
+
+					if ($sql_product_tax_obj->num_rows())
+					{
+						$sql_product_tax_obj->fetch_array();
+
+						foreach ($sql_product_tax_obj->data as $data_product_tax)
+						{
+							// add item amount, 
+							if ($data_product_tax["manual_option"])
+							{
+								// manual amount
+								// note: we multiple manual amount by the quantity of units to ensure valid tax amount
+								$tax_structure[ $data_product_tax["taxid"] ]["manual"]	+= $data_product_tax["manual_amount"] * $data["quantity"];
+							}
+							else
+							{
+								// automatic
+								// note: no need to multiple by quantity, since the item amount is already price * quantity
+								$tax_structure[ $data_product_tax["taxid"] ]["auto"]	+= $data["amount"];
+							}
+						}
+					}
+				} // end of if item == time || item == product
+				elseif ($data["type"] == "standard")
+				{
+					/*
+						HANDLE TAXES FOR STANDARD ITEMS
+
+						All taxes for standard items are automatically generated, so we need to get the list of taxes
+						selected for the item from the account_items_options table and then add them to the structure
+					*/
+
+					// fetch the taxes for the selected item
+					$sql_item_tax_obj		= New sql_query;
+					$sql_item_tax_obj->string	= "SELECT option_value as taxid FROM account_items_options WHERE itemid='". $data["id"] ."'";
+					$sql_item_tax_obj->execute();
+
+					if ($sql_item_tax_obj->num_rows())
+					{
+						$sql_item_tax_obj->fetch_array();
+
+						foreach ($sql_item_tax_obj->data as $data_item_tax)
+						{
+							// automatic
+							// note: no need to multiple by quantity, since the item amount is already price * quantity
+							$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+						}
+					}
+
+				}
+
+
+
+			} // end of loop through items
+
+		} // end if items exist
+
+
+
+		/*
+			Run through all the tax structure and generate tax items
+		*/
+
+		foreach (array_keys($tax_structure) as $taxid)
+		{
+			// fetch required information about the tax
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT taxrate, chartid FROM account_taxes WHERE id='". $taxid ."' LIMIT 1";
+			$sql_tax_obj->execute();
+			$sql_tax_obj->fetch_array();
+
+
+			/*
+				Work out total amount of tax
+			*/
+
+			$amount = 0;
+
+			// add any manual (aka fixed amount) taxes
+			$amount += $tax_structure[ $taxid ]["manual"];
+
+			// any items requiring automatic tax generation?
+			if ($tax_structure[ $taxid ]["auto"])
+			{
+				// calculate taxable amount
+				$amount += $tax_structure[ $taxid ]["auto"] * ($sql_tax_obj->data[0]["taxrate"] / 100);
+			}
+
+
+			/*
+				Create new tax item
+			*/
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `account_items` "
+						."(invoiceid, "
+						."invoicetype, "
+						."type, "
+						."amount, "
+						."chartid, "
+						."customid, "
+						."description"
+						.") VALUES ("
+						."'". $this->id_invoice ."', "
+						."'". $this->type_invoice ."', "
+						."'tax', "
+						."'". $amount ."', "
+						."'". $sql_tax_obj->data[0]["chartid"] ."', "
+						."'". $taxid ."', "
+						."'')";
+
+			$sql_obj->execute();
+			
+		} // end of loop through tax structure
+
+		return 1;
+
+	} // end of action_update_tax
+
 
 
 
@@ -1735,93 +1873,6 @@ class invoice_items
 		return 1;
 
 	} // end of action_update_total
-
-
-
-
-
-	/*
-		action_update_tax
-		
-		This function regenerates the taxes for any auto-matically calculated tax items on this invoice.
-
-		Note that it does NOT update the tax totals on the invoice itself or the ledger, so you MUST run
-		the following functions afterwards:
-		* action_update_totals
-		* action_update_ledger
-
-		Return Codes
-		0		failure
-		1		success
-	*/
-	function action_update_tax()
-	{
-		log_debug("invoice_items", "Executing action_update_tax()");
-
-
-		// fetch taxable amount
-		$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax' AND type!='payment'");
-
-
-		/*
-			Run though all the tax items on this invoice
-		*/
-		$sql_items_obj		= New sql_query;
-		$sql_items_obj->string	= "SELECT id, customid, amount FROM account_items WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type='tax'";
-		$sql_items_obj->execute();
-
-		if ($sql_items_obj->num_rows())
-		{
-			$sql_items_obj->fetch_array();
-
-			foreach ($sql_items_obj->data as $data)
-			{
-				// determine if we need to calculate tax for this item
-				$mode = sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TAX_CALC_MODE' LIMIT 1");
-
-				if (!$mode || $mode != "manual")
-				{
-					/*
-						This item is an automatically calculated tax item.
-						
-						Fetch taxrate information, calculate new tax amount and update the item
-					*/
-				
-					// fetch required information
-					$sql_tax_obj		= New sql_query;
-					$sql_tax_obj->string	= "SELECT taxrate, chartid FROM account_taxes WHERE id='". $data["customid"] ."' LIMIT 1";
-					$sql_tax_obj->execute();
-
-					if ($sql_tax_obj->num_rows())
-					{
-						$sql_tax_obj->fetch_array();
-					}
-
-				
-					// calculate taxable amount
-					$amount = $amount * ($sql_tax_obj->data[0]["taxrate"] / 100);
-					$amount = sprintf("%0.2f", $amount);
-
-					// update the item with the new amount
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "UPDATE account_items SET amount='$amount' WHERE id='". $data["id"] ."'";
-					$sql_obj->execute();
-
-
-					// note - the invoice_items_update ledger function should now be called to update the ledger
-
-				}
-			}
-		}
-		else
-		{
-			log_debug("invoice_items", "No tax items belonging to this invoice to process.");
-		}
-
-		return 1;
-
-	} // end of action_update_tax
-
 
 
 

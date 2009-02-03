@@ -28,98 +28,85 @@ class invoice_list_items
 	var $locked;
 	var $mode;
 	
-//	var $obj_table_standard;
-//	var $obj_table_taxes;
+	var $obj_table_standard;
+	var $obj_table_taxes;
 
 
 
 	function execute()
 	{
 		log_debug("invoice_list_items", "Executing execute()");
-	
+
+		// check lock status
 		if ($this->type != "quotes")
 		{
 			$this->locked = sql_get_singlevalue("SELECT locked as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
 		}
 
-		
-		// TODO: fix up this class to comply with the standard coding style of the rest of the application
-	
-		// do nothing
-		return 1;
-	}
 
-	function render_html()
-	{
-		log_debug("invoice_list_items", "Executing render_html()");
 
 		/*
-			Standard invoice items
+			Create table of standard object data
 		*/
-		print "<b>Standard Items:</b>";
 
 		// establish a new table object
-		$item_list = New table;
+		$this->obj_table_standard		= New table;
 
-		$item_list->language	= $_SESSION["user"]["lang"];
-		$item_list->tablename	= "item_list";
+		$this->obj_table_standard->language	= $_SESSION["user"]["lang"];
+		$this->obj_table_standard->tablename	= "item_list";
 
 		// define all the columns and structure
-		$item_list->add_column("money", "amount", "");
-		$item_list->add_column("standard", "item_info", "NONE");
-		$item_list->add_column("money", "price", "");
-		$item_list->add_column("standard", "units", "");
-		$item_list->add_column("standard", "qnty", "quantity");
-		$item_list->add_column("text", "description", "");
+		$this->obj_table_standard->add_column("standard", "item_info", "NONE");
+		$this->obj_table_standard->add_column("text", "description", "");
+		$this->obj_table_standard->add_column("standard", "qnty", "quantity");
+		$this->obj_table_standard->add_column("standard", "units", "");
+		$this->obj_table_standard->add_column("money", "price", "");
+		$this->obj_table_standard->add_column("money", "amount", "");
 
 		// defaults
-		$item_list->columns		= array("amount", "item_info", "price", "qnty", "units", "description");
+		$this->obj_table_standard->columns		= array("item_info", "description", "qnty", "units", "price", "amount");
 
 		// totals
-		$item_list->total_columns	= array("amount");
+		$this->obj_table_standard->total_columns	= array("amount");
 
 		// define SQL structure
-		$item_list->sql_obj->prepare_sql_settable("account_items");
+		$this->obj_table_standard->sql_obj->prepare_sql_settable("account_items");
 		
-		$item_list->sql_obj->prepare_sql_addfield("id", "");
-		$item_list->sql_obj->prepare_sql_addfield("type", "");
-		$item_list->sql_obj->prepare_sql_addfield("customid", "");
-		$item_list->sql_obj->prepare_sql_addfield("chartid", "");
+		$this->obj_table_standard->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table_standard->sql_obj->prepare_sql_addfield("type", "");
+		$this->obj_table_standard->sql_obj->prepare_sql_addfield("customid", "");
+		$this->obj_table_standard->sql_obj->prepare_sql_addfield("chartid", "");
+
+		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
+		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
+		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("type!='tax'");
+		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("type!='payment'");
 		
-		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
-		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
-		$item_list->sql_obj->prepare_sql_addwhere("type!='tax'");
-		$item_list->sql_obj->prepare_sql_addwhere("type!='payment'");
-		
-		$item_list->sql_obj->prepare_sql_addorderby("type");
+		$this->obj_table_standard->sql_obj->prepare_sql_addorderby("type");
 
 		// run SQL query
-		$item_list->generate_sql();
-		$item_list->load_data_sql();
+		$this->obj_table_standard->generate_sql();
+		$this->obj_table_standard->load_data_sql();
 
-		if (!$item_list->data_num_rows)
-		{
-			print "<p><i>There are currently no items.</i></p>";
-		}
-		else
+		if ($this->obj_table_standard->data_num_rows)
 		{
 			/*
 				Perform custom processing for item types
 			*/
-			for ($i=0; $i < $item_list->data_num_rows; $i++)
+			for ($i=0; $i < $this->obj_table_standard->data_num_rows; $i++)
 			{
-				switch ($item_list->data[$i]["type"])
+				switch ($this->obj_table_standard->data[$i]["type"])
 				{
 					case "product":
 						/*
 							Fetch product name
 						*/
 						$sql_obj		= New sql_query;
-						$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $item_list->data[$i]["customid"] ."' LIMIT 1";
+						$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
 						$sql_obj->execute();
 
 						$sql_obj->fetch_array();
-						$item_list->data[$i]["item_info"] = $sql_obj->data[0]["name_product"];
+						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["name_product"];
 					break;
 
 
@@ -128,9 +115,9 @@ class invoice_list_items
 							Fetch time group ID
 						*/
 
-						$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $item_list->data[$i]["id"] ."' AND option_name='TIMEGROUPID'");
+						$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->obj_table_standard->data[$i]["id"] ."' AND option_name='TIMEGROUPID'");
 
-						$item_list->data[$i]["item_info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+						$this->obj_table_standard->data[$i]["item_info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
 					break;
 
 
@@ -140,13 +127,13 @@ class invoice_list_items
 						*/
 
 						$sql_obj		= New sql_query;
-						$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $item_list->data[$i]["chartid"] ."' LIMIT 1";
+						$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $this->obj_table_standard->data[$i]["chartid"] ."' LIMIT 1";
 						$sql_obj->execute();
 
 						$sql_obj->fetch_array();
-						$item_list->data[$i]["item_info"] = $sql_obj->data[0]["name_account"];
+						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["name_account"];
 					
-						$item_list->data[$i]["qnty"] = "";
+						$this->obj_table_standard->data[$i]["qnty"] = "";
 					break;
 				}
 			}
@@ -160,7 +147,7 @@ class invoice_list_items
 				$structure["id"]["action"]	= "edit";
 				$structure["itemid"]["column"]	= "id";
 			
-				$item_list->add_link("edit", $this->page_view, $structure);
+				$this->obj_table_standard->add_link("edit", $this->page_view, $structure);
 
 			
 				// delete link
@@ -169,20 +156,244 @@ class invoice_list_items
 				$structure["itemid"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
 			
-				$item_list->add_link("delete", $this->page_delete, $structure);
+				$this->obj_table_standard->add_link("delete", $this->page_delete, $structure);
 			}
 
 
-			// display the table
-			$item_list->render_table_html();
+			// process table data & generate totals
+			$this->obj_table_standard->render_table_prepare();
+
+
+
+			/* 
+				Create table of tax data
+			*/
+
+			// establish a new table object
+			$this->obj_table_taxes = New table;
+
+			$this->obj_table_taxes->language = $_SESSION["user"]["lang"];
+			$this->obj_table_taxes->tablename = "item_list";
+
+			// define all the columns and structure
+			$this->obj_table_taxes->add_column("money", "amount", "account_items.amount");
+			$this->obj_table_taxes->add_column("standard", "name_tax", "account_taxes.name_tax");
+
+			// defaults
+			$this->obj_table_taxes->columns		= array("amount", "name_tax");
+			$this->obj_table_taxes->columns_order	= array("name_tax");
+
+			// totals
+			$this->obj_table_taxes->total_columns	= array("amount");
+
+			// define SQL structure
+			$this->obj_table_taxes->sql_obj->prepare_sql_settable("account_items");
+			$this->obj_table_taxes->sql_obj->prepare_sql_addfield("id", "account_items.id");
+			$this->obj_table_taxes->sql_obj->prepare_sql_addjoin("LEFT JOIN account_taxes ON account_taxes.id = account_items.customid");
+			$this->obj_table_taxes->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
+			$this->obj_table_taxes->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
+			$this->obj_table_taxes->sql_obj->prepare_sql_addwhere("type='tax'");
+			
+
+			// run SQL query
+			$this->obj_table_taxes->generate_sql();
+			$this->obj_table_taxes->load_data_sql();
+
+			// prepare the data for display
+			$this->obj_table_taxes->render_table_prepare();
+
+
+		} // end if items exist
+
+		
+		return 1;
+	}
+
+
+
+	function render_html()
+	{
+		log_debug("invoice_list_items", "Executing render_html()");
+
+
+		/*
+			Display custom table, combining the table data from the standard items and adding tax data
+
+			The following code is based off the tables class.
+		*/
+
+		if (!$this->obj_table_standard->data_num_rows)
+		{
+			format_msgbox("info", "<p>There are no items in this invoice</p>");
 		}
-	
+		else
+		{
+
+			print "<table width=\"100%\" class=\"table_content\" style=\"border-bottom: 0px;\">";
+
+
+			/*
+				Display standard invoice items
+			*/
+
+			print "<tr>";
+
+			// heading
+			foreach ($this->obj_table_standard->columns as $column)
+			{
+				print "<td class=\"header\"><b>". $this->obj_table_standard->render_columns[$column] ."</b></td>";
+			}
+
+			// filler for optional link column
+			print "<td class=\"header\"></td>";
+
+			print "</tr>";
+
+
+			// display invoice items
+			for ($i=0; $i < $this->obj_table_standard->data_num_rows; $i++)
+			{
+				print "<tr>";
+
+				// content for columns
+				foreach ($this->obj_table_standard->columns as $columns)
+				{
+					$content = $this->obj_table_standard->data_render[$i][$columns];
+
+					// display
+					print "<td valign=\"top\">$content</td>";
+				}
+
+
+				// links	
+				print "<td align=\"right\">";
+
+				$links		= array_keys($this->obj_table_standard->links);
+				$links_count	= count($links);
+				$count		= 0;
+
+				foreach ($links as $link)
+				{
+					$count++;
+					
+					$linkname = language_translate_string($this->obj_table_standard->language, $link);
+
+					// link to page
+					// There are two ways:
+					// 1. (default) Link to index.php
+					// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+					if ($this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
+					{
+						print "<a href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
+					}
+					else
+					{
+						print "<a href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
+					}
+
+					// add each option
+					foreach (array_keys($this->obj_table_standard->links[$link]["options"]) as $getfield)
+					{
+						/*
+							There are two methods for setting the value of the variable:
+							1. The value has been passed.
+							2. The name of a column to take the value from has been passed
+						*/
+						if ($this->obj_table_standard->links[$link]["options"][$getfield]["value"])
+						{
+							print "&$getfield=". $this->obj_table_standard->links[$link]["options"][$getfield]["value"];
+						}
+						else
+						{
+							print "&$getfield=". $this->obj_table_standard->data[$i][ $this->obj_table_standard->links[$link]["options"][$getfield]["column"] ];
+						}
+					}
+
+					// finish link
+					print "\">$linkname</a>";
+
+					// if required, add seporator
+					if ($count < $links_count)
+					{
+						print " || ";
+					}
+				}
+
+				print "</tr>";
+			}
+
+
+			/*
+				Subtotal
+
+				Display total of all items without tax
+			*/
+			print "<tr>";
+				print "<td class=\"blank\" colspan=\"3\"></td>";
+				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Subtotal:</b></td>";
+				print "<td class=\"footer\" valign=\"top\"><b>". $this->obj_table_standard->data_render["total"]["amount"] ."</b></td>";
+				print "<td class=\"footer\"></td>";
+			print "</tr>";
+
+
+
+			/*
+				display taxes & totals
+			*/
+			for ($i=0; $i < $this->obj_table_taxes->data_num_rows; $i++)
+			{
+				print "<tr>";
+
+				// padding
+				print "<td class=\"blank\" colspan=\"3\"></td>";
+
+				// tax name
+				print "<td valign=\"top\" colspan=\"2\">". $this->obj_table_taxes->data_render[$i]["name_tax"] ."</td>";
+
+				// amount
+				print "<td valign=\"top\">". $this->obj_table_taxes->data_render[$i]["amount"] ."</td>";
+
+				// links
+				print "<td></td>";
+
+				print "</tr>";
+			}
+
+
+			/*
+				Invoice Total
+
+				Items + Taxes totaled together
+			*/
+
+			$invoice_total = $this->obj_table_standard->data["total"]["amount"] + $this->obj_table_taxes->data["total"]["amount"];
+
+			$invoice_total = format_money($invoice_total);
+
+			print "<tr>";
+				print "<td class=\"blank\" colspan=\"3\"></td>";
+				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Invoice Total:</b></td>";
+				print "<td class=\"footer\" valign=\"top\"><b>$invoice_total</b></td>";
+				print "<td class=\"footer\"></td>";
+			print "</tr>";
+
+
+			print "</table>";
+
+
+
+		} // end if items exist
+
+
+
 
 		if (!$this->locked)
 		{
 			/*
 				Display the new item form
 			*/
+
 
 			$form = New form_input;
 			$form->formname		= $this->type ."_invoice_". $this->mode;
@@ -205,7 +416,7 @@ class invoice_list_items
 			$structure["type"]		= "dropdown";
 
 			$structure["values"][]			= "standard";
-			$structure["translations"]["standard"]	= "Standard Transaction";
+			$structure["translations"]["standard"]	= "Basic Transaction";
 			
 			if ($this->type == "ar")
 			{
@@ -243,6 +454,9 @@ class invoice_list_items
 
 
 			// display the form
+			print "<br><table class=\"table_highlight_info\" width=\"100%\"><tr><td>";
+			print "<p>Add new items to invoice:</p>";
+
 			print "<form method=\"". $form->method ."\" action=\"". $form->action ."\">";
 			print "<table><tr>";
 
@@ -260,101 +474,13 @@ class invoice_list_items
 
 			print "</form>";
 
+			print "</td></tr></table>";
 		
-
-
-
-			/*
-
-
-			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=standard\">Add standard transaction item</a></b></p>";
-			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=product\">Add product item</a></b></p>";
-
-			if ($this->type == "ar")
-			{
-				print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=time\">Add time item</a></b></p>";
-			}
-
-			*/
-		}
-
-
-
-		/* 
-			Tax Items
-		*/
-		print "<br><br>";
-		print "<b>Taxes:</b>";
-
-		// establish a new table object
-		$item_list = New table;
-
-		$item_list->language	= $_SESSION["user"]["lang"];
-		$item_list->tablename	= "item_list";
-
-		// define all the columns and structure
-		$item_list->add_column("money", "amount", "account_items.amount");
-		$item_list->add_column("standard", "name_tax", "CONCAT_WS(' -- ',account_taxes.name_tax,account_taxes.description)");
-		$item_list->add_column("text", "description", "account_items.description");
-
-		// defaults
-		$item_list->columns		= array("amount", "name_tax", "description");
-		$item_list->columns_order	= array("name_tax");
-
-		// totals
-		$item_list->total_columns	= array("amount");
-
-		// define SQL structure
-		$item_list->sql_obj->prepare_sql_settable("account_items");
-		$item_list->sql_obj->prepare_sql_addfield("id", "account_items.id");
-		$item_list->sql_obj->prepare_sql_addjoin("LEFT JOIN account_taxes ON account_taxes.id = account_items.customid");
-		$item_list->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
-		$item_list->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
-		$item_list->sql_obj->prepare_sql_addwhere("type='tax'");
-		
-
-		// run SQL query
-		$item_list->generate_sql();
-		$item_list->load_data_sql();
-
-		if (!$item_list->data_num_rows)
-		{
-			print "<p><i>There are currently no tax items.</i></p>";
-		}
-		else
-		{
-			
-			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
-			{
-				// edit link
-				$structure = NULL;
-				$structure["id"]["value"]	= $this->invoiceid;
-				$structure["itemid"]["column"]	= "id";
-			
-				$item_list->add_link("edit", $this->page_view, $structure);
-			
-				// delete link
-				$structure = NULL;
-				$structure["id"]["value"]	= $this->invoiceid;
-				$structure["itemid"]["column"]	= "id";
-				$structure["full_link"]		= "yes";
-
-				$item_list->add_link("delete", $this->page_delete, $structure);
-			}
-
-		
-			// display the table
-			$item_list->render_table_html();
-	
-		}
-		
-		if (!$this->locked)
-		{
-			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=tax\">Add tax item</a></b></p>";
-		}
+		} // end if items
 
 		return 1;
-	}
+
+	} // end of render_html
 
 	
 } // end of class invoice_list_items
@@ -608,7 +734,86 @@ class invoice_form_item
 				$form->subforms[$this->type ."_invoice_item"] = array("amount", "chartid", "description");
 
 				// SQL query
-				$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+				if ($this->itemid)
+				{
+					$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+				}
+
+
+
+				/*
+					List all the taxes, so that the user can select the tax(es) that apply for the transaction.
+				*/
+
+				$sql_tax_obj		= New sql_query;
+				$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+				$sql_tax_obj->execute();
+
+				if ($sql_tax_obj->num_rows())
+				{
+					// user note
+					$structure = NULL;
+					$structure["fieldname"] 		= "tax_message";
+					$structure["type"]			= "message";
+					$structure["defaultvalue"]		= "<p>Check all taxes that apply to this transaction below. If you want more advanced tax control (eg: fixed amounts of tax) then define a product and add it to the invoice.</p>";
+					$form->add_input($structure);
+				
+					$form->subforms[$this->type ."_invoice_item_tax"][] = "tax_message";
+
+
+					// fetch customer/vendor tax defaults
+					if ($this->type == "ap")
+					{
+						$vendorid	= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->invoiceid ."'");
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $vendorid."'");
+					}
+					else
+					{
+						$customerid	= sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->invoiceid ."'");
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $customerid ."'");
+					}
+
+
+
+					// run through all the taxes
+					$sql_tax_obj->fetch_array();
+
+					foreach ($sql_tax_obj->data as $data_tax)
+					{
+						// define tax checkbox
+						$structure = NULL;
+						$structure["fieldname"] 		= "tax_". $data_tax["id"];
+						$structure["type"]			= "checkbox";
+						$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+						$structure["options"]["no_fieldname"]	= "enable";
+
+						if ($this->itemid)
+						{
+							// see if this tax is currently inuse for the item
+							$sql_obj		= New sql_query;
+							$sql_obj->string	= "SELECT id FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TAX_CHECKED' AND option_value='". $data_tax["id"] ."'";
+							$sql_obj->execute();
+
+							if ($sql_obj->num_rows())
+							{
+								$structure["defaultvalue"] = "on";
+							}
+						}
+						else
+						{
+							// is this tax a customer/vendor default? If so, it should be checked automatically.
+							if ($data_tax["id"] == $defaulttax)
+							{
+								$structure["defaultvalue"] = "on";
+							}
+
+						}
+
+						// add to form
+						$form->add_input($structure);
+						$form->subforms[$this->type ."_invoice_item_tax"][] = "tax_". $data_tax["id"];
+					}
+				}
 
 			break;
 
@@ -673,7 +878,14 @@ class invoice_form_item
 				}
 				else
 				{
-					$form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+					if ($this->type_invoice == "ar")
+					{
+						$form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+					}
+					else
+					{
+						$form->sql_query = "SELECT id as productid, price_cost as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+					}
 
 					$form->structure["quantity"]["defaultvalue"] = 1;
 				}
@@ -745,58 +957,6 @@ class invoice_form_item
 
 			break;
 			
-
-			case "tax":
-			
-				/*
-					TAX
-
-					Tax items are quite flexible items - they allow the user to select a different
-					tax code, and then set the item to either automatically calculate the tax
-					based on the total items, or to set a manual value.
-
-					The tax will then auto-recalculate if required when other items are changed.
-
-					Other accounting systems looked at seem to only allow 1 tax to be added to invoices - by having
-					tax as an item, we can do nifty stuff like have different tax items to be added - for example if you
-					add a product, the product could be configured to add a specific tax item of a specific amount to the
-					invoice.
-				*/
-
-				// tax selection
-				$structure = form_helper_prepare_dropdownfromdb("tax_id", "SELECT id, name_tax as label FROM account_taxes");
-
-				if (count(array_keys($structure["values"])) == 1)
-				{
-					// if there is only 1 tax option avaliable, select it as the default
-					$structure["options"]["noselectoption"] = "yes";
-				}
-		
-				$form->add_input($structure);
-		
-
-				// auto or manual
-				$structure = NULL;
-				$structure["fieldname"] 	= "manual_option";
-				$structure["type"]		= "checkbox";
-				$structure["options"]["label"]	= "Do not auto-calculate this tax, instead specify the amount charged for this tax in the field below.";
-				$form->add_input($structure);
-
-				// manual value input field
-				$structure = NULL;
-				$structure["fieldname"] 	= "manual_amount";
-				$structure["type"]		= "input";
-				$form->add_input($structure);
-
-
-				// define form layout
-				$form->subforms[$this->type ."_invoice_item"]		= array("tax_id", "manual_option", "manual_amount");
-
-				// SQL query
-				$form->sql_query = "SELECT customid as tax_id, amount as manual_amount FROM account_items WHERE id='". $this->itemid ."'";
-
-			break;
-
 
 			case "payment":
 				/*
@@ -893,29 +1053,6 @@ class invoice_form_item
 		{
 			switch ($this->item_type)
 			{
-				case "tax":
-
-					// check if the tax is to be calculated manually or calculated
-					// automatically.
-					
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TAX_CALC_MODE' LIMIT 1";
-					$sql_obj->execute();
-
-					if ($sql_obj->num_rows())
-					{
-						$form->structure["manual_option"]["defaultvalue"] = "on";
-						$form->structure["manual_amount"]["defaultvalue"] = "";
-					}
-					else
-					{
-						$form->structure["manual_option"]["defaultvalue"] = "";
-						$form->structure["manual_amount"]["defaultvalue"] = "";
-					}
-
-				break;
-
-
 				case "time":
 
 					// fetch the time group ID
@@ -1135,6 +1272,22 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["amount"]		= security_form_input_predefined("money", "amount", 0, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+
+			// fetch information from all tax checkboxes from form
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+			$sql_tax_obj->execute();
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					$data["tax_". $data_tax["id"] ]	= security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+				}
+
+			} // end of loop through taxes
 			
 		break;
 
@@ -1167,26 +1320,6 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["units"]		= "hours";
 			
 		break;
-
-
-
-
-		case "tax":
-			/*
-				TAX ITEMS
-			*/
-
-			// fetch key information from form
-			$data["customid"]	= security_form_input_predefined("int", "tax_id", 1, "");
-			$data["manual_option"]	= security_form_input_predefined("any", "manual_option", 0, "");
-
-			if ($data["manual_option"])
-			{
-				$data["manual_amount"]	= security_form_input_predefined("money", "manual_amount", 1, "You must enter a value if you choose to calculate the tax amount manually.");
-			}
-
-		break;
-
 
 		case "payment":
 			/*
@@ -1254,12 +1387,8 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		/*
 			Re-calculate taxes, totals and ledgers as required
 		*/
-		
-		if ($item->type_item != "tax" && $item->type_item != "payment")
-		{
-			$item->action_update_tax();
-		}
 
+		$item->action_update_tax();
 		$item->action_update_total();
 
 
@@ -1371,8 +1500,16 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		/*
 			Update taxes
 		*/
-		
+
 		$item->action_update_tax();
+
+
+
+		/*
+			Update invoice summary
+		*/
+	
+		$item->action_update_total();
 
 
 
@@ -1386,14 +1523,6 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		{
 			$item->action_update_ledger();
 		}
-
-
-
-		/*
-			Update invoice summary
-		*/
-		
-		$item->action_update_total();
 
 
 		// success

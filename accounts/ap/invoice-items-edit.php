@@ -34,6 +34,7 @@ class page_output
 		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$this->itemid		= security_script_input('/^[0-9]*$/', $_GET["itemid"]);
 		$this->item_type	= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		$this->productid	= security_script_input('/^[0-9]*$/', $_GET["productid"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -109,6 +110,7 @@ class page_output
 		$this->obj_form_item->invoiceid		= $this->id;
 		$this->obj_form_item->itemid		= $this->itemid;
 		$this->obj_form_item->item_type		= $this->item_type;
+		$this->obj_form_item->productid		= $this->productid;
 		$this->obj_form_item->processpage	= "accounts/ap/invoice-items-edit-process.php";
 		
 		$this->obj_form_item->execute();
