@@ -49,6 +49,7 @@ class invoice_list_items
 			Create table of standard object data
 		*/
 
+		$_SESSION["notification"]["message"] = array("Updated tax value with custom input");
 		// establish a new table object
 		$this->obj_table_standard		= New table;
 
@@ -339,7 +340,14 @@ class invoice_list_items
 
 
 			/*
-				display taxes & totals
+				Display taxes
+
+				For AR invoices and quotes we only display a read-only total, but for AP
+				invoices we create a form for each tax, which users can use to override the
+				automatically calculate tax amount.
+
+				This override function is provided to deal with vendors who send invoices with
+				incorrect rounding - a common example is $0.01 rounding errors.
 			*/
 			for ($i=0; $i < $this->obj_table_taxes->data_num_rows; $i++)
 			{
@@ -349,13 +357,42 @@ class invoice_list_items
 				print "<td class=\"blank\" colspan=\"3\"></td>";
 
 				// tax name
-				print "<td valign=\"top\" colspan=\"2\">". $this->obj_table_taxes->data_render[$i]["name_tax"] ."</td>";
+				print "<td valign=\"center\" colspan=\"2\">". $this->obj_table_taxes->data_render[$i]["name_tax"] ."</td>";
 
-				// amount
-				print "<td valign=\"top\">". $this->obj_table_taxes->data_render[$i]["amount"] ."</td>";
 
-				// links
-				print "<td></td>";
+				if ($this->type == "ap" && user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+				{
+					// amount
+					print "<td valign=\"top\">";
+					
+					print "<form method=\"post\" action=\"accounts/ap/invoice-items-tax-override-process.php\">";
+
+					print "<input type=\"hidden\" name=\"invoiceid\" value=\"". $this->invoiceid ."\">";
+					print "<input type=\"hidden\" name=\"itemid\" value=\"". $this->obj_table_taxes->data[$i]["id"] ."\">";
+
+					print sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+					print "<input name=\"amount\" value=\"". $this->obj_table_taxes->data[$i]["amount"] ."\" style=\"width: 100px; font-size: 10px;\">";
+					
+					print "</td>";
+					
+
+					// links
+					print "<td align=\"right\">";
+
+					print "<input type=\"submit\" value=\"correct\" style=\"font-size: 10px\">";
+
+					print "</form>";
+
+					print "</td>";			
+				}
+				else
+				{
+					// amount
+					print "<td valign=\"top\">". $this->obj_table_taxes->data_render[$i]["amount"] ."</td>";
+
+					// links
+					print "<td></td>";
+				}
 
 				print "</tr>";
 			}
@@ -388,7 +425,7 @@ class invoice_list_items
 
 
 
-		if (!$this->locked)
+		if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 		{
 			/*
 				Display the new item form
@@ -1532,6 +1569,117 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	}
 	
 } // end of invoice_form_items_delete_process
+
+
+
+
+/*
+	invoice_form_tax_override_process($type, $returnpage_error, $returnpage_success)
+
+	This function overwrites the selected tax with the specified value - this is only used for AP
+	transactions where the taxes sometimes need to be manual adjusted due to bad vendor rounding.
+
+	Values
+	$returnpage		Page to return to.
+*/
+function invoice_form_tax_override_process($returnpage)
+{
+	log_debug("inc_invoices_items", "Executing invoice_form_tax_override_process($returnpage)");
+
+
+
+	/*
+		Start invoice_items object
+	*/
+	$item			= New invoice_items;
+	
+	$item->id_invoice	= security_form_input_predefined("int", "invoiceid", 1, "");
+	$item->id_item		= security_form_input_predefined("int", "itemid", 1, "");
+
+	$item->type_invoice	= "ap"; // only AP invoices can have taxes overridden
+	
+	
+	/*
+		Fetch all form data
+	*/
+	
+	$data["amount"]		= security_form_input_predefined("money", "amount", 0, "");
+
+
+	
+	//// ERROR CHECKING ///////////////////////
+
+
+	/*
+		Verify invoice/form data
+	*/
+	if ($item->verify_invoice())
+	{
+		if (!$item->verify_item())
+		{
+			$_SESSION["error"]["message"][] = "The provided tax does not exist.";
+		}
+	}
+	else
+	{
+		$_SESSION["error"]["message"][] = "The provided invoice does not exist.";
+	}
+
+
+
+	/// if there was an error, go back to the entry page
+	if ($_SESSION["error"]["message"])
+	{	
+		$_SESSION["error"]["form"]["ap_invoice_". $mode ."_override"] = "failed";
+		header("Location: ../../index.php?page=$returnpage&id=". $item->id_invoice);
+		exit(0);
+	}
+	else
+	{
+		/*
+			Depending on the amount, we either delete the tax item (if the amount is 0) or we
+			adjust the tax item.
+		*/
+
+
+		if ($data["amount"] == 0)
+		{
+			// delete item
+			$item->action_delete();
+		
+			// done
+			$_SESSION["notification"]["message"] = array("Deleted unwanted tax.");
+		}
+		else
+		{
+			// load & update the tax item
+			$item->load_data();
+
+			$item->data["amount"] = $data["amount"];
+
+			$item->action_update();
+
+			// done
+			$_SESSION["notification"]["message"] = array("Updated tax value with custom input");
+		}
+
+
+		// update invoice summary
+		$item->action_update_total();
+
+		// update ledger
+		$item->action_update_ledger();
+
+
+		// done
+		header("Location: ../../index.php?page=$returnpage&id=". $item->id_invoice);
+		exit(0);
+	
+	}
+
+
+} // end of invoice_form_tax_override_process
+
 
 
 

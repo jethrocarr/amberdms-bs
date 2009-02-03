@@ -1184,6 +1184,44 @@ class invoice_items
 	} // end verify_item
 
 
+	/*
+		load_data
+
+		Loads the item data from the MySQL database.
+
+		Return Codes
+		0	failure
+		1	success
+	*/
+	function load_data()
+	{
+		log_debug("invoice", "Executing load_data()");
+		
+		// fetch invoice item information from DB.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT * FROM account_items WHERE id='". $this->id_item ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_debug("invoice", "No such item". $this->id_item ."");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			// save all the data into class variables
+			$this->data = $sql_obj->data[0];
+
+			unset($sql_obj);
+		}
+
+		return 1;
+		
+	} // end 
+
+
 
 	/*
 		check_lock
