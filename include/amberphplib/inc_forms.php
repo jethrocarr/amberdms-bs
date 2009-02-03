@@ -333,7 +333,7 @@ class form_input
 				if ($this->structure[$fieldname]["options"]["no_fieldname"])
 				{
 					// display the form field, but do no display the column for the fieldname
-					print "<td cellspan=\"2\" width=\"100%\">";
+					print "<td colspan=\"2\" width=\"100%\">";
 
 					$this->render_field($fieldname);
 
