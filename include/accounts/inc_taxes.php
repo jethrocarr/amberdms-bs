@@ -514,7 +514,9 @@ class tax
 		}
 
 
-		// update
+		/*
+			Update tax details
+		*/
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `account_taxes` SET "
 						."name_tax='". $this->data["name_tax"] ."', "
@@ -531,6 +533,52 @@ class tax
 		}
 
 		unset($sql_obj);
+
+
+		/*
+			Create customer/vendor tax selection mappings if requested
+		*/
+		if ($this->data["autoenable_tax_customers"])
+		{
+			// loop through customers
+			$sql_cust_obj			= New sql_query;
+			$sql_cust_obj->string		= "SELECT id FROM customers";
+			$sql_cust_obj->execute();
+
+			if ($sql_cust_obj->num_rows())
+			{
+				$sql_cust_obj->fetch_array();
+
+				foreach ($sql_cust_obj->data as $data_customer)
+				{
+					// insert tax assignment for this customer
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "INSERT INTO customers_taxes (customerid, taxid) VALUES ('". $data_customer["id"] ."', '". $this->id ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
+
+		if ($this->data["autoenable_tax_vendors"])
+		{
+			// loop through customers
+			$sql_vendor_obj			= New sql_query;
+			$sql_vendor_obj->string		= "SELECT id FROM vendors";
+			$sql_vendor_obj->execute();
+
+			if ($sql_vendor_obj->num_rows())
+			{
+				$sql_vendor_obj->fetch_array();
+
+				foreach ($sql_vendor_obj->data as $data_vendor)
+				{
+					// insert tax assignment for this vendor
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "INSERT INTO vendors_taxes (vendorid, taxid) VALUES ('". $data_vendor["id"] ."', '". $this->id ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
 
 
 
@@ -581,6 +629,47 @@ class tax
 			log_write("error", "inc_taxes", "A fatal SQL error occured whilst trying to delete the tax");
 			return 0;
 		}
+
+
+		/*
+			Delete tax from any products it is assigned to
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM products_taxes WHERE taxid='". $this->id ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Delete tax from any vendors it is assigned to
+		*/
+
+		// delete mapping from table
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM vendors_taxes WHERE taxid='". $this->id ."'";
+		$sql_obj->execute();
+
+		// unset any defaulttax usage
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE vendors SET tax_default='0' WHERE tax_default='". $this->id ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Delete tax from any customers it is assigned to
+		*/
+
+		// delete mapping from table
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM customers_taxes WHERE taxid='". $this->id ."'";
+		$sql_obj->execute();
+
+		// unset any defaulttax usage
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE customers SET tax_default='0' WHERE tax_default='". $this->id ."'";
+		$sql_obj->execute();
 
 
 		log_write("notification", "inc_taxes", "Tax has been successfully deleted.");

@@ -79,6 +79,22 @@ class page_output
 		}
 		$this->obj_form->add_input($structure);
 
+		// auto-enable
+		$structure = NULL;
+		$structure["fieldname"] 		= "autoenable_tax_customers";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all customers";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 		= "autoenable_tax_vendors";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all vendors";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
 
 	
 		
@@ -92,6 +108,7 @@ class page_output
 
 		// define subforms
 		$this->obj_form->subforms["tax_details"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
+		$this->obj_form->subforms["tax_setup_options"]	= array("autoenable_tax_customers", "autoenable_tax_vendors");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
 		// load any data returned due to errors
