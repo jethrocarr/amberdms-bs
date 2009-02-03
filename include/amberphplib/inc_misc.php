@@ -174,6 +174,23 @@ function format_msgbox($type, $text)
 }
 
 
+/*
+	format_money($amount)
+
+	Formats the provided floating integer and adds the default currency and applies
+	rounding to it to make a number suitable for display.
+*/
+function format_money($amount)
+{
+	log_debug("misc", "Executing format_money($amount)");
+
+	$amount = sprintf("%0.2f", $amount);
+	$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . "$amount";
+
+	return $result;
+}
+
+
 
 /* TIME FUNCTION */
 
