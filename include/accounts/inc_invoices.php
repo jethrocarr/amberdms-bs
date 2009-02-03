@@ -1772,6 +1772,50 @@ class invoice_items
 		} // end if items exist
 
 
+		/*
+			Check what taxes that the customer/vendor has enabled - we can only
+			create tax items if they are enabled.
+		*/
+		$enabled_taxes = NULL;
+
+		if ($this->type_invoice == "ap")
+		{
+			$vendorid		= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->id_invoice ."'");
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT taxid FROM vendors_taxes WHERE vendorid='$vendorid'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					$enabled_taxes[] = $data["taxid"];
+				}
+			}
+		}
+		else
+		{
+			$customerid		= sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."'");
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT taxid FROM customers_taxes WHERE customerid='$customerid'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					$enabled_taxes[] = $data["taxid"];
+				}
+			}
+
+		}
+
 
 		/*
 			Run through all the tax structure and generate tax items
@@ -1779,54 +1823,59 @@ class invoice_items
 
 		foreach (array_keys($tax_structure) as $taxid)
 		{
-			// fetch required information about the tax
-			$sql_tax_obj		= New sql_query;
-			$sql_tax_obj->string	= "SELECT taxrate, chartid FROM account_taxes WHERE id='". $taxid ."' LIMIT 1";
-			$sql_tax_obj->execute();
-			$sql_tax_obj->fetch_array();
-
-
-			/*
-				Work out total amount of tax
-			*/
-
-			$amount = 0;
-
-			// add any manual (aka fixed amount) taxes
-			$amount += $tax_structure[ $taxid ]["manual"];
-
-			// any items requiring automatic tax generation?
-			if ($tax_structure[ $taxid ]["auto"])
+			// only process taxes which are enabled for the customer/vendor
+			if (in_array($taxid, $enabled_taxes))
 			{
-				// calculate taxable amount
-				$amount += $tax_structure[ $taxid ]["auto"] * ($sql_tax_obj->data[0]["taxrate"] / 100);
-			}
+				// fetch required information about the tax
+				$sql_tax_obj		= New sql_query;
+				$sql_tax_obj->string	= "SELECT taxrate, chartid FROM account_taxes WHERE id='". $taxid ."' LIMIT 1";
+				$sql_tax_obj->execute();
+				$sql_tax_obj->fetch_array();
 
 
-			/*
-				Create new tax item
-			*/
+				/*
+					Work out total amount of tax
+				*/
 
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO `account_items` "
-						."(invoiceid, "
-						."invoicetype, "
-						."type, "
-						."amount, "
-						."chartid, "
-						."customid, "
-						."description"
-						.") VALUES ("
-						."'". $this->id_invoice ."', "
-						."'". $this->type_invoice ."', "
-						."'tax', "
-						."'". $amount ."', "
-						."'". $sql_tax_obj->data[0]["chartid"] ."', "
-						."'". $taxid ."', "
-						."'')";
+				$amount = 0;
 
-			$sql_obj->execute();
-			
+				// add any manual (aka fixed amount) taxes
+				$amount += $tax_structure[ $taxid ]["manual"];
+
+				// any items requiring automatic tax generation?
+				if ($tax_structure[ $taxid ]["auto"])
+				{
+					// calculate taxable amount
+					$amount += $tax_structure[ $taxid ]["auto"] * ($sql_tax_obj->data[0]["taxrate"] / 100);
+				}
+
+
+				/*
+					Create new tax item
+				*/
+
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO `account_items` "
+							."(invoiceid, "
+							."invoicetype, "
+							."type, "
+							."amount, "
+							."chartid, "
+							."customid, "
+							."description"
+							.") VALUES ("
+							."'". $this->id_invoice ."', "
+							."'". $this->type_invoice ."', "
+							."'tax', "
+							."'". $amount ."', "
+							."'". $sql_tax_obj->data[0]["chartid"] ."', "
+							."'". $taxid ."', "
+							."'')";
+
+				$sql_obj->execute();
+
+			} // end if tax enabled
+				
 		} // end of loop through tax structure
 
 		return 1;
