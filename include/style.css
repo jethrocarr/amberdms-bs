@@ -79,6 +79,7 @@ a:active {
 		color: #000000;
 	}
 
+
 	.table_content a:hover {
 		color: #ffffff;
 	}
@@ -90,6 +91,12 @@ a:active {
 
 	.table_content tr:hover {
 		background-color: #2580a2;
+	}
+
+	.table_content .blank {
+		border-bottom: 0px;
+		padding: 4px;
+		background-color: #ffffff;
 	}
 
 
