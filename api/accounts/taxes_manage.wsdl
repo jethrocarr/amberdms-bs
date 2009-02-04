@@ -28,6 +28,8 @@
 		<part name='chartid' type='xsd:int'/>
 		<part name='taxnumber' type='xsd:string'/>
 		<part name='description' type='xsd:string'/>
+		<part name='autoenable_tax_customers' type='xsd:string'/>
+		<part name='autoenable_tax_vendors' type='xsd:string'/>
 	</message>
 
 	<message name='set_tax_details_response'>

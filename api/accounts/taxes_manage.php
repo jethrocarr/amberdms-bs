@@ -102,7 +102,9 @@ class accounts_taxes_manage_soap
 					$taxrate,
 					$chartid,
 					$taxnumber,
-					$description)
+					$description,
+					$autoenable_tax_customers,
+					$autoenable_tax_vendors)
 	{
 		log_debug("accounts_taxes_manage", "Executing set_tax_details($id, values...)");
 
@@ -114,13 +116,15 @@ class accounts_taxes_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_tax->id				= security_script_input_predefined("int", $id);
+			$obj_tax->id					= security_script_input_predefined("int", $id);
 			
-			$obj_tax->data["name_tax"]		= security_script_input_predefined("any", $name_tax);
-			$obj_tax->data["taxrate"]		= security_script_input_predefined("any", $taxrate);
-			$obj_tax->data["chartid"]		= security_script_input_predefined("int", $chartid);
-			$obj_tax->data["taxnumber"]		= security_script_input_predefined("any", $taxnumber);
-			$obj_tax->data["description"]		= security_script_input_predefined("any", $description);
+			$obj_tax->data["name_tax"]			= security_script_input_predefined("any", $name_tax);
+			$obj_tax->data["taxrate"]			= security_script_input_predefined("any", $taxrate);
+			$obj_tax->data["chartid"]			= security_script_input_predefined("int", $chartid);
+			$obj_tax->data["taxnumber"]			= security_script_input_predefined("any", $taxnumber);
+			$obj_tax->data["description"]			= security_script_input_predefined("any", $description);
+			$obj_tax->data["autoenable_tax_customers"]	= security_script_input_predefined("any", $autoenable_tax_customers);
+			$obj_tax->data["autoenable_tax_vendors"]	= security_script_input_predefined("any", $autoenable_tax_vendors);
 			
 			foreach (array_keys($obj_tax->data) as $key)
 			{
