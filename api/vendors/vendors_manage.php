@@ -103,6 +103,96 @@ class vendors_manage_soap
 	} // end of get_vendor_details
 
 
+	/*
+		get_vendor_tax
+
+		Return list of all taxes and mark whether they are enabled or not for this vendor.
+	*/
+
+	function get_vendor_tax($id)
+	{
+		log_debug("vendors_manage_soap", "Executing get_vendor_tax($id)");
+
+		if (user_permissions_get("vendors_view"))
+		{
+			$obj_vendor = New vendor;
+
+
+			// sanitise input
+			$obj_vendor->id = security_script_input_predefined("int", $id);
+
+			if (!$obj_vendor->id || $obj_vendor->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+			// verify that the ID is valid
+			if (!$obj_vendor->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// fetch vendor status
+			$enabled_taxes = NULL;
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT taxid FROM vendors_taxes WHERE vendorid='$id'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					$enabled_taxes[] = $data["taxid"];
+				}
+			}
+
+
+			// fetch list of all taxes
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id, name_tax FROM account_taxes ORDER BY name_tax";
+			$sql_tax_obj->execute();
+
+			// package up for sending to the client
+			$return = NULL;
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					$return_tmp			= NULL;
+					$return_tmp["taxid"]		= $data_tax["id"];
+					$return_tmp["name_tax"]		= $data_tax["name_tax"];
+
+					if (in_array($data_tax["id"], $enabled_taxes))
+					{
+						$return_tmp["status"]	= "on";
+					}
+					else
+					{
+						$return_tmp["status"]	= "off";
+					}
+
+					$return[] = $return_tmp;
+				}
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_vendor_tax
+
+
 
 
 	/*
@@ -229,6 +319,109 @@ class vendors_manage_soap
 		}
 
 	} // end of set_vendor_details
+
+
+
+	/*
+		set_vendor_tax
+
+		Enables or disables the specified tax for the vendor
+
+		Returns
+		0	failure
+		#	ID of the vendor
+	*/
+	function set_vendor_tax($id,
+					$taxid,
+					$status)
+	{
+		log_debug("vendor_manager", "Executing set_vendor_tax($id, values...)");
+
+		if (user_permissions_get("vendors_write"))
+		{
+			$obj_vendor = New vendor;
+
+			
+			/*
+				Load SOAP Data
+			*/
+			$obj_vendor->id		= security_script_input_predefined("int", $id);
+			$taxid			= security_script_input_predefined("int", $taxid);
+			$status			= security_script_input_predefined("any", $status);
+
+			foreach (array_keys($obj_vendor->data) as $key)
+			{
+				if ($obj_vendor->data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+			if ($status != "on" && $status != "off")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+
+			/*
+				Error Handling
+			*/
+
+			// verify vendor ID
+			if (!$obj_vendor->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			/*
+				Perform Changes
+			*/
+
+			// fetch vendors's current tax status
+			$sql_vendor_taxes_obj		= New sql_query;
+			$sql_vendor_taxes_obj->string	= "SELECT taxid FROM vendors_taxes WHERE vendorid='". $obj_vendor->id."'";
+
+			$sql_vendor_taxes_obj->execute();
+
+			if ($sql_vendor_taxes_obj->num_rows())
+			{
+				$sql_vendor_taxes_obj->fetch_array();
+
+				foreach ($sql_vendor_taxes_obj->data as $data_tax)
+				{
+					$obj_vendor->data["tax_". $data_tax["taxid"] ] = "on";
+
+				}
+			}
+
+			// change the status of the supplied option
+			if ($status == "on")
+			{
+				$obj_vendor->data["tax_". $taxid] = "on";
+			}
+			else
+			{
+				$obj_vendor->data["tax_". $taxid] = "";
+			}
+
+			
+			if ($obj_vendor->action_update_taxes())
+			{
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_vendor_tax
 
 
 
