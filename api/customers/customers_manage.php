@@ -103,6 +103,96 @@ class customers_manage_soap
 	} // end of get_customer_details
 
 
+	/*
+		get_customer_tax
+
+		Return list of all taxes and mark whether they are enabled or not for this customer.
+	*/
+
+	function get_customer_tax($id)
+	{
+		log_debug("customers_manage_soap", "Executing get_customer_tax($id)");
+
+		if (user_permissions_get("customers_view"))
+		{
+			$obj_customer = New customer;
+
+
+			// sanitise input
+			$obj_customer->id = security_script_input_predefined("int", $id);
+
+			if (!$obj_customer->id || $obj_customer->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+			// verify that the ID is valid
+			if (!$obj_customer->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// fetch customer status
+			$enabled_taxes = NULL;
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT taxid FROM customers_taxes WHERE customerid='$id'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					$enabled_taxes[] = $data["taxid"];
+				}
+			}
+
+
+			// fetch list of all taxes
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id, name_tax FROM account_taxes ORDER BY name_tax";
+			$sql_tax_obj->execute();
+
+			// package up for sending to the client
+			$return = NULL;
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					$return_tmp			= NULL;
+					$return_tmp["taxid"]		= $data_tax["id"];
+					$return_tmp["name_tax"]		= $data_tax["name_tax"];
+
+					if (in_array($data_tax["id"], $enabled_taxes))
+					{
+						$return_tmp["status"]	= "on";
+					}
+					else
+					{
+						$return_tmp["status"]	= "off";
+					}
+
+					$return[] = $return_tmp;
+				}
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_customer_tax
+
+
 
 
 	/*
@@ -237,6 +327,109 @@ class customers_manage_soap
 		}
 
 	} // end of set_customer_details
+
+
+
+	/*
+		set_customer_tax
+
+		Enables or disables the specified tax for the customer
+
+		Returns
+		0	failure
+		#	ID of the customer
+	*/
+	function set_customer_tax($id,
+					$taxid,
+					$status)
+	{
+		log_debug("customers_manager", "Executing set_customer_tax($id, values...)");
+
+		if (user_permissions_get("customers_write"))
+		{
+			$obj_customer = New customer;
+
+			
+			/*
+				Load SOAP Data
+			*/
+			$obj_customer->id	= security_script_input_predefined("int", $id);
+			$taxid			= security_script_input_predefined("int", $taxid);
+			$status			= security_script_input_predefined("any", $status);
+
+			foreach (array_keys($obj_customer->data) as $key)
+			{
+				if ($obj_customer->data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+			if ($status != "on" && $status != "off")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+
+			/*
+				Error Handling
+			*/
+
+			// verify customer ID
+			if (!$obj_customer->verify_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			/*
+				Perform Changes
+			*/
+
+			// fetch customer's current tax status
+			$sql_customer_taxes_obj		= New sql_query;
+			$sql_customer_taxes_obj->string	= "SELECT taxid FROM customers_taxes WHERE customerid='". $obj_customer->id."'";
+
+			$sql_customer_taxes_obj->execute();
+
+			if ($sql_customer_taxes_obj->num_rows())
+			{
+				$sql_customer_taxes_obj->fetch_array();
+
+				foreach ($sql_customer_taxes_obj->data as $data_tax)
+				{
+					$obj_customer->data["tax_". $data_tax["taxid"] ] = "on";
+
+				}
+			}
+
+			// change the status of the supplied option
+			if ($status == "on")
+			{
+				$obj_customer->data["tax_". $taxid] = "on";
+			}
+			else
+			{
+				$obj_customer->data["tax_". $taxid] = "";
+			}
+
+			
+			if ($obj_customer->action_update_taxes())
+			{
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_customer_tax
 
 
 

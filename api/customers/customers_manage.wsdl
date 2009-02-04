@@ -6,6 +6,29 @@
 	xmlns:tns="http://www.amberdms.com/billing_system/api/customers/customers_manage.wsdl"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
+	<types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://www.amberdms.com/billing_system/api/accounts/gl_manage.wsdl"
+		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+
+			<complexType name="customer_tax_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="customer_tax_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="customer_tax_row">
+				<all>
+					<element name="taxid" type="xsd:int"/>
+					<element name="name_tax" type="xsd:int"/>
+					<element name="status" type="xsd:string"/>
+				</all>
+			</complexType>
+		</schema>
+	</types>
 
 
 	<message name='get_customer_details_request'>
@@ -34,6 +57,16 @@
 		<part name='address2_state' type='xsd:string'/>
 		<part name='address2_country' type='xsd:string'/>
 		<part name='address2_zipcode' type='xsd:string'/>
+	</message>
+
+
+	<message name='get_customer_tax_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
+	<message name='get_customer_tax_response'>
+		<part name='return' type='xsd1:customer_tax_list'/>
 	</message>
 
 
@@ -66,6 +99,17 @@
 	</message>
 
 
+	<message name='set_customer_tax_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='taxid' type='xsd:int'/>
+		<part name='status' type='xsd:string'/>
+	</message>
+
+	<message name='set_customer_tax_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
 	<message name='delete_customer_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
@@ -82,9 +126,20 @@
 			<output message='tns:get_customer_details_response'/>
 		</operation>
 
+		<operation name='get_customer_tax'>
+			<input message='tns:get_customer_tax_request'/>
+			<output message='tns:get_customer_tax_response'/>
+		</operation>
+
+
 		<operation name='set_customer_details'>
 			<input message='tns:set_customer_details_request'/>
 			<output message='tns:set_customer_details_response'/>
+		</operation>
+
+		<operation name='set_customer_tax'>
+			<input message='tns:set_customer_tax_request'/>
+			<output message='tns:set_customer_tax_response'/>
 		</operation>
 
 		<operation name='delete_customer'>
@@ -95,7 +150,19 @@
 
 	<binding name='customers_manage_binding' type='tns:customers_manage_porttype'>
 		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
-				
+
+		<operation name='get_customer_tax'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+			
 		<operation name='get_customer_details'>
 			<soap:operation soapAction='customers_manage'/>
 			<input>
@@ -106,8 +173,20 @@
 				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
-			
+
 		<operation name='set_customer_details'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		
+		<operation name='set_customer_tax'>
 			<soap:operation soapAction='customers_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
