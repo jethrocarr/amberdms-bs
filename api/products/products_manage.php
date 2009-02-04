@@ -103,6 +103,78 @@ class products_manage_soap
 
 
 	/*
+		get_product_taxes
+
+		Returns a list of all tax items belonging to the selected product
+	*/
+	function get_product_taxes($id)
+	{
+		log_debug("products_manage_soap", "Executing get_product_taxes($id)");
+
+
+		if (user_permissions_get("products_view"))
+		{
+			$obj_product_tax = New product_tax;
+
+
+			// sanitise input
+			$obj_product_tax->id = security_script_input_predefined("int", $id);
+
+			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+			// verify that the supplied product ID is valid
+			if (!$obj_product_tax->verify_product_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// fetch all the tax item data
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT * FROM products_taxes WHERE productid='". $obj_product_tax->id ."'";
+			$sql_obj->execute();
+
+			$return = NULL;
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				// package data into array for passing back to SOAP client
+				foreach ($sql_obj->data as $data)
+				{
+					// fetch tax_id_label value
+					$data["taxid_label"] = sql_get_singlevalue("SELECT name_tax as value FROM account_taxes WHERE id='". $data["taxid"] ."'");
+
+					// create return structure
+					$return_tmp			= NULL;
+
+					$return_tmp["itemid"]		= $data["id"];
+					$return_tmp["taxid"]		= $data["taxid"];
+					$return_tmp["taxid_label"]	= $data["taxid_label"];
+					$return_tmp["manual_option"]	= $data["manual_option"];
+					$return_tmp["manual_amount"]	= $data["manual_amount"];
+					$return_tmp["description"]	= $data["description"];
+
+					$return[] = $return_tmp;
+				}
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_product_taxes
+
+
+
+	/*
 		set_product_details
 
 		Creates/Updates an product record.
@@ -124,7 +196,7 @@ class products_manage_soap
 					$code_product_vendor,
 					$account_sales)
 	{
-		log_debug("accounts_products_manage", "Executing set_product_details($id, values...)");
+		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
 
 		if (user_permissions_get("products_write"))
 		{
@@ -212,6 +284,94 @@ class products_manage_soap
 
 
 	/*
+		set_product_tax
+
+		Creates/Updates a tax item assigned to a product.
+
+		Returns
+		0	failure
+		#	ID of the product
+	*/
+	function set_product_tax($id,
+					$itemid,
+					$taxid,
+					$manual_option,
+					$manual_amount,
+					$description)
+	{
+		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
+
+		if (user_permissions_get("products_write"))
+		{
+			$obj_product_tax = New product_tax;
+
+			
+			/*
+				Load SOAP Data
+			*/
+			$obj_product_tax->id				= security_script_input_predefined("int", $id);
+					
+			$obj_product_tax->itemid			= security_script_input_predefined("int", $itemid);
+			$obj_product_tax->data["taxid"]			= security_script_input_predefined("any", $taxid);
+			$obj_product_tax->data["manual_option"]		= security_script_input_predefined("int", $manual_option);
+			$obj_product_tax->data["manual_amount"]		= security_script_input_predefined("money", $manual_amount);
+			$obj_product_tax->data["description"]		= security_script_input_predefined("any", $description);
+
+			
+			foreach (array_keys($obj_product_tax->data) as $key)
+			{
+				if ($obj_product_tax->data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			/*
+				Error Handling
+			*/
+	
+	
+			// verify that the supplied product ID is valid
+			if (!$obj_product_tax->verify_product_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// verify that the item exists (if supplied)
+			if ($obj_product_tax->itemid)
+			{
+				if (!$obj_product_tax->verify_item_id())
+				{
+					throw new SoapFault("Sender", "INVALID_ID");
+				}
+			}
+
+
+			/*
+				Perform Changes
+			*/
+
+			if ($obj_product_tax->action_update())
+			{
+				return $obj_product_tax->itemid;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_product_tax
+
+
+
+	/*
 		delete_product
 
 		Deletes an product, provided that the product is not locked.
@@ -222,7 +382,7 @@ class products_manage_soap
 	*/
 	function delete_product($id)
 	{
-		log_debug("products", "Executing delete_product_details($id, values...)");
+		log_debug("products", "Executing delete_product_details($id)");
 
 		if (user_permissions_get("products_write"))
 		{
@@ -278,6 +438,86 @@ class products_manage_soap
 		}
 
 	} // end of delete_product
+
+
+
+	/*
+		delete_product_tax
+
+		Deletes a tax from a product. It does not matter whether the product is
+		locked or not, since taxes only affect products when they are first added
+		to invoices.
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function delete_product_tax($id, $itemid)
+	{
+		log_debug("products", "Executing delete_product_tax($id, $itemid)");
+
+		if (user_permissions_get("products_write"))
+		{
+			$obj_product_tax = New product_tax;
+
+			
+			/*
+				Load SOAP Data
+			*/
+
+			$obj_product_tax->id		= security_script_input_predefined("int", $id);
+			$obj_product_tax->itemid	= security_script_input_predefined("int", $itemid);
+
+			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+			if (!$obj_product_tax->itemid || $obj_product_tax->itemid == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
+
+			/*
+				Error Handling
+			*/
+
+			// verify product ID
+			if (!$obj_product_tax->verify_product_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+			// verify tax item ID	
+			if (!$obj_product_tax->verify_item_id())
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+
+
+
+			/*
+				Perform Changes
+			*/
+			if ($obj_product_tax->action_delete())
+			{
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of delete_product_tax
+
 
 
 } // end of products_manage_soap class

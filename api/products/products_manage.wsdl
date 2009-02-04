@@ -7,6 +7,35 @@
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
 
+	<types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://www.amberdms.com/billing_system/api/accounts/invoices_manage.wsdl"
+		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+
+			<complexType name="invoice_taxes_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="invoice_taxes_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="invoice_taxes_row">
+				<all>
+					<element name="itemid" type="xsd:int"/>
+					<element name="taxid" type="xsd:int"/>
+					<element name="taxid_label" type="xsd:string"/>
+					<element name="manual_option" type="xsd:int"/>
+					<element name="manual_amount" type="xsd:string"/>
+					<element name="description" type="xsd:string"/>
+				</all>
+			</complexType>
+
+		</schema>
+	</types>
+ 
+
 	<message name='get_product_details_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
@@ -25,6 +54,15 @@
 		<part name='code_product_vendor' type='xsd:string'/>
 		<part name='account_sales' type='xsd:int'/>
 		<part name='account_sales_label' type='xsd:string'/>
+	</message>
+
+
+	<message name='get_product_taxes_request'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+	<message name='get_product_taxes_response'>
+		<part name='return' type='xsd1:product_taxes_list'/>
 	</message>
 
 
@@ -48,11 +86,35 @@
 	</message>
 
 
+	<message name='set_product_tax_request'>
+		<part name='id' type='xsd:int'/>
+		<part name="itemid" type="xsd:int"/>
+		<part name="taxid" type="xsd:int"/>
+		<part name="manual_option" type="xsd:string"/>
+		<part name="manual_amount" type="xsd:string"/>
+		<part name="description" type="xsd:string"/>
+	</message>
+
+	<message name='set_product_tax_response'>
+		<part name='itemid' type='xsd:int'/>
+	</message>
+
+
 	<message name='delete_product_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
 
 	<message name='delete_product_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+	<message name='delete_product_tax_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='itemid' type='xsd:int'/>
+	</message>
+
+	<message name='delete_product_tax_response'>
 		<part name='returncode' type='xsd:int'/>
 	</message>
 
@@ -65,14 +127,29 @@
 			<output message='tns:get_product_details_response'/>
 		</operation>
 
+		<operation name='get_product_taxes'>
+			<input message='tns:get_product_taxes_request'/>
+			<output message='tns:get_product_taxes_response'/>
+		</operation>
+
 		<operation name='set_product_details'>
 			<input message='tns:set_product_details_request'/>
 			<output message='tns:set_product_details_response'/>
 		</operation>
 
+		<operation name='set_product_tax'>
+			<input message='tns:set_product_tax_request'/>
+			<output message='tns:set_product_tax_response'/>
+		</operation>
+
 		<operation name='delete_product'>
 			<input message='tns:delete_product_request'/>
 			<output message='tns:delete_product_response'/>
+		</operation>
+
+		<operation name='delete_product_tax'>
+			<input message='tns:delete_product_tax_request'/>
+			<output message='tns:delete_product_tax_response'/>
 		</operation>
 
 	</portType>
@@ -91,6 +168,17 @@
 			</output>
 		</operation>
 
+		<operation name='get_product_taxes'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
 		<operation name='set_product_details'>
 			<soap:operation soapAction='products_manage'/>
 			<input>
@@ -102,7 +190,29 @@
 			</output>
 		</operation>
 
+		<operation name='set_product_tax'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
 		<operation name='delete_product'>
+			<soap:operation soapAction='products_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='delete_product_tax'>
 			<soap:operation soapAction='products_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
