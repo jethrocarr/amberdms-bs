@@ -8,7 +8,7 @@
 
 	<types>
 		<schema xmlns="http://www.w3.org/2001/XMLSchema"
-		targetNamespace="http://www.amberdms.com/billing_system/api/accounts/gl_manage.wsdl"
+		targetNamespace="http://www.amberdms.com/billing_system/api/customers/customers_manage.wsdl"
 		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
 
