@@ -538,7 +538,7 @@ class tax
 		/*
 			Create customer/vendor tax selection mappings if requested
 		*/
-		if ($this->data["autoenable_tax_customers"])
+		if ($this->data["autoenable_tax_customers"] == "on")
 		{
 			// loop through customers
 			$sql_cust_obj			= New sql_query;
@@ -559,7 +559,7 @@ class tax
 			}
 		}
 
-		if ($this->data["autoenable_tax_vendors"])
+		if ($this->data["autoenable_tax_vendors"] == "on")
 		{
 			// loop through customers
 			$sql_vendor_obj			= New sql_query;
