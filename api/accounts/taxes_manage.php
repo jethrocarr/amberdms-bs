@@ -23,6 +23,56 @@ include("../../include/accounts/inc_taxes.php");
 
 class accounts_taxes_manage_soap
 {
+	/*
+		list_taxes
+
+		Returns a list of all the taxes in the system
+	*/
+
+	function list_taxes()
+	{
+		log_debug("accounts_taxes_manage_soap", "Executing list_taxes()");
+
+		if (user_permissions_get("accounts_taxes_view"))
+		{
+			// fetch taxes
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id, name_tax, taxrate, chartid, taxnumber, description FROM account_taxes";
+			$sql_obj->execute();
+
+			$return = NULL;
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				// package data into array for passing back to SOAP client
+				foreach ($sql_obj->data as $data)
+				{
+					$return_tmp			= NULL;
+					$return_tmp["id"]		= $data["id"];
+					$return_tmp["name_tax"]		= $data["name_tax"];
+					$return_tmp["taxrate"]		= $data["taxrate"];
+					$return_tmp["chartid"]		= $data["chartid"];
+					$return_tmp["chartid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $data["chartid"] ."'");
+					$return_tmp["taxnumber"]	= $data["taxnumber"];
+					$return_tmp["description"]	= $data["description"];
+
+					$return[] = $return_tmp;
+				}
+			}
+
+			return $return;
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of list_chart_type
+
+
+
+
 
 	/*
 		get_tax_details
