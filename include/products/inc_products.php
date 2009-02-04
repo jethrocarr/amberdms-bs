@@ -510,7 +510,7 @@ class product_tax
 
 		Returns
 		0	failure
-		#	success - returns the ID
+		#	success - returns the item ID
 	*/
 	function action_update()
 	{
@@ -579,9 +579,9 @@ class product_tax
 
 
 		// success
-		return $this->id;
+		return $this->itemid;
 
-	} // end of action_update_details
+	} // end of action_update
 
 
 
