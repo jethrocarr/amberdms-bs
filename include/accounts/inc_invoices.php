@@ -1215,6 +1215,44 @@ class invoice_items
 			$this->data = $sql_obj->data[0];
 
 			unset($sql_obj);
+
+
+			// if this is a standard item, load the tax options as well
+			if ($this->type_item == "standard")
+			{
+				// load all the taxes
+				$sql_tax_obj		= New sql_query;
+				$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+				$sql_tax_obj->execute();
+
+				if ($sql_tax_obj->num_rows())
+				{
+					// run through all the taxes
+					$sql_tax_obj->fetch_array();
+
+					foreach ($sql_tax_obj->data as $data_tax)
+					{
+						// see if this tax is currently inuse by the item
+						$sql_taxenabled_obj		= New sql_query;
+						$sql_taxenabled_obj->string	= "SELECT id FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='TAX_CHECKED' AND option_value='". $data_tax["id"] ."'";
+						$sql_taxenabled_obj->execute();
+
+						if ($sql_taxenabled_obj->num_rows())
+						{
+							$this->data["tax_". $data_tax["id"] ] = "on";
+						}
+						else
+						{
+							$this->data["tax_". $data_tax["id"] ] = "off";
+						}
+
+						unset($sql_taxenabled_obj);
+					}
+
+				} // end of loop through taxes
+
+			}
+
 		}
 
 		return 1;
@@ -1479,9 +1517,9 @@ class invoice_items
 
 			if ($this->action_update())
 			{
-//				// notify success
-//				log_write("notification", "invoice_items", "Successfully created new invoice item");
-//				journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
+				// notify success
+				log_write("notification", "invoice_items", "Successfully created new invoice item");
+				journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
 
 
 				return $this->id_item;
@@ -1569,7 +1607,7 @@ class invoice_items
 
 				foreach ($sql_tax_obj->data as $data_tax)
 				{
-					if ($this->data["tax_". $data_tax["id"] ])
+					if ($this->data["tax_". $data_tax["id"] ] == "on")
 					{
 						$sql_obj		= New sql_query;
 						$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TAX_CHECKED', '". $data_tax["id"] ."')";

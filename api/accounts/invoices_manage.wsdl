@@ -13,6 +13,23 @@
 		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
 
+			<complexType name="invoice_items_tax_list">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="invoice_items_tax_row[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+
+			<complexType name="invoice_items_tax_row">
+				<all>
+					<element name="taxid" type="xsd:int"/>
+					<element name="taxid_label" type="xsd:string"/>
+					<element name="status" type="xsd:string"/>
+				</all>
+			</complexType>
+
+
 			<complexType name="invoice_items_list">
 				<complexContent>
 					<restriction base="soapenc:Array">
@@ -36,6 +53,7 @@
 					<element name="amount" type="xsd:string"/>
 					<element name="price" type="xsd:string"/>
 					<element name="description" type="xsd:string"/>
+					<element name='taxes' type='xsd1:invoice_items_tax_list'/>
 				</all>
 			</complexType>
 
@@ -53,9 +71,7 @@
 					<element name="itemid" type="xsd:int"/>
 					<element name="taxid" type="xsd:int"/>
 					<element name="taxid_label" type="xsd:string"/>
-					<element name="manual_option" type="xsd:string"/>
 					<element name="amount" type="xsd:string"/>
-					<element name="description" type="xsd:string"/>
 				</all>
 			</complexType>
 
@@ -181,6 +197,18 @@
 		<part name='itemid' type='xsd:int'/>
 	</message>
 
+	<message name='set_invoice_item_standard_tax_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='invoicetype' type='xsd:string'/>
+		<part name="itemid" type="xsd:int"/>
+		<part name="taxid" type="xsd:int"/>
+		<part name="status" type="xsd:string"/>
+	</message>
+
+	<message name='set_invoice_item_standard_tax_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
 
 	<message name='set_invoice_item_product_request'>
 		<part name='id' type='xsd:int'/>
@@ -214,16 +242,14 @@
 
 
 
-	<message name='set_invoice_tax_request'>
+	<message name='set_invoice_override_tax_request'>
 		<part name='id' type='xsd:int'/>
 		<part name='invoicetype' type='xsd:string'/>
 		<part name="itemid" type="xsd:int"/>
-		<part name="taxid" type="xsd:int"/>
-		<part name="manual_option" type="xsd:string"/>
-		<part name="manual_amount" type="xsd:string"/>
+		<part name="amount" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_tax_response'>
+	<message name='set_invoice_override_tax_response'>
 		<part name='itemid' type='xsd:int'/>
 	</message>
 
@@ -296,6 +322,11 @@
 			<output message='tns:set_invoice_item_standard_response'/>
 		</operation>
 
+		<operation name='set_invoice_item_standard_tax'>
+			<input message='tns:set_invoice_item_standard_tax_request'/>
+			<output message='tns:set_invoice_item_standard_tax_response'/>
+		</operation>
+
 		<operation name='set_invoice_item_product'>
 			<input message='tns:set_invoice_item_product_request'/>
 			<output message='tns:set_invoice_item_product_response'/>
@@ -306,9 +337,9 @@
 			<output message='tns:set_invoice_item_time_response'/>
 		</operation>
 
-		<operation name='set_invoice_tax'>
-			<input message='tns:set_invoice_tax_request'/>
-			<output message='tns:set_invoice_tax_response'/>
+		<operation name='set_invoice_override_tax'>
+			<input message='tns:set_invoice_override_tax_request'/>
+			<output message='tns:set_invoice_override_tax_response'/>
 		</operation>
 
 		<operation name='set_invoice_payment'>
@@ -398,6 +429,17 @@
 			</output>
 		</operation>
 
+		<operation name='set_invoice_item_standard_tax'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
 		<operation name='set_invoice_item_product'>
 			<soap:operation soapAction='accounts_invoices_manage'/>
 			<input>
@@ -420,7 +462,7 @@
 			</output>
 		</operation>
 
-		<operation name='set_invoice_tax'>
+		<operation name='set_invoice_override_tax'>
 			<soap:operation soapAction='accounts_invoices_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

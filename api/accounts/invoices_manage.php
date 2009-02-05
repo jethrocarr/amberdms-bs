@@ -209,6 +209,54 @@ class accounts_invoices_manage_soap
 						$data["units"]			= "";
 						$data["timegroupid"]		= "";
 						$data["timegroupid_label"]	= "";
+
+						$data["taxes"]			= NULL;;
+
+						/*
+							Fetch taxes for this item
+
+							Show all taxes and their status (enables vs disabled)
+						*/
+
+						$sql_tax_obj		= New sql_query;
+						$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+						$sql_tax_obj->execute();
+
+						if ($sql_tax_obj->num_rows())
+						{
+							// run through all the taxes
+							$sql_tax_obj->fetch_array();
+
+							foreach ($sql_tax_obj->data as $data_tax)
+							{
+								// define tax checkbox
+								$structure = NULL;
+								$structure["taxid"]		= $data_tax["id"];
+								$structure["taxid_label"]	= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+								
+								// see if this tax is currently inuse for the item
+								$sql_taxenabled_obj		= New sql_query;
+								$sql_taxenabled_obj->string	= "SELECT id FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TAX_CHECKED' AND option_value='". $data_tax["id"] ."'";
+								$sql_taxenabled_obj->execute();
+
+								if ($sql_taxenabled_obj->num_rows())
+								{
+									$structure["status"] = "on";
+								}
+								else
+								{
+									$structure["status"] = "off";
+								}
+
+								unset($sql_taxenabled_obj);
+
+
+								// add to return data
+								$data["taxes"][] = $structure;
+							}
+
+						} // end of loop through taxes
+
 					break;
 				}
 
@@ -229,6 +277,7 @@ class accounts_invoices_manage_soap
 				$return_tmp["amount"]			= $data["amount"];
 				$return_tmp["price"]			= $data["price"];
 				$return_tmp["description"]		= $data["description"];
+				$return_tmp["taxes"]			= $data["taxes"];
 
 				$return[] = $return_tmp;
 			}
@@ -286,7 +335,7 @@ class accounts_invoices_manage_soap
 
 			// fetch all tax items
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id, type, customid, chartid, amount, description FROM account_items WHERE invoiceid='". $obj_invoice->id ."' AND invoicetype='". $obj_invoice->type ."' AND type='tax'";
+			$sql_obj->string	= "SELECT id, customid, chartid, amount FROM account_items WHERE invoiceid='". $obj_invoice->id ."' AND invoicetype='". $obj_invoice->type ."' AND type='tax'";
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 
@@ -299,20 +348,6 @@ class accounts_invoices_manage_soap
 				// fetch tax_id_label value
 				$data["customid_label"] = sql_get_singlevalue("SELECT name_tax as value FROM account_taxes WHERE id='". $data["customid"] ."'");
 
-				// fetch manual option status
-				$sql_option_obj		= New sql_query;
-				$sql_option_obj->string	= "SELECT id FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TAX_CALC_MODE' AND option_value='manual'";
-				$sql_option_obj->execute();
-
-				if ($sql_option_obj->num_rows())
-				{
-					$data["manual_option"] = "on";
-				}
-				else
-				{
-					$data["manual_option"] = "";
-				}
-
 
 				// create return structure
 				$return_tmp			= NULL;
@@ -320,9 +355,7 @@ class accounts_invoices_manage_soap
 				$return_tmp["itemid"]		= $data["id"];
 				$return_tmp["taxid"]		= $data["customid"];
 				$return_tmp["taxid_label"]	= $data["customid_label"];
-				$return_tmp["manual_option"]	= $data["manual_option"];
 				$return_tmp["amount"]		= $data["amount"];
-				$return_tmp["description"]	= $data["description"];
 
 				$return[] = $return_tmp;
 			}
@@ -500,7 +533,7 @@ class accounts_invoices_manage_soap
 			{
 				// TODO: what the fuck is wrong with php here???
 				//
-				// weird bug work aorund - without the != 0 statement, $obj_invoice->data["locked"] will
+				// weird bug work around - without the != 0 statement, $obj_invoice->data["locked"] will
 				// match "error", despite equaling 0.
 
 				if ($obj_invoice->data[$key] == "error" && $obj_invoice->data[$key] != 0)
@@ -714,6 +747,129 @@ class accounts_invoices_manage_soap
 
 	} // end of set_invoice_item_standard
 
+
+
+	/*
+		set_invoice_item_standard_tax
+
+		Enables or disables a specific tax for the specified standard invoice item.
+
+		Returns
+		0	failure
+		#	ID of the item
+	*/
+	function set_invoice_item_standard_tax($id,
+					$invoicetype,
+					$itemid,
+					$taxid,
+					$status)
+	{
+		log_debug("accounts_invoices_manage", "Executing set_invoice_item_standard_tax($id, $invoicetype, values...)");
+
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_write"))
+		{
+			$obj_invoice_item			= New invoice_items;
+
+			$obj_invoice_item->type_invoice		= $invoicetype;
+			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->type_item		= "standard";
+
+			/*
+				Error Handling
+			*/
+
+			// verify invoice existance
+			if (!$obj_invoice_item->verify_invoice())
+			{
+				throw new SoapFault("Sender", "INVALID_INVOICE");
+			}
+
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+			// verify item existance
+			if (!$obj_invoice_item->verify_item())
+			{
+				throw new SoapFault("Sender", "INVALID_ITEMID");
+			}
+
+			// make sure item is a standard item
+			if ($obj_invoice_item->type_item != "standard")
+			{
+				throw new SoapFault("Sender", "UNSUPPORTED_ITEM_TYPE");
+			}
+
+
+			/*
+				Load SOAP data
+			*/
+
+			$data["taxid"]		= security_script_input_predefined("int", $taxid);
+			$data["status"]		= security_script_input_predefined("any", $status);
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error")
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT");
+				}
+			}
+
+
+			/*
+				Load Item Data
+
+				We need to load the item's data so we can then add the new tax status and save it
+				again. Note that the load_data() function will also load all the current tax status.
+			*/
+
+			$obj_invoice_item->load_data();
+ 
+
+
+			/*
+				Apply Data
+			*/
+
+
+			// we set the tax
+			$obj_invoice_item->data["tax_". $data["taxid"] ] = $data["status"];
+
+
+			// save changes
+			if (!$obj_invoice_item->action_update())
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+
+			// Re-calculate taxes, totals and ledgers as required
+			$obj_invoice_item->action_update_tax();
+			$obj_invoice_item->action_update_total();
+			$obj_invoice_item->action_update_ledger();
+
+
+			// complete
+			return $obj_invoice_item->id_item;
+
+ 		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of set_invoice_item_standard_tax
 
 
 
@@ -1025,22 +1181,25 @@ class accounts_invoices_manage_soap
 
 
 	/*
-		set_invoice_tax
+		set_invoice_override_tax
 
-		Creates/Updates a tax item.
+		Overrides the amount of tax on an invoice - this is typically used to correct
+		AP invoices when vendors supply invoices with $0.01 mistakes due to rounding errors.
+
+		Note that if any changes are made to the items on the invoice, or if additional invoice
+		items are added, the changes made to the tax amount will be lost and will need to be
+		re-applied.
 
 		Returns
 		0	failure
 		#	ID of the item
 	*/
-	function set_invoice_tax($id,
+	function set_invoice_override_tax($id,
 					$invoicetype,
 					$itemid,
-					$taxid,
-					$manual_option,
-					$manual_amount)
+					$amount)
 	{
-		log_debug("accounts_invoices_manage", "Executing set_invoice_tax($id, $invoicetype, values...)");
+		log_debug("accounts_invoices_manage", "Executing set_invoice_override_tax($id, $invoicetype, values...)");
 
 
 		// check the invoicetype
@@ -1084,36 +1243,36 @@ class accounts_invoices_manage_soap
 				}
 			}
 
+			// make sure invoice is not locked
+			if ($obj_invoice_item->check_lock())
+			{
+				throw new SoapFault("Sender", "LOCKED");
+			}
+
+
+
+			/*
+				Load tax item data
+
+				We need to load the existing item data, update the amount field and then
+				save it again.
+			*/
+
+			$obj_invoice_item->load_data();
+
 
 
 			/*
 				Load SOAP data
 			*/
 
-			$data["customid"]	= security_script_input_predefined("int", $taxid);
-			$data["manual_option"]	= security_script_input_predefined("any", $manual_option);
+			$obj_invoice_item->data["amount"] = security_script_input_predefined("money", $amount);
+			
 
-			if ($data["manual_option"])
+			if ($obj_invoice_item->data["amount"] == "error")
 			{
-				$data["manual_amount"]	= security_script_input_predefined("money", $manual_amount);
+				throw new SoapFault("Sender", "INVALID_INPUT");
 			}
-
-
-			foreach (array_keys($data) as $key)
-			{
-				if ($data[$key] == "error")
-				{
-					throw new SoapFault("Sender", "INVALID_INPUT");
-				}
-			}
-
-
-			// process the data
-			if (!$obj_invoice_item->prepare_data($data))
-			{
-				throw new SoapFault("Sender", "UNEXPECTED_PREP_ERROR");
-			}
-
 
 
 
@@ -1121,26 +1280,16 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
-			if ($obj_invoice_item->id_item)
+			if (!$obj_invoice_item->action_update())
 			{
-				if (!$obj_invoice_item->action_update())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
-
-			}
-			else
-			{
-				if (!$obj_invoice_item->action_create())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
 
-			// update invoice totals
-			$obj_invoice_item->action_update_total();
 
-			// Generate ledger entries.
+			// Update invoice totals
+			$obj_invoice_item->action_update_totals();
+
+			// Update ledger
 			$obj_invoice_item->action_update_ledger();
 
 
@@ -1154,7 +1303,7 @@ class accounts_invoices_manage_soap
 			throw new SoapFault("Sender", "ACCESS DENIED");
 		}
 
-	} // end of set_invoice_tax
+	} // end of set_invoice_override_tax
 
 
 
@@ -1368,7 +1517,8 @@ class accounts_invoices_manage_soap
 	/*
 		delete_invoice_item
 
-		Deletes the selected invoice item, provided that the invoice is not locked
+		Deletes the selected invoice item, provided that the invoice is not locked - this
+		function can delete all item types (products, standard, time & tax)
 
 		Returns
 		0	failure
