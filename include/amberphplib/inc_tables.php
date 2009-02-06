@@ -29,6 +29,7 @@ class table
 	var $total_rows_mode = "subtotal";	// row total modes
 						//
 						//	* subtotal		Total for just each row only (default)
+						//	* subtotal_nofinal	Do not display a final total for the subtotal rows
 						//	* incrementing		Add each row total to the previous one
 						//	* ledger_add_debit	Like incrementing, but will add any columns
 						//				titled "debit" and subtract any titled "credit"
@@ -897,6 +898,7 @@ class table
 						them at all.
 					*/
 					case "subtotal":
+					case "subtotal_nofinal":
 					
 						$this->data[$i]["total"] = 0;
 	
@@ -1008,7 +1010,7 @@ class table
 			}
 
 			// optional: totals for rows
-			if ($this->total_rows)
+			if ($this->total_rows && $this->total_rows_mode != "subtotal_nofinal")
 			{
 				// we have already calculated the final total for ledger
 				// totals, so only calculate for non-ledger items.
