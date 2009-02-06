@@ -130,12 +130,15 @@ class page_output
 		$this->obj_table->columns_order		= array("code_chart");
 
 		// totals
-		$this->obj_table->total_columns	= array("debit", "credit");
+		$this->obj_table->total_columns		= array("debit", "credit");
+		$this->obj_table->total_rows		= array("debit", "credit");
+		$this->obj_table->total_rows_mode	= "subtotal_nofinal";
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_charts");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_charts.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("account_charts.chart_type != '1'");
 
 
 		// fetch all the chart information
@@ -187,6 +190,7 @@ class page_output
 				}
 			}
 		}
+
 	}
 
 
@@ -285,6 +289,7 @@ class page_output
 			$structure["chart_type"]	= $this->obj_table->data_render[$i]["chart_type"];
 			$structure["credit"]		= $this->obj_table->data_render[$i]["credit"];
 			$structure["debit"]		= $this->obj_table->data_render[$i]["debit"];
+			$structure["balance"]		= $this->obj_table->data_render[$i]["total"];
 
 			$structure_main[] = $structure;
 		}
@@ -307,10 +312,6 @@ class page_output
 
 		// display PDF
 		print $template_pdf->output;
-//		foreach ($template_pdf->processed as $line)
-//		{
-//			print $line;
-//		}
 	}
 }
 
