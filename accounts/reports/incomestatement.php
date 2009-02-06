@@ -380,9 +380,9 @@ class page_output
 				// run through income charts
 				for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
 				{
-					if ($data_trans["chartid"] == $this->data_expense[$i]["id"])
+					if ($data_trans["chartid"] == $this->data_income[$i]["id"])
 					{
-						$this->data_expense[$i]["amount"] += $data_trans["amount_credit"];
+						$this->data_income[$i]["amount"] += $data_trans["amount_credit"];
 					}
 							
 				} // end of loop through income charts
