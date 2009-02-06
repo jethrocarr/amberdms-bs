@@ -97,7 +97,8 @@ class invoice_form_details
 		}
 			
 		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

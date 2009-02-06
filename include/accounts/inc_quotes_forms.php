@@ -67,7 +67,8 @@ class quote_form_details
 		
 			
 		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -218,17 +219,8 @@ class quote_form_convert
 
 		// destination account
 		$structure = charts_form_prepare_acccountdropdown("dest_account", "ar_summary_account");
-			
-		if ($structure["values"])
-		{
-			if (count(array_keys($structure["values"])) == 1)
-			{
-				// if there is only 1 tax option avaliable, select it as the default
-				$structure["options"]["noselectoption"] = "yes";
-			}
-		}
-		
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
