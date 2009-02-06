@@ -1013,14 +1013,15 @@ class invoice_form_item
 				$form->add_input($structure);
 
 				$structure = NULL;
-				$structure = charts_form_prepare_acccountdropdown("chartid", 6);
-				
-				if (count(array_keys($structure["values"])) == 1)
+				if ($this->type == "ap")
 				{
-					// if there is only 1 account avaliable, select it as the default
-					$structure["options"]["noselectoption"] = "yes";
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ap_payment");
 				}
-				
+				else
+				{
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ar_payment");
+				}
+
 				$form->add_input($structure);
 
 				$structure = NULL;
