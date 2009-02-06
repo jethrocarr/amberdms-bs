@@ -1113,7 +1113,7 @@ class table
 			// optional: links column
 			if ($this->links)
 			{
-				print "<td align=\"right\">";
+				print "<td align=\"right\" nowrap>";
 
 				$links		= array_keys($this->links);
 				$links_count	= count($links);
