@@ -244,7 +244,7 @@ class ledger_account_list
 
 		
 		// defaults
-		$this->obj_table->columns		= array("date_trans", "item_id", "debit", "credit");
+		$this->obj_table->columns		= array("date_trans", "item_id", "source", "memo", "debit", "credit");
 		$this->obj_table->columns_order		= array("date_trans");
 		$this->obj_table->columns_order_options	= array("date_trans", "item_id", "source", "memo");
 
@@ -254,6 +254,9 @@ class ledger_account_list
 		$this->obj_table->sql_obj->prepare_sql_addfield("type", "account_trans.type");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("chartid='". $this->chartid ."'");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
+
+		// load options
+		$this->obj_table->load_options_form();
 	}
 
 
@@ -347,7 +350,6 @@ class ledger_account_list
 		$this->obj_table->add_filter($structure);
 			
 		// options form
-		$this->obj_table->load_options_form();
 		$this->obj_table->render_options_form();
 	}
 
