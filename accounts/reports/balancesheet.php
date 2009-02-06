@@ -412,40 +412,53 @@ class page_output
 		*/
 
 		// assets
-		for ($i = 0; $i < count(array_keys($this->data_assets)); $i++)
+		if ($this->data_assets)
 		{
-			$this->data_totals["assets"] += $this->data_assets[$i]["amount"];
+			for ($i = 0; $i < count(array_keys($this->data_assets)); $i++)
+			{
+				$this->data_totals["assets"] += $this->data_assets[$i]["amount"];
+			}
 		}
 
 
 		// liabilities
-		for ($i = 0; $i < count(array_keys($this->data_liabilities)); $i++)
+		if ($this->data_liabilities)
 		{
-			$this->data_totals["liabilities"] += $this->data_liabilities[$i]["amount"];
+			for ($i = 0; $i < count(array_keys($this->data_liabilities)); $i++)
+			{
+				$this->data_totals["liabilities"] += $this->data_liabilities[$i]["amount"];
+			}
 		}
 
 
 		// equity
-		for ($i = 0; $i < count(array_keys($this->data_equity)); $i++)
+		if ($this->data_equity)
 		{
-			$this->data_totals["equity"] += $this->data_equity[$i]["amount"];
+			for ($i = 0; $i < count(array_keys($this->data_equity)); $i++)
+			{
+				$this->data_totals["equity"] += $this->data_equity[$i]["amount"];
+			}
 		}
 
 	
 		// income
-		for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
+		if ($this->data_income)
 		{
-			$this->data_totals["income"] += $this->data_income[$i]["amount"];
+			for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
+			{
+				$this->data_totals["income"] += $this->data_income[$i]["amount"];
+			}
 		}
 		
 		// expense
-		for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
+		if ($this->data_expense)
 		{
-			$this->data_totals["expense"] += $this->data_expense[$i]["amount"];
+			for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
+			{
+				$this->data_totals["expense"] += $this->data_expense[$i]["amount"];
+			}
 		}
-		
-
-		
+				
 
 		// final
 		$this->data_totals["current_earnings"]		 = $this->data_totals["income"] - $this->data_totals["expense"];
@@ -488,102 +501,110 @@ class page_output
 
 		print "</form>";
 		print "<br>";
-		
-
-
-		/*
-			Define template
-		*/
-		
-		// start the html template
-		$template_html = New template_engine;
-
-		// load template
-		$template_html->prepare_load_template("templates/html/report_balancesheet.html");
 
 
 
-		/*
-			Fill in template fields
-		*/
-
-		// totals
-		$template_html->prepare_add_field("amount_total_current_earnings", $this->data_totals["current_earnings"]);
-		$template_html->prepare_add_field("amount_total_assets", $this->data_totals["assets"]);
-		$template_html->prepare_add_field("amount_total_liabilities", $this->data_totals["liabilities"]);
-		$template_html->prepare_add_field("amount_total_equity", $this->data_totals["equity"]);
-		$template_html->prepare_add_field("amount_total_liabilities_and_equity", $this->data_totals["liabilities_and_equity"]);
-
-
-		// asset data
-		$structure_main = NULL;
+		if (!$this->data_income || !$this->data_expense)
+		{
+			format_msgbox("important", "<p>No income and/or expense accounts have been configured.</p>");
+		}
+		else
+		{
+			/*
+				Define template
+			*/
 			
-		foreach ($this->data_assets as $itemdata)
-		{
-			$structure = array();
-		
-			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			// start the html template
+			$template_html = New template_engine;
 
-			$structure_main[] = $structure;
-		}
-
-		$template_html->prepare_add_array("table_assets", $structure_main);
+			// load template
+			$template_html->prepare_load_template("templates/html/report_balancesheet.html");
 
 
-		// liabilities data
-		$structure_main = NULL;
+
+			/*
+				Fill in template fields
+			*/
+
+			// totals
+			$template_html->prepare_add_field("amount_total_current_earnings", $this->data_totals["current_earnings"]);
+			$template_html->prepare_add_field("amount_total_assets", $this->data_totals["assets"]);
+			$template_html->prepare_add_field("amount_total_liabilities", $this->data_totals["liabilities"]);
+			$template_html->prepare_add_field("amount_total_equity", $this->data_totals["equity"]);
+			$template_html->prepare_add_field("amount_total_liabilities_and_equity", $this->data_totals["liabilities_and_equity"]);
+
+
+			// asset data
+			$structure_main = NULL;
+				
+			foreach ($this->data_assets as $itemdata)
+			{
+				$structure = array();
 			
-		foreach ($this->data_liabilities as $itemdata)
-		{
-			$structure = array();
-		
-			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
 
-			$structure_main[] = $structure;
-		}
+				$structure_main[] = $structure;
+			}
 
-		$template_html->prepare_add_array("table_liabilities", $structure_main);
+			$template_html->prepare_add_array("table_assets", $structure_main);
 
 
-		// equity data
-		$structure_main = NULL;
+			// liabilities data
+			$structure_main = NULL;
+				
+			foreach ($this->data_liabilities as $itemdata)
+			{
+				$structure = array();
 			
-		foreach ($this->data_equity as $itemdata)
-		{
-			$structure = array();
-		
-			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
 
-			$structure_main[] = $structure;
-		}
+				$structure_main[] = $structure;
+			}
 
-		$template_html->prepare_add_array("table_equity", $structure_main);
+			$template_html->prepare_add_array("table_liabilities", $structure_main);
 
 
+			// equity data
+			$structure_main = NULL;
+				
+			foreach ($this->data_equity as $itemdata)
+			{
+				$structure = array();
+			
+				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+
+				$structure_main[] = $structure;
+			}
+
+			$template_html->prepare_add_array("table_equity", $structure_main);
 
 
 
 
-		/*
-			Output Template
-		*/
-
-		// fill template
-		$template_html->prepare_filltemplate();
-
-		// display html
-		foreach ($template_html->processed as $line)
-		{
-			print $line;
-		}
 
 
-		// display CSV download link
-		print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/balancesheet.php\">Export as CSV</a></p>";
-		print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/balancesheet.php\">Export as PDF</a></p>";
+			/*
+				Output Template
+			*/
+
+			// fill template
+			$template_html->prepare_filltemplate();
+
+			// display html
+			foreach ($template_html->processed as $line)
+			{
+				print $line;
+			}
+
+
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/balancesheet.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/balancesheet.php\">Export as PDF</a></p>";
+
+		} // end if accounts exist
 		
 	} // end of render_html
 

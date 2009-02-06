@@ -463,80 +463,88 @@ class page_output
 		print "<br>";
 		
 
+		if (!$this->data_income || !$this->data_expense)
+		{
+			format_msgbox("important", "<p>No income and/or expense accounts have been configured.</p>");
+		}
+		else
+		{
 
-		/*
-			Define template
-		*/
-		
-		// start the html template
-		$template_html = New template_engine;
-
-		// load template
-		$template_html->prepare_load_template("templates/html/report_incomestatement.html");
-
-
-
-		/*
-			Fill in template fields
-		*/
-
-		// totals
-		$template_html->prepare_add_field("amount_total_income", $this->data_totals["income"]);
-		$template_html->prepare_add_field("amount_total_expense", $this->data_totals["expense"]);
-		$template_html->prepare_add_field("amount_total_final", $this->data_totals["final"]);
-
-
-		// income data
-		$structure_main = NULL;
+			/*
+				Define template
+			*/
 			
-		foreach ($this->data_income as $itemdata)
-		{
-			$structure = array();
-		
-			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			// start the html template
+			$template_html = New template_engine;
 
-			$structure_main[] = $structure;
-		}
-
-		$template_html->prepare_add_array("table_income", $structure_main);
+			// load template
+			$template_html->prepare_load_template("templates/html/report_incomestatement.html");
 
 
-		// income data
-		$structure_main = NULL;
+
+			/*
+				Fill in template fields
+			*/
+
+			// totals
+			$template_html->prepare_add_field("amount_total_income", $this->data_totals["income"]);
+			$template_html->prepare_add_field("amount_total_expense", $this->data_totals["expense"]);
+			$template_html->prepare_add_field("amount_total_final", $this->data_totals["final"]);
+
+
+			// income data
+			$structure_main = NULL;
+				
+			foreach ($this->data_income as $itemdata)
+			{
+				$structure = array();
 			
-		foreach ($this->data_expense as $itemdata)
-		{
-			$structure = array();
-		
-			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
 
-			$structure_main[] = $structure;
-		}
+				$structure_main[] = $structure;
+			}
 
-		$template_html->prepare_add_array("table_expense", $structure_main);
+			$template_html->prepare_add_array("table_income", $structure_main);
 
 
+			// income data
+			$structure_main = NULL;
+				
+			foreach ($this->data_expense as $itemdata)
+			{
+				$structure = array();
+			
+				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+
+				$structure_main[] = $structure;
+			}
+
+			$template_html->prepare_add_array("table_expense", $structure_main);
 
 
-		/*
-			Output Template
-		*/
-
-		// fill template
-		$template_html->prepare_filltemplate();
-
-		// display html
-		foreach ($template_html->processed as $line)
-		{
-			print $line;
-		}
 
 
-		// display CSV download link
-		print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/incomestatement.php\">Export as CSV</a></p>";
-		print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/incomestatement.php\">Export as PDF</a></p>";
+			/*
+				Output Template
+			*/
+
+			// fill template
+			$template_html->prepare_filltemplate();
+
+			// display html
+			foreach ($template_html->processed as $line)
+			{
+				print $line;
+			}
+
+
+			// display CSV download link
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/incomestatement.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/incomestatement.php\">Export as PDF</a></p>";
+
+		} // end if accounts exist
 		
 	} // end of render_html
 
