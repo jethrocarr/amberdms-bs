@@ -215,7 +215,7 @@
 		<part name='invoicetype' type='xsd:string'/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="price" type="xsd:string"/>
-		<part name="quantity" type="xsd:int"/>
+		<part name="quantity" type="xsd:string"/>
 		<part name="units" type="xsd:string"/>
 		<part name="productid" type="xsd:int"/>
 		<part name="description" type="xsd:string"/>

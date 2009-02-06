@@ -1335,7 +1335,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			
 			// fetch information from form
 			$data["price"]		= security_form_input_predefined("money", "price", 0, "");
-			$data["quantity"]	= security_form_input_predefined("int", "quantity", 1, "");
+			$data["quantity"]	= security_form_input_predefined("float", "quantity", 1, "");
 			$data["units"]		= security_form_input_predefined("any", "units", 0, "");
 			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");

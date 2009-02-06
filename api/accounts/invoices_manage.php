@@ -943,16 +943,16 @@ class accounts_invoices_manage_soap
 
 
 			$data["price"]		= security_script_input_predefined("money", $price);
-			$data["quantity"]	= security_script_input_predefined("int", $quantity);
+			$data["quantity"]	= security_script_input_predefined("float", $quantity);
 			$data["units"]		= security_script_input_predefined("any", $units);
 			$data["customid"]	= security_script_input_predefined("int", $productid);
 			$data["description"]	= security_script_input_predefined("any", $description);
 
 			foreach (array_keys($data) as $key)
 			{
-				if ($data[$key] == "error")
+				if ($data[$key] == "error" && $data[$key] != 0)
 				{
-					throw new SoapFault("Sender", "INVALID_INPUT");
+					throw new SoapFault("Sender", "INVALID_INPUT - $key - ". $data[$key] ."");
 				}
 			}
 

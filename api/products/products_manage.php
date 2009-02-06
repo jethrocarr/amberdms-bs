@@ -79,6 +79,7 @@ class products_manage_soap
 			// return data
 			$return = array($obj_product->data["code_product"], 
 					$obj_product->data["name_product"], 
+					$obj_product->data["units"], 
 					$obj_product->data["details"], 
 					$obj_product->data["price_cost"], 
 					$obj_product->data["price_sale"], 
@@ -186,6 +187,7 @@ class products_manage_soap
 	function set_product_details($id,
 					$code_product, 
 					$name_product,
+					$units,
 					$details,
 					$price_cost,
 					$price_sale,
@@ -210,6 +212,7 @@ class products_manage_soap
 					
 			$obj_product->data["code_product"]		= security_script_input_predefined("any", $code_product);
 			$obj_product->data["name_product"]		= security_script_input_predefined("any", $name_product);
+			$obj_product->data["units"]			= security_script_input_predefined("any", $units);
 			$obj_product->data["account_sales"]		= security_script_input_predefined("int", $account_sales);
 
 			$obj_product->data["date_current"]		= security_script_input_predefined("date", $date_current);
@@ -227,7 +230,7 @@ class products_manage_soap
 			
 			foreach (array_keys($obj_product->data) as $key)
 			{
-				if ($obj_product->data[$key] == "error")
+				if ($obj_product->data[$key] == "error" && $obj_product->data[$key] != 0)
 				{
 					throw new SoapFault("Sender", "INVALID_INPUT");
 				}

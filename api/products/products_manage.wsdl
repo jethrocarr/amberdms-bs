@@ -43,6 +43,7 @@
 	<message name='get_product_details_response'>
 		<part name='code_product' type='xsd:string'/>
 		<part name='name_product' type='xsd:string'/>
+		<part name='units' type='xsd:string'/>
 		<part name='details' type='xsd:string'/>
 		<part name='price_cost' type='xsd:string'/>
 		<part name='price_sale' type='xsd:string'/>
@@ -70,6 +71,7 @@
 		<part name='id' type='xsd:int'/>
 		<part name='code_product' type='xsd:string'/>
 		<part name='name_product' type='xsd:string'/>
+		<part name='units' type='xsd:string'/>
 		<part name='details' type='xsd:string'/>
 		<part name='price_cost' type='xsd:string'/>
 		<part name='price_sale' type='xsd:string'/>
