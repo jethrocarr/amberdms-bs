@@ -114,11 +114,11 @@ class page_output
 		// display table
 		if (!count($this->obj_table->columns))
 		{
-			format_msgbox("important", "<p><b>Please select some valid options to display.</b></p>");
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			format_msgbox("important", "<p><b>There are no services in the database that match the filters.</b></p>");
+			format_msgbox("important", "<p>There are no services in the database that match the filters.</p>");
 		}
 		else
 		{

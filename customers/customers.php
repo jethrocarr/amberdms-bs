@@ -114,11 +114,11 @@ class page_output
 		// display results
 		if (!count($this->obj_table_list->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table_list->data_num_rows)
 		{
-			print "<p><b>You currently have no customers in your database.</b></p>";
+			format_msgbox("info", "<p>You currently have no customers in your database.</p>");
 		}
 		else
 		{
