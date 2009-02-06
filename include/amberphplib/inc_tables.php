@@ -1014,12 +1014,13 @@ class table
 				// totals, so only calculate for non-ledger items.
 				if ($this->total_rows_mode != "ledger_add_credit" && $this->total_rows_mode != "ledger_add_debit")
 				{
+					// run through and total all the row totals
+					// then we create a final total for the row totals
 					$this->data["total"]["total"] = 0;
-					
-					// total all the total columns
-					foreach ($this->total_columns as $column)
+
+					for ($i=0; $i < $this->data_num_rows; $i++)
 					{
-						$this->data_render["total"]["total"] += $this->data["total"][$column];
+						$this->data["total"]["total"] += $this->data[$i]["total"];
 					}
 				}
 
