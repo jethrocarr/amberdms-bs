@@ -250,6 +250,15 @@ class page_output
 		// fetch the general form data
 		$this->obj_form->sql_query = "SELECT * FROM `account_gl` WHERE id='". $this->id ."' LIMIT 1";
 		$this->obj_form->load_data();
+
+
+		// calculate totals
+		for ($i = 0; $i < $this->num_trans; $i++)
+		{
+			$this->obj_form->structure["total_debit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_debit"]["defaultvalue"];
+			$this->obj_form->structure["total_credit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_credit"]["defaultvalue"];
+		}
+
 	}
 
 
@@ -370,18 +379,13 @@ class page_output
 		print "<td width=\"20%\"></td>";
 	
 
-		// TODO: change this from $ to any currancy
 		// TODO: make totals javascript compatible so they auto-update
 		
 		// total debit
-		print "<td width=\"15%\"><b>$";
-		$this->obj_form->render_field("total_debit");
-		print "</b></td>";
+		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_debit"]["defaultvalue"]) ."</b></td>";
 
 		// total credit
-		print "<td width=\"15%\"><b>$";
-		$this->obj_form->render_field("total_credit");
-		print "</b></td>";
+		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_credit"]["defaultvalue"]) ."</b></td>";
 	
 		// joining/filler columns
 		print "<td width=\"15%\"></td>";
