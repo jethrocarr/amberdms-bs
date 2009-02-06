@@ -99,14 +99,14 @@ class invoice_list_items
 				{
 					case "product":
 						/*
-							Fetch product name
+							Fetch product code
 						*/
 						$sql_obj		= New sql_query;
-						$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
+						$sql_obj->string	= "SELECT code_product FROM products WHERE id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
 						$sql_obj->execute();
 
 						$sql_obj->fetch_array();
-						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["name_product"];
+						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["code_product"];
 					break;
 
 

@@ -825,15 +825,15 @@ class invoice
 			{
 				case "product":
 					/*
-						Fetch product name
+						Fetch product code
 					*/
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT name_product FROM products WHERE id='". $itemdata["customid"] ."' LIMIT 1";
+					$sql_obj->string	= "SELECT code_product FROM products WHERE id='". $itemdata["customid"] ."' LIMIT 1";
 					$sql_obj->execute();
 
 					$sql_obj->fetch_array();
 					
-					$structure["info"] = $sql_obj->data[0]["name_product"];
+					$structure["info"] = $sql_obj->data[0]["code_product"];
 					
 					unset($sql_obj);
 				break;
