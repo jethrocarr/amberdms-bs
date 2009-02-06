@@ -71,7 +71,7 @@ class taxes_report_transactions
 
 
 		// total rows
-		$this->obj_table->total_columns		= array("amount", "amount_tax",);
+		$this->obj_table->total_columns		= array("amount", "amount_tax");
 		$this->obj_table->total_rows		= array("amount", "amount_tax");
 
 		// defaults
@@ -222,6 +222,20 @@ class taxes_report_transactions
 					// add the amount to the data
 					$this->obj_table->data[$i]["amount_tax"] = $sql_obj->data[0]["amount"];
 				}
+
+
+				/*
+					Turn the code_invoice field into a hyperlink
+				*/
+				if ($this->type == "ap")
+				{
+					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+				}
+				else
+				{
+					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+				}
+
 			}
 
 			// re-index the data results to fix any holes created
