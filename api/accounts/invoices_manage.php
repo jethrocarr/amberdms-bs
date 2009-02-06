@@ -685,7 +685,7 @@ class accounts_invoices_manage_soap
 
 			foreach (array_keys($data) as $key)
 			{
-				if ($data[$key] == "error")
+				if ($data[$key] == "error" && $data[$key] != 0)
 				{
 					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
@@ -952,7 +952,7 @@ class accounts_invoices_manage_soap
 			{
 				if ($data[$key] == "error" && $data[$key] != 0)
 				{
-					throw new SoapFault("Sender", "INVALID_INPUT - $key - ". $data[$key] ."");
+					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
 			}
 
@@ -1287,7 +1287,7 @@ class accounts_invoices_manage_soap
 
 
 			// Update invoice totals
-			$obj_invoice_item->action_update_totals();
+			$obj_invoice_item->action_update_total();
 
 			// Update ledger
 			$obj_invoice_item->action_update_ledger();
