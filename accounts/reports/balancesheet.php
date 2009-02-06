@@ -467,12 +467,12 @@ class page_output
 	
 
 		// formatting
-		$this->data_totals["liabilities"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data_totals["liabilities"]);
-		$this->data_totals["assets"]			= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data_totals["assets"]);
-		$this->data_totals["equity"]			= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data_totals["equity"]);
+		$this->data_totals["liabilities"]		= format_money($this->data_totals["liabilities"]);
+		$this->data_totals["assets"]			= format_money($this->data_totals["assets"]);
+		$this->data_totals["equity"]			= format_money($this->data_totals["equity"]);
 		
-		$this->data_totals["current_earnings"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data_totals["current_earnings"]);
-		$this->data_totals["liabilities_and_equity"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $this->data_totals["liabilities_and_equity"]);
+		$this->data_totals["current_earnings"]		= format_money($this->data_totals["current_earnings"]);
+		$this->data_totals["liabilities_and_equity"]	= format_money($this->data_totals["liabilities_and_equity"]);
 	}
 
 
@@ -542,7 +542,7 @@ class page_output
 				$structure = array();
 			
 				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["amount"]		= format_money($itemdata["amount"]);
 
 				$structure_main[] = $structure;
 			}
@@ -558,7 +558,7 @@ class page_output
 				$structure = array();
 			
 				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["amount"]		= format_money($itemdata["amount"]);
 
 				$structure_main[] = $structure;
 			}
@@ -574,7 +574,7 @@ class page_output
 				$structure = array();
 			
 				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+				$structure["amount"]		= format_money($itemdata["amount"]);
 
 				$structure_main[] = $structure;
 			}
@@ -653,7 +653,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
@@ -669,7 +669,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
@@ -685,7 +685,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
@@ -753,7 +753,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
@@ -769,7 +769,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
@@ -785,7 +785,7 @@ class page_output
 			$structure = array();
 		
 			$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-			$structure["amount"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . sprintf("%0.2f", $itemdata["amount"]);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_main[] = $structure;
 		}
