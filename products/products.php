@@ -83,11 +83,11 @@ class page_output
 		// render table
 		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>You currently have no products in your database.</b></p>";
+			format_msgbox("info", "<p>You currently have no products in your database.</p>");
 		}
 		else
 		{
