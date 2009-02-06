@@ -184,7 +184,14 @@ function format_money($amount)
 {
 	log_debug("misc", "Executing format_money($amount)");
 
+	// 2 decimal places
 	$amount = sprintf("%0.2f", $amount);
+
+	// formatting for readability
+	$amount = number_format($amount, "2", ".", ",");
+
+
+	// add currency & return
 	$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . "$amount";
 
 	return $result;
