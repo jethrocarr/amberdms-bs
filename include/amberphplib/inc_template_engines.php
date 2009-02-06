@@ -44,10 +44,13 @@ class template_engine
 		log_debug("template_engine", "Executing destructor()");
 		
 		// remove any temporary files
-		foreach (array_keys($this->data_files) as $var)
+		if ($this->data_files)
 		{
-			log_debug("template_engine", "Removing tmp file ". $this->data_files[$var]["filename"] ."");
-			unlink($this->data_files[$var]["filename"]);
+			foreach (array_keys($this->data_files) as $var)
+			{
+				log_debug("template_engine", "Removing tmp file ". $this->data_files[$var]["filename"] ."");
+				unlink($this->data_files[$var]["filename"]);
+			}
 		}
 	}
 
@@ -132,7 +135,12 @@ class template_engine
 		// output file data
 		$file_obj = New file_process;
 
-		$file_obj->fetch_information_by_type("COMPANY_LOGO", 0);
+		if (!$file_obj->fetch_information_by_type("COMPANY_LOGO", 0))
+		{
+			log_write("error", "template_engine", "Unable to find company logo image - use the administration config page to upload a company logo");
+			return 0;
+		}
+
 		$file_obj->write_filedata($tmp_filename);
 
 
