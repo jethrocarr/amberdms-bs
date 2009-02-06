@@ -2135,6 +2135,12 @@ class invoice_items
 					if ($option_data["option_name"] == "DATE_TRANS")
 						$data["date_trans"] = $option_data["option_value"];
 				}
+
+
+				// addslashes to memo & source fields - since we have pulled data from the DB, that data could
+				// contains quotation marks or other unacceptable input, so we must process it
+				$data["description"]	= addslashes($data["description"]);
+				$data["source"]		= addslashes($data["source"]);
 				
 
 				if ($this->type_invoice == "ap")
