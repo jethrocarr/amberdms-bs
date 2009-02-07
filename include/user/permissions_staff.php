@@ -47,3 +47,4 @@ function user_permissions_staff_get($type, $staffid)
 
 
 
+?>

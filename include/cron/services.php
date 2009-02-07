@@ -39,3 +39,4 @@ print "Service invoicing complete.\n";
 
 exit(0);
 
+?>

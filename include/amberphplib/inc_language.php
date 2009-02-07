@@ -135,3 +135,5 @@ function language_translate_string($language, $label)
 }
 
 
+
+?>

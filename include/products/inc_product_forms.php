@@ -314,3 +314,4 @@ class products_form_delete
 } // end of products_form_delete
 
 
+?>
