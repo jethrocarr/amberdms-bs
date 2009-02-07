@@ -5,6 +5,20 @@
 	This file should be read-only by the httpd user. All other users should be denied.
 */
 
+
+/*
+	Instance Configuration
+
+	When running the Amberdms Billing System for a single entity/company, set
+	this value to "single".
+
+	To support multiple instances, set to "hosted" to enable the hosted mode
+	and refer to the product documentation for further details.
+*/
+$config["instance"]	= "single";
+
+
+
 /*
 	Database Settings
 
@@ -37,9 +51,6 @@ $config["dangerous_conf_options"] = "enabled";
 	Do not touch anything below this line
 */
 
-// Connect to the MySQL database
-include("database.php");
-
 // Initate session variables
 if ($_SERVER['SERVER_NAME'])
 {
@@ -52,6 +63,9 @@ else
 	$GLOBALS["_SESSION"]	= array();
 	$_SESSION["mode"]	= "cli";
 }
+
+// Connect to the MySQL database
+include("database.php");
 
 
 // force debugging on for all users + scripts

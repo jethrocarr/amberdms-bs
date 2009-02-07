@@ -54,6 +54,14 @@ class page_output
 		
 
 		// general
+		if ($GLOBALS["config"]["instance"] == "hosted")
+		{
+			$structure = NULL;
+			$structure["fieldname"] 	= "instance_amberdms_bs";
+			$structure["type"]		= "input";
+			$this->obj_form->add_input($structure);
+		}
+
 		$structure = NULL;
 		$structure["fieldname"] 	= "username_amberdms_bs";
 		$structure["type"]		= "input";
@@ -73,10 +81,6 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 
-		// define subforms
-//		$this->obj_form->subforms["login"]	= array("username_amberdms_bs", "password_amberdms_bs");
-//		$this->obj_form->subforms["submit"]	= array("submit");
-		
 		// load any data returned due to errors
 		$this->obj_form->load_data_error();
 	}
@@ -102,7 +106,7 @@ class page_output
 
 		// display the form
 		$this->obj_form->render_form();
-	
+
 
 		// troubleshoot page
 		print "<p id=\"troublestart\"><br><br><a href=\"#\" onclick=\"obj_show('trouble'); obj_hide('troublestart');\"><b>Unable to login? Click here for help</b></a></p>";

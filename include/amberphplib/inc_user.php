@@ -76,22 +76,98 @@ function user_online()
 
 
 /*
-	user_login($username, $password)
+	user_login($instance, $username, $password)
 
 	This function performs two main tasks:
-	* If enabled, it performs brute-force blacklisting defense, and will block authentication attempts from blacklisted IP addresses.
+	* If enabled, it performs brute-force blacklisting defense, and will block authentication
+	  attempts from blacklisted IP addresses.
 	* Checks the username/password and authenticates the user.
 
 	Return Codes
+	-4	Instance has been disabled
+	-3	Invalid instance ID
 	-2	User account has been disabled
 	-1	IP is blacklisted due to brute-force attempts
 	0	Invalid username/password
 	1	Success
 */
-function user_login($username, $password)
+function user_login($instance, $username, $password)
 {
 	//
-	// first we do a check of the IP against a brute-force table. Whilst admins should always lock down their interfaces
+	// check the instance (if required) and select the required database
+	//
+	if ($GLOBALS["config"]["instance"] == "hosted")
+	{
+		$mysql_string		= "SELECT active, db_hostname FROM `instances` WHERE instanceid='$instance' LIMIT 1";
+		$mysql_result		= mysql_query($mysql_string);
+		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		
+		if ($mysql_num_rows)
+		{
+			$mysql_data = mysql_fetch_array($mysql_result);
+
+			if ($mysql_data["active"])
+			{
+				// Instance exists and access is permitted - now use the details
+				// to establish a connection to the instance database (note that this
+				// database may be on a different server)
+
+
+				// if the hostname is blank, default to the current
+				if ($mysql_data["db_hostname"] == "")
+				{
+					$mysql_data["db_hostname"] = $GLOBALS["config"]["db_hostname"];
+				}
+
+				// if the instance database is on a different server, initate a connection
+				// to the new server.
+				if ($mysql_data["db_hostname"] != $GLOBALS["config"]["db_hostname"])
+				{
+					$link = mysql_connect($mysql_data["db_hostname"], $config["db_user"], $config["db_pass"]);
+
+					if (!$link)
+					{
+						log_write("error", "inc_users", "Unable to connect to database server for instance $instance - error: " . mysql_error());
+						return -3;
+					}
+				}
+
+
+				// select the instance database
+				$dbaccess = mysql_select_db($GLOBALS["config"]["db_name"] ."_$instance");
+	
+				if (!$dbaccess)
+				{
+					// invalid instance ID
+					// ID has a record in the instance table, but does not have a valid database
+					log_write("error", "inc_user", "Instance ID has record but no database accessible - error: ". mysql_error());
+					return -3;
+				}
+				else
+				{
+					// save the instance value
+					$_SESSION["user"]["instance"]["id"]		= $instance;
+					$_SESSION["user"]["instance"]["db_hostname"]	= $mysql_data["db_hostname"];
+				}
+			}
+			else
+			{
+				// instance exists but is disabled
+				log_write("error", "inc_user", "Your account has been disabled - please contact the system administrator if you belive this to be a mistake.");
+				return -4;
+			}
+		}
+		else
+		{
+			// no such instance
+			log_write("error", "inc_user", "Please provide a valid customer instance ID.");
+			return -3;
+		}
+	}
+
+
+	//
+	// perform a check of the IP against a brute-force table. Whilst admins should always lock down their interfaces
 	// to trusted IPs only, in the real-world this often does not happen.
 	//
 	$mysql_query		= "SELECT value as blacklist_enable FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1";

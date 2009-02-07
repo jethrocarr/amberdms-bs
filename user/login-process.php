@@ -26,12 +26,33 @@ if (user_online())
 else
 {
 	// check & convert input
+	if ($GLOBALS["config"]["instance"] == "hosted")
+	{
+		$instance = security_form_input("/^[0-9a-z]*$/", "instance_amberdms_bs", 1, "Please provide a valid customer instance ID.");
+	}
+	else
+	{
+		$instance = NULL;
+	}
+
 	$username	= security_form_input("/^[A-Za-z0-9.]*$/", "username_amberdms_bs", 4, "Please enter a username.");
 	$password	= security_form_input("/^\S*$/", "password_amberdms_bs", 4, "Please enter a password.");
 
 
+	if ($_SESSION["error"]["message"])
+	{
+		// errors occured
+		header("Location: ../index.php?page=user/login.php");
+		exit(0);
+	}
+
+
+
+
 	// call the user functions to authenticate the user and handle blacklisting
-	if (user_login($username, $password))
+	$result = user_login($instance, $username, $password);
+
+	if ($result == 1)
 	{
 		// login succeded
 
@@ -52,6 +73,7 @@ else
 	else
 	{
 		// login failed
+		$_SESSION["error"]["form"]["login"] = "failed";
 
 		// if no errors were set for other reasons (eg: the user forgetting to input any password at all)
 		// then display the incorrect username/password error.
@@ -60,6 +82,11 @@ else
 			$_SESSION["error"]["message"][] = "That username and/or password is invalid!";
 			$_SESSION["error"]["username_amberdms_bs-error"] = 1;
 			$_SESSION["error"]["password_amberdms_bs-error"] = 1;
+		}
+
+		if ($result == -3)
+		{
+			$_SESSION["error"]["instance_amberdms_bs-error"] = 1;
 		}
 		
 		// errors occured
