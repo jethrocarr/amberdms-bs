@@ -45,7 +45,7 @@ if ($config["instance"] == "hosted")
 		*/
 
 		// login to the database
-		$link = mysql_connect($config["db_hostname"], $config["db_user"], $config["db_pass"]);
+		$link = mysql_connect($config["db_host"], $config["db_user"], $config["db_pass"]);
 		if (!$link)
 			die("Unable to connect to DB:" . mysql_error());
 
@@ -67,7 +67,7 @@ else
 
 		
 	// login to the database
-	$link = mysql_connect($config["db_hostname"], $config["db_user"], $config["db_pass"]);
+	$link = mysql_connect($config["db_host"], $config["db_user"], $config["db_pass"]);
 	if (!$link)
 		die("Unable to connect to DB:" . mysql_error());
 

@@ -116,12 +116,12 @@ function user_login($instance, $username, $password)
 				// if the hostname is blank, default to the current
 				if ($mysql_data["db_hostname"] == "")
 				{
-					$mysql_data["db_hostname"] = $GLOBALS["config"]["db_hostname"];
+					$mysql_data["db_hostname"] = $GLOBALS["config"]["db_host"];
 				}
 
 				// if the instance database is on a different server, initate a connection
 				// to the new server.
-				if ($mysql_data["db_hostname"] != $GLOBALS["config"]["db_hostname"])
+				if ($mysql_data["db_hostname"] != $GLOBALS["config"]["db_host"])
 				{
 					$link = mysql_connect($mysql_data["db_hostname"], $config["db_user"], $config["db_pass"]);
 
