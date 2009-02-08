@@ -104,7 +104,7 @@ class page_output
 		// display table
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<br><p><b>This user currently has no staff access rights.</b></p><br>";
+			format_msgbox("info", "<p>This user currently has no staff access rights.</p>");
 		}
 		else
 		{
