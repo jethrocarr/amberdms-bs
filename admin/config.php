@@ -211,6 +211,8 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]			= "COMPANY_ADDRESS1_STREET";
 		$structure["type"]			= "textarea";
+		$structure["options"]["width"]		= "300";
+		$structure["options"]["height"]		= "60";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
@@ -236,6 +238,8 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]			= "COMPANY_PAYMENT_DETAILS";
 		$structure["type"]			= "textarea";
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["height"]		= "60";
 		$this->obj_form->add_input($structure);
 	
 	
