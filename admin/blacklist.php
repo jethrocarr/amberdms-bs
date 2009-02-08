@@ -161,7 +161,7 @@ class page_output
 
 			if (!$this->obj_table_blacklist->data_num_rows)
 			{
-				print "<p><b>The blacklist is currently empty.</b></p>";
+				format_msgbox("info", "<p>The blacklist is currently empty.</p>");
 			}
 			else
 			{
