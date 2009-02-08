@@ -522,8 +522,15 @@ class page_output
 			// display week time table
 			$this->obj_table_week->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=timekeeping/timereg.php\">Export as CSV</a></p>";
+			print "<table width=\"100%\">";
+
+				// add time link
+				print "<td align=\"left\"><p><b><a href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time record.</a></b></p></td>";
+
+				// display CSV download link
+				print "<td align=\"right\"><p><a href=\"index-export.php?mode=csv&page=timekeeping/timereg.php\">Export as CSV</a></p></td>";
+
+			print "</table>";
 		}
 	}
 
