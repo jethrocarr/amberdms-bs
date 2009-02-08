@@ -169,13 +169,34 @@ class page_output
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->id;
 		$this->obj_form->add_input($structure);
+	
+
+		// employee selection box
+		$sql_string = "SELECT "
+				."staff.id as id, "
+				."staff.name_staff as label "
+				."FROM users_permissions_staff "
+				."LEFT JOIN staff ON staff.id = users_permissions_staff.staffid "
+				."WHERE users_permissions_staff.userid='". $_SESSION["user"]["id"] ."' "
+				."GROUP BY users_permissions_staff.staffid "
+				."ORDER BY staff.name_staff";
+				
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_string);
+
+		// if there is currently no employee set, and there is only one
+		// employee in the selection box, automatically select it and update
+		// the session variables.
 		
-		$structure = NULL;
-		$structure["fieldname"] 	= "id_employee";
-		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->employeeid;
+		if (!$this->employeeid && count($structure["values"]) == 1)
+		{
+			$this->employeeid				= $structure["values"][0];
+			$_SESSION["form"]["timereg"]["employeeid"]	= $structure["values"][0];
+		}
+		
+		$structure["options"]["autoselect"]	= "on";
+		$structure["defaultvalue"]		= $this->employeeid;
 		$this->obj_form->add_input($structure);
-					
+				
 
 		// general
 		$structure = NULL;
@@ -200,45 +221,16 @@ class page_output
 
 		// TODO: Update this to use the new helper functions
 
-		// get data from DB and create project/phase dropdown
-		//
-		// Note: this hasn't yet been reduced to use the form_helper_prepare_dropdownfromdb function
-		// because of the fact that it needs to merge two different fields to make the drop down label.
-		//
-		// This a pretty rare occurance, so it's likely this will be left as it is.
-		//
-		$structure = NULL;
-		$structure["fieldname"] 	= "phaseid";
-		$structure["type"]		= "dropdown";
-		$structure["options"]["req"]	= "yes";
+		// project/phase dropdown
+		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT projects.name_project as label,
+											project_phases.id as id, 
+											project_phases.name_phase as label1
+											FROM `projects` 
+											LEFT JOIN project_phases ON project_phases.projectid = projects.id
+											ORDER BY projects.name_project, project_phases.name_phase");
 
-		$sql_obj = New sql_query;
-		$sql_obj->string = "SELECT "
-				."projects.name_project, "
-				."project_phases.id as phaseid, "
-				."project_phases.name_phase "
-				."FROM `projects` "
-				."LEFT JOIN project_phases ON project_phases.projectid = projects.id "
-				."ORDER BY "
-				."projects.name_project, "
-				."project_phases.name_phase";
-		
-		$sql_obj->execute();	
-		
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-			foreach ($sql_obj->data as $data)
-			{
-				// only add a project if there is a phaseid for it
-				if ($data["phaseid"])
-				{
-					$structure["values"][]				= $data["phaseid"];
-					$structure["translations"][ $data["phaseid"] ]	= $data["name_project"] ." - ". $data["name_phase"];
-				}
-			}
-		}
-				
+		$structure["options"]["autoselect"] = "on";
+
 		$this->obj_form->add_input($structure);
 		
 						
@@ -251,8 +243,8 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["timereg_day"]	= array("phaseid", "date", "time_booked", "description");
-		$this->obj_form->subforms["hidden"]		= array("id_timereg", "id_employee");
+		$this->obj_form->subforms["timereg_day"]	= array("employeeid", "phaseid", "date", "time_booked", "description");
+		$this->obj_form->subforms["hidden"]		= array("id_timereg");
 
 		if ($this->locked)
 		{

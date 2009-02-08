@@ -163,21 +163,18 @@ class page_output
 				
 		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_string);
 
-
-		// if there is only one employee, automatically select it if
-		// it hasn't been already
+		// if there is currently no employee set, and there is only one
+		// employee in the selection box, automatically select it and update
+		// the session variables.
+		
 		if (!$this->employeeid && count($structure["values"]) == 1)
 		{
-			// TODO: why do a query here? should be able to pull the info out of $structure["values"]
-			$sql = New sql_query;
-			$sql->string = $sql_string;
-			$sql->execute();
-			$sql->fetch_array();
-			
-			$this->employeeid = $sql->data[0]["id"];
+			$this->employeeid				= $structure["values"][0];
+			$_SESSION["form"]["timereg"]["employeeid"]	= $structure["values"][0];
 		}
 		
-		$structure["defaultvalue"] = $this->employeeid;
+		$structure["options"]["autoselect"]	= "on";
+		$structure["defaultvalue"]		= $this->employeeid;
 		$this->obj_form_employee->add_input($structure);
 
 		
