@@ -125,7 +125,6 @@ class page_output
 
 	function execute()
 	{
-	
 		/*
 			Check if time entry can be adjusted
 		*/
@@ -231,6 +230,12 @@ class page_output
 
 		$structure["options"]["autoselect"] = "on";
 
+		if (count($structure["values"] == 0))
+		{
+			$structure["defaultvalue"] = "You need to create a project and add a phase to it in order to be able to book time.";
+			$_SESSION["error"]["phaseid-error"] = 1;
+		}
+
 		$this->obj_form->add_input($structure);
 		
 						
@@ -283,11 +288,11 @@ class page_output
 		// title + summary
 		if ($this->id)
 		{
-			print "<h3>ADJUST TIME RECORD</h3>";
+			print "<h3>ADJUST TIME RECORD</h3><br><br>";
 		}
 		else
 		{
-			print "<h3>ADD TIME RECORD</h3>";
+			print "<h3>ADD TIME RECORD</h3><br><br>";
 		}
 
 		// display the form
