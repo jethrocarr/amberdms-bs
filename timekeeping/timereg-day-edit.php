@@ -193,6 +193,7 @@ class page_output
 		}
 		
 		$structure["options"]["autoselect"]	= "on";
+		$structure["options"]["width"]		= "600";
 		$structure["defaultvalue"]		= $this->employeeid;
 		$this->obj_form->add_input($structure);
 				
@@ -215,6 +216,8 @@ class page_output
 		$structure["fieldname"]		= "description";
 		$structure["type"]		= "textarea";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "60";
 		$this->obj_form->add_input($structure);
 
 
@@ -228,7 +231,8 @@ class page_output
 											LEFT JOIN project_phases ON project_phases.projectid = projects.id
 											ORDER BY projects.name_project, project_phases.name_phase");
 
-		$structure["options"]["autoselect"] = "on";
+		$structure["options"]["autoselect"]	= "on";
+		$structure["options"]["width"]		= "600";
 
 		if (count($structure["values"] == 0))
 		{
