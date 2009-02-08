@@ -28,6 +28,7 @@ if (user_online())
 	$data["option_lang"]			= security_form_input_predefined("any", "option_lang", 1, "");
 	$data["option_dateformat"]		= security_form_input_predefined("any", "option_dateformat", 1, "");
 	$data["option_timezone"]		= security_form_input_predefined("any", "option_timezone", 1, "");
+	$data["option_shrink_tableoptions"]	= security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
 	$data["option_debug"]			= security_form_input_predefined("any", "option_debug", 0, "");
 	$data["option_concurrent_logins"]	= security_form_input_predefined("any", "option_concurrent_logins", 0, "");
 
@@ -112,6 +113,11 @@ if (user_online())
 		// dateformat
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". $data["option_dateformat"] ."')";
+		$sql_obj->execute();
+
+		// table options
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'shrink_tableoptions', '". $data["option_shrink_tableoptions"] ."')";
 		$sql_obj->execute();
 
 

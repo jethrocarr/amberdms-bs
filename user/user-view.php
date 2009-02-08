@@ -161,7 +161,13 @@ class page_output
 		$structure 			= form_helper_prepare_timezonedropdown("option_timezone");
 		$structure["defaultvalue"]	= $options["timezone"];
 		$this->obj_form->add_input($structure);
-		
+	
+		$structure = NULL;
+		$structure["fieldname"]		= "option_shrink_tableoptions";
+		$structure["type"]		= "checkbox";
+		$structure["defaultvalue"]	= $options["shrink_tableoptions"];
+		$structure["options"]["label"]	= "Automatically hide the options table when using defaults";
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"]		= "option_debug";
@@ -191,7 +197,7 @@ class page_output
 		$this->obj_form->subforms["user_view"]		= array("id_user", "username", "realname", "contact_email");
 		$this->obj_form->subforms["user_password"]	= array("password_message", "password", "password_confirm");
 		$this->obj_form->subforms["user_info"]		= array("time", "ipaddress");
-		$this->obj_form->subforms["user_options"]	= array("option_lang", "option_dateformat", "option_timezone", "option_debug", "option_concurrent_logins");
+		$this->obj_form->subforms["user_options"]	= array("option_lang", "option_dateformat", "option_timezone", "option_shrink_tableoptions", "option_debug", "option_concurrent_logins");
 		
 		$this->obj_form->subforms["submit"]		= array("submit");
 

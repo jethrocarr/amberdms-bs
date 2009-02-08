@@ -159,6 +159,18 @@ class page_output
 		$this->obj_form->subforms["user_options"][]	= "option_timezone";
 
 
+		// table options form shrink configuration
+		$structure = NULL;
+		$structure["fieldname"]		= "option_shrink_tableoptions";
+		$structure["type"]		= "checkbox";
+		$structure["defaultvalue"]	= $options["shrink_tableoptions"];
+		$structure["options"]["label"]	= "Automatically hide the options table when using defaults";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["user_options"][]	= "option_shrink_tableoptions";
+
+
+
 		// administrator-only option
 		if (user_permissions_get("admin"))
 		{

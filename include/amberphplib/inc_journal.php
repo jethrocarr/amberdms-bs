@@ -664,19 +664,22 @@ class journal_display extends journal_base
 		// link bar instead of the main options table.
 		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
 		{
-			print "<div id=\"". $this->journalname ."_link\">";
+			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
+			{
+				print "<div id=\"". $this->journalname ."_link\">";
 
-			print "<table width=\"100%\" class=\"table_options_dropdown\">";
-			print "<tr bgcolor=\"#666666\">";
+				print "<table width=\"100%\" class=\"table_options_dropdown\">";
+				print "<tr bgcolor=\"#666666\">";
 
-				print "<td width=\"100%\" onclick=\"obj_show('". $this->journalname ."_form'); obj_hide('". $this->journalname ."_link');\">";
-				print "<b style=\"color: #ffffff; text-decoration: none\">ADJUST JOURNAL OPTIONS &gt;&gt;</b>";
-				print "</td>";
+					print "<td width=\"100%\" onclick=\"obj_show('". $this->journalname ."_form'); obj_hide('". $this->journalname ."_link');\">";
+					print "<b style=\"color: #ffffff; text-decoration: none\">ADJUST JOURNAL OPTIONS &gt;&gt;</b>";
+					print "</td>";
 
-			print "</tr>";
-			print "</table><br>";
+				print "</tr>";
+				print "</table><br>";
 
-			print "</div>";
+				print "</div>";
+			}
 		}
 
 
@@ -890,9 +893,12 @@ class journal_display extends journal_base
 		// auto-hide options at startup
 		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
 		{
-			print "<script type=\"text/javascript\">";
-			print "obj_hide('". $this->journalname ."_form');";
-			print "</script>";
+			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
+			{
+				print "<script type=\"text/javascript\">";
+				print "obj_hide('". $this->journalname ."_form');";
+				print "</script>";
+			}
 		}
 
 
