@@ -71,7 +71,7 @@ class page_output
 		$this->obj_table = New table;
 
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= "timereg_table";
+		$this->obj_table->tablename	= "staff_timesheet_table";
 
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date", "timereg.date");
