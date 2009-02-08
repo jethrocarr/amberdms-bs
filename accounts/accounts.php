@@ -26,7 +26,7 @@ class page_output
 
 	function render_html()
 	{
-		print "<h3>Accounts</h3>";
+		print "<h3>ACCOUNTS</h3>";
 		print "<p>Have overview/summary of account status here.</p>";
 	}
 }
