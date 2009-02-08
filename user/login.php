@@ -113,9 +113,22 @@ class page_output
 		print "<div id=\"trouble\">";
 		print "<br><br><br><hr>";
 		
-		print "<h3>LOGIN TROUBLE?</h3>";
-		print "<p>If you have forgotten your password, please refer to your system administrator. In the event that person is not able to help you, please read the administration manual for information on how to reset it.</p>";
-		print "</div>";
+		if ($_SERVER["SERVER_NAME"] == "www.amberdms.com")
+		{
+			// different error message for amberdms hosted billing system instances
+			print "<h3>LOGIN TROUBLE?</h3>";
+			print "<p>If you have forgotten your password, or are having other login problems, please refer to your system administrator.</p>";
+			print "<p>In the event your system administrator is unable to resolve your issue, please contact <a href=\"mailto:support@amberdms.com\">support@amberdms.com</a> for assistance.</p>";
+			print "</div>";
+
+		}
+		else
+		{
+			// non-amberdms instances
+			print "<h3>LOGIN TROUBLE?</h3>";
+			print "<p>If you have forgotten your password, please refer to your system administrator or read the Amberdms Billing User Guide for details on how to reset account passwords.</p>";
+			print "</div>";
+		}
 
 		print "<script type=\"text/javascript\">";
 		print "obj_hide('trouble');";
