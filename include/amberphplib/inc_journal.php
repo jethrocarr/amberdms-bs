@@ -481,7 +481,7 @@ class journal_display extends journal_base
 		if (!$this->sql_obj->data_num_rows)
 		{
 			// TODO: detect if the journal has entries which are being hidden by the filter options
-			format_msgbox("important", "<p><b>This journal is either empty or has no entries matching your filter options</b></p>");
+			format_msgbox("important", "<p>This journal is either empty or has no entries matching your filter options</p>");
 		}
 		else
 		{
@@ -950,12 +950,15 @@ class journal_input extends journal_base
 		$structure["fieldname"] 	= "title";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
 		$this->form_obj->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "content";
 		$structure["type"]		= "textarea";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
 		$this->form_obj->add_input($structure);
 		
 
@@ -1093,6 +1096,8 @@ class journal_input extends journal_base
 		$structure = NULL;
 		$structure["fieldname"] 	= "content";
 		$structure["type"]		= "textarea";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
 		$this->form_obj->add_input($structure);
 		
 
