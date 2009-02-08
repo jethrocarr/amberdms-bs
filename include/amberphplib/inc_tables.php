@@ -354,6 +354,10 @@ class table
 			
 			if ($_GET["table_display_options"])
 			{
+				// flag custom options as active - this is used to adjust the display of
+				// the table options dropdown
+				$_SESSION["form"][$this->tablename]["custom_options_active"] = 1;
+
 				log_debug("table", "Loading options form from $_GET");
 				
 				$this->columns		= array();
@@ -582,6 +586,32 @@ class table
 	function render_options_form()
 	{	
 		log_debug("table", "Executing render_options_form()");
+
+
+		// if the user has not configured any default options, display the dropdown
+		// link bar instead of the main options table.
+		if (!$_SESSION["form"][$this->tablename]["custom_options_active"])
+		{
+			print "<div id=\"". $this->tablename ."_link\">";
+
+			print "<table width=\"100%\" class=\"table_options_dropdown\">";
+			print "<tr bgcolor=\"#666666\">";
+
+				print "<td width=\"100%\" onclick=\"obj_show('". $this->tablename ."_form'); obj_hide('". $this->tablename ."_link');\">";
+				print "<b style=\"color: #ffffff; text-decoration: none\">ADJUST TABLE OPTIONS &gt;&gt;</b>";
+				print "</td>";
+
+			print "</tr>";
+			print "</table><br>";
+
+			print "</div>";
+		}
+
+
+		// border table / div object
+		print "<div id=\"". $this->tablename ."_form\">";
+		print "<table width=\"100%\" style=\"border: 1px solid #666666;\" bgcolor=\"#e7e7e7\"><tr><td>";
+
 
 		
 		// create tmp array to prevent excessive use of array_keys
@@ -855,7 +885,21 @@ class table
 
 
 		// end of structure table
-		print "</table><br>";
+		print "</table>";
+
+
+		// end of border table
+		print "</td></tr></table><br>";
+		print "</div>";
+
+		// auto-hide options at startup
+		if (!$_SESSION["form"][$this->tablename]["custom_options_active"])
+		{
+			print "<script type=\"text/javascript\">";
+			print "obj_hide('". $this->tablename ."_form');";
+			print "</script>";
+		}
+
 	}
 
 

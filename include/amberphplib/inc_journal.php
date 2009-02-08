@@ -149,6 +149,10 @@ class journal_base
 			
 			if ($_GET["journal_display_options"])
 			{
+				// flag custom options as active - this is used to adjust the display of the options dropdown
+				$_SESSION["form"][$this->journalname]["custom_options_active"] = 1;
+
+
 				log_debug("journal_base", "Loading options form from $_GET");
 				
 				// load filterby options
@@ -655,6 +659,32 @@ class journal_display extends journal_base
 	{	
 		log_debug("journal_display", "Executing render_options_form()");
 
+	
+		// if the user has not configured any default options, display the dropdown
+		// link bar instead of the main options table.
+		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
+		{
+			print "<div id=\"". $this->journalname ."_link\">";
+
+			print "<table width=\"100%\" class=\"table_options_dropdown\">";
+			print "<tr bgcolor=\"#666666\">";
+
+				print "<td width=\"100%\" onclick=\"obj_show('". $this->journalname ."_form'); obj_hide('". $this->journalname ."_link');\">";
+				print "<b style=\"color: #ffffff; text-decoration: none\">ADJUST JOURNAL OPTIONS &gt;&gt;</b>";
+				print "</td>";
+
+			print "</tr>";
+			print "</table><br>";
+
+			print "</div>";
+		}
+
+
+		// border table / div object
+		print "<div id=\"". $this->journalname ."_form\">";
+		print "<table width=\"100%\" style=\"border: 1px solid #666666;\" bgcolor=\"#e7e7e7\"><tr><td>";
+
+
 		
 		// start the form
 		print "<form method=\"get\" class=\"form_standard\">";
@@ -851,12 +881,22 @@ class journal_display extends journal_base
 
 
 		// end of structure table
-		print "</table><br><br>";
+		print "</table>";
+
+		// end of border table
+		print "</td></tr></table><br>";
+		print "</div>";
+
+		// auto-hide options at startup
+		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
+		{
+			print "<script type=\"text/javascript\">";
+			print "obj_hide('". $this->journalname ."_form');";
+			print "</script>";
+		}
+
+
 	}
-
-
-
-
 
 	
 } // end class journal_display

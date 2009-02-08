@@ -101,6 +101,31 @@ a:active {
 
 
 /*
+	table_options_dropdown
+
+	Defines the style of the options dropdown
+*/
+
+.table_options_dropdown {
+	border: 1px solid #000000;
+	border-spacing: 4px;
+	font-size: 12px;
+}
+
+	.table_options_dropdown td {
+		padding: 8px;
+	}
+
+
+	.table_options_dropdown tr:hover {
+		padding: 8px;
+		background-color: #92dd90;
+	}
+
+
+
+
+/*
 	table_highlight
 
 	Used to give a table a different background colour - typically used to highlight
