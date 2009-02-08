@@ -245,7 +245,7 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			// make sure a value has been provided
 			if ($numchar && $timestamp == 0)
 			{
-				$_SESSION["error"]["message"][] = $errormsg_tmp;
+				$_SESSION["error"]["message"][] = $errormsg;
 				$_SESSION["error"]["". $valuename . "-error"] = 1;
 				$_SESSION["error"][$valuename] = 0;
 			}
