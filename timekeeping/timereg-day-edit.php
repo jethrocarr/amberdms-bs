@@ -232,7 +232,7 @@ class page_output
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
 
-		if (count($structure["values"] == 0))
+		if (count($structure["values"]) == 0)
 		{
 			$structure["defaultvalue"] = "You need to create a project and add a phase to it in order to be able to book time.";
 			$_SESSION["error"]["phaseid-error"] = 1;
