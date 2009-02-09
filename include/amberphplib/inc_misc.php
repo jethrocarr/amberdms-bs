@@ -528,13 +528,17 @@ function log_debug_render()
 	print "</tr>";
 
 	// get first time entry
-	$time_first["seconds"]		= $_SESSION["user"]["log_debug"][0]["time_sec"];
-	$time_first["microseconds"]	= $_SESSION["user"]["log_debug"][0]["time_usec"];
+	$time_first = (float)$_SESSION["user"]["log_debug"][0]["time_sec"] + (float)$_SESSION["user"]["log_debug"][0]["time_usec"];
 
 
 	// content
 	foreach ($_SESSION["user"]["log_debug"] as $log_record)
 	{
+		// get last time entry
+		$time_last = (float)$log_record["time_sec"] + (float)$log_record["time_usec"];
+
+
+		// choose formatting
 		switch ($log_record["type"])
 		{
 			case "error":
@@ -554,7 +558,8 @@ function log_debug_render()
 			break;
 		}
 		
-		print "<td nowrap>". $log_record["time_sec"] ." ". $log_record["time_usec"]  ."</td>";
+		// display
+		print "<td nowrap>". $time_last  ."</td>";
 		print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
 		print "<td nowrap>". $log_record["type"] ."</td>";
 		print "<td nowrap>". $log_record["category"] ."</td>";
@@ -562,19 +567,15 @@ function log_debug_render()
 		print "</tr>";
 
 
-		// get last time entry
-		$time_last["seconds"]		= $log_record["time_sec"];
-		$time_last["microseconds"]	= $log_record["time_usec"];
 	}
 
 	print "</table>";
 
 
 	// report completion time
-	$time_diff["seconds"]		= ($time_last["seconds"] - $time_first["seconds"]);
-	$time_diff["microseconds"]	= ($time_last["microseconds"] - $time_first["microseconds"]);
+	$time_diff = ($time_last - $time_first);
 
-	print "<p>Completed in ". $time_diff["seconds"] ." seconds and ". $time_diff["microseconds"] ." microseconds.</p>";
+	print "<p>Completed in $time_diff seconds.</p>";
 }
 
 
