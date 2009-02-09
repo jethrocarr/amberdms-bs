@@ -221,8 +221,6 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 
-		// TODO: Update this to use the new helper functions
-
 		// project/phase dropdown
 		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT projects.name_project as label,
 											project_phases.id as id, 
