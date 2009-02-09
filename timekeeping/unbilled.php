@@ -139,10 +139,10 @@ class page_output
 		{
 			// time entry link
 			$structure = NULL;
-			$structure["editid"]["column"]		= "id";
+			$structure["id"]["column"]		= "id";
 			$structure["date"]["column"]		= "date";
 			$structure["employeeid"]["column"]	= "employeeid";
-			$this->obj_table->add_link("tbl_lnk_view_timeentry", "timekeeping/timereg-day.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_view_timeentry", "timekeeping/timereg-day-edit.php", $structure);
 
 			// project/phase ID
 			$structure = NULL;
