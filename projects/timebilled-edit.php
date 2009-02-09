@@ -120,10 +120,13 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
-		$structure = NULL;
-		$structure["fieldname"] 	= "code_invoice";
-		$structure["type"]		= "text";
-		$this->obj_form->add_input($structure);
+		if ($this->groupid)
+		{
+			$structure = NULL;
+			$structure["fieldname"] 	= "code_invoice";
+			$structure["type"]		= "text";
+			$this->obj_form->add_input($structure);
+		}
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
@@ -289,7 +292,12 @@ class page_output
 		// display all the rows
 		$this->obj_form->render_row("name_group");
 		$this->obj_form->render_row("customerid");
-		$this->obj_form->render_row("code_invoice");
+
+		if ($this->groupid)
+		{
+			$this->obj_form->render_row("code_invoice");
+		}
+
 		$this->obj_form->render_row("description");
 
 
