@@ -67,7 +67,7 @@ class page_output
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		$this->obj_menu_nav->add_item("Weekview", "page=timekeeping/timereg.php&year=". $_SESSION["timereg"]["year"] ."&weekofyear=". $_SESSION["timereg"]["weekofyear"]."");
+		$this->obj_menu_nav->add_item("Weekview", "page=timekeeping/timereg.php&year=". time_calculate_yearnum($this->date) ."&weekofyear=". time_calculate_weeknum($this->date) ."");
 		$this->obj_menu_nav->add_item("Day View", "page=timekeeping/timereg-day.php&date=". $this->date ."", TRUE);
 		
 		
