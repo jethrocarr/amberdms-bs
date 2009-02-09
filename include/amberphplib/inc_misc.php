@@ -378,6 +378,29 @@ function time_calculate_weeknum($date = NULL)
 
 
 /*
+	time_calculate_yearnum($date)
+
+	Calculates what year the supplied date is in. If not date is supplied, then
+	returns the current year.
+*/
+function time_calculate_yearnum($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_yearnum($date)");
+
+	if (!$date)
+	{
+		return date("Y");
+	}
+	else
+	{
+		preg_match("/^([0-9]*)-/", $date, $matches);
+
+		return $matches[1];
+	}
+}
+
+
+/*
 	time_calculate_monthday_first($date)
 
 	Calculates what the first date of the month is, for the provided date. If
