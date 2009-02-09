@@ -151,7 +151,7 @@ if (user_permissions_get('admin'))
 
 				// table options
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'shrink_tableoptions', 'enabled')";
+				$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'shrink_tableoptions', 'on')";
 				$sql_obj->execute();
 
 				// debugging
