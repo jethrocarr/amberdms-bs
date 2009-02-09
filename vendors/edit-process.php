@@ -47,7 +47,6 @@ if (user_permissions_get('vendors_write'))
 	$obj_vendor->data["address2_country"]	= security_form_input_predefined("any", "address2_country", 0, "");
 	$obj_vendor->data["address2_zipcode"]	= security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
-	$obj_vendor->data["tax_default"]	= security_form_input_predefined("int", "tax_default", 0, "");
 	$obj_vendor->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
 
 
@@ -60,6 +59,11 @@ if (user_permissions_get('vendors_write'))
 	{
 		$sql_taxes_obj->fetch_array();
 
+		// only get the default tax if taxes exist
+		$obj_vendor->data["tax_default"] = security_form_input_predefined("int", "tax_default", 0, "");
+
+
+		// fetch all the taxes and see which ones are enabled for the customer
 		foreach ($sql_taxes_obj->data as $data_tax)
 		{
 			$obj_vendor->data["tax_". $data_tax["id"] ] = security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");

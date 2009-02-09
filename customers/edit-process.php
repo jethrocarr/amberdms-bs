@@ -49,7 +49,7 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->data["address2_zipcode"]		= security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
 	$obj_customer->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
-	$obj_customer->data["tax_default"]		= security_form_input_predefined("int", "tax_default", 0, "");
+
 
 	// get tax selection options
 	$sql_taxes_obj		= New sql_query;
@@ -58,6 +58,11 @@ if (user_permissions_get('customers_write'))
 
 	if ($sql_taxes_obj->num_rows())
 	{
+		// only get the default tax if taxes exist
+		$obj_customer->data["tax_default"] = security_form_input_predefined("int", "tax_default", 0, "");
+
+
+		// fetch all the taxes and see which ones are enabled for the customer
 		$sql_taxes_obj->fetch_array();
 
 		foreach ($sql_taxes_obj->data as $data_tax)
