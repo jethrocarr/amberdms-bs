@@ -110,10 +110,15 @@ class page_output
 		}
 		else
 		{
-			// view link
+			// links
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "hr/staff-view.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_details", "hr/staff-view.php", $structure);
+
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("tbl_lnk_timesheet", "hr/staff-timebooked.php", $structure);
+
 
 			// display the table
 			$this->obj_table->render_table_html();
