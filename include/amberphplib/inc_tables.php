@@ -224,22 +224,26 @@ class table
 		{
 			foreach (array_keys($this->filter) as $fieldname)
 			{
-				// note: we only add the filter if a value has been saved to default value, otherwise
-				// we assume the SQL could break.
-				if ($this->filter[$fieldname]["defaultvalue"])
+				// ignore input from text fields, text fields
+				if ($this->filter[$fieldname]["type"] != "text")
 				{
-					// It is possible to have filters with no SQL query
-					// supplied - these are used when creating complex filters which require code and can not
-					// be expressed in a SQL query.
-					//
-					// Therefore, we ignore any filter without an SQL query and assume the code calling us
-					// will handle it.
-					//
-
-					if ($this->filter[$fieldname]["sql"])
+					// note: we only add the filter if a value has been saved to default value, otherwise
+					// we assume the SQL could break.
+					if ($this->filter[$fieldname]["defaultvalue"])
 					{
-						$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
-						$this->sql_obj->prepare_sql_addwhere($query);
+						// It is possible to have filters with no SQL query
+						// supplied - these are used when creating complex filters which require code and can not
+						// be expressed in a SQL query.
+						//
+						// Therefore, we ignore any filter without an SQL query and assume the code calling us
+						// will handle it.
+						//
+
+						if ($this->filter[$fieldname]["sql"])
+						{
+							$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
+							$this->sql_obj->prepare_sql_addwhere($query);
+						}
 					}
 				}
 			}
