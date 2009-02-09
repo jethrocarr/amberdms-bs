@@ -122,16 +122,61 @@ function language_translate($language, $label_array)
 /*
 	language_translate_string($language, $string)
 
-	Wrapper function for language_translate for transalting a single string
+	This function performs the same actions as the language_translate
+	function, except for a single value rather than an array of values.
+
+	For a single value lookup, this function is more efficent.
 */
 function language_translate_string($language, $label)
 {
 	log_debug("language", "Executing language_translate_string($language, $label)");
 
-	$label_array = array($label);
 
-	$result = language_translate($language, $label_array);
-	return $result[$label];
+	// see if the value is already cached
+	if ($GLOBALS["cache"]["lang"][$label])
+	{
+		// return cached label
+		return $GLOBALS["cache"]["lang"][$label];
+	}
+	else
+	{
+		// not cached - need to do a DB lookup.
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='". $language ."' AND label='$label' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			// add to cache
+			$GLOBALS["cache"]["lang"][ $label ] = $sql_obj->data[0]["translation"];
+
+
+			// done
+			return $sql_obj->data[0]["translation"];
+		}
+		else
+		{
+			// no value was returned for the particular label we looked up, it means
+			// that no translation exists.
+			//
+			// In this case, just return the label as the translation and also add it to
+			// the cache to prevent extra lookups.
+
+			$GLOBALS["cache"]["lang"][ $label ] = $label;
+
+			return $label;
+		}
+
+		unset($sql_obj);
+		
+	} // end if lookup required
+
+
+	// unexpected failure, return the label
+	return $label;
 }
 
 
