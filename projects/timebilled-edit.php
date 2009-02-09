@@ -131,6 +131,8 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "textarea";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "60";
 		$this->obj_form->add_input($structure);
 
 
