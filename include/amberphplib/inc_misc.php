@@ -376,6 +376,57 @@ function time_calculate_weeknum($date = NULL)
 	return sql_get_singlevalue("SELECT WEEK('$date',1) as value");
 }
 
+
+/*
+	time_calculate_monthday_first($date)
+
+	Calculates what the first date of the month is, for the provided date. If
+	no date is provided, returns for the current month.
+*/
+function time_calculate_monthdate_first($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_monthday_first($date)");
+
+	if (!$date)
+	{
+		$date = date("Y-m-d");
+	}
+
+	$date = preg_replace("/-[0-9]*$/", "-01", $date);
+
+	return $date;
+}
+	
+
+/*
+	time_calculate_monthday_last($date)
+
+	Calculates what the final date of the month is, for the provided date. If
+	no date is provided, returns for the current month.
+*/
+function time_calculate_monthdate_last($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_monthday_last($date)");
+
+	if (!$date)
+	{
+		$timestamp	= mktime();
+		$date		= date("Y-m-d", $timestamp);
+	}
+	else
+	{
+		$timestamp = time_date_to_timestamp($date);
+	}
+	
+	// fetch the final day of the month
+	$lastday = date("t", $timestamp);
+	
+	// replace the day with the final day
+	$date = preg_replace("/-[0-9]*$/", "-$lastday", $date);
+
+	// done
+	return $date;
+}
 	
 
 
