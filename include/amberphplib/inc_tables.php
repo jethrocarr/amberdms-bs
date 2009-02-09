@@ -38,6 +38,7 @@ class table
 
 
 	var $links;				// array of links to place in a final column
+	var $links_columns;			// array used to define links that belong inside columns
 
 	var $structure;				// contains the structure of all the defined columns.
 	var $filter = array();			// structure of the filtering
@@ -110,12 +111,26 @@ class table
 		If the value option is specified, a GET field will be added with the specified value,
 		otherwise if the column option is
 
+
+		If you wish to have a column value turned into a link, set the following options:
+		$options_array["column"] = "columnname";
+
 		
 	*/
 	function add_link($name, $page, $options_array)
 	{
+		log_debug("table", "Executing add_link($name, $page, options_array)");
+
 		$this->links[$name]["page"]	= $page;
 		$this->links[$name]["options"]	= $options_array;
+
+
+		if ($options_array["column"])
+		{
+			log_debug("table", "Configuring $name as a column link");
+
+			$this->links_columns[ $options_array["column"] ] = $name;
+		}
 	}
 
 
@@ -1141,45 +1156,14 @@ class table
 			{
 				$content = $this->data_render[$i][$columns];
 
-				// handle bool images
-				if ($this->structure[$columns]["type"] == "bool_tick")
+				// start cell
+				print "<td valign=\"top\">";
+
+				// hyperlink?
+				if ($this->links_columns[ $columns ])
 				{
-					if ($content == "Y")
-					{
-						$content = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
-					}
-					else
-					{
-						$content = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
-					}
-				}
-
-				// display
-				print "<td valign=\"top\">$content</td>";
-			}
-
-
-			// optional: row totals column
-			if ($this->total_rows)
-			{
-				print "<td><b>". $this->data_render[$i]["total"] ."</b></td>";
-			}
-
-			
-			// optional: links column
-			if ($this->links)
-			{
-				print "<td align=\"right\" nowrap>";
-
-				$links		= array_keys($this->links);
-				$links_count	= count($links);
-				$count		= 0;
-
-				foreach ($links as $link)
-				{
-					$count++;
-					
-					$linkname = language_translate_string($this->language, $link);
+					$link		= $this->links_columns[ $columns ];
+					$linkname	= language_translate_string($this->language, $link);
 
 					// link to page
 					// There are two ways:
@@ -1214,16 +1198,116 @@ class table
 					}
 
 					// finish link
-					print "\">$linkname</a>";
+					print "\">";
+				}
 
-					// if required, add seporator
-					if ($count < $links_count)
+				// handle bool images
+				if ($this->structure[$columns]["type"] == "bool_tick")
+				{
+					if ($content == "Y")
 					{
-						print " || ";
+						$content = "<img src=\"images/icons/tick_16.gif\" alt=\"Y\"></img>";
+					}
+					else
+					{
+						$content = "<img src=\"images/icons/cross_16.gif\" alt=\"N\"></img>";
 					}
 				}
 
+				// display content
+				print "$content";
+
+
+				// end hyperlink
+				if ($this->links["columns"][ $columns ])
+				{
+					print "</a>";
+				}
+
 				print "</td>";
+			}
+
+
+			// optional: row totals column
+			if ($this->total_rows)
+			{
+				print "<td><b>". $this->data_render[$i]["total"] ."</b></td>";
+			}
+
+			
+			// optional: links column
+			if ($this->links)
+			{
+				// filter out column links from the links page
+				$links			= array_keys($this->links);
+				$links_available	= array();
+				$links_count		= 0;
+				$count			= 0;
+
+				foreach ($links as $link)
+				{
+					if (!$this->links[$link]["options"]["column"])
+					{
+						$links_count++;
+						$links_available[] = $link;
+					}
+				}
+
+				if ($links_count)
+				{
+					print "<td align=\"right\" nowrap>";
+	
+					foreach ($links_available as $link)
+					{
+						$count++;
+						
+						$linkname = language_translate_string($this->language, $link);
+
+						// link to page
+						// There are two ways:
+						// 1. (default) Link to index.php
+						// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+						if ($this->links[$link]["options"]["full_link"] == "yes")
+						{
+							print "<a href=\"". $this->links[$link]["page"] ."?libfiller=n";
+						}
+						else
+						{
+							print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
+						}
+
+						// add each option
+						foreach (array_keys($this->links[$link]["options"]) as $getfield)
+						{
+							/*
+								There are two methods for setting the value of the variable:
+								1. The value has been passed.
+								2. The name of a column to take the value from has been passed
+							*/
+							if ($this->links[$link]["options"][$getfield]["value"])
+							{
+								print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+							}
+							else
+							{
+								print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+							}
+						}
+
+						// finish link
+						print "\">$linkname</a>";
+
+						// if required, add seporator
+						if ($count < $links_count)
+						{
+							print " || ";
+						}
+						}
+
+					print "</td>";
+
+				} // end if valid links exist
 			}
 	
 			print "</tr>";
