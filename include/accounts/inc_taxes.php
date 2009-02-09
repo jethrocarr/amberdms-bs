@@ -130,6 +130,13 @@ class taxes_report_transactions
 		$this->obj_table->load_options_form();
 
 
+		// set default of 1 month range if no range has been set
+		if (!$this->obj_table->filter["filter_date_start"]["defaultvalue"])
+		{
+			$this->obj_table->filter["filter_date_start"]["defaultvalue"]	= time_calculate_monthdate_first();
+			$this->obj_table->filter["filter_date_end"]["defaultvalue"]	= time_calculate_monthdate_last();
+		}
+
 
 		/*
 			Create SQL filters from user-selected options

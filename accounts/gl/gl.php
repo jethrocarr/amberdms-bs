@@ -36,6 +36,7 @@ class page_output
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
 		$this->obj_table->tablename	= "account_gl";
 
+	
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "date_trans", "account_trans.date_trans");
 		$this->obj_table->add_column("standard", "code_reference", "NONE");
@@ -85,6 +86,12 @@ class page_output
 		// load options
 		$this->obj_table->load_options_form();
 
+		// set default of 1 month range if no range has been set
+		if (!$this->obj_table->filter["filter_date_start"]["defaultvalue"])
+		{
+			$this->obj_table->filter["filter_date_start"]["defaultvalue"]	= time_calculate_monthdate_first();
+			$this->obj_table->filter["filter_date_end"]["defaultvalue"]	= time_calculate_monthdate_last();
+		}
 
 
 		if ($this->obj_table->filter["filter_date_start"]["defaultvalue"] && $this->obj_table->filter["filter_date_end"]["defaultvalue"])
