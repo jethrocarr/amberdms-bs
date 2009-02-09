@@ -87,10 +87,21 @@ class page_output
 		}
 		else
 		{
-			// view link
+			// details link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "user/user-view.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_details", "user/user-view.php", $structure);
+
+			// permissions
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("tbl_lnk_permissions", "user/user-permissions.php", $structure);
+
+			// staff access rights
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("tbl_lnk_staffaccess", "user/user-staffaccess.php", $structure);
+
 
 			// display the table
 			$this->obj_table->render_table_html();
