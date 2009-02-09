@@ -36,8 +36,9 @@ function log_write($type, $category, $content)
 	
 		// this provided PHP 4 compadiblity.
 		// TODO: when upgrading to PHP 5, replace with microtime(TRUE).
-		list($usec, $sec)	= explode(" ", microtime());
-		$log_record["time"]	= ((float)$usec + (float)$sec);
+		list($usec, $sec)		= explode(" ", microtime());
+		$log_record["time_usec"]	= $usec;
+		$log_record["time_sec"]		= $sec;
 		
 		$_SESSION["user"]["log_debug"][] = $log_record;
 		

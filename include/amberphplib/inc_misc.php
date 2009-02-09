@@ -527,6 +527,10 @@ function log_debug_render()
 		print "<td><b>Message/Content</b></td>";
 	print "</tr>";
 
+	// get first time entry
+	$time_first["seconds"]		= $_SESSION["user"]["log_debug"][0]["time_sec"];
+	$time_first["microseconds"]	= $_SESSION["user"]["log_debug"][0]["time_usec"];
+
 
 	// content
 	foreach ($_SESSION["user"]["log_debug"] as $log_record)
@@ -550,15 +554,27 @@ function log_debug_render()
 			break;
 		}
 		
-		print "<td nowrap>". $log_record["time"] ."</td>";
+		print "<td nowrap>". $log_record["time_sec"] ." ". $log_record["time_usec"]  ."</td>";
 		print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
 		print "<td nowrap>". $log_record["type"] ."</td>";
 		print "<td nowrap>". $log_record["category"] ."</td>";
 		print "<td>". $log_record["content"] ."</td>";
 		print "</tr>";
+
+
+		// get last time entry
+		$time_last["seconds"]		= $log_record["time_sec"];
+		$time_last["microseconds"]	= $log_record["time_usec"];
 	}
 
 	print "</table>";
+
+
+	// report completion time
+	$time_diff["seconds"]		= ($time_last["seconds"] - $time_first["seconds"]);
+	$time_diff["microseconds"]	= ($time_last["microseconds"] - $time_first["microseconds"]);
+
+	print "<p>Completed in ". $time_diff["seconds"] ." seconds and ". $time_diff["microseconds"] ." microseconds.</p>";
 }
 
 
