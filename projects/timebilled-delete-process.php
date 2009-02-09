@@ -2,7 +2,7 @@
 /*
 	projects/timebilled-delete-process.php
 
-	access: projects_write
+	access: projects_timegroup
 
 	Deletes an unwanted time group. Note that the locked field will prevent a user
 	from deleting a time group that belongs to an invoice.
@@ -13,7 +13,7 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 
-if (user_permissions_get('projects_write'))
+if (user_permissions_get('projects_timegroup'))
 {
 	/////////////////////////
 

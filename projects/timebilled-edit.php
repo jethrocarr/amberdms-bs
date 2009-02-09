@@ -2,7 +2,7 @@
 /*
 	projects/timebilled-edit.php
 	
-	access: projects_write
+	access: projects_timegroup
 
 	Form to add or edit a time grouping.
 */
@@ -34,13 +34,17 @@ class page_output
 		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+
+		if (user_permissions_get("projects_write"))
+		{
+			$this->obj_menu_nav->add_item("Delete Project", "page=projects/delete.php&id=". $this->id ."");
+		}
 	}
 
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_write");
+		return user_permissions_get("projects_timegroup");
 	}
 
 

@@ -2,7 +2,7 @@
 /*
 	projects/timebilled-edit-process.php
 
-	access: projects_write
+	access: projects_timegroup
 
 	Allows the creation of new time groups, or adjustments to existing ones.
 */
@@ -12,7 +12,7 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 
-if (user_permissions_get('projects_write'))
+if (user_permissions_get('projects_timegroup'))
 {
 	/////////////////////////
 

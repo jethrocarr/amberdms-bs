@@ -2,7 +2,7 @@
 /*
 	timebilled.php
 	
-	access: "projects_view" group members
+	access: "projects_view" and "projects_timegroup" group members
 
 	Displays groups of time for invoicing purposes.
 */
@@ -40,7 +40,10 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_view");
+		if (user_permissions_get("projects_view") || user_permissions_get("projects_timegroup"))
+		{
+			return 1;
+		}
 	}
 
 
@@ -207,7 +210,7 @@ class page_output
 			}
 			
 		
-			if (user_permissions_get("projects_write"))
+			if (user_permissions_get("projects_timegroup"))
 			{
 				// add view/edit link
 				$structure = NULL;
@@ -233,7 +236,7 @@ class page_output
 		}
 
 
-		if (user_permissions_get("projects_write"))
+		if (user_permissions_get("projects_timegroup"))
 		{
 			// display add time group link
 			print "<p><b><a href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group.</a></b></p>";
