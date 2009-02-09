@@ -62,14 +62,6 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 {
 	// get post data
 	$input = $_POST[$valuename];
-
-	// if there is no errormsg supplied, set a default one by looking
-	// up the translation of the fieldname and reporting it.
-	if ($errormsg == "")
-	{
-		$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
-		$errormsg	= "Invalid $translation supplied, please correct.";
-	}
 	
 
 	// strip any HTML tags
@@ -97,6 +89,16 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 		else
 		{
 			// invalid input - does not match regex
+
+			// if there is no errormsg supplied, set a default one by looking
+			// up the translation of the fieldname and reporting it.
+			if ($errormsg == "")
+			{
+				$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+				$errormsg	= "Invalid $translation supplied, please correct.";
+			}
+
+			// report the error
 			$_SESSION["error"]["message"][] = "$errormsg";
 			$_SESSION["error"]["". $valuename . "-error"] = 1;
 			$_SESSION["error"][$valuename] = $input;
@@ -105,6 +107,16 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 	else
 	{
 		// invalid input - input not long enough/no input
+
+		// if there is no errormsg supplied, set a default one by looking
+		// up the translation of the fieldname and reporting it.
+		if ($errormsg == "")
+		{
+			$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+			$errormsg	= "Invalid $translation supplied, please correct.";
+		}
+
+		// report the error
 		$_SESSION["error"]["message"][] = "$errormsg";
 		$_SESSION["error"]["". $valuename . "-error"] = 1;
 		$_SESSION["error"][$valuename] = $input;
