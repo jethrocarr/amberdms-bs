@@ -1149,7 +1149,14 @@ class table
 		// display data
 		for ($i=0; $i < $this->data_num_rows; $i++)
 		{
-			print "<tr>";
+			if ($this->data[$i]["options"]["css_class"])
+			{
+				print "<tr class=\"". $this->data[$i]["options"]["css_class"] ."\">";
+			}
+			else
+			{
+				print "<tr>";
+			}
 
 			// content for columns
 			foreach ($this->columns as $columns)
