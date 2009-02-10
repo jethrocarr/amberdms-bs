@@ -27,6 +27,8 @@ class page_output
 	var $date_selected_end;
 	
 	var $obj_form_employee;
+	var $obj_form_goto;
+
 	var $obj_table_week;
 
 	var $config_timesheet_booktofuture;
@@ -377,6 +379,36 @@ class page_output
 		} // valid employee selected for viewing
 
 
+
+		/*
+			Date GOTO form
+		*/
+
+		$this->obj_form_goto		= New form_input;
+		$this->obj_form_goto->formname	= "timereg_goto";
+		$this->obj_form_goto->language	= $_SESSION["user"]["lang"];
+
+
+		$structure = NULL;
+		$structure["fieldname"]		= "date";
+		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= date("Y-m-d");
+		$this->obj_form_goto->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"]		= "page";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= "timekeeping/timereg-day.php";
+		$this->obj_form_goto->add_input($structure);
+		
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Goto Date";
+		$this->obj_form_goto->add_input($structure);
+
+
 	} // end execute function
 
 
@@ -413,7 +445,10 @@ class page_output
 		
 		print "<h3>TIME REGISTRATION</h3><br><br>";
 			
-		print "<table class=\"table_highlight\" width=\"100%\"><tr><td width=\"100%\">";
+		print "<table class=\"table_highlight\" width=\"100%\"><tr>";
+		
+		// Week selection links
+		print "<td width=\"70%\">";
 		
 		print "<b>WEEK ". $this->date_selected_weekofyear .", ". $this->date_selected_year ."</b><br>";
 		print "(". time_format_humandate($this->date_selected_start) ." to ". time_format_humandate($this->date_selected_end) .")<br>";
@@ -439,8 +474,31 @@ class page_output
 		}
 
 		print "</b></p>";
+
+		print "</td>";
+
+
+
+		// goto date form
+		print "<td width=\"30%\">";
+
+			print "<form method=\"get\" action=\"index.php\">";
+
+
+			$this->obj_form_goto->render_field("date");
+
+			print "<br>";
+
+			$this->obj_form_goto->render_field("page");
+			$this->obj_form_goto->render_field("submit");
+
+
+			print "</form>";
+
+		print "</td>";
 		
-		print "</td></tr></table><br>";
+
+		print "</tr></table><br>";
 
 
 		// Employee selection form

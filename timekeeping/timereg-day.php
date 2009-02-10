@@ -48,6 +48,12 @@ class page_output
 		// get selected date
 		$this->date	= security_script_input('/^\S*$/', $_GET["date"]);
 
+		if (!$this->date)
+		{
+			// try alternative input syntax
+			$this->date = security_script_input_predefined("date", $_GET["date_yyyy"] ."-". $_GET["date_mm"] ."-". $_GET["date_dd"]);
+		}
+
 		if ($this->date)
 		{
 			// save to session vars
