@@ -27,7 +27,7 @@ class page_output
 
 	function render_html()
 	{
-		print "<h3>Time Keeping</h3>";
+		print "<h3>TIME KEEPING</h3>";
 
 		print "<p>This section of the billing system allows you to keep track of the hours you work, leave earned/taken and your payslips.</p>";
 	}
