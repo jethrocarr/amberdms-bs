@@ -79,6 +79,9 @@ a:active {
 		color: #000000;
 	}
 
+	.table_content .chart_heading {
+		background-color: #e7e7e7;
+	}
 
 	.table_content a:hover {
 		color: #ffffff;
