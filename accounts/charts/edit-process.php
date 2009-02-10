@@ -31,7 +31,12 @@ if (user_permissions_get('accounts_charts_write'))
 	// general details
 	$obj_chart->data["code_chart"]		= security_form_input_predefined("int", "code_chart", 0, "A chart code can only consist of numbers.");
 	$obj_chart->data["description"]		= security_form_input_predefined("any", "description", 1, "");
-	$obj_chart->data["chart_type"]		= security_form_input_predefined("int", "chart_type", 1, "");
+	
+	// only want the chart type if create a new account
+	if (!$obj_chart->id)
+	{
+		$obj_chart->data["chart_type"]	= security_form_input_predefined("int", "chart_type", 1, "");
+	}
 	
 	// menu selection options
 	$sql_obj_menu		= New sql_query;

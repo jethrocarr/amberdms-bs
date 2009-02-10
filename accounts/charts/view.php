@@ -16,6 +16,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form;
 
+	var $chart_type;	// hold the ID of the chart type
+
 
 	function page_output()
 	{
@@ -47,13 +49,20 @@ class page_output
 	{
 		// verify that the account exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_charts WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id, chart_type FROM account_charts WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
 			log_write("error", "page_output", "The requested account (". $this->id .") does not exist - possibly the account has been deleted.");
 			return 0;
+		}
+		else
+		{
+			// get the chart type - we use this for configuring the options that we display.
+			$sql_obj->fetch_array();
+
+			$this->chart_type = $sql_obj->data[0]["chart_type"];
 		}
 
 		unset($sql_obj);
@@ -88,15 +97,20 @@ class page_output
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
-		
-		$structure = form_helper_prepare_radiofromdb("chart_type", "SELECT id, value as label FROM account_chart_type");
-		$structure["options"]["req"]	= "yes";
+	
+		$structure = NULL;
+		$structure["fieldname"]		= "chart_type";
+		$structure["type"]		= "text";
 		$this->obj_form->add_input($structure);
 	
 		$this->obj_form->subforms["chart_details"]	= array("code_chart", "description", "chart_type");
 
 
-		// menu configuration
+		/*
+			Menu Configuration
+
+			Only select the menu options suitable for the account type, to avoid confusion for users.
+		*/
 		$sql_obj = New sql_query;
 		$sql_obj->string = "SELECT groupname FROM account_chart_menu GROUP BY groupname";
 		$sql_obj->execute();
@@ -109,31 +123,36 @@ class page_output
 			{
 				// get all the menu entries for this group
 				$sql_obj_menu = New sql_query;
-				$sql_obj_menu->string = "SELECT id, value, description FROM account_chart_menu WHERE groupname='". $data["groupname"] ."'";
+				$sql_obj_menu->string = "SELECT account_chart_menu.id, value, description FROM account_chart_menu LEFT JOIN account_chart_types_menus ON account_chart_types_menus.menuid = account_chart_menu.id WHERE account_chart_types_menus.chart_typeid='". $this->chart_type ."' AND groupname='". $data["groupname"] ."'";
 				$sql_obj_menu->execute();
-				$sql_obj_menu->fetch_array();
 
-				foreach ($sql_obj_menu->data as $data_menu)
+				if ($sql_obj_menu->num_rows())
 				{
-					// define checkbox
-					$structure = NULL;
-					$structure["fieldname"]		= $data_menu["value"];
-					$structure["type"]		= "checkbox";
-					$structure["options"]["label"]	= $data_menu["description"];
+					$sql_obj_menu->fetch_array();
 
-					// checkbox - checked or unchecked
-					$sql_obj_checked = New sql_query;
-					$sql_obj_checked->string = "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."'";
-					$sql_obj_checked->execute();
+					foreach ($sql_obj_menu->data as $data_menu)
+					{
+						// define checkbox
+						$structure = NULL;
+						$structure["fieldname"]		= $data_menu["value"];
+						$structure["type"]		= "checkbox";
+						$structure["options"]["label"]	= $data_menu["description"];
 
-					if ($sql_obj_checked->num_rows())
-						$structure["defaultvalue"] = "enabled";
+						// checkbox - checked or unchecked
+						$sql_obj_checked = New sql_query;
+						$sql_obj_checked->string = "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."'";
+						$sql_obj_checked->execute();
 
-					// add checkbox to group subform
-					$this->obj_form->add_input($structure);
-					$this->obj_form->subforms[$data["groupname"] ." Menu Options"][] = $data_menu["value"];
-				}
-				
+						if ($sql_obj_checked->num_rows())
+							$structure["defaultvalue"] = "enabled";
+
+						// add checkbox to group subform
+						$this->obj_form->add_input($structure);
+						$this->obj_form->subforms[$data["groupname"] ." Menu Options"][] = $data_menu["value"];
+					}
+
+				} // end if valid menu options for account type
+					
 			}
 		}
 
@@ -169,7 +188,7 @@ class page_output
 
 		
 		// fetch the form data
-		$this->obj_form->sql_query = "SELECT * FROM `account_charts` WHERE id='". $this->id ."' LIMIT 1";
+		$this->obj_form->sql_query = "SELECT code_chart, description, account_chart_type.value as chart_type FROM `account_charts` LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type WHERE account_charts.id='". $this->id ."' LIMIT 1";
 		$this->obj_form->load_data();
 
 

@@ -254,7 +254,7 @@ class chart
 
 		// create a new chart
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `account_charts` (description) VALUES ('". $this->data["description"]. "')";
+		$sql_obj->string	= "INSERT INTO `account_charts` (chart_type) VALUES ('". $this->data["chart_type"]. "')";
 		$sql_obj->execute();
 
 		$this->id = $sql_obj->fetch_insert_id();
@@ -378,8 +378,7 @@ class chart
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `account_charts` SET "
 						."code_chart='". $this->data["code_chart"] ."', "
-						."description='". $this->data["description"] ."', "
-						."chart_type='". $this->data["chart_type"] ."' "
+						."description='". $this->data["description"] ."' "
 						."WHERE id='". $this->id ."'";
 		if (!$sql_obj->execute())
 		{

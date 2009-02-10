@@ -59,6 +59,17 @@ class page_output
 		$this->obj_table->load_data_sql();
 
 
+		// set different row styling for specifc chart types
+		// such as the heading account
+		for ($i = 0; $i < count(array_keys($this->obj_table->data)); $i++)
+		{
+			if ($this->obj_table->data[$i]["chart_type"] == "Heading")
+			{
+				$this->obj_table->data[$i]["options"]["css_class"] = "chart_heading";
+			}
+		}
+
+
 		// fetch debit and credit summaries for all charts in advance - this
 		// is better than running a query per chart just to get all the totals
 		$sql_amount_obj		= New sql_query;
@@ -68,7 +79,6 @@ class page_output
 		if ($sql_amount_obj->num_rows())
 		{
 			$sql_amount_obj->fetch_array();
-
 
 			// run through all the chart rows and fill in the credit/debit fields
 			for ($i = 0; $i < count(array_keys($this->obj_table->data)); $i++)
