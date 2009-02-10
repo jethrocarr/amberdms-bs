@@ -163,7 +163,7 @@ class page_output
 
 
 			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=projects/timebooked.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=timekeeping/unbilled.php\">Export as CSV</a></p>";
 		}
 	}
 
