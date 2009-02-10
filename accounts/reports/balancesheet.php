@@ -535,53 +535,60 @@ class page_output
 
 
 			// asset data
-			$structure_main = NULL;
-				
-			foreach ($this->data_assets as $itemdata)
+			if ($this->data_assets)
 			{
-				$structure = array();
-			
-				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= format_money($itemdata["amount"]);
+				$structure_main = NULL;
 
-				$structure_main[] = $structure;
+				foreach ($this->data_assets as $itemdata)
+				{
+					$structure = array();
+				
+					$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+					$structure["amount"]		= format_money($itemdata["amount"]);
+
+					$structure_main[] = $structure;
+				}
+
+				$template_html->prepare_add_array("table_assets", $structure_main);
 			}
-
-			$template_html->prepare_add_array("table_assets", $structure_main);
 
 
 			// liabilities data
-			$structure_main = NULL;
-				
-			foreach ($this->data_liabilities as $itemdata)
+			if ($this->data_liabilities)
 			{
-				$structure = array();
+				$structure_main = NULL;
+				
+				foreach ($this->data_liabilities as $itemdata)
+				{
+					$structure = array();
 			
-				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= format_money($itemdata["amount"]);
+					$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+					$structure["amount"]		= format_money($itemdata["amount"]);
 
-				$structure_main[] = $structure;
+					$structure_main[] = $structure;
+				}
+
+				$template_html->prepare_add_array("table_liabilities", $structure_main);
 			}
-
-			$template_html->prepare_add_array("table_liabilities", $structure_main);
 
 
 			// equity data
-			$structure_main = NULL;
-				
-			foreach ($this->data_equity as $itemdata)
+			if ($this->data_equity)
 			{
-				$structure = array();
+				$structure_main = NULL;
+				
+				foreach ($this->data_equity as $itemdata)
+				{
+					$structure = array();
 			
-				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= format_money($itemdata["amount"]);
+					$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
+					$structure["amount"]		= format_money($itemdata["amount"]);
 
-				$structure_main[] = $structure;
+					$structure_main[] = $structure;
+				}
+
+				$template_html->prepare_add_array("table_equity", $structure_main);
 			}
-
-			$template_html->prepare_add_array("table_equity", $structure_main);
-
-
 
 
 
