@@ -40,7 +40,16 @@ if (user_permissions_get('products_write'))
 	$obj_product->data["quantity_instock"]		= security_form_input_predefined("int", "quantity_instock", 0, "");
 	$obj_product->data["quantity_vendor"]		= security_form_input_predefined("int", "quantity_vendor", 0, "");
 
-	$obj_product->data["vendorid"]			= security_form_input_predefined("int", "vendorid", 0, "");
+	// only get vendor ID if vendors exist, otherwise will trigger an error
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM vendors LIMIT 1";
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
+	{
+		$obj_product->data["vendorid"]		= security_form_input_predefined("int", "vendorid", 0, "");
+	}
+
 	$obj_product->data["code_product_vendor"]	= security_form_input_predefined("any", "code_product_vendor", 0, "");
 
 
