@@ -173,6 +173,30 @@ function format_msgbox($type, $text)
 	print "</table>";
 }
 
+/*
+	format_linkbox($type, $hyperlink, $text)
+
+	Creates a coloured message box configured to take the user
+	to the specified link upon being clicked
+
+	Supported types:
+	important
+	info
+*/
+function format_linkbox($type, $hyperlink, $text)
+{
+	log_debug("misc", "Executing format_linkbox($type, $hyperlink, text)");
+
+	print "<table width=\"100%\" class=\"table_linkbox_$type\" onclick=\"location.href='$hyperlink'\">";
+	print "<tr>";
+		print "<td>";
+		print "$text";
+		print "</td>";
+	print "</tr>";
+	print "</table>";
+}
+
+
 
 /*
 	format_money($amount)

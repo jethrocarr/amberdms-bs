@@ -160,6 +160,25 @@ a:active {
 }
 
 
+/*
+	table_linkbox
+
+	Used to give a table a different backgroud colour, with another colour for rollover
+	effects. Used for creating linked colour boxes that take users to a page when clicked
+*/
+
+.table_linkbox_default {
+	background-color: #e7e7e7;
+}
+
+	.table_linkbox_default td {
+		padding: 4px;
+	}
+
+	.table_linkbox_default tr:hover {
+		padding: 4px;
+		background-color: #95c7d9;
+	}
 
 
 
