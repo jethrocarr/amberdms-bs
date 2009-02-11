@@ -100,7 +100,7 @@ function obj_show(obj)
 
 
 <!-- Main Structure Table -->
-<table width="1000" cellspacing="5" cellpadding="0" align="center">
+<table width="90%" cellspacing="5" cellpadding="0" align="center">
 
 
 
