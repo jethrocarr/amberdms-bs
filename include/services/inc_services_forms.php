@@ -43,10 +43,10 @@ class services_form_details
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
-		$structure = charts_form_prepare_acccountdropdown("chartid", 2);
+		$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
-		
+
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "textarea";
