@@ -1518,6 +1518,8 @@ class invoice_items
 			if ($this->action_update())
 			{
 				// notify success
+				$_SESSION["notification"]["message"] = array();
+
 				log_write("notification", "invoice_items", "Successfully created new invoice item");
 				journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
 
