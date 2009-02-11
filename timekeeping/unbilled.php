@@ -123,7 +123,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("date", "name_phase", "name_staff", "time_group", "description", "time_booked");
 		$this->obj_table->columns_order		= array("date", "name_phase");
-		$this->obj_table->columns_order_options	= array("date", "name_phase", "name_staff", "time_group", "description", "time_booked");
+		$this->obj_table->columns_order_options	= array("date", "name_phase", "name_staff", "time_group", "description");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("timereg");
@@ -136,6 +136,8 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN time_groups ON timereg.groupid = time_groups.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
+
+
 
 		// provide list of valid IDs
 		$unbilled_ids_keys	= array_keys($unbilled_ids);
@@ -200,6 +202,14 @@ class page_output
 		$structure["sql"]	= "timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]	= "groupby";
+		$structure["type"]	= "radio";
+		$structure["values"]	= array("none", "name_phase", "name_staff");
+		$structure["defaultvalue"] = "none";
+		$this->obj_table->add_filter($structure);
+
+
 
 
 		// create totals
@@ -208,6 +218,32 @@ class page_output
 
 		// load options form
 		$this->obj_table->load_options_form();
+
+		// add group by options
+		if ($this->obj_table->filter["filter_groupby"]["defaultvalue"] != "none")
+		{
+			$this->obj_table->sql_obj->prepare_sql_addgroupby( $this->obj_table->filter["filter_groupby"]["defaultvalue"] );
+
+			// replace timereg value with SUM query
+			$this->obj_table->structure["time_booked"]["dbname"] = "SUM(timereg.time_booked)";
+
+			switch ($this->obj_table->filter["filter_groupby"]["defaultvalue"])
+			{
+				case "name_staff":
+					$this->obj_table->columns		= array("name_staff", "time_booked");
+					$this->obj_table->columns_order		= array();
+					$this->obj_table->columns_order_options	= array("name_staff");
+				break;
+
+				case "name_phase":
+					$this->obj_table->columns		= array("name_phase", "time_booked");
+					$this->obj_table->columns_order		= array();
+					$this->obj_table->columns_order_options	= array("name_phase");
+				break;
+
+
+			}
+		}
 
 		
 		// generate & execute SQL query			
@@ -219,7 +255,7 @@ class page_output
 		{
 			if ($this->obj_table->data[$i]["timegroupinvoiceid"])
 			{
-				$this->obj_table->data[$i] = NULL;
+				$this->obj_table->data[$i] = NULL;	
 			}
 		}
 	}
@@ -241,12 +277,16 @@ class page_output
 		}
 		else
 		{
+		
 			// time entry link
-			$structure = NULL;
-			$structure["id"]["column"]		= "id";
-			$structure["date"]["column"]		= "date";
-			$structure["employeeid"]["column"]	= "employeeid";
-			$this->obj_table->add_link("tbl_lnk_view_timeentry", "timekeeping/timereg-day-edit.php", $structure);
+			if ($this->obj_table->filter["filter_groupby"]["defaultvalue"] == "none")
+			{
+				$structure = NULL;
+				$structure["id"]["column"]		= "id";
+				$structure["date"]["column"]		= "date";
+				$structure["employeeid"]["column"]	= "employeeid";
+				$this->obj_table->add_link("tbl_lnk_view_timeentry", "timekeeping/timereg-day-edit.php", $structure);
+			}
 
 			// project/phase ID
 			$structure = NULL;
