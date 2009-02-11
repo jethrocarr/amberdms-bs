@@ -269,14 +269,7 @@ class table
 		{
 			foreach ($this->columns_order as $column_order)
 			{
-				if ($this->structure[$column_order]["dbname"])
-				{
-					$this->sql_obj->prepare_sql_addorderby($this->structure[$column_order]["dbname"]);
-				}
-				else
-				{
-					$this->sql_obj->prepare_sql_addorderby($column_order);
-				}
+				$this->sql_obj->prepare_sql_addorderby($column_order);
 			}
 		}
 
