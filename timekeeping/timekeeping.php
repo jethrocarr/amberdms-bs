@@ -76,12 +76,104 @@ class page_output
 		*/
 		if (user_permissions_get("projects_timegroup"))
 		{
+			/*
+				Prepare array of time row IDs which do not belong to a paid time group
+			*/
+
+			$unbilled_ids = array();
+
+
+			// select non-group time records
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM timereg WHERE groupid='0'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_tmp)
+				{
+					// we store the ID inside an array key, since they are unique
+					// and this will prevent us needed to check for the existance of
+					// the ID already.
+					$unbilled_ids[ $data_tmp["id"] ] = "on";
+				}
+			}
+
+			unset($sql_obj);
+
+
+			// select unpaid group IDs
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM time_groups WHERE invoiceid='0'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_group)
+				{
+					// fetch all the time reg IDs belonging this group
+					$sql_reg_obj		= New sql_query;
+					$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."'";
+					$sql_reg_obj->execute();
+
+					if ($sql_reg_obj->num_rows())
+					{
+						$sql_reg_obj->fetch_array();
+
+						foreach ($sql_reg_obj->data as $data_tmp)
+						{
+							// we store the ID inside an array key, since they are unique
+							// and this will prevent us needed to check for the existance of
+							// the ID already.
+							$unbilled_ids[ $data_tmp["id"] ] = "on";
+						}
+					}
+
+					unset($sql_reg_obj);
+				}
+			}
+
+			unset($sql_obj);
+
+
+
+			/*
+				Fetch amount of unbilled time
+			*/
+
 			// fetch amount of unbilled time
 			$sql_obj = New sql_query;
 			$sql_obj->prepare_sql_settable("timereg");
 			$sql_obj->prepare_sql_addfield("timebooked", "SUM(timereg.time_booked)");
 			$sql_obj->prepare_sql_addjoin("LEFT JOIN time_groups ON timereg.groupid = time_groups.id");
-			$sql_obj->prepare_sql_addwhere("(time_groups.invoiceid='' || time_groups.invoiceid='0')");
+
+			// provide list of valid IDs
+			$unbilled_ids_keys	= array_keys($unbilled_ids);
+			$unbilled_ids_count	= count($unbilled_ids_keys);
+			$unbilled_ids_sql	= "";
+
+			$i = 0;
+			foreach ($unbilled_ids_keys as $id)
+			{
+				$i++;
+
+				if ($i == $unbilled_ids_count)
+				{
+					$unbilled_ids_sql .= "timereg.id='$id' ";
+				}
+				else
+				{
+					$unbilled_ids_sql .= "timereg.id='$id' OR ";
+				}
+			}
+					
+			$sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+			
+
 			$sql_obj->generate_sql();
 
 			$sql_obj->execute();
