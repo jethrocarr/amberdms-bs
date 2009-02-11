@@ -809,7 +809,7 @@ class invoice
 
 		// fetch invoice items
 		$sql_items_obj			= New sql_query;
-		$sql_items_obj->string		= "SELECT id, type, chartid, customid, quantity, units, amount, price, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type!='tax' AND type!='payment'";
+		$sql_items_obj->string		= "SELECT id, type, chartid, customid, quantity, units, amount, price, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type!='tax' AND type!='payment' ORDER BY type, chartid, description";
 		$sql_items_obj->execute();
 		$sql_items_obj->fetch_array();
 
