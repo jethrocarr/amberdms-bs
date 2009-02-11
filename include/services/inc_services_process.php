@@ -44,6 +44,23 @@ function service_form_details_process()
 	$data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
 	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
 
+	// fetch information for all tax checkboxes from form
+	$sql_tax_obj		= New sql_query;
+	$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+	$sql_tax_obj->execute();
+
+	if ($sql_tax_obj->num_rows())
+	{
+		$sql_tax_obj->fetch_array();
+
+		foreach ($sql_tax_obj->data as $data_tax)
+		{
+			$data["tax_". $data_tax["id"] ]	= security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+		}
+
+	} // end of loop through taxes
+
+
 
 	// are we editing an existing service or adding a new one?
 	if ($id)
@@ -118,9 +135,10 @@ function service_form_details_process()
 			
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO services (name_service, typeid) VALUES ('".$data["name_service"]."', '". $data["typeid"] ."')";
+
 			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create service";
+				log_write("inc_services_process", "error", "A fatal SQL error occured whilst attempting to create the service");
 			}
 
 			$id = $sql_obj->fetch_insert_id();
@@ -142,9 +160,48 @@ function service_form_details_process()
 			
 			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";
+				log_write("inc_services_process", "error", "A fatal SQL error occured whilst attempting to save changes");
 			}
-			else
+
+
+
+			/*
+				Update service tax options
+			*/
+
+			// delete existing tax options for this service (if any)
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "DELETE FROM services_taxes WHERE serviceid='$id'";
+			$sql_tax_obj->execute();
+
+			// fetch list of tax IDs
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+			$sql_tax_obj->execute();
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					if ($data["tax_". $data_tax["id"] ] == "on")
+					{
+						// enable selected tax options
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "INSERT INTO services_taxes (serviceid, taxid) VALUES ('$id', '". $data_tax["id"] ."')";
+						$sql_obj->execute();
+					}
+				}
+
+			} // end of loop through taxes
+
+
+
+			/*
+				Success! :-)
+			*/
+			if (!$_SESSION["error"]["message"])
 			{
 				if ($mode == "add")
 				{
@@ -160,13 +217,25 @@ function service_form_details_process()
 					$_SESSION["notification"]["message"][] = "Service successfully updated.";
 					journal_quickadd_event("services", $id, "Service successfully updated");
 
-
 					// display updated details
 					header("Location: ../index.php?page=services/view.php&id=$id");
 					exit(0);
 				}
-				
 			}
+
+
+			/*
+				Failure
+			*/
+			if ($mode == "add")
+			{
+				header("Location: ../index.php?page=services/add.php");
+			}
+			else
+			{
+				header("Location: ../index.php?page=services/view.php&id=$id");
+			}
+		
 			
 		} // end if ID
 

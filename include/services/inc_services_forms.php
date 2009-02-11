@@ -68,9 +68,65 @@ class services_form_details
 			$this->obj_form->add_input($structure);
 		}
 
-		// define subforms
+		// define service_details subform
 		$this->obj_form->subforms["service_details"]	= array("name_service", "chartid", "typeid", "description");
+
+
+
+		/*
+			List all the taxes, so that the user can select the tax(es) that apply to the service
+		*/
+
+		$sql_tax_obj		= New sql_query;
+		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->execute();
+
+		if ($sql_tax_obj->num_rows())
+		{
+			// user note
+			$structure = NULL;
+			$structure["fieldname"] 		= "tax_message";
+			$structure["type"]			= "message";
+			$structure["defaultvalue"]		= "<p>Check all taxes that apply to this transaction below. If you want more advanced tax control (eg: fixed amounts of tax) then define a product and add it to the invoice.</p>";
+			$this->obj_form->add_input($structure);
 		
+			$this->obj_form->subforms["service_tax"][] = "tax_message";
+
+
+			// run through all the taxes
+			$sql_tax_obj->fetch_array();
+
+			foreach ($sql_tax_obj->data as $data_tax)
+			{
+				// define tax checkbox
+				$structure = NULL;
+				$structure["fieldname"] 		= "tax_". $data_tax["id"];
+				$structure["type"]			= "checkbox";
+				$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+				$structure["options"]["no_fieldname"]	= "enable";
+
+				if ($this->serviceid)
+				{
+					// see if this tax is currently enabled for this service
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT id FROM services_taxes WHERE serviceid='". $this->serviceid ."' AND taxid='". $data_tax["id"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$structure["defaultvalue"] = "on";
+					}
+				}
+
+				// add to form
+				$this->obj_form->add_input($structure);
+				$this->obj_form->subforms["service_tax"][] = "tax_". $data_tax["id"];
+			}
+		}
+
+
+
+		// define subforms	
 		if (user_permissions_get("services_write"))
 		{
 			$this->obj_form->subforms["submit"]	= array("submit");

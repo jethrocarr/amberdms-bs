@@ -492,6 +492,28 @@ function service_invoices_generate($customerid = NULL)
 					// amount
 					$itemdata["amount"]		= $sql_service_obj->data[0]["price"];
 
+
+					// fetch all tax options for this service from the database
+					//
+					// note: if any options aren't suitable for the customer, the invoices
+					// code will handle this for us and unselect them.
+					//
+					$sql_tax_obj		= New sql_query;
+					$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $period_data["serviceid"] ."'";
+					$sql_tax_obj->execute();
+
+					if ($sql_tax_obj->num_rows())
+					{
+						$sql_tax_obj->fetch_array();
+
+						foreach ($sql_tax_obj->data as $data_tax)
+						{
+							$itemdata["tax_". $data_tax["taxid"] ] = "on";
+						}
+
+					} // end of loop through taxes
+
+
 					// create item
 					$invoice_item->prepare_data($itemdata);
 					$invoice_item->action_create();
@@ -692,6 +714,28 @@ function service_invoices_generate($customerid = NULL)
 
 						} // end of processing usage
 
+
+						// fetch all tax options for this service from the database
+						//
+						// note: if any options aren't suitable for the customer, the invoices
+						// code will handle this for us and unselect them.
+						//
+						$sql_tax_obj		= New sql_query;
+						$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $period_data["serviceid"] ."'";
+						$sql_tax_obj->execute();
+
+						if ($sql_tax_obj->num_rows())
+						{
+							$sql_tax_obj->fetch_array();
+
+							foreach ($sql_tax_obj->data as $data_tax)
+							{
+								$itemdata["tax_". $data_tax["taxid"] ] = "on";
+							}
+
+						} // end of loop through taxes
+
+
 						// create the item
 						$invoice_item->prepare_data($itemdata);
 						$invoice_item->action_create();
@@ -738,7 +782,10 @@ function service_invoices_generate($customerid = NULL)
 				} // end of processing periods
 
 
-				// invoice creation complete
+				// invoice creation complete - remove any notifications made by the invoice functions and return
+				// our own notification
+				$_SESSION["notification"]["message"] = array();
+
 				log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
 
 
