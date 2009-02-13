@@ -30,7 +30,10 @@ if (user_permissions_get('products_write'))
 	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
 	$obj_product->data["units"]			= security_form_input_predefined("any", "units", 1, "");
 	$obj_product->data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
+	$obj_product->data["account_purchase"]		= security_form_input_predefined("int", "account_purchase", 1, "");
 
+	$obj_product->data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
+	$obj_product->data["date_end"]			= security_form_input_predefined("date", "date_end", 0, "");
 	$obj_product->data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
 	$obj_product->data["details"]			= security_form_input_predefined("any", "details", 0, "");
 	

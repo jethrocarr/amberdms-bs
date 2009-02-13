@@ -58,7 +58,11 @@ class products_form_details
 		$this->obj_form->add_input($structure);
 
 
-		$structure = charts_form_prepare_acccountdropdown("account_sales", 2);
+		$structure = charts_form_prepare_acccountdropdown("account_sales", "ar_income");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = charts_form_prepare_acccountdropdown("account_purchase", "ap_expense");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
@@ -66,6 +70,18 @@ class products_form_details
 		$structure = NULL;
 		$structure["fieldname"] 	= "details";
 		$structure["type"]		= "textarea";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]		= "date_start";
+		$structure["type"]		= "date";
+		$structure["options"]["req"]	= "yes";
+		$structure["defaultvalue"]	= date("Y-m-d");
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]		= "date_end";
+		$structure["type"]		= "date";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -109,7 +125,7 @@ class products_form_details
 			
 
 		// define subforms
-		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "date_current", "details");
+		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
 		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale");
 		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$this->obj_form->subforms["product_supplier"]	= array("vendorid", "code_product_vendor");
