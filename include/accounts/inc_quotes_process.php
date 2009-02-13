@@ -312,10 +312,18 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 
 
 			/*
-				Call functions to create transaction entries for all the items. (remember that the quote had nothing in account_trans for the items)
+				Call functions to create transaction entries for all the items.
+				(remember that the quote had nothing in account_trans for the items)
 			*/
 			
-			invoice_items_update_ledger($invoiceid, "ar");
+			$invoice_item = New invoice_items;
+					
+			$invoice_item->id_invoice	= $invoiceid;
+			$invoice_item->type_invoice	= "ar";
+
+			$invoice_item->action_update_ledger();
+
+			unset($invoice_item);
 
 
 

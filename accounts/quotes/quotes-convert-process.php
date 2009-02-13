@@ -12,6 +12,8 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 // custom includes
+require("../../include/accounts/inc_ledger.php");
+require("../../include/accounts/inc_invoices.php");
 require("../../include/accounts/inc_quotes_process.php");
 
 
