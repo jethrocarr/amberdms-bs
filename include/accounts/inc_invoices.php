@@ -1358,16 +1358,27 @@ class invoice_items
 				// calculate the total amount
 				$this->data["amount"]		= $data["price"] * $data["quantity"];
 
-				// get the chart for the product
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT account_sales FROM products WHERE id='". $this->data["customid"] ."' LIMIT 1";
+				// get the chart for the product - this will be the account_sales
+				// for ar/quotes, or account_purchase for AP invoices
+
+				$sql_obj = New sql_query;
+
+				if ($this->type_invoice == "ap")
+				{
+					$sql_obj->string = "SELECT account_purchase as account FROM products WHERE id='". $this->data["customid"] ."' LIMIT 1";
+				}
+				else
+				{
+					$sql_obj->string = "SELECT account_sales as account FROM products WHERE id='". $this->data["customid"] ."' LIMIT 1";
+				}
+
 				$sql_obj->execute();
 
 				if ($sql_obj->num_rows())
 				{
 					$sql_obj->fetch_array();
 	
-					$this->data["chartid"] = $sql_obj->data[0]["account_sales"];
+					$this->data["chartid"] = $sql_obj->data[0]["account"];
 				}
 				else
 				{
