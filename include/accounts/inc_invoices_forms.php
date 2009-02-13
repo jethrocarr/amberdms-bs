@@ -437,11 +437,15 @@ class invoice_form_export
 
 		// download form
 		print "<table width=\"100%\" class=\"table_highlight\"><tr><td>";
-		print "<table cellpadding=\"5\"><tr>";
-		
+		print "<table cellpadding=\"5\" width=\"100%\"><tr>";
+
+/*
+	TODO: good place to add an icon
+
 		print "<td valign=\"top\">";
 			print "pdf_icon_here";
 		print "</td>";
+*/
 
 		print "<td width=\"100%\">";
 			print "<h3>Download PDF:</h3>";
@@ -462,11 +466,15 @@ class invoice_form_export
 
 		// email form
 		print "<table width=\"100%\" class=\"table_highlight\"><tr><td>";
-		print "<table cellpadding=\"5\"><tr>";
-		
+		print "<table cellpadding=\"5\" width=\"100%\"><tr>";
+
+/*
+	TODO: good place to add an icon
+
 		print "<td valign=\"top\">";
 			print "email_icon_here";
 		print "</td>";
+*/
 
 		print "<td width=\"100%\">";
 			print "<h3>Email PDF:</h3>";
