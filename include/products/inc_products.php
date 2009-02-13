@@ -351,6 +351,17 @@ class product
 		}
 
 
+		// delete the product taxes
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM products_taxes WHERE productid='". $this->id ."'";
+			
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the taxes assigned to the product");
+			return 0;
+		}
+
+
 		// delete product journal
 		journal_delete_entire("products", $this->id);
 
