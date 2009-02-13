@@ -305,7 +305,14 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 
 
 			// PDF headers
-			$filename = "/tmp/invoice_". $invoice->data["code_invoice"] .".pdf";
+			if ($type == "quotes")
+			{
+				$filename = "/tmp/quote_". $invoice->data["code_quote"] .".pdf";
+			}
+			else
+			{
+				$filename = "/tmp/invoice_". $invoice->data["code_invoice"] .".pdf";
+			}
 			
 			// required for IE, otherwise Content-disposition is ignored
 			if (ini_get('zlib.output_compression'))
