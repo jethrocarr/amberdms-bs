@@ -11,32 +11,26 @@
 */
 
 
-// includes
-require("../config.php");
-require("../amberphplib/main.php");
-
 // custom includes
 require("../accounts/inc_ledger.php");
 require("../accounts/inc_invoices.php");
 require("../services/inc_services_invoicegen.php");
 
 
+function page_execute()
+{
+	print "Checking for service invoices...\n";
 
-print "Checking for service invoices...\n";
+	// generate new service periods
+	service_periods_generate(NULL);
 
-
-// generate new service periods
-service_periods_generate(NULL);
-
-// generate any invoices required
-service_invoices_generate(NULL);
-
-
-print "Service invoicing complete.\n";
+	// generate any invoices required
+	service_invoices_generate(NULL);
 
 
-//print_r($_SESSION);
+	print "Service invoicing complete.\n";
 
-exit(0);
+} // end of page_execute()
+
 
 ?>

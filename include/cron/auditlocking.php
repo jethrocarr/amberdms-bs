@@ -17,122 +17,122 @@
 	
 */
 
-// includes
-require("../config.php");
-require("../amberphplib/main.php");
 
-
-print "Started Audit Locking Cron Job\n";
-
-
-/*
-	Lock paid invoices 
-
-	Note: If ACCOUNTS_INVOICE_LOCK is set to 0, then locking is disabled.
-*/
-
-print "Checking for invoices to lock...\n";
-
-auditlocking_invoices("ar");
-auditlocking_invoices("ap");
-
-
-
-/*
-	Lock GL transactions
-*/
-
-print "Checking for GL transactions...\n";
-
-
-// fetch number of days to perform locking for
-$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_GL_LOCK'");
-
-if ($lockdays)
+function page_execute()
 {
-	// calculate locking date
-	$locking_date = date("Y-m-d", mktime() - (86400 * $lockdays));
+	print "Started Audit Locking Cron Job\n";
 
-	// fetch all GL transactions older than $locking_date
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id, code_gl FROM account_gl WHERE locked='0' AND date_trans < '$locking_date'";
-	$sql_obj->execute();
 
-	if ($sql_obj->num_rows())
+	/*
+		Lock paid invoices 
+
+		Note: If ACCOUNTS_INVOICE_LOCK is set to 0, then locking is disabled.
+	*/
+
+	print "Checking for invoices to lock...\n";
+
+	auditlocking_invoices("ar");
+	auditlocking_invoices("ap");
+
+
+
+	/*
+		Lock GL transactions
+	*/
+
+	print "Checking for GL transactions...\n";
+
+
+	// fetch number of days to perform locking for
+	$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_GL_LOCK'");
+
+	if ($lockdays)
 	{
-		$sql_obj->fetch_array();
+		// calculate locking date
+		$locking_date = date("Y-m-d", mktime() - (86400 * $lockdays));
 
-		foreach ($sql_obj->data as $data_trans)
+		// fetch all GL transactions older than $locking_date
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, code_gl FROM account_gl WHERE locked='0' AND date_trans < '$locking_date'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
 		{
-			// lock the transaction
-			print "Locked GL transaction ". $data_trans["code_gl"] ."\n";
+			$sql_obj->fetch_array();
 
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE account_gl SET locked='1' WHERE id='". $data_trans["id"] ."' LIMIT 1";
-			$sql_obj->execute();
-		}
+			foreach ($sql_obj->data as $data_trans)
+			{
+				// lock the transaction
+				print "Locked GL transaction ". $data_trans["code_gl"] ."\n";
+
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE account_gl SET locked='1' WHERE id='". $data_trans["id"] ."' LIMIT 1";
+				$sql_obj->execute();
+			}
+			
+		} // end of loop through transactions
 		
-	} // end of loop through transactions
-	
-} // end of lockdays
+	} // end of lockdays
 
 
 
 
-/*
-	Lock journal posts
-*/
+	/*
+		Lock journal posts
+	*/
 
-print "Locking journal posts\n";
+	print "Locking journal posts\n";
 
-// fetch number of days to perform locking for
-$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='JOURNAL_LOCK'");
+	// fetch number of days to perform locking for
+	$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='JOURNAL_LOCK'");
 
-if ($lockdays)
-{
-	// calculate locking timestamp
-	$locking_time = mktime() - (86400 * $lockdays);
-
-
-	// lock any journal entries older than $locking_time
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "UPDATE journal SET locked='1' WHERE locked='0' AND timestamp < '$locking_time'";
-	$sql_obj->execute();
-	
-} // end of lockdays
+	if ($lockdays)
+	{
+		// calculate locking timestamp
+		$locking_time = mktime() - (86400 * $lockdays);
 
 
-/*
-	Lock Time Entries
-*/
-
-print "Locking timesheets/time entries\n";
-
-// fetch number of days to perform locking for
-$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_LOCK'");
-
-if ($lockdays)
-{
-	// calculate locking date
-	$locking_date = date("Y-m-d", mktime() - (86400 * $lockdays));
-
-	// lock any time entries older than $locking_date
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "UPDATE timereg SET locked='1' WHERE date < '$locking_date'";
-	$sql_obj->execute();
-	
-} // end of lockdays
+		// lock any journal entries older than $locking_time
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE journal SET locked='1' WHERE locked='0' AND timestamp < '$locking_time'";
+		$sql_obj->execute();
+		
+	} // end of lockdays
 
 
+	/*
+		Lock Time Entries
+	*/
 
-// complete
-print "Audit Locking Complete\n";
-exit(0);
+	print "Locking timesheets/time entries\n";
+
+	// fetch number of days to perform locking for
+	$lockdays = sql_get_singlevalue("SELECT value FROM config WHERE name='TIMESHEET_LOCK'");
+
+	if ($lockdays)
+	{
+		// calculate locking date
+		$locking_date = date("Y-m-d", mktime() - (86400 * $lockdays));
+
+		// lock any time entries older than $locking_date
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE timereg SET locked='1' WHERE date < '$locking_date'";
+		$sql_obj->execute();
+		
+	} // end of lockdays
 
 
 
-////// FUNCTIONS ///////
+	// complete
+	print "Audit Locking Complete\n";
+	return 0;
 
+} // end of page_execute
+
+
+
+
+////// SUPPORT FUNCTIONS ///////
 
 
 

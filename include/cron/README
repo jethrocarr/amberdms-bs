@@ -1,5 +1,17 @@
-This directory contains scripts executed by cron on a daily basis for performing auditing, nightly invoicing and service management tasks.
+This directory contains scripts executed by cron on a daily basis for performing auditing,
+nightly invoicing and service management tasks.
 
-If installed from an Amberdms-provided package, there should already be a file in /etc/cron.d/ to run the scripts - if not, then refer
-to the product documentation for installation instructions.
+If installed from an Amberdms-provided package, there should already be a file in /etc/cron.d/
+to run the scripts - if not, then please refer to the product documentation for installation
+instructions.
+
+
+IMPORTANT: ALL SCRIPTS MUST BE EXECUTED AS AN OPTION VIA THE INDEX.PHP SCRIPT
+
+eg:
+	$ ./index.php cron.php
+
+If you attempt to run the scripts directly, they will not do anything. The index.php script
+does some important setup work for handling multiple hosted instances.
+
 
