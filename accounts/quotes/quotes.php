@@ -33,9 +33,9 @@ class page_output
 		$this->obj_table->tablename		= "account_quotes";
 
 		// define all the columns and structure
+		$this->obj_table->add_column("standard", "code_quote", "account_quotes.code_quote");
 		$this->obj_table->add_column("standard", "name_customer", "customers.name_customer");
 		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
-		$this->obj_table->add_column("standard", "code_quote", "account_quotes.code_quote");
 		$this->obj_table->add_column("date", "date_trans", "account_quotes.date_trans");
 		$this->obj_table->add_column("date", "date_validtill", "account_quotes.date_validtill");
 		$this->obj_table->add_column("price", "amount_tax", "account_quotes.amount_tax");
@@ -48,7 +48,7 @@ class page_output
 
 		
 		// defaults
-		$this->obj_table->columns		= array("name_customer", "code_quote", "date_trans", "amount_total");
+		$this->obj_table->columns		= array("code_quote", "name_customer", "date_trans", "amount_total");
 		$this->obj_table->columns_order		= array("code_quote");
 		$this->obj_table->columns_order_options	= array("code_quote", "name_customer", "name_staff", "date_trans", "date_validtill", "sent");
 
