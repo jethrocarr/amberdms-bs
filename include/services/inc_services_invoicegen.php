@@ -305,16 +305,47 @@ function service_periods_add($services_customers_id, $billing_mode)
 	}
 
 
+	
+	/*
+		Calculate date to bill the period on
+	*/
+	switch ($billing_mode)
+	{
+		case "periodadvance":
+		case "monthadvance":
+			// PERIODADVANCE / MONTHADVANCE
+			//
+			// Billing date should be set to today, since the period will have just been generated in advance today and
+			// we don't need to bother regenerating the billing period.
+			//
+
+			$date_period_billing = date("Y-m-d");
+		break;
+
+			
+		case "periodend":
+		case "monthend":
+			// PERIODEND /  MONTHEND
+			//
+			// We can't bill for this period until it's end, so we set the billing date to the start of the next period,
+			// so that the period has completely finished before we invoice.
+
+			$date_period_billing = $date_period_next;
+
+		break;
+	}
+
+
+
+
 
 
 
 	/*
 		Add a new period
-
-		We set the date_billed value to today, so that the invoicing code will process it.
 	*/
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "INSERT INTO services_customers_periods (services_customers_id, date_start, date_end, date_billed) VALUES ('$services_customers_id', '$date_period_start', '$date_period_end', '". date("Y-m-d") ."')";
+	$sql_obj->string	= "INSERT INTO services_customers_periods (services_customers_id, date_start, date_end, date_billed) VALUES ('$services_customers_id', '$date_period_start', '$date_period_end', '$date_period_billing')";
 	$sql_obj->execute();
 
 			
