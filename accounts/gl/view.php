@@ -163,7 +163,7 @@ class page_output
 		for ($i = 0; $i < $this->num_trans; $i++)
 		{					
 			// account
-			$structure = form_helper_prepare_dropdownfromdb("trans_". $i ."_account", "SELECT id, code_chart as label, description as label1 FROM account_charts ORDER BY code_chart");
+			$structure = form_helper_prepare_dropdownfromdb("trans_". $i ."_account", "SELECT id, code_chart as label, description as label1 FROM account_charts WHERE chart_type!='1' ORDER BY code_chart");
 			$structure["options"]["width"]	= "200";
 			$this->obj_form->add_input($structure);
 			
