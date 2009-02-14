@@ -47,6 +47,8 @@
 		<part name='details' type='xsd:string'/>
 		<part name='price_cost' type='xsd:string'/>
 		<part name='price_sale' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
 		<part name='date_current' type='xsd:string'/>
 		<part name='quantity_instock' type='xsd:int'/>
 		<part name='quantity_vendor' type='xsd:int'/>
@@ -55,6 +57,8 @@
 		<part name='code_product_vendor' type='xsd:string'/>
 		<part name='account_sales' type='xsd:int'/>
 		<part name='account_sales_label' type='xsd:string'/>
+		<part name='account_purchase' type='xsd:int'/>
+		<part name='account_purchase_label' type='xsd:string'/>
 	</message>
 
 
@@ -75,12 +79,15 @@
 		<part name='details' type='xsd:string'/>
 		<part name='price_cost' type='xsd:string'/>
 		<part name='price_sale' type='xsd:string'/>
+		<part name='date_start' type='xsd:string'/>
+		<part name='date_end' type='xsd:string'/>
 		<part name='date_current' type='xsd:string'/>
 		<part name='quantity_instock' type='xsd:int'/>
 		<part name='quantity_vendor' type='xsd:int'/>
 		<part name='vendorid' type='xsd:int'/>
 		<part name='code_product_vendor' type='xsd:string'/>
 		<part name='account_sales' type='xsd:int'/>
+		<part name='account_purchase' type='xsd:int'/>
 	</message>
 
 	<message name='set_product_details_response'>

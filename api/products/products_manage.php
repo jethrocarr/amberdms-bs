@@ -67,13 +67,19 @@ class products_manage_soap
 			{
 				$obj_product->data["vendorid_label"] = sql_get_singlevalue("SELECT name_vendor as value FROM vendors WHERE id='". $obj_product->data["vendorid"] ."'");
 			}
-
-			// to save SOAP clients from having to do another lookup to find the account_sales
-			// chart name, we fetch it now
+			
+			// to save SOAP clients from having to do another lookup to find the account_sales and account_purchase
+			// account names, we look them up now
 			if ($obj_product->data["account_sales"])
 			{
 				$obj_product->data["account_sales_label"] = sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $obj_product->data["account_sales"] ."'");
 			}
+
+			if ($obj_product->data["account_purchase"])
+			{
+				$obj_product->data["account_purchase_label"] = sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $obj_product->data["account_purchase"] ."'");
+			}
+
 
 
 			// return data
@@ -83,6 +89,8 @@ class products_manage_soap
 					$obj_product->data["details"], 
 					$obj_product->data["price_cost"], 
 					$obj_product->data["price_sale"], 
+					$obj_product->data["date_start"], 
+					$obj_product->data["date_end"], 
 					$obj_product->data["date_current"], 
 					$obj_product->data["quantity_instock"], 
 					$obj_product->data["quantity_vendor"], 
@@ -90,7 +98,9 @@ class products_manage_soap
 					$obj_product->data["vendorid_label"], 
 					$obj_product->data["code_product_vendor"], 
 					$obj_product->data["account_sales"], 
-					$obj_product->data["account_sales_label"]);
+					$obj_product->data["account_sales_label"],
+					$obj_product->data["account_purchase"], 
+					$obj_product->data["account_purchase_label"]);
 
 			return $return;
 		}
@@ -191,12 +201,15 @@ class products_manage_soap
 					$details,
 					$price_cost,
 					$price_sale,
+					$date_start,
+					$date_end,
 					$date_current,
 					$quantity_instock,
 					$quantity_vendor,
 					$vendorid,
 					$code_product_vendor,
-					$account_sales)
+					$account_sales,
+					$account_purchase)
 	{
 		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
 
@@ -214,7 +227,10 @@ class products_manage_soap
 			$obj_product->data["name_product"]		= security_script_input_predefined("any", $name_product);
 			$obj_product->data["units"]			= security_script_input_predefined("any", $units);
 			$obj_product->data["account_sales"]		= security_script_input_predefined("int", $account_sales);
+			$obj_product->data["account_purchase"]		= security_script_input_predefined("int", $account_purchase);
 
+			$obj_product->data["date_start"]		= security_script_input_predefined("date", $date_start);
+			$obj_product->data["date_end"]			= security_script_input_predefined("date", $date_end);
 			$obj_product->data["date_current"]		= security_script_input_predefined("date", $date_current);
 			$obj_product->data["details"]			= security_script_input_predefined("any", $details);
 			
