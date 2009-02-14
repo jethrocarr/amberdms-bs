@@ -583,7 +583,14 @@ class page_output
 			print "<table width=\"100%\">";
 
 				// add time link
-				print "<td align=\"left\"><p><b><a href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time record.</a></b></p></td>";
+				if (user_permissions_staff_get("timereg_write", $this->employeeid))
+				{
+					print "<td align=\"left\"><p><b><a href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time record.</a></b></p></td>";
+				}
+				else
+				{
+					print "<p><i>You have read-only access to this employee and therefore can not add any more time.</i></p>";
+				}
 
 				// display CSV download link
 				print "<td align=\"right\"><p><a href=\"index-export.php?mode=csv&page=timekeeping/timereg.php\">Export as CSV</a></p></td>";
