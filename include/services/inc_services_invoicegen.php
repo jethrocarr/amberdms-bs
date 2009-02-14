@@ -267,15 +267,39 @@ function service_periods_add($services_customers_id, $billing_mode)
 			//
 			// Periods start on the 1st and end on the last day of the month.
 
+			if (time_calculate_daynum($date_period_start) != "01")
+			{
+				log_debug("inc_services_invoicegen", "Note: generating extra long period due to new service.");
 
-			// Add time to the date_period_start date.
-			$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
+				// the service is starting not on the first day of the month - the most likely cause is that this
+				// is the first time a new service is being billed for a customer.
+				//
+				// we need to generate a period end date for the end of the next month, so that the first period is one
+				// whole month + the extra number of days.
+				//
 
-			// fetch the end of the month date
-			$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_end') as value");
 
-			// fetch the next period's start date (the first of the next month)
-			$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+				// Add time to the date_period_start date.
+				$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
+
+				// fetch the end of the month date
+				$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_end') as value");
+
+				// fetch the next period's start date (the first of the next month)
+				$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+
+			}
+			else
+			{
+				// regular billing period - ie: not the first time.
+			
+				// fetch the end of the month date
+				$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_start') as value");
+
+				// fetch the next period's start date (the first of the next month)
+				$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+			}
+
 
 		break;
 	}
@@ -463,6 +487,56 @@ function service_invoices_generate($customerid = NULL)
 					// fetch service type
 					$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."'");
 					
+				
+					// fetch billing mode
+					$billing_mode = sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $sql_service_obj->data[0]["billing_mode"] ."'");
+
+
+					if ($billing_mode == "monthend" || $billing_mode == "monthadvance")
+					{
+						log_debug("services_invoicegen", "Invoice bills by month date");
+
+						/*
+							Handle monthly billing
+
+							Normally, monthly billing is easy, however the very first billing period is special, as it may span a more than 1 month.
+
+							Eg: if a service is started on 2008-01-09, the end of the billing period will be 2008-02-29, which is 1 month + 21 day.
+
+							To handle this, we increase the base costs and included units by the following method:
+
+								( standard_cost / normal_month_num_days ) * num_days_in_partial_month == extra_amount
+
+								total_amount = (extra_amount + normal_amount)
+
+
+							Note: we do not increase included units for licenses service types, since these need to remain fixed and do not
+							scale with the month.
+						*/
+
+						// check if the period is the very first period - the start and end dates will be in different months.
+						if (time_calculate_monthnum($period_data["date_start"]) != time_calculate_monthnum($period_data["date_end"]))
+						{
+							// very first billing month
+							log_debug("services_invoicegen", "Very first billing month - adjusting prices/included units to suit the extra time included.");
+
+							// work out the number of days extra
+							$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
+							$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_data["date_start"]);
+
+							log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
+
+							// calculate correct base fee
+							$sql_service_obj->data[0]["price"] = ( ($sql_service_obj->data[0]["price"] / $extra_month_days_total) * $extra_month_days_extra ) + $sql_service_obj->data[0]["price"];
+
+							// calculate number of included units - round up to nearest full unit
+							if ($service_type != "licenses")
+							{	
+								$sql_service_obj->data[0]["included_units"] = sprintf("%d", ( ($sql_service_obj->data[0]["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $sql_service_obj->data[0]["included_units"] );
+							}
+						}
+					}
+
 
 
 					/*
