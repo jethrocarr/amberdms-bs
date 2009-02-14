@@ -30,10 +30,10 @@ class authenticate
 		$password	= security_script_input_predefined("any", $password);
 
 
-		// $account is only used by Amberdms's hosted billing system - for normal setups
+		// $account is only used by Amberdms's hosted billing system - for single instance configurations
 		// it is unused, and simply exists to ensure a standard API across all product versions
 
-		if ($result = user_login($username, $password))
+		if ($result = user_login($account, $username, $password))
 		{
 			// authenticated - return the session string
 			$sid = session_name() ."=". session_id();
