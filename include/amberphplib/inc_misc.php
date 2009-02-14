@@ -373,6 +373,30 @@ function time_calculate_daysofweek($date_selected_start)
 
 
 /*
+	time_calculate_daynum($date)
+
+	Calculates what day the supplied date is in. If not date is supplied, then
+	returns the current day.
+*/
+function time_calculate_daynum($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_daynum($date)");
+
+	if (!$date)
+	{
+		return date("d");
+	}
+	else
+	{
+		preg_match("/-([0-9]*)$/", $date, $matches);
+
+		return $matches[1];
+	}
+}
+
+
+
+/*
 	time_calculate_weeknum($date)
 
 	Calculates what week the supplied date is in. If not date is supplied, then
@@ -402,6 +426,30 @@ function time_calculate_weeknum($date = NULL)
 
 
 /*
+	time_calculate_monthnum($date)
+
+	Calculates what month the supplied date is in. If not date is supplied, then
+	returns the current month.
+*/
+function time_calculate_monthnum($date = NULL)
+{
+	log_debug("misc", "Executing time_calculate_monthnum($date)");
+
+	if (!$date)
+	{
+		return date("m");
+	}
+	else
+	{
+		preg_match("/^[0-9]*-([0-9]*)-/", $date, $matches);
+
+		return $matches[1];
+	}
+}
+
+
+
+/*
 	time_calculate_yearnum($date)
 
 	Calculates what year the supplied date is in. If not date is supplied, then
@@ -422,6 +470,7 @@ function time_calculate_yearnum($date = NULL)
 		return $matches[1];
 	}
 }
+
 
 
 /*
