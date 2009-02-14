@@ -478,8 +478,7 @@ class accounts_invoices_manage_soap
 					$date_trans,
 					$date_sent,
 					$sendmethod,
-					$notes,
-					$autotaxes)
+					$notes)
 	{
 		log_debug("accounts_invoices_manage", "Executing set_invoice_details($id, $invoicetype, values...)");
 
@@ -526,7 +525,6 @@ class accounts_invoices_manage_soap
 			$obj_invoice->data["date_sent"]			= security_script_input_predefined("date", $date_sent);
 			$obj_invoice->data["sentmethod"]		= security_script_input_predefined("any", $sentmethod);
 			$obj_invoice->data["notes"]			= security_script_input_predefined("any", $notes);
-			$obj_invoice->data["autotaxes"]			= security_script_input_predefined("any", $autotaxes);
 
 
 			foreach (array_keys($obj_invoice->data) as $key)

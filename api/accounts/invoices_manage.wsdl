@@ -176,7 +176,6 @@
 		<part name='date_sent' type='xsd:string'/>
 		<part name='sentmethod' type='xsd:string'/>
 		<part name='notes' type='xsd:string'/>
-		<part name='autotaxes' type='xsd:string'/>
 	</message>
 
 	<message name='set_invoice_details_response'>
