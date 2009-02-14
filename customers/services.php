@@ -113,7 +113,7 @@ class page_output
 
 		if (!$this->obj_table->data_num_rows)
 		{
-			format_msgbox("important", "<p><b>This customer is not currently subscribed to any services.</b></p>");
+			format_msgbox("info", "<p>This customer is not currently subscribed to any services.</p>");
 
 			if (user_permissions_get("customers_write"))
 			{

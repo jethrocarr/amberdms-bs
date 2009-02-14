@@ -149,11 +149,11 @@ class page_output
 		// display data
 		if (!count($this->obj_table->columns))
 		{
-			print "<p><b>Please select some valid options to display.</b></p>";
+			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
 		elseif (!$this->obj_table->data_num_rows)
 		{
-			format_msgbox("important", "<p><b>You currently have no invoices belonging to this customer and matching your search requirements.</b></p>");
+			format_msgbox("info", "<p>You currently have no invoices belonging to this customer or matching your search requirements.</p>");
 		}
 		else
 		{

@@ -103,12 +103,13 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date_start", "");
 		$this->obj_table->add_column("date", "date_end", "");
+		$this->obj_table->add_column("date", "invoice_gen_date", "date_billed");
 		$this->obj_table->add_column("bool_tick", "invoiced", "invoiceid");
 		$this->obj_table->add_column("bool_tick", "paid", "NONE");
 		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
 
 		// defaults
-		$this->obj_table->columns		= array("date_start", "date_end", "invoiced", "paid", "code_invoice");
+		$this->obj_table->columns		= array("date_start", "date_end", "invoice_gen_date", "invoiced", "paid", "code_invoice");
 		$this->obj_table->columns_order		= array("date_start");
 
 		// define SQL structure
@@ -137,7 +138,7 @@ class page_output
 	
 		if (!$this->obj_table->data_num_rows)
 		{
-			print "<p><b>This service does not have any history - if the service has just been added, then this is normal.</b></p>";
+			format_msgbox("info", "<p>This service does not have any history - this is normal when the service has just recently been added.</p>");
 		}
 		else
 		{
