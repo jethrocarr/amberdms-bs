@@ -79,7 +79,6 @@ function invoice_generate_invoiceid($type)
 	0	failure
 	1	sucess
 */
-
 function invoice_render_summarybox($type, $id)
 {
 	log_debug("inc_invoices", "invoice_render_summarybox($type, $id)");
@@ -108,7 +107,12 @@ function invoice_render_summarybox($type, $id)
 	{
 		$sql_obj->fetch_array();
 
-		if ($sql_obj->data[0]["amount_total"] == 0)
+		// check for presence of invoice items
+		$sql_item_obj		= New sql_query;
+		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='$type' AND invoiceid='$id' LIMIT 1";
+		$sql_item_obj->execute();
+
+		if (!$sql_item_obj->num_rows())
 		{
 			print "<table width=\"100%\" class=\"table_highlight_important\">";
 			print "<tr>";
