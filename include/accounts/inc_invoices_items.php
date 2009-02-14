@@ -916,7 +916,7 @@ class invoice_form_item
 				}
 				else
 				{
-					if ($this->type_invoice == "ar")
+					if ($this->type == "ar" || $this->type == "quotes")
 					{
 						$form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
 					}
