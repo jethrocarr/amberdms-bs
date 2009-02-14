@@ -170,10 +170,11 @@ class page_output
 		
 		$this->obj_sql_entries->prepare_sql_addjoin("LEFT JOIN staff ON timereg.employeeid = staff.id");
 		$this->obj_sql_entries->prepare_sql_addjoin("LEFT JOIN project_phases ON timereg.phaseid = project_phases.id");
+		$this->obj_sql_entries->prepare_sql_addwhere("project_phases.projectid='". $this->id ."'");
 
 		if ($this->groupid)
 		{
-			$this->obj_sql_entries->prepare_sql_addwhere("groupid='". $this->groupid ."' OR !groupid");
+			$this->obj_sql_entries->prepare_sql_addwhere("(groupid='". $this->groupid ."' OR !groupid)");
 		}
 		else
 		{
