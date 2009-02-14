@@ -1,10 +1,9 @@
 <?php
 /*
 	Amberdms Billing System
-	(c) Copyright 2008 Amberdms Ltd
+	(c) Copyright 2009 Amberdms Ltd
 
-	www.amberdms.com
-	Licenced under the GNU GPL version 2 only.
+	Please see LICENSE file for copyright information.
 */
 
 

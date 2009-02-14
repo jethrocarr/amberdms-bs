@@ -2,10 +2,24 @@
 /*
 	AMBERPHPLIB
 
-	PHP functions + classed developed by Amberdms for use in various products.
+	(c) Copyright 2009 Amberdms Ltd
 
-	All code is Licensed under the GNU GPL version 2. If you wish to use this
-	code in a propietary/commercial product, please contact sales@amberdms.com.
+	www.amberdms.com
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Affero General Public License version 3
+	only as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU Affero General Public License for more details.
+
+	You should have received a copy of the GNU Affero General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+	If you wish to license any components of this program under a different
+	license, please contact sales@amberdms.com for commercial licencing options.
 */
 
 

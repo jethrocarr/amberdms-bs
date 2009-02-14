@@ -1,11 +1,24 @@
 <?php
 /*
 	Amberdms Billing System
-	(c) Copyright 2008 Amberdms Ltd
+	(c) Copyright 2009 Amberdms Ltd
 
-	www.amberdms.com
-	Licenced under the GNU GPL version 2 only.
+	www.amberdms.com/billing
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Affero General Public License version 3
+	only as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU Affero General Public License for more details.
+
+	You should have received a copy of the GNU Affero General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 */
+
 
 
 /*
@@ -60,12 +73,6 @@ else
 }
 
 
-// REMOVE?
-//// set default page state
-//if (!$_SESSION["error"]["pagestate"])
-//	$_SESSION["error"]["pagestate"] = 1;
-
-
 
 ?>
 
@@ -73,7 +80,7 @@ else
 <html>
 <head>
 	<title>Amberdms Billing System</title>
-	<meta name="copyright" content="(C)Copyright 2008 Amberdms Ltd.">
+	<meta name="copyright" content="(C)Copyright 2009 Amberdms Ltd.">
 
 
 <script type="text/javascript">
@@ -273,7 +280,7 @@ if (!preg_match('/^user/', $page))
 	<table width="100%">
 	<tr>
 		<td align="left">
-		<p style="font-size: 10px">(c) Copyright 2008 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
+		<p style="font-size: 10px">(c) Copyright 2009 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
 		</td>
 	</tr>
 	</table>
