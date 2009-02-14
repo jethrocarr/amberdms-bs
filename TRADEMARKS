@@ -1,0 +1,52 @@
+TRADEMARKS
+==========
+
+The Amberdms logo is a registered trademark of Amberdms Ltd.
+
+"Amberdms" is the trading name of Amberdms Ltd and is also covered by
+trademark laws.
+
+
+You may only use the Amberdms logo and/or name under the following conditions:
+
+	a) The Amberdms logo/name may be used on any product released by Amberdms
+	   which has not been modified in any way by a third party or yourself.
+
+	b) The Amberdms logo/name may still be used if the product has been modified
+	   in any of the following ways:
+
+	   - Bug fixes only
+	   - Security fixes only
+	   - Modifications required for packaging on different platforms.
+
+	   The product must carry a notice stating that this is a modified product. For example:
+
+	   "Based on the Amberdms Billing System"
+
+	   or
+
+	   "Contains code developed by Amberdms Ltd".
+
+
+	c) Modified versions of this product not covered by condition "b" above, may still be
+	   labeled as the "Amberdms Billing System" for the purposes of packaging for
+	   different operating systems.
+
+	   However, the application itself is not permitted to use the name/logo when running,
+	   without the written permission of Amberdms Ltd.
+	
+
+	c) The Amberdms logo may not be used if you have made any other changes
+	   without the written permission of Amberdms Ltd.
+
+
+These trademark usage requirements are intended to prevent missuse of the trusted
+Amberdms brand whilst still allowing flexability for open source developers.
+
+If you require clarification or wish to seek permissions to use Amberdms trademarks
+outside of the above requirements, please contact legal@amberdms.com
+
+If you are requesting to get permission for use of our trademark for your modifications,
+please include a copy of your modified code.
+
+<end>
