@@ -352,7 +352,7 @@ function user_login($instance, $username, $password)
 				// is the system default and needs to be changed
 				if ($mysql_data["password_salt"] == "")
 				{
-					$_SESSION["error"]["message"][] = "Your password is currently set to a default. It is highly important for you to change this password, which you can do <a href=\"index.php?page=user/user-details.php&id=". $mysql_data["id"] ."\">by clicking here</a>.";
+					$_SESSION["error"]["message"][] = "Your password is currently set to a default. It is highly important for you to change this password, which you can do <a href=\"index.php?page=user/options.php\">by clicking here</a>.";
 				}
 
 
