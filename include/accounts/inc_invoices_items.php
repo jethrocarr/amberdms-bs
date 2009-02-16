@@ -1369,7 +1369,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["date_trans"]	= security_form_input_predefined("date", "date_trans", 1, "");
 			$data["amount"]		= security_form_input_predefined("money", "amount", 1, "");
 			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
-			$data["source"]		= security_form_input_predefined("any", "source", 1, "");
+			$data["source"]		= security_form_input_predefined("any", "source", 0, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
 			
 		break;
