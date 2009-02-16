@@ -73,7 +73,7 @@ else
 					print "<p>For technical support or user assistance, please use the button below to view
 						how much support you have and support contact details.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support_package.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/index.php?page=products/billing_system/support_package.php&subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 				break;
 
 
@@ -86,7 +86,7 @@ else
 					print "<p>There is no change for technical support, but user assistance is charged to your
 						account and billed monthly - pricing information is available at the link below.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support_basic.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/index.php?page=products/billing_system/support_basic.php&subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 
 				break;
 
@@ -102,7 +102,7 @@ else
 						the expense and hassles of running your own servers and can include different support
 						packages with this service.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/getsupport.php\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/index.php?page=products/billing_system/getsupport.php\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 
 				break;
 			}
@@ -132,7 +132,7 @@ else
 				require a particular feature or want to integrate other products with the Amberdms Billing System, talk to us
 				and we can give you competitive quotes and service from the developers who designed and wrote this program.</p>";
 
-			print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/customisations.php\"><img src=\"images/buttons/button_customisations.png\" border=\"0\"></img></a><br>";
+			print "<a target=\"new\" href=\"http://www.amberdms.com/index.php?page=products/billing_system/customisations.php\"><img src=\"images/buttons/button_customisations.png\" border=\"0\"></img></a><br>";
 
 
 
@@ -146,7 +146,7 @@ else
 				the GNU AGPL software license - this means anyone can download the source
 				code for this program and make modifications or run it on your own servers.</p>";
 
-			print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/source.php\"><img src=\"images/buttons/button_getthesource.png\" border=\"0\"></img></a><br>";
+			print "<a target=\"new\" href=\"http://www.amberdms.com/index.php?page=products/billing_system/source.php\"><img src=\"images/buttons/button_getthesource.png\" border=\"0\"></img></a><br>";
 		}
 	}
 }
