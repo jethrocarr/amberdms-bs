@@ -73,7 +73,7 @@ else
 					print "<p>For technical support or user assistance, please use the button below to view
 						how much support you have and support contact details.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/getsupport.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support_package.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 				break;
 
 
@@ -86,7 +86,7 @@ else
 					print "<p>There is no change for technical support, but user assistance is charged to your
 						account and billed monthly - pricing information is available at the link below.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/getsupport.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support_basic.php?subscription=$subscription_id\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 
 				break;
 
@@ -102,7 +102,7 @@ else
 						the expense and hassles of running your own servers and can include different support
 						packages with this service.</p>";
 
-					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support.php\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/getsupport.php\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
 
 				break;
 			}
