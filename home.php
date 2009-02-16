@@ -42,10 +42,9 @@ else
 			print "<h3>OVERVIEW</h3>";
 			print "<p>Welcome to the Amberdms Billing System.</p>";
 
-			print "<p>To get started, use the links above or download the user guide for step-by-step instructions for
-				using this program.</p>";
+			print "<p>To get started, use the links above or download the product manuals (including a detailed user guide) using the button below.</p>";
 
-			print "<a target=\"new\" href=\"help/user_guide.pdf\"><img src=\"images/buttons/button_user_guide.png\" border=\"0\"></img></a><br>";
+			print "<a href=\"index.php?page=help/help.php\"><img src=\"images/buttons/button_manuals.png\" border=\"0\"></img></a><br>";
 
 			print "<br><br>";
 
@@ -96,7 +95,7 @@ else
 				case "none":
 				default:
 					
-					print "<p>If you would commercial support for the Amberdms Billing System, please click the
+					print "<p>If you would commercial support options for the Amberdms Billing System, please click the
 						button below to view our technical & user support packages.</p>";
 
 					print "<p>Amberdms also provided hosted versions of the Amberdms Billing System, eliminating
@@ -104,8 +103,24 @@ else
 						packages with this service.</p>";
 
 					print "<a target=\"new\" href=\"http://www.amberdms.com/products/billing_system/support.php\"><img src=\"images/buttons/button_commercial_support.png\" border=\"0\"></img></a><br>";
+
 				break;
 			}
+
+
+
+			/*
+				Community Mailing List
+			*/
+			print "<br><br>";
+			print "<h3>COMMUNITY</h3>";
+
+			print "<p>You may also be able to get support and discuss the Amberdms Billing System at the community mailing list. To subscribe
+				to this list, use the button below</p>";
+
+			print "<a target=\"new\" href=\"http://lists.amberdms.com/mailman/listinfo/amberdms-bs\"><img src=\"images/buttons/button_communitymailinglist.png\" border=\"0\"></img></a><br>";
+
+						
 
 			/*
 				Customisations
