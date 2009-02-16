@@ -180,17 +180,10 @@ class page_output
 		$this->obj_form_employee->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]		= "weekofyear";
+		$structure["fieldname"]		= "date";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $date_selected_weekofyear;
+		$structure["defaultvalue"]	= $this->date;
 		$this->obj_form_employee->add_input($structure);
-		
-		$structure = NULL;
-		$structure["fieldname"]		= "year";
-		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $date_selected_year;
-		$this->obj_form_employee->add_input($structure);
-
 		
 		// submit button
 		$structure = NULL;
@@ -295,8 +288,7 @@ class page_output
 		print "<form method=\"get\" action=\"index.php\">";
 		print "<p><b>Select an employee to view:</b></p>";
 		$this->obj_form_employee->render_field("employeeid");
-		$this->obj_form_employee->render_field("weekofyear");
-		$this->obj_form_employee->render_field("year");
+		$this->obj_form_employee->render_field("date");
 		$this->obj_form_employee->render_field("page");
 		$this->obj_form_employee->render_field("submit");
 		

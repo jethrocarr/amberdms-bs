@@ -199,6 +199,7 @@ class page_output
 		$structure["defaultvalue"]	= $date_selected_year;
 		$this->obj_form_employee->add_input($structure);
 
+
 		
 		// submit button
 		$structure = NULL;
