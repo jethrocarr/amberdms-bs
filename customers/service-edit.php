@@ -132,6 +132,13 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
+			$structure["fieldname"]		= "services_customers_id";
+			$structure["type"]		= "text";
+			$structure["defaultvalue"]	= $this->services_customers_id;
+			$this->obj_form->add_input($structure);
+
+
+			$structure = NULL;
 			$structure["fieldname"] 	= "active";
 			$structure["type"]		= "checkbox";
 			$structure["options"]["label"]	= "Service is enabled";
@@ -153,7 +160,6 @@ class page_output
 				$structure["options"]["req"]	= "yes";
 				$this->obj_form->add_input($structure);
 			}
-
 
 			
 			// billing
@@ -201,13 +207,6 @@ class page_output
 		$structure["defaultvalue"]	= $this->customerid;
 		$this->obj_form->add_input($structure);
 		
-		$structure = NULL;
-		$structure["fieldname"]		= "services_customers_id";
-		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->services_customers_id;
-		$this->obj_form->add_input($structure);
-		
-
 
 		// submit button
 		$structure = NULL;
@@ -229,7 +228,7 @@ class page_output
 		// define subforms
 		if ($this->services_customers_id)
 		{
-			$this->obj_form->subforms["service_edit"]	= array("serviceid", "active", "description");
+			$this->obj_form->subforms["service_edit"]	= array("serviceid", "services_customers_id", "active", "description");
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
 
 
@@ -244,7 +243,7 @@ class page_output
 		}
 		
 		
-		$this->obj_form->subforms["hidden"] = array("customerid", "services_customers_id");
+		$this->obj_form->subforms["hidden"] = array("customerid");
 
 		if (user_permissions_get("customers_write"))
 		{
