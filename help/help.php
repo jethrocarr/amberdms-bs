@@ -55,8 +55,11 @@ class page_output
 			System via the SOAP API, people interested in the code internals of the Amberdms Billing System or engineers wanting to intergrate
 			their monitoring scripts with the service usage functions.</p>";
 
-		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_API_developer_docs.pdf\">Amberdms Billing System API Developer Documentation</a><br>";
-		print "<br>";
+		print "<p><i>The developer documentation is currently undergoing final editing and accuracy checking and will be released with version 1.1.0
+			on 2nd March 2009. If you would like a draft copy, you are welcome to request one from support@amberdms.com but there is no guarantee
+			to their accuracy.</i></p>";
+//		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_API_developer_docs.pdf\">Amberdms Billing System API Developer Documentation</a><br>";
+//		print "<br>";
 //		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_service_usage_integration.pdf\">Amberdms Billing System Service Usage Integration</a><br>";
 //		print "<br>";
 
