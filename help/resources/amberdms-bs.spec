@@ -11,9 +11,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires: gettext
 Requires: httpd, mod_ssl
-Requires: php >= 4.0.4, mysql-server, php-mysql
+Requires: php >= 5.1.6, mysql-server, php-mysql, php-soap
 Requires: tetex-latex
-Requires: php-pear, php-pear-mail_mime
+Requires: php-pear, php-pear-Mail-Mime
 Requires: perl, perl-DBD-MySQL
 Prereq: httpd, php, mysql-server, php-mysql
 
