@@ -29,38 +29,35 @@ class page_output
 	function render_html()
 	{
 		print "<h3>PROGRAM MANUALS</h3>";
-		print "<p>This page lists all the program manuals available for download.</p>";
+		print "<p>This page lists all the program manual available for download.</p>";
 
 
 		// standard user guide
 		print "<br><br>";
 		print "<h3>USER GUIDE</h3>";
 		print "<p>If you are looking for information about using and configuring the Amberdms Billing System, download the user guide using the button below</p>";
-		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_userguide.pdf\"><img src=\"images/buttons/button_user_guide.png\" border=\"0\"></img></a><br>";
+		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_userguide.pdf\"><img src=\"images/buttons/button_user_guide.png\" border=\"0\"></img></a><br>";
 		print "<br>";
 
 
 		// administration guides
 		print "<br><br>";
 		print "<h3>SYSADMIN MANUALS</h3>";
-		print "<p>The following manuals are intended for system administrators installing or upgrading this program.</p>";
-		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_installguide.pdf\">Amberdms Billing System Installation Guide</a><br>";
+		print "<p>The following manual are intended for system administrators installing or upgrading this program.</p>";
+		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_installguide.pdf\">Amberdms Billing System Installation Guide</a><br>";
 		print "<br>";
 
 
-		// developer manuals
+		// developer manual
 		print "<br><br>";
 		print "<h3>DEVELOPER MANUALS</h3>";
-		print "<p>The following manuals are intended for developers who want to write their own programs capable of talking to the Amberdms Billing
+		print "<p>The following manual are intended for developers who want to write their own programs capable of talking to the Amberdms Billing
 			System via the SOAP API, people interested in the code internals of the Amberdms Billing System or engineers wanting to intergrate
 			their monitoring scripts with the service usage functions.</p>";
 
-		print "<p><i>The developer documentation is currently undergoing final editing and accuracy checking and will be released with version 1.1.0
-			on 2nd March 2009. If you would like a draft copy, you are welcome to request one from support@amberdms.com but there is no guarantee
-			to their accuracy.</i></p>";
-//		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_API_developer_docs.pdf\">Amberdms Billing System API Developer Documentation</a><br>";
-//		print "<br>";
-//		print "<a target=\"new\" href=\"help/manuals/amberdms_billing_system_service_usage_integration.pdf\">Amberdms Billing System Service Usage Integration</a><br>";
+		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_SOAP_API.pdf\">Amberdms Billing System SOAP API Developer Documentation</a><br>";
+		print "<br>";
+//		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_service_usage_integration.pdf\">Amberdms Billing System Service Usage Integration</a><br>";
 //		print "<br>";
 
 
