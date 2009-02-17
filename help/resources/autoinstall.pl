@@ -116,8 +116,17 @@ open (MYSQL, ">$opt_tmpfile") || die("Unable to create tmp file mysqltmp\n");
 
 # create MySQL user
 print "Creating user...\n";
-print MYSQL "GRANT USAGE ON * . * TO '$db_bs_user'\@'%' IDENTIFIED BY '$db_bs_password' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;\n";
-print MYSQL "GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , INDEX , ALTER , CREATE TEMPORARY TABLES, LOCK TABLES ON `$db_name` . * TO '$db_bs_user'\@'%';\n";
+
+if ($db_host eq "localhost")
+{
+	print MYSQL "GRANT USAGE ON * . * TO '$db_bs_user'\@'localhost' IDENTIFIED BY '$db_bs_password' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;\n";
+	print MYSQL "GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , INDEX , ALTER , CREATE TEMPORARY TABLES, LOCK TABLES ON `$db_name` . * TO '$db_bs_user'\@'localhost';\n";
+}
+else
+{
+	print MYSQL "GRANT USAGE ON * . * TO '$db_bs_user'\@'%' IDENTIFIED BY '$db_bs_password' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;\n";
+	print MYSQL "GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , INDEX , ALTER , CREATE TEMPORARY TABLES, LOCK TABLES ON `$db_name` . * TO '$db_bs_user'\@'%';\n";
+}
 
 close(MYSQL);
 
@@ -142,22 +151,22 @@ while (my $line = <CFG>)
 	chomp($line);
 
 	# update config file with mysql user settings
-	if ($line =~ /^\$_GLOBAL\["db_host"\]\s*=\s*"(\S*)";/)
+	if ($line =~ /^\$config\["db_host"\]\s*=\s*"(\S*)";/)
 	{
 		$line =~ s/"$1"/"$db_host"/;
 	}
 	
-	if ($line =~ /^\$_GLOBAL\["db_name"\]\s*=\s*"(\S*)";/)
+	if ($line =~ /^\$config\["db_name"\]\s*=\s*"(\S*)";/)
 	{
 		$line =~ s/"$1"/"$db_name"/;
 	}
 		
-	if ($line =~ /^\$_GLOBAL\["db_user"\]\s*=\s*"(\S*)";/)
+	if ($line =~ /^\$config\["db_user"\]\s*=\s*"(\S*)";/)
 	{
 		$line =~ s/"$1"/"$db_bs_user"/;
 	}
 	
-	if ($line =~ /^\$_GLOBAL\["db_pass"\]\s*=\s*"(\S*)";/)
+	if ($line =~ /^\$config\["db_pass"\]\s*=\s*"(\S*)";/)
 	{
 		$line =~ s/"$1"/"$db_bs_password"/;
 	}
