@@ -1424,10 +1424,22 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 
 		/*
-			Re-calculate taxes, totals and ledgers as required
+			Re-calculate Taxes
+
+			Note: Wo not re-calculate taxes for payment items, as this will change
+			any overridden values made on AP invocies and is unnessacary.
 		*/
 
-		$item->action_update_tax();
+		if ($item->type_item != "payment")
+		{
+			$item->action_update_tax();
+		}
+
+
+
+		/*
+			Update invoice summary totals
+		*/
 		$item->action_update_total();
 
 
