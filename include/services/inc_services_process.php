@@ -476,7 +476,18 @@ function service_form_delete_process()
 
 	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The service you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The service you have attempted to edit - $id - does not exist in this system.");
+	}
+
+
+	// make sure the service is not active for any customers
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM services_customers WHERE serviceid='$id' LIMIT 1";
+	$sql_obj->execute();
+		
+	if ($sql_obj->num_rows())
+	{
+		log_write("error", "process", "Service is active for customers and can therefore not be deleted.");
 	}
 
 
@@ -506,7 +517,7 @@ function service_form_delete_process()
 			
 		if (!$sql_obj->execute())
 		{
-			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the taxes assigned to the service");
+			log_write("error", "inc_services", "A fatal SQL error occured whilst trying to delete the taxes assigned to the service");
 			return 0;
 		}
 
