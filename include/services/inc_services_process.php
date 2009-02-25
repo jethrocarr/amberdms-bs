@@ -498,6 +498,20 @@ function service_form_delete_process()
 
 
 		/*
+			Delete the service taxes
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM services_taxes WHERE serviceid='$id'";
+			
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the taxes assigned to the service");
+			return 0;
+		}
+
+
+		/*
 			Delete service journal data
 		*/
 		journal_delete_entire("services", $id);
