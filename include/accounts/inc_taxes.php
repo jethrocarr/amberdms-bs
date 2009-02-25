@@ -661,6 +661,14 @@ class tax
 		$sql_obj->execute();
 
 
+		/*
+			Delete tax from any services it is assigned to
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM services_taxes WHERE taxid='". $this->id ."'";
+		$sql_obj->execute();
+
 
 		/*
 			Delete tax from any vendors it is assigned to
