@@ -87,7 +87,7 @@ class services_form_details
 			$structure = NULL;
 			$structure["fieldname"] 		= "tax_message";
 			$structure["type"]			= "message";
-			$structure["defaultvalue"]		= "<p>Check all taxes that apply to this transaction below. If you want more advanced tax control (eg: fixed amounts of tax) then define a product and add it to the invoice.</p>";
+			$structure["defaultvalue"]		= "<p>Check all taxes that apply to this service below.</p>";
 			$this->obj_form->add_input($structure);
 		
 			$this->obj_form->subforms["service_tax"][] = "tax_message";
