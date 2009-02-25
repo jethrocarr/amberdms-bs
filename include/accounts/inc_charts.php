@@ -48,7 +48,8 @@ function charts_form_prepare_acccountdropdown($fieldname, $menu_name)
 			."account_charts.description as label1 "
 			."FROM account_charts "
 			."LEFT JOIN account_charts_menus ON account_charts_menus.chartid = account_charts.id "
-			."WHERE account_charts_menus.menuid='$menuid'";
+			."WHERE account_charts_menus.menuid='$menuid' "
+			."ORDER BY account_charts.code_chart";
 											
 	$return = form_helper_prepare_dropdownfromdb($fieldname, $sql_query);
 
