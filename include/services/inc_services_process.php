@@ -295,6 +295,10 @@ function service_form_plan_process()
 			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
 			$data["usage_mode"]		= security_form_input_predefined("int", "usage_mode", 1, "");
+
+			$data["alert_80pc"]		= security_form_input_predefined("any", "alert_80pc", 0, "");
+			$data["alert_100pc"]		= security_form_input_predefined("any", "alert_100pc", 0, "");
+			$data["alert_extraunits"]	= security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
 
 
@@ -312,8 +316,20 @@ function service_form_plan_process()
 			
 			// force data usage/time to be incrementing
 			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
+
+			$data["alert_80pc"]		= security_form_input_predefined("any", "alert_80pc", 0, "");
+			$data["alert_100pc"]		= security_form_input_predefined("any", "alert_100pc", 0, "");
+			$data["alert_extraunits"]	= security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
 	}
+
+
+	// convert checkbox input
+	if ($data["alert_80pc"])
+		$data["alert_80pc"] = 1;
+	
+	if ($data["alert_100pc"])
+		$data["alert_100pc"] = 1;
 
 
 
@@ -349,7 +365,10 @@ function service_form_plan_process()
 						."included_units='". $data["included_units"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
-						."usage_mode='". $data["usage_mode"] ."' "
+						."usage_mode='". $data["usage_mode"] ."', "
+						."alert_80pc='". $data["alert_80pc"] ."', "
+						."alert_100pc='". $data["alert_100pc"] ."', "
+						."alert_extraunits='". $data["alert_extraunits"] ."' "
 						."WHERE id='$id'";
 	
 				
@@ -364,7 +383,10 @@ function service_form_plan_process()
 						."included_units='". $data["included_units"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
-						."usage_mode='". $data["usage_mode"] ."' "
+						."usage_mode='". $data["usage_mode"] ."', "
+						."alert_80pc='". $data["alert_80pc"] ."', "
+						."alert_100pc='". $data["alert_100pc"] ."', "
+						."alert_extraunits='". $data["alert_extraunits"] ."' "
 						."WHERE id='$id'";
 	
 			break;

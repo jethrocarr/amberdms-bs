@@ -820,6 +820,15 @@ function service_invoices_generate($customerid = NULL)
 						} // end of processing usage
 
 
+						// Update usage value for period - this summary value is visable on the service
+						// history page and saves having to query lots of records to generate period totals.
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
+						$sql_obj->execute();
+					
+
+
+
 						// fetch all tax options for this service from the database
 						//
 						// note: if any options aren't suitable for the customer, the invoices

@@ -320,10 +320,32 @@ class services_form_plan
 				$this->obj_form->add_input($structure);
 
 
+				// usage alerts
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_80pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 80% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_100pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 100% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_extraunits";
+				$structure["type"]			= "input";
+				$this->obj_form->add_input($structure);
+					
+
 
 				// subforms
 				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
+				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 		
 			break;
 			
@@ -424,10 +446,32 @@ class services_form_plan
 				$this->obj_form->add_input($structure);
 
 
+				// usage alerts
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_80pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 80% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_100pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 100% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_extraunits";
+				$structure["type"]			= "input";
+				$this->obj_form->add_input($structure);
+													
 				
 				// subforms
 				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
-				$this->obj_form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
+				$this->obj_form->subforms["service_plan_custom"] 	= array("plan_information", "units", "included_units", "price_extraunits");
+				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
+
 			break;
 
 

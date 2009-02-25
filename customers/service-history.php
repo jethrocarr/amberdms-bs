@@ -104,12 +104,13 @@ class page_output
 		$this->obj_table->add_column("date", "date_start", "");
 		$this->obj_table->add_column("date", "date_end", "");
 		$this->obj_table->add_column("date", "invoice_gen_date", "date_billed");
+		$this->obj_table->add_column("standard", "usage_summary", "");
 		$this->obj_table->add_column("bool_tick", "invoiced", "invoiceid");
 		$this->obj_table->add_column("bool_tick", "paid", "NONE");
 		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
 
 		// defaults
-		$this->obj_table->columns		= array("date_start", "date_end", "invoice_gen_date", "invoiced", "paid", "code_invoice");
+		$this->obj_table->columns		= array("date_start", "date_end", "invoice_gen_date", "usage_summary", "invoiced", "paid", "code_invoice");
 		$this->obj_table->columns_order		= array("date_start");
 
 		// define SQL structure
@@ -159,6 +160,22 @@ class page_output
 						$this->obj_table->data[$i]["paid"] = 1;
 					}
 				}
+
+				// if the usage is 0, just blank it, as it might not be a usage service
+				if ($this->obj_table->data[$i]["usage_summary"] == 0)
+				{
+					$this->obj_table->data[$i]["usage_summary"] = "";
+				}
+				else
+				{
+					// if this is the most recent period, then add a check link next to the usage amount
+					if ($i == ($this->obj_table->data_num_rows - 1))
+					{
+						$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">(get latest)</a>";
+					}
+
+				}
+
 			}
 			
 

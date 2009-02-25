@@ -3,10 +3,10 @@
 /*
 	include/cron/services.php
 
-	This script is called daily and runs through all the customers and creates new service
-	periods and invoices where required.
-
-	Invoices are then set to customers via email automatically.
+	This script is called daily and runs through all the customers and performs the following service tasks
+	1. Creates new service periods (when required)
+	2. Creates invoices (when required)
+	3. Checks customer usage and sends alerts if required.
 	
 */
 
@@ -29,6 +29,19 @@ function page_execute()
 
 
 	print "Service invoicing complete.\n";
+
+
+	// send customers usage alerts
+	print "Checking customer usage alerts...\n";
+
+	$return = service_usage_alerts_generate(NULL);
+
+	if ($return == -1)
+	{
+		print "No alerts sent - EMAIL_ENABLE is disabled.\n";
+	}
+
+	print "Alerting complete.\n";
 
 } // end of page_execute()
 
