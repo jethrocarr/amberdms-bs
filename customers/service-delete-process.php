@@ -4,7 +4,7 @@
 
 	access: customers_write
 
-	Deletes an unwanted service, provided that there is no time booked to it.
+	Deletes an unwanted service.
 */
 
 // includes
@@ -88,16 +88,54 @@ if (user_permissions_get('customers_write'))
 	
 	
 		/*
-			Delete Phase
+			Delete service
 		*/
 			
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM services_customers WHERE id='$services_customers_id'";
+		$sql_obj->string	= "DELETE FROM services_customers WHERE id='$services_customers_id' LIMIT 1";
 			
 		if (!$sql_obj->execute())
 		{
 			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service";
 		}
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM services_customers_options WHERE services_customers_id='$services_customers_id'";
+			
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service options";
+		}
+
+
+
+		/*
+			Delete service period history
+		*/
+			
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='$services_customers_id'";
+			
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service period history";
+		}
+
+
+		/*
+			Delete service usage records
+		*/
+			
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='$services_customers_id'";
+			
+		if (!$sql_obj->execute())
+		{
+			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service usage records";
+		}
+
+
+
 
 
 		/*
