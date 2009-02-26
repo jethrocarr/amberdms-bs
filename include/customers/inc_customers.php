@@ -172,7 +172,7 @@ class customer
 
 		// make sure customer does not belong to any invoices
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_ar WHERE customerid='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM account_ar WHERE customerid='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -185,7 +185,7 @@ class customer
 
 		// make sure customer has no time groups assigned to it
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM time_groups WHERE customerid='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM time_groups WHERE customerid='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -194,6 +194,20 @@ class customer
 		}
 
 		unset($sql_obj);
+
+
+		// make sure customer has no services - services need to be removed before deleting the account
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM services_customers WHERE customerid='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 1;
+		}
+
+		unset($sql_obj);
+
 
 
 		// unlocked
