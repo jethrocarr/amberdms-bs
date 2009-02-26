@@ -47,117 +47,137 @@ class page_output
 
 		// default codes
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_AP_INVOICENUM";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_AP_INVOICENUM";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_AR_INVOICENUM";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_AR_INVOICENUM";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_GL_TRANSNUM";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_GL_TRANSNUM";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_QUOTES_NUM";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_QUOTES_NUM";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "CODE_ACCOUNT";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CODE_ACCOUNT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "CODE_CUSTOMER";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CODE_CUSTOMER";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]			= "CODE_PRODUCT";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CODE_PRODUCT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "CODE_PROJECT";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CODE_PROJECT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "CODE_VENDOR";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CODE_VENDOR";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
 		// invoicing options
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_SERVICES_ADVANCEBILLING";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_SERVICES_ADVANCEBILLING";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_TERMS_DAYS";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_TERMS_DAYS";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_INVOICE_AUTOEMAIL";
-		$structure["type"]			= "checkbox";
-		$structure["options"]["label"]		= "Tick to have service invoices automatically emailed to customers when created.";
+		$structure["fieldname"]				= "ACCOUNTS_INVOICE_AUTOEMAIL";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Tick to have service invoices automatically emailed to customers when created.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
 
 		// currency options
 		$structure = NULL;
-		$structure["fieldname"]			= "CURRENCY_DEFAULT_NAME";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CURRENCY_DEFAULT_NAME";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]			= "CURRENCY_DEFAULT_SYMBOL";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "CURRENCY_DEFAULT_SYMBOL";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
 		// timesheet options
 		$structure = NULL;
-		$structure["fieldname"]			= "TIMESHEET_BOOKTOFUTURE";
-		$structure["type"]			= "checkbox";
-		$structure["options"]["label"]		= "Allow users to book time to dates in the future";
+		$structure["fieldname"]				= "TIMESHEET_BOOKTOFUTURE";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Allow users to book time to dates in the future";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 	
 		// security options
 		$structure = NULL;
-		$structure["fieldname"]			= "BLACKLIST_ENABLE";
-		$structure["type"]			= "checkbox";
-		$structure["options"]["label"]		= "Enable to prevent brute-force login attempts";
+		$structure["fieldname"]				= "BLACKLIST_ENABLE";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Enable to prevent brute-force login attempts";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "BLACKLIST_LIMIT";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "BLACKLIST_LIMIT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
 
 		// misc	
 		$structure = form_helper_prepare_timezonedropdown("TIMEZONE_DEFAULT");
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]			= "DATEFORMAT";
-		$structure["type"]			= "radio";
-		$structure["values"]			= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$structure["fieldname"]				= "DATEFORMAT";
+		$structure["type"]				= "radio";
+		$structure["values"]				= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "UPLOAD_MAXBYTES";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "UPLOAD_MAXBYTES";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 
@@ -165,23 +185,27 @@ class page_output
 
 		// audit locking
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_INVOICE_LOCK";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_INVOICE_LOCK";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]			= "ACCOUNTS_GL_LOCK";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "ACCOUNTS_GL_LOCK";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 			
 		$structure = NULL;
-		$structure["fieldname"]			= "JOURNAL_LOCK";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "JOURNAL_LOCK";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "TIMESHEET_LOCK";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "TIMESHEET_LOCK";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
@@ -189,57 +213,67 @@ class page_output
 
 		// company details
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_NAME";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_NAME";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_CONTACT_EMAIL";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_CONTACT_EMAIL";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_CONTACT_PHONE";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_CONTACT_PHONE";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_CONTACT_FAX";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_CONTACT_FAX";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_ADDRESS1_STREET";
-		$structure["type"]			= "textarea";
-		$structure["options"]["width"]		= "300";
-		$structure["options"]["height"]		= "60";
+		$structure["fieldname"]				= "COMPANY_ADDRESS1_STREET";
+		$structure["type"]				= "textarea";
+		$structure["options"]["width"]			= "300";
+		$structure["options"]["height"]			= "60";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_ADDRESS1_CITY";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_ADDRESS1_CITY";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_ADDRESS1_STATE";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_ADDRESS1_STATE";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_ADDRESS1_COUNTRY";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_ADDRESS1_COUNTRY";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_ADDRESS1_ZIPCODE";
-		$structure["type"]			= "input";
+		$structure["fieldname"]				= "COMPANY_ADDRESS1_ZIPCODE";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"]			= "COMPANY_PAYMENT_DETAILS";
-		$structure["type"]			= "textarea";
-		$structure["options"]["width"]		= "600";
-		$structure["options"]["height"]		= "60";
+		$structure["fieldname"]				= "COMPANY_PAYMENT_DETAILS";
+		$structure["type"]				= "textarea";
+		$structure["options"]["width"]			= "600";
+		$structure["options"]["height"]			= "60";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 	
@@ -247,14 +281,16 @@ class page_output
 	
 		
 		$structure = NULL;
-		$structure["fieldname"] 	= "COMPANY_LOGO";
-		$structure["type"]		= "file";
+		$structure["fieldname"] 			= "COMPANY_LOGO";
+		$structure["type"]				= "file";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
-		$structure["fieldname"] 	= "COMPANY_LOGO_MSG";
-		$structure["type"]		= "message";
-		$structure["defaultvalue"]	= "Note: You only need to upload a logo once or when you want to replace it with a new logo. The logo will be used on PDF files generated by the billing system such as invoices.";
+		$structure["fieldname"] 			= "COMPANY_LOGO_MSG";
+		$structure["type"]				= "message";
+		$structure["defaultvalue"]			= "Note: You only need to upload a logo once or when you want to replace it with a new logo. The logo will be used on PDF files generated by the billing system such as invoices.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
@@ -263,25 +299,29 @@ class page_output
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{
 			$structure = NULL;
-			$structure["fieldname"]			= "EMAIL_ENABLE";
-			$structure["type"]			= "checkbox";
-			$structure["options"]["label"]		= "Enable or disable the ability to send emails. If you don't trust users not to try using the system to spam people (eg: if this is a demo system) then it is highly recommended to disable this option.";
+			$structure["fieldname"]				= "EMAIL_ENABLE";
+			$structure["type"]				= "checkbox";
+			$structure["options"]["label"]			= "Enable or disable the ability to send emails. If you don't trust users not to try using the system to spam people (eg: if this is a demo system) then it is highly recommended to disable this option.";
+			$structure["options"]["no_translate_fieldname"]	= "yes";
 			$this->obj_form->add_input($structure);
 	
 			$structure = NULL;
-			$structure["fieldname"]			= "DATA_STORAGE_METHOD";
-			$structure["type"]			= "radio";
-			$structure["values"]			= array("database", "filesystem");
+			$structure["fieldname"]				= "DATA_STORAGE_METHOD";
+			$structure["type"]				= "radio";
+			$structure["values"]				= array("database", "filesystem");
+			$structure["options"]["no_translate_fieldname"]	= "yes";
 			$this->obj_form->add_input($structure);
 	
 			$structure = NULL;
-			$structure["fieldname"]			= "DATA_STORAGE_LOCATION";
-			$structure["type"]			= "input";
+			$structure["fieldname"]				= "DATA_STORAGE_LOCATION";
+			$structure["type"]				= "input";
+			$structure["options"]["no_translate_fieldname"]	= "yes";
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"]			= "APP_PDFLATEX";
-			$structure["type"]			= "input";
+			$structure["fieldname"]				= "APP_PDFLATEX";
+			$structure["type"]				= "input";
+			$structure["options"]["no_translate_fieldname"]	= "yes";
 			$this->obj_form->add_input($structure);
 
 		}
