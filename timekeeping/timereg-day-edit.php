@@ -173,7 +173,8 @@ class page_output
 		// employee selection box
 		$sql_string = "SELECT "
 				."staff.id as id, "
-				."staff.name_staff as label "
+				."staff.staff_code as label, "
+				."staff.name_staff as label1 "
 				."FROM users_permissions_staff "
 				."LEFT JOIN staff ON staff.id = users_permissions_staff.staffid "
 				."WHERE users_permissions_staff.userid='". $_SESSION["user"]["id"] ."' "

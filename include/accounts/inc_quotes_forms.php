@@ -61,14 +61,16 @@ class quote_form_details
 		*/
 		
 		// basic details
-		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
+		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 		
 			
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
+		$structure["options"]["width"]		= "600";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

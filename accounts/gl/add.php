@@ -52,19 +52,23 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff");
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "notes";
 		$structure["type"]		= "textarea";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "50";
 		$this->obj_form->add_input($structure);
 
 

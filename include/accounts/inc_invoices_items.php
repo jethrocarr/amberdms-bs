@@ -452,6 +452,7 @@ class invoice_list_items
 			$structure = NULL;
 			$structure["fieldname"] 	= "item";
 			$structure["type"]		= "dropdown";
+			$structure["options"]["width"]	= "600";
 
 			$structure["values"][]			= "standard";
 			$structure["translations"]["standard"]	= "Basic Transaction";
@@ -889,7 +890,8 @@ class invoice_form_item
 
 
 				// product id
-				$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+				$structure 			= form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products ORDER BY name_product");
+				$structure["options"]["width"]	= "600";
 				$form->add_input($structure);
 
 
@@ -953,7 +955,7 @@ class invoice_form_item
 					
 					// list of avaliable time groups
 					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
-					$structure["options"]["width"]		= "400";
+					$structure["options"]["width"]		= "600";
 					$structure["options"]["autoselect"]	= "yes";
 					$form->add_input($structure);
 
@@ -967,7 +969,7 @@ class invoice_form_item
 
 					// product id
 					$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
-					$structure["options"]["width"] = "400";
+					$structure["options"]["width"] = "600";
 					$form->add_input($structure);
 
 
