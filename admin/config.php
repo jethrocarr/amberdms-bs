@@ -100,6 +100,13 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]				= "CODE_STAFF";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+
 
 		// invoicing options
 		$structure = NULL;
@@ -338,7 +345,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_company"]		= array("COMPANY_NAME", "COMPANY_CONTACT_EMAIL", "COMPANY_CONTACT_PHONE", "COMPANY_CONTACT_FAX", "COMPANY_ADDRESS1_STREET", "COMPANY_ADDRESS1_CITY","COMPANY_ADDRESS1_STATE","COMPANY_ADDRESS1_COUNTRY", "COMPANY_ADDRESS1_ZIPCODE", "COMPANY_PAYMENT_DETAILS", "COMPANY_LOGO", "COMPANY_LOGO_MSG");
-		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT");
+		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
 		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_INVOICE_AUTOEMAIL");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL");

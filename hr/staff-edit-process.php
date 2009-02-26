@@ -60,6 +60,15 @@ if (user_permissions_get('staff_write'))
 		$_SESSION["error"]["name_staff-error"] = 1;
 	}
 
+	if ($obj_employee->data["staff_code"])
+	{
+		if (!$obj_employee->verify_code_staff())
+		{
+			log_write("error", "staff-edit-process", "Another staff member already has this code - please choose a unique code or leave blank for a default.");
+			$_SESSION["error"]["staff_code-error"] = 1;
+		}
+	}
+
 
 	// return to input page in event of any errors
 	if ($_SESSION["error"]["message"])

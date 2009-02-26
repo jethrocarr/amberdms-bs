@@ -53,6 +53,39 @@ class hr_staff
 
 
 
+	/*
+		verify_code_staff
+
+		Checks that the staff_code supplied has not been taken by another employee already.
+
+		Results
+		0	Failure - name in use
+		1	Success - name is available
+	*/
+
+	function verify_code_staff()
+	{
+		log_debug("inc_staff", "Executing verify_code_staff()");
+
+		$sql_obj			= New sql_query;
+		$sql_obj->string		= "SELECT id FROM `staff` WHERE staff_code='". $this->data["staff_code"] ."' ";
+
+		if ($this->id)
+			$sql_obj->string	.= " AND id!='". $this->id ."'";
+
+		$sql_obj->string		.= " LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 0;
+		}
+		
+		return 1;
+
+	} // end of verify_code_staff
+
+
 
 	/*
 		verify_name_staff
@@ -239,6 +272,14 @@ class hr_staff
 	function action_update()
 	{
 		log_debug("inc_staff", "Executing action_update()");
+
+
+		// All staff require a staff_code value. If one has not been provided, automatically generate one
+		if (!$this->data["staff_code"])
+		{
+			$this->data["staff_code"] = config_generate_uniqueid("CODE_STAFF", "SELECT id FROM staff WHERE staff_code='VALUE'");
+		}
+
 
 		// update the employee
 		$sql_obj		= New sql_query;

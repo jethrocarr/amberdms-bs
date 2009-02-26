@@ -144,6 +144,16 @@ class hr_staff_manage_soap
 			}
 
 
+			// make sure we don't choose a staff code that has already been taken
+			if ($obj_employee->data["staff_code"])
+			{
+				if (!$obj_employee->verify_code_staff())
+				{
+					throw new SoapFault("Sender", "DUPLICATE_CODE_STAFF");
+				}
+			}
+
+
 
 			/*
 				Perform Changes

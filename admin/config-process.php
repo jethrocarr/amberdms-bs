@@ -39,6 +39,7 @@ if (user_permissions_get("admin"))
 	$data["CODE_VENDOR"]			= security_form_input_predefined("int", "CODE_VENDOR", 1, "");
 	$data["CODE_PRODUCT"]			= security_form_input_predefined("int", "CODE_PRODUCT", 1, "");
 	$data["CODE_PROJECT"]			= security_form_input_predefined("int", "CODE_PROJECT", 1, "");
+	$data["CODE_STAFF"]			= security_form_input_predefined("int", "CODE_STAFF", 1, "");
 
 	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
