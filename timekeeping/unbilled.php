@@ -4,7 +4,7 @@
 
 	access: projects_timegroup
 
-	Displays all time which is current unprocessed.
+	Displays all time which is currently unprocessed.
 */
 
 
@@ -73,9 +73,10 @@ class page_output
 
 			foreach ($sql_obj->data as $data_group)
 			{
-				// fetch all the time reg IDs belonging this group
+				// fetch all the time reg IDs belonging this group, but only select time entries marked as billable - we
+				// don't want to report a timegroup with unbillable time as being billed!
 				$sql_reg_obj		= New sql_query;
-				$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."'";
+				$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."' AND billable='1'";
 				$sql_reg_obj->execute();
 
 				if ($sql_reg_obj->num_rows())
