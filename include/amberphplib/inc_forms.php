@@ -952,25 +952,24 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 		$sql_obj->fetch_array();
 		foreach ($sql_obj->data as $data)
 		{
-			// only add an option if there is an id and label for it
-			if ($data["id"] && $data["label"])
+
+			// merge multiple labels into a single label
+			$label = $data["label"];
+
+			for ($i=0; $i < count(array_keys($data)); $i++)
 			{
-				$structure["values"][]					= $data["id"];
-
-				/*
-					Merge multiple labels into a single label and return it.
-				*/
-				$label = $data["label"];
-
-				for ($i=0; $i < count(array_keys($data)); $i++)
+				if ($data["label$i"])
 				{
-					if ($data["label$i"])
-					{
-						$label .= " -- ". $data["label$i"];
-					}
+					$label .= " -- ". $data["label$i"];
 				}
-				
-				$structure["translations"][ $data["id"] ] = $label;
+			}
+			
+
+			// only add an option if there is an id and label for it
+			if ($data["id"] && $label)
+			{
+				$structure["values"][]				= $data["id"];
+				$structure["translations"][ $data["id"] ]	= $label;
 			}
 		}
 
