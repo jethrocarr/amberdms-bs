@@ -115,20 +115,16 @@ class page_output
 
 
 		// acceptable filter options
-		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date >= 'value'";
+		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
+		$structure["sql"]	= "time_groups.customerid='value'";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "date <= 'value'";
-		$this->obj_table->add_filter($structure);
-		
-		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
-		$structure["sql"]	= "time_groups.customerid='value'";
+		$structure["fieldname"] 	= "hide_closed";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Hide time groups belong to invoices";
+		$structure["defaultvalue"]	= "enabled";
+		$structure["sql"]		= "time_groups.invoiceid='0'";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
@@ -136,6 +132,8 @@ class page_output
 		$structure["type"]	= "input";
 		$structure["sql"]	= "time_groups.description LIKE '%value%' OR time_groups.name_group LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
+
+
 
 		$this->obj_table->total_columns	= array("time_billed", "time_not_billed");
 
