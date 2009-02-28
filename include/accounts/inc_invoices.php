@@ -1033,6 +1033,13 @@ class invoice
 			// send as the system
 			$email_sender = sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." <". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") .">";
 		}
+
+
+		// if no BCC, then set BCC to the sender
+		if (!$email_bcc)
+		{
+			$email_bcc = $email_sender;
+		}
 			
 
 		// prepare headers
