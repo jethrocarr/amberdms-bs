@@ -116,8 +116,9 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
-		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers");
+		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 
 		if ($this->groupid)
