@@ -330,30 +330,36 @@ class invoice_form_export
 			$structure["defaultvalue"]	= "Quote ". $obj_sql_invoice->data[0]["code_quote"];
 		}
 		
+		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_to";
 		$structure["type"]		= "input";
 		$structure["defaultvalue"]	= $obj_sql_customer->data[0]["contact_email"];
+		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_cc";
 		$structure["type"]		= "input";
 		$structure["defaultvalue"]	= "";
+		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 			
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_bcc";
 		$structure["type"]		= "input";
-		$structure["defaultvalue"]	= "";
+		$structure["defaultvalue"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 	
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_message";
 		$structure["type"]		= "textarea";
 		$structure["defaultvalue"]	= "Please see attached PDF";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
 		$this->obj_form_email->add_input($structure);
 		
 		// hidden
