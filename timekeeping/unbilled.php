@@ -35,55 +35,35 @@ class page_output
 	function execute()
 	{
 		/*
-			Prepare array of time row IDs which do not belong to a paid time group
+			Create an array of all unbilled time records. We need to do the following to create this list:
+			1. Exclude any internal_only projects.
+			2. Include time which belongs to a time_group, but ONLY if the time group has not been added to an invoice.
 		*/
 
 		$unbilled_ids = array();
 
 
-		// select non-group time records
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM timereg WHERE groupid='0'";
-		$sql_obj->execute();
+		// select non-internal projects
+		$sql_projects_obj		= New sql_query;
+		$sql_projects_obj->string	= "SELECT projects.id as projectid, project_phases.id as phaseid FROM project_phases LEFT JOIN projects ON projects.id = project_phases.projectid WHERE projects.internal_only='0'";
+		$sql_projects_obj->execute();
 
-		if ($sql_obj->num_rows())
+		if ($sql_projects_obj->num_rows())
 		{
-			$sql_obj->fetch_array();
+			$sql_projects_obj->fetch_array();
 
-			foreach ($sql_obj->data as $data_tmp)
+			foreach ($sql_projects_obj->data as $project_data)
 			{
-				// we store the ID inside an array key, since they are unique
-				// and this will prevent us needed to check for the existance of
-				// the ID already.
-				$unbilled_ids[ $data_tmp["id"] ] = "on";
-			}
-		}
+				// select non-group time records
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT id FROM timereg WHERE groupid='0' AND phaseid='". $project_data["phaseid"] ."'";
+				$sql_obj->execute();
 
-		unset($sql_obj);
-
-
-		// select unpaid group IDs
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM time_groups WHERE invoiceid='0'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-
-			foreach ($sql_obj->data as $data_group)
-			{
-				// fetch all the time reg IDs belonging this group, but only select time entries marked as billable - we
-				// don't want to report a timegroup with unbillable time as being billed!
-				$sql_reg_obj		= New sql_query;
-				$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."' AND billable='1'";
-				$sql_reg_obj->execute();
-
-				if ($sql_reg_obj->num_rows())
+				if ($sql_obj->num_rows())
 				{
-					$sql_reg_obj->fetch_array();
+					$sql_obj->fetch_array();
 
-					foreach ($sql_reg_obj->data as $data_tmp)
+					foreach ($sql_obj->data as $data_tmp)
 					{
 						// we store the ID inside an array key, since they are unique
 						// and this will prevent us needed to check for the existance of
@@ -92,11 +72,46 @@ class page_output
 					}
 				}
 
-				unset($sql_reg_obj);
+				unset($sql_obj);
+
+
+				// select unpaid group IDs
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT id FROM time_groups WHERE projectid='". $project_data["projectid"] ."' AND invoiceid='0'";
+				$sql_obj->execute();
+
+				if ($sql_obj->num_rows())
+				{
+					$sql_obj->fetch_array();
+
+					foreach ($sql_obj->data as $data_group)
+					{
+						// fetch all the time reg IDs belonging this group, but only select time entries marked as billable - we
+						// don't want to report a timegroup with unbillable time as being billed!
+						$sql_reg_obj		= New sql_query;
+						$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."' AND billable='1'";
+						$sql_reg_obj->execute();
+
+						if ($sql_reg_obj->num_rows())
+						{
+							$sql_reg_obj->fetch_array();
+
+							foreach ($sql_reg_obj->data as $data_tmp)
+							{
+								// we store the ID inside an array key, since they are unique
+								// and this will prevent us needed to check for the existance of
+								// the ID already.
+								$unbilled_ids[ $data_tmp["id"] ] = "on";
+							}
+						}
+
+						unset($sql_reg_obj);
+					}
+				}
+
+				unset($sql_obj);
 			}
 		}
-
-		unset($sql_obj);
 
 
 
@@ -188,6 +203,7 @@ class page_output
 													project_phases.name_phase as label1
 													FROM `projects` 
 													LEFT JOIN project_phases ON project_phases.projectid = projects.id
+													WHERE projects.internal_only='0'
 													ORDER BY projects.name_project, project_phases.name_phase");
 													
 		$structure["sql"]	= "project_phases.id='value'";
@@ -265,7 +281,7 @@ class page_output
 	{
 		// heading
 		print "<h3>UNBILLED TIME</h3>";
-		print "<p>This page shows all time which has not yet been added to an invoice.</p>";
+		print "<p>This page shows all time which has not yet been added to an invoice for any non-internal projects.</p>";
 
 
 		// display options form

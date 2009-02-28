@@ -20,11 +20,18 @@ if (user_permissions_get('projects_write'))
 	
 	$data["code_project"]		= security_form_input_predefined("any", "code_project", 0, "");	
 	$data["name_project"]		= security_form_input_predefined("any", "name_project", 1, "You must set a project name");
+	$data["internal_only"]		= security_form_input_predefined("any", "internal_only", 0, "");
 	$data["details"]		= security_form_input_predefined("any", "details", 0, "");
 	
 	$data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
 	$data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
-	
+
+
+	// process checkboxes
+	if ($data["internal_only"])
+	{
+		$data["internal_only"] = 1;
+	}
 	
 
 	// are we editing an existing project or adding a new one?
@@ -131,6 +138,7 @@ if (user_permissions_get('projects_write'))
 						."code_project='". $data["code_project"] ."', "
 						."date_start='". $data["date_start"] ."', "
 						."date_end='". $data["date_end"] ."', "
+						."internal_only='". $data["internal_only"] ."', "
 						."details='". $data["details"] ."' "
 						."WHERE id='$id'";
 						
