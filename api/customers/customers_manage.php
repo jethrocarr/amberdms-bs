@@ -25,6 +25,51 @@ include("../../include/customers/inc_customers.php");
 class customers_manage_soap
 {
 	/*
+		get_customer_id_from_code
+
+		Return the ID of the provided customer code
+	*/
+	function get_customer_id_from_code($code_customer)
+	{
+		log_debug("customers_manage_soap", "Executing get_customer_from_by_code($code_customer)");
+
+		if (user_permissions_get("customers_view"))
+		{
+			// sanitise input
+			$code_customer = security_script_input_predefined("any", $code_customer);
+
+			if (!$code_customer || $code_customer == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+			
+			// fetch the customer ID
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM customers WHERE code_customer='$code_customer' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				return $sql_obj->data[0]["id"];
+			}
+			else
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_customer_id_from_code
+
+
+
+	/*
 		get_customer_details
 
 		Fetch all the details for the requested customer

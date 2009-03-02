@@ -31,6 +31,15 @@
 	</types>
 
 
+	<message name='get_customer_id_from_code_request'>
+		<part name='code_customer' type='xsd:string'/>
+	</message>
+
+	<message name='get_customer_id_from_code_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
+
 	<message name='get_customer_details_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
@@ -121,6 +130,11 @@
 
 
 	<portType name='customers_manage_porttype'>
+		<operation name='get_customer_id_from_code'>
+			<input message='tns:get_customer_id_from_code_request'/>
+			<output message='tns:get_customer_id_from_code_response'/>
+		</operation>
+
 		<operation name='get_customer_details'>
 			<input message='tns:get_customer_details_request'/>
 			<output message='tns:get_customer_details_response'/>
@@ -162,6 +176,16 @@
 			</output>
 		</operation>
 
+		<operation name='get_customer_id_from_code'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
 			
 		<operation name='get_customer_details'>
 			<soap:operation soapAction='customers_manage'/>
