@@ -27,6 +27,56 @@ include("../../include/accounts/inc_invoices_items.php");
 
 class accounts_invoices_manage_soap
 {
+	/*
+		get_invoice_id_from_code
+
+		Return the ID of the provided invoice code/number
+	*/
+	function get_invoice_id_from_code($code_invoice, $invoicetype)
+	{
+		log_debug("invoices_manage_soap", "Executing get_invoice_id_from_code($code_invoice, $invoicetype)");
+
+		// check the invoicetype
+		if ($invoicetype != "ar" && $invoicetype != "ap")
+		{
+			throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+		}
+
+
+		if (user_permissions_get("accounts_". $invoicetype ."_view"))
+		{
+			// sanitise input
+			$code_invoice = security_script_input_predefined("any", $code_invoice);
+
+			if (!$code_invoice || $code_invoice == "error")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+			
+			// fetch the invoice ID
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM account_". $invoicetype ." WHERE code_invoice='$code_invoice' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				return $sql_obj->data[0]["id"];
+			}
+			else
+			{
+				throw new SoapFault("Sender", "INVALID_ID");
+			}
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS_DENIED");
+		}
+
+	} // end of get_invoice_id_from_code
+
 
 	/*
 		get_invoice_details

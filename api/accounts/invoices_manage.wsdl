@@ -100,7 +100,16 @@
 
 		</schema>
 	</types>
- 
+
+ 	<message name='get_invoice_id_from_code_request'>
+		<part name='code_invoice' type='xsd:string'/>
+		<part name='invoicetype' type='xsd:string'/>
+	</message>
+
+ 	<message name='get_invoice_id_from_code_response'>
+		<part name='id' type='xsd:int'/>
+	</message>
+
 
 	<message name='get_invoice_details_request'>
 		<part name='id' type='xsd:int'/>
@@ -291,6 +300,11 @@
 
 	<portType name='accounts_invoices_manage_porttype'>
 
+		<operation name='get_invoice_id_from_code'>
+			<input message='tns:get_invoice_id_from_code_request'/>
+			<output message='tns:get_invoice_id_from_code_response'/>
+		</operation>
+
 		<operation name='get_invoice_details'>
 			<input message='tns:get_invoice_details_request'/>
 			<output message='tns:get_invoice_details_response'/>
@@ -360,6 +374,17 @@
 
 	<binding name='accounts_invoices_manage_binding' type='tns:accounts_invoices_manage_porttype'>
 		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+
+		<operation name='get_invoice_id_from_code'>
+			<soap:operation soapAction='accounts_invoices_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
 
 		<operation name='get_invoice_details'>
 			<soap:operation soapAction='accounts_invoices_manage'/>
