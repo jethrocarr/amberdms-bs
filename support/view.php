@@ -102,6 +102,8 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "details";
 		$structure["type"]		= "textarea";
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
 		$this->obj_form->add_input($structure);
 
 		// status + priority
