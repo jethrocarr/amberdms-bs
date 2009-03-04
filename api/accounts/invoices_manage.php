@@ -473,10 +473,10 @@ class accounts_invoices_manage_soap
 			foreach ($sql_obj->data as $data)
 			{
 				// fetch source message
-				$data["source"]		= sql_get_singlevalue("SELECT option_value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='SOURCE'");
+				$data["source"]		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='SOURCE'");
 
 				// fetch payment date_trans
-				$data["date_trans"]	= sql_get_singlevalue("SELECT option_value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='DATE_TRANS'");
+				$data["date_trans"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='DATE_TRANS'");
 
 				// fetch chartid label
 				$data["chartid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_chart, description) as value FROM account_charts WHERE id='". $data["chartid"] ."'");
