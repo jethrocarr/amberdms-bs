@@ -160,22 +160,26 @@ class page_output
 		$unbilled_ids_count	= count($unbilled_ids_keys);
 		$unbilled_ids_sql	= "";
 
-		$i = 0;
-		foreach ($unbilled_ids_keys as $id)
-		{
-			$i++;
 
-			if ($i == $unbilled_ids_count)
+		if ($unbilled_ids_count)
+		{
+			$i = 0;
+			foreach ($unbilled_ids_keys as $id)
 			{
-				$unbilled_ids_sql .= "timereg.id='$id' ";
+				$i++;
+
+				if ($i == $unbilled_ids_count)
+				{
+					$unbilled_ids_sql .= "timereg.id='$id' ";
+				}
+				else
+				{
+					$unbilled_ids_sql .= "timereg.id='$id' OR ";
+				}
 			}
-			else
-			{
-				$unbilled_ids_sql .= "timereg.id='$id' OR ";
-			}
-		}
 				
-		$this->obj_table->sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+			$this->obj_table->sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+		}
 		
 
 		
@@ -263,9 +267,13 @@ class page_output
 		}
 
 		
-		// generate & execute SQL query			
+		// generate & execute SQL query	(only if time entries exist)
 		$this->obj_table->generate_sql();
-		$this->obj_table->load_data_sql();
+
+		if ($unbilled_ids_count)
+		{
+			$this->obj_table->load_data_sql();
+		}
 
 		// delete any rows which belong to processed time groups
 		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)

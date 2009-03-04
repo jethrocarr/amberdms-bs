@@ -173,43 +173,47 @@ class page_output
 			$unbilled_ids_count	= count($unbilled_ids_keys);
 			$unbilled_ids_sql	= "";
 
-			$i = 0;
-			foreach ($unbilled_ids_keys as $id)
+			if ($unbilled_ids_count)
 			{
-				$i++;
-
-				if ($i == $unbilled_ids_count)
+				$i = 0;
+				foreach ($unbilled_ids_keys as $id)
 				{
-					$unbilled_ids_sql .= "timereg.id='$id' ";
+					$i++;
+
+					if ($i == $unbilled_ids_count)
+					{
+						$unbilled_ids_sql .= "timereg.id='$id' ";
+					}
+					else
+					{
+						$unbilled_ids_sql .= "timereg.id='$id' OR ";
+					}
 				}
-				else
+						
+				$sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+				
+
+				$sql_obj->generate_sql();
+
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+
+				list($unbilled_time_hours, $unbilled_time_mins) = split(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
+
+
+				if ($unbilled_time_hours > 0 && $unbilled_time_mins > 0)
 				{
-					$unbilled_ids_sql .= "timereg.id='$id' OR ";
+					$message = "There is currently $unbilled_time_hours hours and $unbilled_time_mins minutes of unbilled time to be processed.";
 				}
-			}
-					
-			$sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
-			
+				elseif ($unbilled_time_hours > 0)
+				{
+					$message = "There is currently $unbilled_time_hours hours of unbilled time to be processed.";
+				}
+				elseif ($unbilled_time_mins > 0)
+				{
+					$message = "There is currently $unbilled_time_mins minutes of unbilled time to be processed.";
+				}
 
-			$sql_obj->generate_sql();
-
-			$sql_obj->execute();
-			$sql_obj->fetch_array();
-
-
-			list($unbilled_time_hours, $unbilled_time_mins) = split(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
-
-			if ($unbilled_time_hours > 0 && $unbilled_time_mins > 0)
-			{
-				$message = "There is currently $unbilled_time_hours hours and $unbilled_time_mins minutes of unbilled time to be processed.";
-			}
-			elseif ($unbilled_time_hours > 0)
-			{
-				$message = "There is currently $unbilled_time_hours hours of unbilled time to be processed.";
-			}
-			elseif ($unbilled_time_mins > 0)
-			{
-				$message = "There is currently $unbilled_time_mins minutes of unbilled time to be processed.";
 			}
 			else
 			{
