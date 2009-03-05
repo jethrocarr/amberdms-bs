@@ -725,12 +725,13 @@ class invoice
 
 		// fetch customer data
 		$sql_customer_obj		= New sql_query;
-		$sql_customer_obj->string	= "SELECT name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
+		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
 		$sql_customer_obj->execute();
 		$sql_customer_obj->fetch_array();
 
 
 		// customer fields
+		$this->obj_pdf->prepare_add_field("code\_customer", $sql_customer_obj->data[0]["code_customer"]);
 		$this->obj_pdf->prepare_add_field("customer\_name", $sql_customer_obj->data[0]["name_customer"]);
 		$this->obj_pdf->prepare_add_field("customer\_contact", $sql_customer_obj->data[0]["name_contact"]);
 		$this->obj_pdf->prepare_add_field("customer\_address1\_street", $sql_customer_obj->data[0]["address1_street"]);
