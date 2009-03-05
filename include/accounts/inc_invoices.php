@@ -869,6 +869,8 @@ class invoice
 					$structure["info"]	= $sql_obj->data[0]["name_account"];
 					$structure["quantity"]	= " ";
 
+					$itemdata["price"]	= " ";
+
 					unset($sql_obj);
 				break;
 			}
