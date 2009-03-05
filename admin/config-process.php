@@ -69,6 +69,15 @@ if (user_permissions_get("admin"))
 		$data["DATA_STORAGE_LOCATION"]	= security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
 		$data["DATA_STORAGE_METHOD"]	= security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
 		$data["APP_PDFLATEX"]		= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+
+		if ($data["EMAIL_ENABLE"] == "on")
+		{
+			$data["EMAIL_ENABLE"] = "enabled";
+		}
+		else
+		{
+			$data["EMAIL_ENABLE"] = "disabled";
+		}
 	}
 
 
@@ -100,15 +109,7 @@ if (user_permissions_get("admin"))
 		$data["BLACKLIST_ENABLE"] = "disabled";
 	}
 
-	if ($data["EMAIL_ENABLE"] == "on")
-	{
-		$data["EMAIL_ENABLE"] = "enabled";
-	}
-	else
-	{
-		$data["EMAIL_ENABLE"] = "disabled";
-	}
-		
+
 
 
 	// Process file upload data
