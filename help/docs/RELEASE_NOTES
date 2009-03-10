@@ -1,0 +1,59 @@
+------------------------------
+AMBERDMS BILLING SYSTEM 1.1.0
+
+RELEASE NOTES
+------------------------------
+
+Released on 2009-03-10, version 1.1.0 of the Amberdms Billing System is primarly
+a maintaince release but also adds supports for usage notification on services,
+better documentation and some other small improvements to make the application
+easier to use.
+
+
+NEW FEATURES / ADJUSTMENTS
+
+* New Feature - Added time group filter option to hide time groups belonging to invoices.
+* New Feature - Implemented new internal-only feature for projects to limit amount of unbilled hours shown.
+* New Feature - Implemented new usage alerts/notifications feature
+* New Feature - Added SOAP API function to fetch customer ID using the code_customer field
+* New Feature - Added SOAP API function to fetch invoice ID using the code_invoice field
+* New Feature - Generated PDF invoices now include customer/account ID on the invoice to assist customers with invoice payment.
+
+* UI Improvement - Standardised dropdown UI on various pages.
+* UI Improvement - details field on support tickets too small
+* UI Improvement - Expanded description field for project phases
+* UI Improvement - Email message field too small
+* UI Improvement - Time group customer field too small.
+
+
+BUG FIXES
+
+* Bug Fix - Account dropdowns are not sorting by chart ID.
+* Bug Fix - Tax deletion deletes taxes assigned to services.
+* Bug Fix - Fixed incorrect reference to fixed-price taxes on services page.
+* Bug Fix - Deleting a service will delete service-tax assignments.
+* Bug Fix - Deleting services from customer's accounts, removes service options, periods and usage records.
+* Bug Fix - Prevent customer deletion when services are assigned to customer account.
+* Bug Fix - Do not display hours which are marked as unbillable in a time group in the unbilled hours display.
+* Bug Fix - Dropdown generation code failed to work if label0 was empty.
+* Bug Fix - Employee code field now compulsary and automatically generates
+* Bug Fix - Removed incorrect time group date search feature
+* Bug Fix - Fixed errors on unbilled time page when there is no unbilled time.
+* Bug Fix - date_trans & source values of payments not being supplied via SOAP API.
+* Bug Fix - Add customer ID to generated invoices
+* Bug Fix - Prevent price of 0.00 from appearing on standard items on invoices
+* Bug Fix - When saving configuration with dangerous options hidden, do not disable email.
+
+
+
+INSTALLATION
+
+Standard installation method - please refer to the installation manual for
+installation information.
+
+
+UPGRADING FROM EXISTING INSTALL
+
+Standard upgrade method - Please refer to the installation manual for upgrade
+information.
+
