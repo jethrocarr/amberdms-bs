@@ -57,8 +57,8 @@ class page_output
 
 		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_SOAP_API.pdf\">Amberdms Billing System SOAP API Developer Documentation</a><br>";
 		print "<br>";
-//		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_service_usage_integration.pdf\">Amberdms Billing System Service Usage Integration</a><br>";
-//		print "<br>";
+		print "<a target=\"new\" href=\"help/manual/amberdms_billing_system_service_usage_collectors.pdf\">Amberdms Billing System Service Usage Collectors/Integration Documentation</a><br>";
+		print "<br>";
 
 
 		// mailing lists
