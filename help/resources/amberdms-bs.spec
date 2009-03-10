@@ -62,16 +62,10 @@ if [ $1 == 1 ];
 then
 	# install - requires manual user MySQL setup
 	echo "Run cd %{_datadir}/amberdms/billing_system/help/resources/; ./autoinstall.pl to install the SQL database."
-#else
-	# CURRENT NO DB UPGRADES ARE REQUIRED
-	#
-	# Amberdms is porting the schema_manage.pl program from another product to be able to provide version upgrades in
-	# future releases.
-	#
-	
+else
 	# upgrade - we can do it all automatically! :-)
-	#echo "Automatically upgrading the MySQL database..."
-	#%{_datadir}/amberdms/billing_system/resources/schema_manage.pl --schema=%{_datadir}/amberdms/billing_system/schema/ -v
+	echo "Automatically upgrading the MySQL database..."
+	%{_datadir}/amberdms/billing_system/help/resources/schema_update.pl --schema=%{_datadir}/amberdms/billing_system/help/schema/ -v
 fi
 
 
@@ -99,6 +93,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/amberdms
 
 %changelog
+* Tue Mar 10 2009 Jethro Carr <jethro.carr@amberos.com> 1.1.0
+- Added automatic MySQL upgrade feature
 * Tue Feb 17 2009 Jethro Carr <jethro.carr@amberos.com> 1.0.0
 - Wrote new spec file.
 
