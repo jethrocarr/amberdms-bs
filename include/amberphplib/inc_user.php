@@ -84,6 +84,7 @@ function user_online()
 	* Checks the username/password and authenticates the user.
 
 	Return Codes
+	-5	Login disabled due to database-application version mismatch
 	-4	Instance has been disabled
 	-3	Invalid instance ID
 	-2	User account has been disabled
@@ -93,6 +94,15 @@ function user_online()
 */
 function user_login($instance, $username, $password)
 {
+	// get the database schema version
+	$schema_version = sql_get_singlevalue("SELECT value FROM config WHERE name='SCHEMA_VERSION' LIMIT 1");
+
+	if ($schema_version != $GLOBALS["config"]["schema_version"])
+	{
+		log_write("error", "inc_user", "The Amberdms Billing System application has been updated, but the database has not been upgraded to match. Login is disabled until this is resolved.");
+		return -5;
+	}
+
 	//
 	// check the instance (if required) and select the required database
 	//

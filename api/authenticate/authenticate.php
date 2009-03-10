@@ -44,6 +44,18 @@ class authenticate
 			// failed authentication - use SoapFault to gracefully return an error which the client app can process
 			switch ($result)
 			{
+				case "-5":
+					throw new SoapFault("Sender", "USER_DISABLED");
+				break;
+
+				case "-4":
+					throw new SoapFault("Sender", "USER_DISABLED");
+				break;
+
+				case "-3":
+					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+				break;
+
 				case "-2":
 					throw new SoapFault("Sender", "USER_DISABLED");
 				break;
@@ -53,6 +65,7 @@ class authenticate
 				break;
 
 				case "0":
+				default:
 					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
 				break;
 			}
