@@ -23,33 +23,36 @@
 
 function user_online()
 {
+	log_debug("inc_user", "Executing user_online()");
+
 	if (!$_SESSION["user"]["authkey"])					// if user has no login data, don't bother trying to check
 		return 0;
 	if (!preg_match("/^[a-zA-Z0-9]*$/", $_SESSION["user"]["authkey"]))	// make sure the key is valid info, NOT AN SQL INJECTION.
 		return 0;
 		
-	// get user auth data
-	$mysql_string	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 0, 1";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	// get user session data
+	$sql_session_obj		= New sql_query;
+	$sql_session_obj->string 	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
+	$sql_session_obj->execute();
 
-	if ($mysql_num_rows)
+	if ($sql_session_obj->num_rows())
 	{
-		$mysql_data = mysql_fetch_array($mysql_result);
+		$sql_session_obj->fetch_array();
 
 		$time = time();
-		if ($time < ($mysql_data["time"] + 7200))
+		if ($time < ($sql_session_obj->data[0]["time"] + 7200))
 		{
 			// we want to update the time value in the database, but we don't want to do this
 			// on every single page load - no need, and a waste of performance.
 			//
 			// therefore, we only update the time record in the DB if it's older than 30 minutes. We use
 			// this time to see if the user has been inactive for long periods of time, to log them out.
-			if (($time -  $mysql_data["time"]) > 1800)
+			if (($time -  $sql_session_obj->data[0]["time"]) > 1800)
 			{
 				// update time field
-				$mysql_string = "UPDATE `users_sessions` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."'";
-				mysql_query($mysql_string);
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE `users_sessions` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."' LIMIT 1";
+				$sql_obj->execute();
 			}
 
 			// user is logged in.
@@ -94,6 +97,9 @@ function user_online()
 */
 function user_login($instance, $username, $password)
 {
+	log_debug("inc_user", "Executing user_login($instance, $username, password)");
+
+
 	// get the database schema version
 	$schema_version = sql_get_singlevalue("SELECT value FROM config WHERE name='SCHEMA_VERSION' LIMIT 1");
 
@@ -103,20 +109,21 @@ function user_login($instance, $username, $password)
 		return -5;
 	}
 
+
 	//
 	// check the instance (if required) and select the required database
 	//
 	if ($GLOBALS["config"]["instance"] == "hosted")
 	{
-		$mysql_string		= "SELECT active, db_hostname FROM `instances` WHERE instanceid='$instance' LIMIT 1";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		$sql_instance_obj		= New sql_query;
+		$sql_instance_obj->string	= "SELECT active, db_hostname FROM `instances` WHERE instanceid='$instance' LIMIT 1";
+		$sql_instance_obj->execute();
 		
-		if ($mysql_num_rows)
+		if ($sql_instance_obj->num_rows())
 		{
-			$mysql_data = mysql_fetch_array($mysql_result);
+			$sql_instance_obj->fetch_array();
 
-			if ($mysql_data["active"])
+			if ($sql_instance_obj->data[0]["active"])
 			{
 				// Instance exists and access is permitted - now use the details
 				// to establish a connection to the instance database (note that this
@@ -124,16 +131,17 @@ function user_login($instance, $username, $password)
 
 
 				// if the hostname is blank, default to the current
-				if ($mysql_data["db_hostname"] == "")
+				if ($sql_instance_obj->data[0]["db_hostname"] == "")
 				{
-					$mysql_data["db_hostname"] = $GLOBALS["config"]["db_host"];
+					$sql_instance_obj->data[0]["db_hostname"] = $GLOBALS["config"]["db_host"];
 				}
 
 				// if the instance database is on a different server, initate a connection
 				// to the new server.
-				if ($mysql_data["db_hostname"] != $GLOBALS["config"]["db_host"])
+				if ($sql_instance_obj->data[0]["db_hostname"] != $GLOBALS["config"]["db_host"])
 				{
-					$link = mysql_connect($mysql_data["db_hostname"], $config["db_user"], $config["db_pass"]);
+					// TODO: does this connect statement need to be moved into the sql_obj framework?
+					$link = mysql_connect($sql_instance_obj->data[0]["db_hostname"], $config["db_user"], $config["db_pass"]);
 
 					if (!$link)
 					{
@@ -157,7 +165,7 @@ function user_login($instance, $username, $password)
 				{
 					// save the instance value
 					$_SESSION["user"]["instance"]["id"]		= $instance;
-					$_SESSION["user"]["instance"]["db_hostname"]	= $mysql_data["db_hostname"];
+					$_SESSION["user"]["instance"]["db_hostname"]	= $sql_instance_obj->data[0]["db_hostname"];
 				}
 			}
 			else
@@ -173,6 +181,7 @@ function user_login($instance, $username, $password)
 			log_write("error", "inc_user", "Please provide a valid customer instance ID.");
 			return -3;
 		}
+
 	}
 
 
@@ -180,56 +189,53 @@ function user_login($instance, $username, $password)
 	// perform a check of the IP against a brute-force table. Whilst admins should always lock down their interfaces
 	// to trusted IPs only, in the real-world this often does not happen.
 	//
-	$mysql_query		= "SELECT value as blacklist_enable FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1";
-	$mysql_result		= mysql_query($mysql_query);
-	$mysql_data		= mysql_fetch_array($mysql_result);
-	$blacklist_enable	= $mysql_data["blacklist_enable"];
 
-	$mysql_query		= "SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1";
-	$mysql_result		= mysql_query($mysql_query);
-	$mysql_data		= mysql_fetch_array($mysql_result);
-	$blacklist_limit	= $mysql_data["blacklist_limit"];
+	$blacklist_enable	= sql_get_singlevalue("SELECT value FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1");
+	$blacklist_limit	= sql_get_singlevalue("SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1");
 
 
 	if ($blacklist_enable == "enabled")
 	{
 		// check the database - is this IP in the bad list?
-		$mysql_string                   = "SELECT failedcount, time FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
-		$mysql_blacklist_result         = mysql_query($mysql_string);
-		$mysql_blacklist_num_rows       = mysql_num_rows($mysql_blacklist_result);
+		$sql_blacklist_obj		= New sql_query;
+		$sql_blacklist_obj->string	= "SELECT failedcount, time FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+		$sql_blacklist_obj->execute();
 
-		if ($mysql_blacklist_num_rows)
+		if ($sql_blacklist_obj->num_rows())
 		{
-			while ($mysql_blacklist_data = mysql_fetch_array($mysql_blacklist_result))
+			foreach ($sql_blacklist_obj->data as $data_blacklist)
 			{
-				// IP is in bad list - but we need to check the count against the time, to see if it's just an innocent wrong password,
-				// or if it's something more sinister.
+				// IP is in bad list - but we need to check the count against the time, to see if it's just an
+				// innocent wrong password, or if it's something more sinister.
 
-				if ($mysql_blacklist_data["failedcount"] >= $blacklist_limit && $mysql_blacklist_data["time"] >= (time() - 432000))
+				if ($data_blacklist["failedcount"] >= $blacklist_limit && $data_blacklist["time"] >= (time() - 432000))
 				{
 					// if failed count >= blacklist limit, and if the last attempt was within
 					// the last 5 days, block the user.
-					
-					$_SESSION["error"]["message"] = array("For brute-force security reasons, you have been locked out of the system interface.");
+
+					log_write("error", "inc_user", "For brute-force security reasons, you have been locked out of the system interface.");
 					return -1;
 				}
-				elseif ($mysql_blacklist_data["time"] < (time() - 432000))
+				elseif ($data_blacklist["time"] < (time() - 432000))
 				{
 					// It has been more than 5 days since the last attempt was blocked. Start clearing the counter, by
 					// removing 2 attempts.
 					
-					if ($mysql_blacklist_data["failedcount"] > 2)
+					if ($data_blacklist["failedcount"] > 2)
 					{
 						// decrease by 2.
-						$newcount = $mysql_blacklist_data["failedcount"] - 2;
-						$data = "UPDATE `users_blacklist` SET `failedcount`='$newcount' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
-						mysql_query($data);
+						$newcount		= $data_blacklist["failedcount"] - 2;
+
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "UPDATE `users_blacklist` SET `failedcount`='$newcount' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
+						$sql_obj->execute();
 					}
 					else
 					{
 						// time to remove the entry completely
-						$data = "DELETE FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
-						mysql_query($data);
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "DELETE FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
+						$sql_obj->execute();
 					}
 				}
 			}
@@ -237,30 +243,29 @@ function user_login($instance, $username, $password)
 	} // end of blacklist check
 
 
-
 	// get user data
-	$mysql_string	= "SELECT id, password, password_salt FROM `users` WHERE username='$username' LIMIT 1";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_user_obj		= New sql_query;
+	$sql_user_obj->string	= "SELECT id, password, password_salt FROM `users` WHERE username='$username' LIMIT 1";
+	$sql_user_obj->execute();
 
-	if ($mysql_num_rows)
+	if ($sql_user_obj->num_rows())
 	{
-		$mysql_data = mysql_fetch_array($mysql_result);
+		$sql_user_obj->fetch_array();
 
 		// compare passwords
-		if ($mysql_data["password"] == sha1($mysql_data["password_salt"] . "$password"))
+		if ($sql_user_obj->data[0]["password"] == sha1($sql_user_obj->data[0]["password_salt"] . "$password"))
 		{
 			///// password is correct
 
 			// make sure the user is not disabled. (PERM ID = 1)
-			$mysql_perms_string	= "SELECT id FROM `users_permissions` WHERE userid='" . $mysql_data["id"] . "' AND permid='1'";
-			$mysql_perms_result	= mysql_query($mysql_perms_string);
-			$mysql_perms_num_rows	= mysql_num_rows($mysql_perms_result);
+			$sql_perms_obj		= New sql_query;
+			$sql_perms_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='" . $sql_user_obj->data[0]["id"] . "' AND permid='1' LIMIT 1";
+			$sql_perms_obj->execute();
 
-			if ($mysql_perms_num_rows)
+			if ($sql_perms_obj->num_rows())
 			{
 				// user has been disabled
-				$_SESSION["error"]["message"] = array("Your user account has been disabled. Please contact the system administrator to get it unlocked.");
+				log_write("error", "inc_user", "Your user account has been disabled. Please contact the system administrator to get it unlocked.");
 				return -2;
 			}
 			else
@@ -307,12 +312,13 @@ function user_login($instance, $username, $password)
 				// perform session table cleanup - remove any records older than 12 hours
 				$time_expired = $time - 43200;
 
-				$mysql_string = "DELETE FROM `users_sessions` WHERE time < '$time_expired'";
-				mysql_query($mysql_string);
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "DELETE FROM `users_sessions` WHERE time < '$time_expired'";
+				$sql_obj->execute();
 
 
 				// if concurrent logins is not enabled, delete any old sessions belonging to this user.
-				if (sql_get_singlevalue("SELECT value FROM users_options WHERE userid='". $mysql_data["id"] ."' AND name='concurrent_logins' LIMIT 1") != "on")
+				if (sql_get_singlevalue("SELECT value FROM users_options WHERE userid='". $sql_user_obj->data[0]["id"] ."' AND name='concurrent_logins' LIMIT 1") != "on")
 				{
 					log_write("debug", "inc_users", "User account does not permit concurrent logins, removing all old sessions");
 
@@ -324,26 +330,26 @@ function user_login($instance, $username, $password)
 
 
 				// create session entry for user login
-				$mysql_string = "INSERT INTO `users_sessions` (userid, authkey, ipaddress, time) VALUES ('". $mysql_data["id"] ."', '$authkey', '$ipaddress', '$time')";
-				mysql_query($mysql_string);
-
-
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO `users_sessions` (userid, authkey, ipaddress, time) VALUES ('". $sql_user_obj->data[0]["id"] ."', '$authkey', '$ipaddress', '$time')";
+				$sql_obj->execute();
 
 
 				// update user's last-login data
-				$mysql_string = "UPDATE `users` SET ipaddress='$ipaddress', time='$time' WHERE id='" . $mysql_data["id"] . "'";
-				mysql_query($mysql_string);
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE `users` SET ipaddress='$ipaddress', time='$time' WHERE id='" . $sql_user_obj->data[0]["id"] . "'";
+				$sql_obj->execute();
 
 
 				// set session variables
-				$_SESSION["user"]["id"]		= $mysql_data["id"];
+				$_SESSION["user"]["id"]		= $sql_user_obj->data[0]["id"];
 				$_SESSION["user"]["name"]	= $username;
 				$_SESSION["user"]["authkey"]	= $authkey;
 
 
 				// fetch user options from the database
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='". $mysql_data["id"] . "'";
+				$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='". $sql_user_obj->data[0]["id"] . "'";
 				$sql_obj->execute();
 
 				if ($sql_obj->num_rows())
@@ -360,7 +366,7 @@ function user_login($instance, $username, $password)
 
 				// does the user need to change their password? If they have no salt, it means the password
 				// is the system default and needs to be changed
-				if ($mysql_data["password_salt"] == "")
+				if ($sql_user_obj->data[0]["password_salt"] == "")
 				{
 					$_SESSION["error"]["message"][] = "Your password is currently set to a default. It is highly important for you to change this password, which you can do <a href=\"index.php?page=user/options.php\">by clicking here</a>.";
 				}
@@ -383,29 +389,33 @@ function user_login($instance, $username, $password)
 	if ($blacklist_enable == "enabled")
 	{
 	        // check if there is already an entry.
-	        $mysql_string                   = "SELECT failedcount FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
-        	$mysql_blacklist_result         = mysql_query($mysql_string);
-	        $mysql_blacklist_num_rows       = mysql_num_rows($mysql_blacklist_result);
+		$sql_blacklist_obj		= New sql_query;
+		$sql_blacklist_obj->string	= "SELECT failedcount FROM `users_blacklist` WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+		$sql_blacklist_obj->execute();
 
-	        if ($mysql_blacklist_num_rows)
+	        if ($sql_blacklist_obj->num_rows())
         	{
-	                // IP is in the list. Increase the failed count, and set the time to now.
-        	        while ($mysql_blacklist_data = mysql_fetch_array($mysql_blacklist_result))
-                	{
-				$newcount       = $mysql_blacklist_data["failedcount"] + 1;
-				$newtime        = time();
+			$sql_blacklist_obj->fetch_array();
 
-				$data = "UPDATE `users_blacklist` SET `failedcount`='$newcount', time='$newtime' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
-				mysql_query($data);
+	                // IP is in the list. Increase the failed count, and set the time to now.
+       			foreach ($sql_blacklist_obj->data as $data_blacklist)
+                	{
+				$newcount       	= $data_blacklist["failedcount"] + 1;
+				$newtime        	= time();
+
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE `users_blacklist` SET `failedcount`='$newcount', time='$newtime' WHERE ipaddress='" . $_SERVER["REMOTE_ADDR"] . "'";
+				$sql_obj->execute();
 			}
 		}
 		else
 		{
 			// IP is not currently in the list. We need to add it.
-			$newtime        = time();
-			
-			$data = "INSERT INTO `users_blacklist` (ipaddress, failedcount, time) VALUES ('" . $_SERVER["REMOTE_ADDR"] . "', '1', '$newtime')";
-			mysql_query($data);
+			$newtime       		= time();
+
+			$sql_obj		= New sql_obj;
+			$sql_obj->string	= "INSERT INTO `users_blacklist` (ipaddress, failedcount, time) VALUES ('" . $_SERVER["REMOTE_ADDR"] . "', '1', '$newtime')";
+			$sql_obj->execute();
 		}
 		
 	}
@@ -423,11 +433,14 @@ function user_login($instance, $username, $password)
 */
 function user_logout()
 {
+	log_debug("inc_user", "Executing user_logout()");
+
 	if ($_SESSION["user"]["name"])
 	{
 		// remove session entry from DB
-		$mysql_string = "DELETE FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' LIMIT 1";
-		mysql_query($mysql_string);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' LIMIT 1";
+		$sql_obj->execute();
 
 		// log the user out.
 		$_SESSION["user"] = array();
@@ -448,19 +461,21 @@ function user_logout()
 */
 function user_newuser($username, $password, $realname, $email)
 {
+	log_debug("inc_user", "Executing user_newuser($username, $password, $realname, $email)");
+
 	// make sure that the user running this command is an admin
 	if (user_permissions_get("admin"))
 	{
 		// verify data
 		if ($username && $password && $realname && $email)
 		{
+			// TODO: Fix ACID compliance here
+
 			// create the user account
-			$mysql_string = "INSERT INTO `users` (username, realname, contact_email) VALUES ('$username', '$realname', '$email')";
-			if (!mysql_query($mysql_string))
-			{
-				die('MySQL Error: ' . mysql_error());
-			}
-	
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `users` (username, realname, contact_email) VALUES ('$username', '$realname', '$email')";
+			$sql_obj->execute();
+
 			$userid = mysql_insert_id();
 
 			// set the password
@@ -487,6 +502,8 @@ function user_newuser($username, $password, $realname, $email)
 */
 function user_changepwd($userid, $password)
 {
+	log_debug("inc_user", "Executing user_changepwd($userid, password)");
+
 	if (user_permissions_get("admin"))
 	{
 		if ($userid && $password)
@@ -511,11 +528,9 @@ function user_changepwd($userid, $password)
 			$password_crypt = sha1("$password_salt"."$password");
 
 			// apply changes to DB.
-			$mysql_string = "UPDATE `users` SET password='$password_crypt', password_salt='$password_salt' WHERE id='$userid'";
-			if (!mysql_query($mysql_string))
-			{
-				die('MySQL Error: ' . mysql_error());
-			}
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `users` SET password='$password_crypt', password_salt='$password_salt' WHERE id='$userid' LIMIT 1";
+			$sql_obj->execute();
 		
 			return 1;
 
@@ -538,6 +553,8 @@ function user_changepwd($userid, $password)
 */
 function user_permissions_get($type)
 {
+	log_debug("inc_user", "Executing user_permissions_get($type)");
+
 
 	// everyone (including guests) have the "public" permission, so don't waste cycles checking for it
 	if ($type == "public")
@@ -586,21 +603,28 @@ function user_permissions_get($type)
 */
 function user_information($field)
 {
-	// this verifys that the user session data is correct, and that they are currently logged in.
-	if (user_online())
+	log_debug("inc_user", "Executing user_information($field)");
+
+
+	if ($GLOBALS["cache"]["user"][$field])
 	{
-		$mysql_string	= "SELECT $field FROM `users` WHERE username='" . $_SESSION["user"]["name"] . "' LIMIT 1";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
-
-		if ($mysql_num_rows)
+		return $GLOBALS["cache"]["user"][$field];
+	}
+	else
+	{
+		// verify user is logged in
+		if (user_online())
 		{
-			$mysql_data = mysql_fetch_array($mysql_result);
+			// fetch the value
+			$value = sql_get_singlevalue("SELECT $field as value FROM `users` WHERE username='" . $_SESSION["user"]["name"] . "' LIMIT 1");
 
-			return $mysql_data[$field];
+			// cache the value
+			$GLOBALS["cache"]["user"][$field] = $value;
+
+			// return the value
+			return $value;
 		}
-		
-	} // end "if (user_online())"
+	}
 
 	return 0;
 }
