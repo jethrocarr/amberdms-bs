@@ -335,7 +335,7 @@ function user_login($instance, $username, $password)
 					log_write("debug", "inc_users", "User account does not permit concurrent logins, removing all old sessions");
 
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "DELETE FROM `users_sessions` WHERE userid='". $mysql_data["id"] ."'";
+					$sql_obj->string	= "DELETE FROM `users_sessions` WHERE userid='". $sql_user_obj->data[0]["id"] ."'";
 					$sql_obj->execute();
 				}
 
