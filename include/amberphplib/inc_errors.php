@@ -151,5 +151,60 @@ function error_render_table($value)
 }
 
 
+/*
+	error_check
+
+	Determines if any error messages currently exist in the session data.
+
+	Returns
+	0	No error messages
+	1	Errors exist
+*/
+function error_check()
+{
+	log_debug("inc_errors", "Executing error_check()");
+
+	if ($_SESSION["error"]["message"])
+	{
+		return 1;
+	}
+
+	return 0;
+}	
+
+
+/*
+	error_clear
+
+	Erases any error messages
+*/
+function error_clear()
+{
+	log_debug("inc_errors", "Executing error_clear()");
+
+	$_SESSION["error"] = array();
+
+	return 1;
+}	
+
+
+
+/*
+	error_flag_field
+
+	Marks a form field as having an error.
+*/
+function error_flag_field($fieldname)
+{
+	log_debug("inc_errors", "Executing error_flag_field($fieldname)");
+
+	$_SESSION["error"][$fieldname ."-error"] = 1;
+
+	return 1;
+}
+
+
+
+
 
 ?>
