@@ -163,6 +163,21 @@ class sql_query
 		Transactions allow a number of SQL queries to be made and then either applied (ie: written to disk) or
 		rolled back (undone). This provides data integrity when a program experiences a bug or a crash.
 
+		The transaction handling implemented by this class allows multiple transactions to be started, committed
+		or rolled back, but only the start/commit/rollbacks for the very first transaction will take any effect.
+
+		In the example below, only the first transaction has any effect.
+
+			$obj->trans_begin();			TRANSACTION START
+
+			sub_function();
+				|
+				| $obj->trans_begin(); 		IGNORED
+				| $obj->trans_commit();		IGNORED
+
+			$obj->trans_commit();			TRANSACTION END
+
+
 		MySQL Note:
 		
 			Transactions will not work with the default MyISAM table engine, you must
@@ -211,12 +226,28 @@ class sql_query
 	function trans_begin()
 	{
 		log_write("debug", "sql_query", "Executing trans_begin()");
-		log_write("sql", "sql_query", "START TRANSACTION");
 
-		if (mysql_query("START TRANSACTION"))
+		if ($GLOBALS["sql"]["transaction"])
 		{
-			// success
+			// a transaction is already running, do not try and start another one
+			log_debug("sql_query", "Transaction already active, not starting another");
+
+			$GLOBALS["sql"]["transaction"]++;
 			return 1;
+		}
+		else
+		{
+			log_write("sql", "sql_query", "START TRANSACTION");
+
+			if (mysql_query("START TRANSACTION"))
+			{
+				// success
+
+				// flag transaction as active
+				$GLOBALS["sql"]["transaction"] = 1;
+
+				return 1;
+			}
 		}
 
 		// failure
@@ -237,12 +268,30 @@ class sql_query
 	function trans_commit()
 	{
 		log_write("debug", "sql_query", "Executing trans_commit()");
-		log_write("sql", "sql_query", "COMMIT");
-
-		if (mysql_query("COMMIT"))
+		
+		if ($GLOBALS["sql"]["transaction"])
 		{
-			// success
-			return 1;
+			if ($GLOBALS["sql"]["transaction"] == 1)
+			{
+				$GLOBALS["sql"]["transaction"] = 0;
+
+				log_write("sql", "sql_query", "COMMIT");
+
+				if (mysql_query("COMMIT"))
+				{
+					// success
+					return 1;
+				}
+			}
+			else
+			{
+				// another transaction is already running, reduce count by 1
+				log_debug("sql_query", "Another transaction is already running, not committing yet");
+
+				$GLOBALS["sql"]["transaction"]--;
+
+				return 1;
+			}
 		}
 
 		// failure
@@ -263,12 +312,31 @@ class sql_query
 	function trans_rollback()
 	{
 		log_write("debug", "sql_query", "Executing trans_rollback()");
-		log_write("sql", "sql_query", "ROLLBACK");
 
-		if (mysql_query("ROLLBACK"))
+
+		if ($GLOBALS["sql"]["transaction"])
 		{
-			// success
-			return 1;
+			if ($GLOBALS["sql"]["transaction"] == 1)
+			{
+				$GLOBALS["sql"]["transaction"] = 0;
+
+				log_write("sql", "sql_query", "ROLLBACK");
+
+				if (mysql_query("ROLLBACK"))
+				{
+					// success
+					return 1;
+				}
+			}
+			else
+			{
+				// another transaction is already running, reduce count by 1
+				log_debug("sql_query", "Another transaction is already running, not rolling back yet");
+
+				$GLOBALS["sql"]["transaction"]--;
+
+				return 1;
+			}
 		}
 
 		// failure
