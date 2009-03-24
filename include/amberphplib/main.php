@@ -129,6 +129,8 @@ require("inc_menus.php");
 
 
 
+log_debug("start", "Framework Load Complete.");
+
 
 /*
 	Configure Local Timezone
@@ -173,6 +175,50 @@ if (version_compare(PHP_VERSION, '5.2.0') === 1)
 
 	unset($timezone);
 }
+
+
+
+/*
+	Preload Language DB
+
+	The translation/errorloading options can be handled in one of two ways:
+	1. Preload all entries for the selected language (more memory, few SQL queries)
+	2. Only load translations as required (more SQL queries, less memory)
+*/
+
+
+$language_mode			= sql_get_singlevalue("SELECT value FROM config WHERE name='LANGUAGE_LOAD' LIMIT 1");
+$GLOBALS["cache"]["lang_mode"]	= $language_mode;
+
+if ($language_mode == "preload")
+{
+	log_debug("start", "Preloading Language DB");
+
+	// fetch the user's language
+	$language = $_SESSION["user"]["lang"];
+
+	if (!$language)
+	{
+		// fetch system default
+		$language = sql_get_singlevalue("SELECT value FROM config WHERE name='LANGUAGE_DEFAULT' LIMIT 1");
+	}
+
+
+	// load all transactions
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='en_us'";
+	$sql_obj->execute();
+	$sql_obj->fetch_array();
+
+	foreach ($sql_obj->data as $data)
+	{
+		// add to cache
+		$GLOBALS["cache"]["lang"][ $data["label"] ] = $data["translation"];
+	}
+
+	log_debug("start", "Completed Language DB Preload");
+}
+
 
 
 

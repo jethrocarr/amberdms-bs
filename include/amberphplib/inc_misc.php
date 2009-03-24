@@ -626,6 +626,8 @@ function log_debug_render()
 	// get first time entry
 	$time_first = (float)$_SESSION["user"]["log_debug"][0]["time_sec"] + (float)$_SESSION["user"]["log_debug"][0]["time_usec"];
 
+	// count SQL queries
+	$num_sql_queries = 0;
 
 	// content
 	foreach ($_SESSION["user"]["log_debug"] as $log_record)
@@ -647,6 +649,7 @@ function log_debug_render()
 
 			case "sql":
 				print "<tr bgcolor=\"#7bbfff\">";
+				$num_sql_queries++;
 			break;
 
 			default:
@@ -672,6 +675,9 @@ function log_debug_render()
 	$time_diff = ($time_last - $time_first);
 
 	print "<p>Completed in $time_diff seconds.</p>";
+
+	// report number of SQL queries
+	print "<p>Executed $num_sql_queries of SQL queries</p>";
 }
 
 

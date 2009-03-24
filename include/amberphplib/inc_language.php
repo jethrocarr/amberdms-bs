@@ -48,7 +48,22 @@ function language_translate($language, $label_array)
 		}
 		else
 		{
-			$label_fetch_array[] = $label;
+			if ($GLOBALS["cache"]["lang_mode"] == "preload")
+			{
+				// All translations have been loaded, therefore requested translation
+				// does not exist.
+				///
+				// In this case, just return the label as the translation and also add it to
+				// the cache to prevent extra lookups.
+
+				$GLOBALS["cache"]["lang"][ $label ] = $label;
+
+				$result[$label] = $label;
+			}
+			else
+			{
+				$label_fetch_array[] = $label;
+			}
 		}
 	}
 
@@ -140,28 +155,11 @@ function language_translate_string($language, $label)
 	}
 	else
 	{
-		// not cached - need to do a DB lookup.
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='". $language ."' AND label='$label' LIMIT 1";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
+		if ($GLOBALS["cache"]["lang_mode"] == "preload")
 		{
-			$sql_obj->fetch_array();
-
-			// add to cache
-			$GLOBALS["cache"]["lang"][ $label ] = $sql_obj->data[0]["translation"];
-
-
-			// done
-			return $sql_obj->data[0]["translation"];
-		}
-		else
-		{
-			// no value was returned for the particular label we looked up, it means
-			// that no translation exists.
-			//
+			// All transations have been loaded, therefore requested translation
+			// does not exist.
+			///
 			// In this case, just return the label as the translation and also add it to
 			// the cache to prevent extra lookups.
 
@@ -169,9 +167,41 @@ function language_translate_string($language, $label)
 
 			return $label;
 		}
+		else
+		{
+			// not cached - need to do a DB lookup.
 
-		unset($sql_obj);
-		
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='". $language ."' AND label='$label' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				// add to cache
+				$GLOBALS["cache"]["lang"][ $label ] = $sql_obj->data[0]["translation"];
+
+
+				// done
+				return $sql_obj->data[0]["translation"];
+			}
+			else
+			{
+				// no value was returned for the particular label we looked up, it means
+				// that no translation exists.
+				//
+				// In this case, just return the label as the translation and also add it to
+				// the cache to prevent extra lookups.
+
+				$GLOBALS["cache"]["lang"][ $label ] = $label;
+
+				return $label;
+			}
+
+			unset($sql_obj);
+		}
+			
 	} // end if lookup required
 
 
