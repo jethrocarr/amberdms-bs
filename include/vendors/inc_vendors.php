@@ -219,14 +219,29 @@ class vendor
 	{
 		log_debug("inc_vendors", "Executing action_create()");
 
+		// transaction start
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		// create a new vendor
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `vendors` (name_vendor) VALUES ('". $this->data["name_vendor"]. "')";
-		$sql_obj->execute();
+		$sql_obj->string = "INSERT INTO `vendors` (name_vendor) VALUES ('". $this->data["name_vendor"]. "')";
 
-		$this->id = $sql_obj->fetch_insert_id();
 
-		return $this->id;
+		// commit
+		if (!$sql_obj->execute())
+		{
+			$sql_obj->trans_rollback();
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			$this->id = $sql_obj->fetch_insert_id();
+
+			return $this->id;
+		}
 
 	} // end of action_create
 
@@ -246,6 +261,11 @@ class vendor
 	function action_update()
 	{
 		log_debug("inc_vendors", "Executing action_update()");
+
+
+		// transaction start
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
 
 
 		// if no ID exists, create a new vendor first
@@ -272,7 +292,6 @@ class vendor
 	
 
 		// update
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `vendors` SET "
 						."code_vendor='". $this->data["code_vendor"] ."', "
 						."name_vendor='". $this->data["name_vendor"] ."', "
@@ -297,27 +316,47 @@ class vendor
 						."WHERE id='". $this->id ."'";
 		if (!$sql_obj->execute())
 		{
-			return 0;
+			log_write("error", "inc_vendors", "Unable to update vendor information");
 		}
-
-		unset($sql_obj);
 
 
 		// add journal entry
 		if ($mode == "update")
 		{
 			journal_quickadd_event("vendors", $this->id, "Vendor details updated.");
-			log_write("notification", "inc_vendors", "Vendor details successfully updated.");
 		}
 		else
 		{
 			journal_quickadd_event("vendors", $this->id, "Initial Vendor Creation.");
-			log_write("notification", "inc_vendors", "Vendor successfully created.");
 		}
 
 
-		// success
-		return $this->id;
+		// commit
+		if (error_check())
+		{
+			// failure
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_vendors", "An error occured whilst saving vendor details, no changes have been made.");
+			return 0;
+		}
+		else
+		{
+			// success
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_vendors", "Vendor details successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_vendors", "Vendor successfully created.");
+			}
+
+			return $this->id;
+		}
+
 
 	} // end of action_update
 
@@ -331,9 +370,12 @@ class vendor
 	{
 		log_debug("inc_vendors", "Executing action_update_taxes()");
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		// delete existing tax options
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM vendors_taxes WHERE vendorid='". $this->id ."'";
 		$sql_obj->execute();
 
@@ -357,14 +399,23 @@ class vendor
 				if ($this->data["tax_". $data_tax["id"]])
 				{
 					// enable tax for vendor
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO vendors_taxes (vendorid, taxid) VALUES ('". $this->id ."', '". $data_tax["id"] ."')";
 					$sql_obj->execute();
 				}
 			}
 		}
 
-		return 1;
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+			return 1;
+		}
 	}
 
 
@@ -386,32 +437,26 @@ class vendor
 	{
 		log_debug("inc_vendors", "Executing action_delete()");
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete Vendor
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM vendors WHERE id='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the vendor");
-			return 0;
-		}
+		$sql_obj->string	= "DELETE FROM vendors WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
 
 
 		/*
 			Delete vendor taxes
 		*/
-		$sql_obj		= New sql_query;
+
 		$sql_obj->string	= "DELETE FROM vendors_taxes WHERE vendorid='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the taxes assigned to the vendor");
-			return 0;
-		}
+		$sql_obj->execute();
 
 
 		/*
@@ -420,9 +465,22 @@ class vendor
 		journal_delete_entire("vendors", $this->id);
 
 
-		log_write("notification", "inc_vendors", "Vendor has been successfully deleted.");
 
-		return 1;
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_vendors", "An error occured whilst attempting to delete vendor. No changes have been made.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_vendors", "Vendor has been successfully deleted.");
+			return 1;
+		}
 	}
 
 

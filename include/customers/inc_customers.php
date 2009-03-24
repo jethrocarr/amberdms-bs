@@ -377,9 +377,11 @@ class customer
 	{
 		log_debug("inc_customers", "Executing action_update_taxes()");
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
 
 		// delete existing tax options
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM customers_taxes WHERE customerid='". $this->id ."'";
 		$sql_obj->execute();
 
@@ -403,12 +405,21 @@ class customer
 				if ($this->data["tax_". $data_tax["id"]])
 				{
 					// enable tax for customer
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO customers_taxes (customerid, taxid) VALUES ('". $this->id ."', '". $data_tax["id"] ."')";
-					$sql_obj->execute();
+					
+					if (!$sql_obj->execute())
+					{
+						log_write("error", "inc_customers", "A fatal error occured whilst attempting to update customer tax information. Changes have not been applied.");
+
+						$sql_obj->trans_rollback();
+						return 0;
+					}
 				}
 			}
 		}
+
+		// commit
+		$sql_obj->trans_commit();
 
 		return 1;
 	}

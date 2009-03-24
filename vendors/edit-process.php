@@ -126,8 +126,20 @@ if (user_permissions_get('vendors_write'))
 		Process Vendor Data
 	*/
 
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
+	
 	$obj_vendor->action_update();
 	$obj_vendor->action_update_taxes();
+
+	if (error_check())
+	{
+		$sql_obj->trans_rollback();
+	}
+	else
+	{
+		$sql_obj->trans_commit();
+	}
 
 
 	// display updated details
