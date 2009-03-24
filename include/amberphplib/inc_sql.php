@@ -210,7 +210,8 @@ class sql_query
 	*/
 	function trans_begin()
 	{
-		log_debug("inc_sql", "Executing trans_begin()");
+		log_write("debug", "sql_query", "Executing trans_begin()");
+		log_write("sql", "sql_query", "START TRANSACTION");
 
 		if (mysql_query("START TRANSACTION"))
 		{
@@ -219,7 +220,7 @@ class sql_query
 		}
 
 		// failure
-		log_write("error", "inc_sql", "Unable to start SQL transaction - Possibly unsupported DB engine");
+		log_write("error", "sql_query", "Unable to start SQL transaction - Possibly unsupported DB engine");
 		return 0;
 	}
 
@@ -235,7 +236,8 @@ class sql_query
 	*/
 	function trans_commit()
 	{
-		log_debug("inc_sql", "Executing trans_commit()");
+		log_write("debug", "sql_query", "Executing trans_commit()");
+		log_write("sql", "sql_query", "COMMIT");
 
 		if (mysql_query("COMMIT"))
 		{
@@ -244,7 +246,7 @@ class sql_query
 		}
 
 		// failure
-		log_write("error", "inc_sql", "Unable to commit SQL transaction - Was one started correctly?");
+		log_write("error", "sql_query", "Unable to commit SQL transaction - Was one started correctly?");
 		return 0;
 	}
 
@@ -260,7 +262,8 @@ class sql_query
 	*/
 	function trans_rollback()
 	{
-		log_debug("inc_sql", "Executing trans_rollback()");
+		log_write("debug", "sql_query", "Executing trans_rollback()");
+		log_write("sql", "sql_query", "ROLLBACK");
 
 		if (mysql_query("ROLLBACK"))
 		{
@@ -269,7 +272,7 @@ class sql_query
 		}
 
 		// failure
-		log_write("error", "inc_sql", "Unable to rollback SQL transaction - Was one started correctly?");
+		log_write("error", "sql_query", "Unable to rollback SQL transaction - Was one started correctly?");
 		return 0;
 	}
 
