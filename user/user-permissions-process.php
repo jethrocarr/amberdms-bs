@@ -51,7 +51,7 @@ if (user_permissions_get('admin'))
 	//// PROCESS DATA ////////////////////////////
 
 
-	if ($_SESSION["error"]["message"])
+	if (error_check())
 	{
 		$_SESSION["error"]["form"]["user_permissions"] = "failed";
 		header("Location: ../index.php?page=user/user-permissions.php");
@@ -70,6 +70,11 @@ if (user_permissions_get('admin'))
 			TODO: This code could be optimised to be a bit more efficent with it's SQL queries.
 		*/
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		foreach ($sql_perms_obj->data as $data_perms)
 		{
 			// check if any current settings exist
@@ -84,14 +89,8 @@ if (user_permissions_get('admin'))
 				// if the new setting is "off", delete the current setting.
 				if ($permissions[ $data_perms["value"] ] != "on")
 				{
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "DELETE FROM `users_permissions` WHERE userid='$id' AND permid='" . $data_perms["id"] . "' LIMIT 1";
-
-					if (!$sql_obj->execute())
-					{
-						log_write("error", "process", "An error occured whilst trying to delete old permissions.");
-					}
-
+					$sql_obj->execute();
 				}
 
 				// if new setting is "on", we don't need todo anything.
@@ -103,13 +102,8 @@ if (user_permissions_get('admin'))
 				// if the new setting is "on", insert a new setting
 				if ($permissions[ $data_perms["value"] ] == "on")
 				{
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '" . $data_perms["id"] . "')";
-
-					if (!$sql_obj->execute())
-					{
-						log_write("error", "process", "An error occured whilst attempting to create new permissions.");
-					}
+					$sql_obj->execute();
 				}
 
 				// if new setting is "off", we don't need todo anything.
@@ -118,9 +112,24 @@ if (user_permissions_get('admin'))
 		} // end of while
 
 
-		// done
-		$_SESSION["notification"]["message"][] = "User permissions have been updated, and are active immediately.";
+		// update journal
 		journal_quickadd_event("users", $id, "Adjusted user permissions.");
+
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to update user permissions, no change has been made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "User permissions have been updated, and are active immediately.");
+		}
+
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-permissions.php&id=$id");

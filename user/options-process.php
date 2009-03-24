@@ -65,6 +65,11 @@ if (user_online())
 	{
 		$_SESSION["error"] = array();
 
+		// start SQL transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		/*
 			Generate new password
 		*/
@@ -78,7 +83,8 @@ if (user_online())
 			Update user account details
 		*/
 
-		$sql_obj		= New sql_query;
+
+
 		$sql_obj->string	= "UPDATE `users` SET "
 					."realname='". $data["realname"] ."', "
 					."contact_email='". $data["contact_email"] ."' "
@@ -95,28 +101,22 @@ if (user_online())
 		*/
 
 		// remove old user options
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM users_options WHERE userid='$id'";
 		$sql_obj->execute();
 
-
 		// language
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'lang', '". $data["option_lang"] ."')";
 		$sql_obj->execute();
 	
 		// timezone
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'timezone', '". $data["option_timezone"] ."')";
 		$sql_obj->execute();
 			
 		// dateformat
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'dateformat', '". $data["option_dateformat"] ."')";
 		$sql_obj->execute();
 
 		// table options
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'shrink_tableoptions', '". $data["option_shrink_tableoptions"] ."')";
 		$sql_obj->execute();
 
@@ -125,44 +125,53 @@ if (user_online())
 		if (user_permissions_get("admin"))
 		{
 			// debugging
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'debug', '". $data["option_debug"] ."')";
 			$sql_obj->execute();
 
 			// concurrent logins
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'concurrent_logins', '". $data["option_concurrent_logins"] ."')";
 			$sql_obj->execute();
 		}
 
 
-		/*
-			Apply changes to active session
-		*/
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='$id'";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-					
-			foreach ($sql_obj->data as $data)
-			{
-				// save updated session data
-				$_SESSION["user"][ $data["name"] ] = $data["value"];
-			}
-		}
-
-		
+				
 
 		/*
 			Complete
 		*/
 		
-		$_SESSION["notification"]["message"][] = "Account changes applied.";
-		journal_quickadd_event("users", $id, "User changed account options");
+		if (!$_SESSION["error"]["message"])
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Account changes applied successfully.");
+			journal_quickadd_event("users", $id, "User changed account options");
+
+
+			/*
+				Apply changes to active session
+			*/
+
+			$sql_obj->string	= "SELECT name, value FROM users_options WHERE userid='$id'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+						
+				foreach ($sql_obj->data as $data)
+				{
+					// save updated session data
+					$_SESSION["user"][ $data["name"] ] = $data["value"];
+				}
+			}
+		}
+		else
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "No changes have been applied.");
+		}
 
 		header("Location: ../index.php?page=user/options.php&id=$id");
 		exit(0);

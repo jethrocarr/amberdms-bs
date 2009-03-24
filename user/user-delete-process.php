@@ -49,22 +49,17 @@ if (user_permissions_get('admin'))
 	}
 	else
 	{
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete User
 		*/
-			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM users WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the user";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "User has been successfully deleted.";
-		}
+
+		$sql_obj->string = "DELETE FROM users WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
@@ -72,23 +67,26 @@ if (user_permissions_get('admin'))
 			(both access and staff permissions)
 		*/
 		
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM users_permissions WHERE userid='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the user permissions";
-		}
-		
-		
-		$sql_obj		= New sql_query;
+		$sql_obj->execute();
+				
 		$sql_obj->string	= "DELETE FROM users_permissions_staff WHERE userid='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the user-staff permissions";
-		}
+		$sql_obj->execute();
 
+
+		// end transaction
+		if ($_SESSION["error"]["message"])
+		{
+			log_write("error", "process", "A fatal error occured whilst attempting to delete user. No changes have been made.");
+
+			$sql_obj->trans_rollback();
+		}
+		else
+		{
+			log_write("notification", "process", "Successfully deleted user account & preferences");
+
+			$sql_obj->trans_commit();
+		}
 
 
 		/*

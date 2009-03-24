@@ -68,7 +68,7 @@ if (user_permissions_get('admin'))
 	//// PROCESS DATA ////////////////////////////
 
 
-	if ($_SESSION["error"]["message"])
+	if (error_check())
 	{
 		$_SESSION["error"]["form"]["user_permissions_staff"] = "failed";
 		header("Location: ../index.php?page=user/user-staffaccess-edit.php&id=$id&staffid=$staffid");
@@ -76,7 +76,7 @@ if (user_permissions_get('admin'))
 	}
 	else
 	{
-		$_SESSION["error"] = array();
+		error_clear();
 
 		/*
 			UPDATE THE PERMISSIONS
@@ -86,6 +86,9 @@ if (user_permissions_get('admin'))
 
 			TODO: This code could be optimised to be a bit more efficent with it's SQL queries.
 		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
 
 		foreach ($sql_perms_obj->data as $data_perms)
 		{
@@ -101,13 +104,8 @@ if (user_permissions_get('admin'))
 				// if the new setting is "off", delete the current setting.
 				if ($permissions[ $data_perms["value"] ] != "on")
 				{
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "DELETE FROM `users_permissions_staff` WHERE userid='$id' AND staffid='$staffid' AND permid='" . $data_perms["id"] . "' LIMIT 1";
-
-					if (!$sql_obj->execute())
-					{
-						log_write("error", "process", "An error occured whilst trying to delete old permissions.");
-					}
+					$sql_obj->execute();
 				}
 
 				// if new setting is "on", we don't need todo anything.
@@ -119,13 +117,8 @@ if (user_permissions_get('admin'))
 				// if the new setting is "on", insert a new setting
 				if ($permissions[ $data_perms["value"] ] == "on")
 				{
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO `users_permissions_staff` (userid, staffid, permid) VALUES ('$id', '$staffid', '" . $data_perms["id"] . "')";
-
-					if (!$sql_obj->execute())
-					{
-						log_write("error", "process", "An error occured whilst attempting to create new permissions.");
-					}
+					$sql_obj->execute();
 				}
 
 				// if new setting is "off", we don't need todo anything.
@@ -134,9 +127,24 @@ if (user_permissions_get('admin'))
 			
 		} // end of while
 
-		// done
-		$_SESSION["notification"]["message"][] = "User staff access permissions have been updated, and are active immediately.";
+
+		// update journal
 		journal_quickadd_event("users", $id, "Adjusted user's staffaccess rights.");
+
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured attempting to update permissions, no changes have been made");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "User staff access permissions have been updated, and are active immediately.");
+		}
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-staffaccess.php&id=$id");
