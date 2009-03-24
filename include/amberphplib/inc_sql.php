@@ -157,6 +157,123 @@ class sql_query
 	}
 
 
+	/*
+		TRANSACTION HANDLING COMMANDS
+
+		Transactions allow a number of SQL queries to be made and then either applied (ie: written to disk) or
+		rolled back (undone). This provides data integrity when a program experiences a bug or a crash.
+
+		MySQL Note:
+		
+			Transactions will not work with the default MyISAM table engine, you must
+			use InnoDB.
+
+		Transaction Example:
+			
+			$sql_obj = New sql_query;
+
+			// begin transaction
+			$sql_obj->trans_begin();
+		
+			// run queries
+			$sql_obj->string	= "DELETE * FROM foo";
+
+			if (!$sql_obj->execute())
+			{
+				$sql_obj->trans_rollback;
+				return 0;
+			}
+
+			$sql_obj->string	= "DELETE * FROM foo_options";
+
+			if (!$sql_obj->execute())
+			{
+				$sql_obj->trans_rollback;
+				return 0;
+			}
+
+			// save changes
+			$sql_obj->trans_commit();
+	*/
+
+
+
+	/*
+		trans_begin()
+
+		This function starts a transaction in the DB, that then needs to be either commited
+		or rolled back, otherwise the SQL changes will not be applied.
+
+		Returns
+		0	Error occured attempting to start transaction
+		1	Transaction started.
+	*/
+	function trans_begin()
+	{
+		log_debug("inc_sql", "Executing trans_begin()");
+
+		if (mysql_query("START TRANSACTION"))
+		{
+			// success
+			return 1;
+		}
+
+		// failure
+		log_write("error", "inc_sql", "Unable to start SQL transaction - Possibly unsupported DB engine");
+		return 0;
+	}
+
+
+	/*
+		trans_commit()
+
+		Commits a started transaction.
+
+		Returns
+		0	Error occured attempting to commit a transaction - was one started to begin with?
+		1	Transaction commited
+	*/
+	function trans_commit()
+	{
+		log_debug("inc_sql", "Executing trans_commit()");
+
+		if (mysql_query("COMMIT"))
+		{
+			// success
+			return 1;
+		}
+
+		// failure
+		log_write("error", "inc_sql", "Unable to commit SQL transaction - Was one started correctly?");
+		return 0;
+	}
+
+
+	/*
+		trans_rollback()
+
+		Rollsback (undoes) a started transaction.
+
+		Returns
+		0	Error occured attempting to rollback the transaction - was one started to begin with?
+		1	Transaction commited
+	*/
+	function trans_rollback()
+	{
+		log_debug("inc_sql", "Executing trans_rollback()");
+
+		if (mysql_query("ROLLBACK"))
+		{
+			// success
+			return 1;
+		}
+
+		// failure
+		log_write("error", "inc_sql", "Unable to rollback SQL transaction - Was one started correctly?");
+		return 0;
+	}
+
+
 
 
 	/*
