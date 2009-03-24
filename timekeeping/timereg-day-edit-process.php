@@ -75,7 +75,7 @@ if (user_permissions_get('timekeeping'))
 
 	// get a total of the time currently booked for this date
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='". $data["employeeid"] ."'";
+	$sql_obj->string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='$employeeid'";
 
 	if ($id)
 		$sql_obj->string .= " AND id!='$id'";
@@ -99,7 +99,7 @@ if (user_permissions_get('timekeeping'))
 	// make sure the totals are less than 24 hours
 	if ($timetotal > 86400)
 	{
-		$_SESSION["error"]["message"][] = "You can not book more than 24 hours of time in one day.";
+		log_write("error", "process", "You can not book more than 24 hours of time in one day.");
 	}
 	
 
@@ -133,20 +133,29 @@ if (user_permissions_get('timekeeping'))
 	}
 	else
 	{
+
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `timereg` (date) VALUES ('". $data["date"]."')";
 			$sql_obj->execute();
 
-			$id = $sql_obj->fetch_array();
+			$id = $sql_obj->fetch_insert_id();
+
+			if (!$id)
+			{
+				log_write("error", "process", "An error occured whilst attempting to create a new time record.");
+			}
 		}
 
 		if ($id)
 		{
 			// update timereg details
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `timereg` SET "
 							."date='". $data["date"] ."', "
 							."employeeid='". $employeeid ."', "
@@ -159,17 +168,29 @@ if (user_permissions_get('timekeeping'))
 			{
 				log_write("error", "process", "A problem occured whilst attempting to update timereg details");
 			}
+		}
+
+
+
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "No changes have been made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "add")
+			{
+				log_write("notification", "process", "Time successfully booked.");
+			}
 			else
 			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Time successfully booked.";
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Time booked has been updated successfully.";
-				}
-				
+				log_write("notification", "process", "Time booked has been updated successfully.");
 			}
 		}
 
