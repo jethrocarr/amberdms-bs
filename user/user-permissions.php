@@ -72,24 +72,25 @@ class page_output
 		$this->obj_form->method = "post";
 
 
-		$mysql_string		= "SELECT * FROM `permissions` ORDER BY value='disabled' DESC, value='admin' DESC, value";
-		$mysql_perms_results	= mysql_query($mysql_string);
+		$sql_perms_obj		= New sql_query;
+		$sql_perms_obj->string	= "SELECT * FROM `permissions` ORDER BY value='disabled' DESC, value='admin' DESC, value";
+		$sql_perms_obj->execute();
 		
-		while ($mysql_perms_data = mysql_fetch_array($mysql_perms_results))
+		for ($sql_perms_obj->data as $data_perms)
 		{
 			// define the checkbox
 			$structure = NULL;
-			$structure["fieldname"]				= $mysql_perms_data["value"];
+			$structure["fieldname"]				= $data_perms["value"];
 			$structure["type"]				= "checkbox";
-			$structure["options"]["label"]			= $mysql_perms_data["description"];
+			$structure["options"]["label"]			= $data_perms["description"];
 			$structure["options"]["no_translate_fieldname"]	= "yes";
 
 			// check if the user has this permission
-			$mysql_string			= "SELECT id FROM `users_permissions` WHERE userid='". $this->id ."' AND permid='". $mysql_perms_data["id"] ."'";
-			$mysql_userperms_result		= mysql_query($mysql_string);
-			$mysql_userperms_num_rows	= mysql_num_rows($mysql_userperms_result);
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='". $this->id ."' AND permid='". $data_perms["id"] ."'";
+			$sql_obj->execute();
 
-			if ($mysql_userperms_num_rows)
+			if ($sql_obj->num_rows())
 			{
 				$structure["defaultvalue"] = "on";
 			}
@@ -98,7 +99,7 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 			// add checkbox to subforms
-			$this->obj_form->subforms["user_permissions"][] = $mysql_perms_data["value"];
+			$this->obj_form->subforms["user_permissions"][] = $data_perms["value"];
 
 		}
 	

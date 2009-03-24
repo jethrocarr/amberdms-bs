@@ -21,28 +21,29 @@ if (user_permissions_get('admin'))
 	
 	// convert all the permissions input
 	$permissions = array();
-	$mysql_perms_string	= "SELECT * FROM `permissions` ORDER BY value";
-	$mysql_perms_result	= mysql_query($mysql_perms_string);
 
-	while ($mysql_perms_data = mysql_fetch_array($mysql_perms_result))
+	$sql_perms_obj		= New sql_query;
+	$sql_perms_obj->string	= "SELECT * FROM `permissions` ORDER BY value";
+	$sql_perms_obj->fetch_array();
+
+	foreach ($sql_perms_obj->data as $data_sql)
 	{
-		$permissions[ $mysql_perms_data["value"] ] = security_form_input_predefined("any", $mysql_perms_data["value"], 0, "Form provided invalid input!");
+		$permissions[ $data_sql["value"] ] = security_form_input_predefined("any", $data_sql["value"], 0, "Form provided invalid input!");
 	}
-
-	// reset the request, so we can re-use it.
-	mysql_data_seek($mysql_perms_result,0);
 
 	
 
 	///// ERROR CHECKING ///////////////////////
 	
+
 	// make sure the user actually exists
-	$mysql_string		= "SELECT id FROM `users` WHERE id='$id'";
-	$mysql_result		= mysql_query($mysql_string);
-	$mysql_num_rows		= mysql_num_rows($mysql_result);
-	if (!$mysql_num_rows)
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `users` WHERE id='$id' LIMIT 1";
+	$sql_obj->execute();
+
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The user you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The user you have attempted to edit - $id - does not exist in this system.");
 	}
 
 
@@ -63,31 +64,32 @@ if (user_permissions_get('admin'))
 		/*
 			UPDATE THE PERMISSIONS
 		
-			This takes quite a few mysql calls, as we need to remove old permissions
+			This takes quite a few SQL calls, as we need to remove old permissions
 			and add new ones on a one-by-one basis.
 
-			TODO: This code could be optimised to be a bit more efficent with it's MySQL queries.
+			TODO: This code could be optimised to be a bit more efficent with it's SQL queries.
 		*/
 
-		while ($mysql_perms_data = mysql_fetch_array($mysql_perms_result))
+		foreach ($sql_perms_obj->data as $data_perms)
 		{
 			// check if any current settings exist
-			$mysql_user_string	= "SELECT id FROM `users_permissions` WHERE userid='$id' AND permid='" . $mysql_perms_data["id"] . "'";
-			$mysql_user_result	= mysql_query($mysql_user_string);
-			$mysql_user_num_rows	= mysql_num_rows($mysql_user_result);
+			$sql_user_obj		= New sql_query;
+			$sql_user_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='$id' AND permid='" . $data_perms["id"] . "' LIMIT 1";
+			$sql_user_obj->execute();
 
-			if ($mysql_user_num_rows)
+			if ($sql_user_obj->num_rows())
 			{
 				// user has this particular permission set
 
 				// if the new setting is "off", delete the current setting.
-				if ($permissions[ $mysql_perms_data["value"] ] != "on")
+				if ($permissions[ $data_perms["value"] ] != "on")
 				{
-					$mysql_string	= "DELETE FROM `users_permissions` WHERE userid='$id' AND permid='" . $mysql_perms_data["id"] . "'";
-					$mysql_result = mysql_query($mysql_string);
-					if (!$mysql_result)
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "DELETE FROM `users_permissions` WHERE userid='$id' AND permid='" . $data_perms["id"] . "' LIMIT 1";
+
+					if (!$sql_obj->execute())
 					{
-						die('MySQL Error: ' . mysql_error());
+						log_write("error", "process", "An error occured whilst trying to delete old permissions.");
 					}
 
 				}
@@ -99,21 +101,22 @@ if (user_permissions_get('admin'))
 			{	// no current setting exists
 
 				// if the new setting is "on", insert a new setting
-				if ($permissions[ $mysql_perms_data["value"] ] == "on")
+				if ($permissions[ $data_perms["value"] ] == "on")
 				{
-					$mysql_string	= "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '" . $mysql_perms_data["id"] . "')";
-					$mysql_result = mysql_query($mysql_string);
-					if (!$mysql_result)
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '" . $data_perms["id"] . "')";
+
+					if (!$sql_obj->execute())
 					{
-						die('MySQL Error: ' . mysql_error());
+						log_write("error", "process", "An error occured whilst attempting to create new permissions.");
 					}
 				}
 
 				// if new setting is "off", we don't need todo anything.
-
 			}
 			
 		} // end of while
+
 
 		// done
 		$_SESSION["notification"]["message"][] = "User permissions have been updated, and are active immediately.";

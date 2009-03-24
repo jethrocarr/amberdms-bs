@@ -29,13 +29,13 @@ if (user_permissions_get('admin'))
 		$mode = "edit";
 
 		// make sure the user actually exists
-		$mysql_string		= "SELECT id FROM `users` WHERE id='$id'";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `users` WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "The user you have attempted to edit - $id - does not exist in this system.";
+			log_write("error", "process", "The user you have attempted to edit - $id - does not exist in this system.");
 		}
 	}
 	else
@@ -62,15 +62,17 @@ if (user_permissions_get('admin'))
 	///// ERROR CHECKING ///////////////////////
 
 	// make sure we don't choose a user name that has already been taken
-	$mysql_string	= "SELECT id FROM `users` WHERE username='". $data["username"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `users` WHERE username='". $data["username"] ."'";
 
-	if ($mysql_num_rows)
+	if ($id)
+		$sql_obj->string .= " AND id!='$id'";
+
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "This user name is already used for another user - please choose a unique name.";
+		log_write("error", "process", "This user name is already used for another user - please choose a unique name.");
 		$_SESSION["error"]["username-error"] = 1;
 	}
 
@@ -83,7 +85,7 @@ if (user_permissions_get('admin'))
 
 		if ($data["password"] != $data["password_confirm"])
 		{
-			$_SESSION["error"]["message"][]		= "Your passwords do not match!";
+			$_SESSION["error"]["message"][]			= "Your passwords do not match!";
 			$_SESSION["error"]["password-error"]		= 1;
 			$_SESSION["error"]["password_confirm-error"]	= 1;
 		}
@@ -167,19 +169,13 @@ if (user_permissions_get('admin'))
 
 			
 				// assign the user "disabled" permissions
-				$mysql_string = "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '1')";
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO `users_permissions` (userid, permid) VALUES ('$id', '1')";
+				$sql_obj->execute();
 				
-				if (!mysql_query($mysql_string))
-				{
-					$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
-					$_SESSION["error"]["message"][] = "The user account may have incorrect permissions assigned to it.";
-				}
-				else
-				{
-					// complete
-					$_SESSION["notification"]["message"][] = "Successfully created user account. Note that the user is disabled by default, you will need to use the User Permissions page to assign them access rights.";
-					journal_quickadd_event("users", $id, "Created user account.");
-				}
+				// complete
+				$_SESSION["notification"]["message"][] = "Successfully created user account. Note that the user is disabled by default, you will need to use the User Permissions page to assign them access rights.";
+				journal_quickadd_event("users", $id, "Created user account.");
 			}
 			else
 			{
@@ -195,15 +191,16 @@ if (user_permissions_get('admin'))
 			}
 
 			// update the account details
-			$mysql_string = "UPDATE `users` SET "
-					."username='". $data["username"] ."', "
-					."realname='". $data["realname"] ."', "
-					."contact_email='". $data["contact_email"] ."' "
-					."WHERE id='$id'";
-			
-			if (!mysql_query($mysql_string))
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `users` SET "
+							."username='". $data["username"] ."', "
+							."realname='". $data["realname"] ."', "
+							."contact_email='". $data["contact_email"] ."' "
+							."WHERE id='$id' LIMIT 1";
+
+			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+				log_write("error", "process", "An error occured whilst attempting to update the account details");
 			}
 			else
 			{
@@ -257,9 +254,9 @@ if (user_permissions_get('admin'))
 		// Because we have changed the users details such as their username, we need to kill all the user's
 		// sessions to prevent any undesired issues from occuring.
 
-		$mysql_string = "DELETE FROM `users_sessions` WHERE userid='$id'";
-		mysql_query($mysql_string);
-
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `users_sessions` WHERE userid='$id'";
+		$sql_obj->execute();
 
 		// goto view page
 		header("Location: ../index.php?page=user/user-view.php&id=$id");
