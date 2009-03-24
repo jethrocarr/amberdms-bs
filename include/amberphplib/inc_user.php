@@ -29,47 +29,59 @@ function user_online()
 		return 0;
 	if (!preg_match("/^[a-zA-Z0-9]*$/", $_SESSION["user"]["authkey"]))	// make sure the key is valid info, NOT AN SQL INJECTION.
 		return 0;
-		
-	// get user session data
-	$sql_session_obj		= New sql_query;
-	$sql_session_obj->string 	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
-	$sql_session_obj->execute();
 
-	if ($sql_session_obj->num_rows())
+
+	if ($GLOBALS["cache"]["user"]["online"])
 	{
-		$sql_session_obj->fetch_array();
+		// we have already checked if the user is online, so don't bother checking again
+		return 1;
+	}
+	else
+	{
+		// get user session data
+		$sql_session_obj		= New sql_query;
+		$sql_session_obj->string 	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
+		$sql_session_obj->execute();
 
-		$time = time();
-		if ($time < ($sql_session_obj->data[0]["time"] + 7200))
+		if ($sql_session_obj->num_rows())
 		{
-			// we want to update the time value in the database, but we don't want to do this
-			// on every single page load - no need, and a waste of performance.
-			//
-			// therefore, we only update the time record in the DB if it's older than 30 minutes. We use
-			// this time to see if the user has been inactive for long periods of time, to log them out.
-			if (($time -  $sql_session_obj->data[0]["time"]) > 1800)
+			$sql_session_obj->fetch_array();
+
+			$time = time();
+			if ($time < ($sql_session_obj->data[0]["time"] + 7200))
 			{
-				// update time field
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "UPDATE `users_sessions` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."' LIMIT 1";
-				$sql_obj->execute();
+				// we want to update the time value in the database, but we don't want to do this
+				// on every single page load - no need, and a waste of performance.
+				//
+				// therefore, we only update the time record in the DB if it's older than 30 minutes. We use
+				// this time to see if the user has been inactive for long periods of time, to log them out.
+				if (($time -  $sql_session_obj->data[0]["time"]) > 1800)
+				{
+					// update time field
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE `users_sessions` SET time='$time' WHERE authkey='". $_SESSION["user"]["authkey"] ."' LIMIT 1";
+					$sql_obj->execute();
+				}
+
+				// save to cache
+				$GLOBALS["cache"]["user"]["online"] = 1;
+
+				// user is logged in.
+				return 1;
 			}
-
-			// user is logged in.
-			return 1;
-		}
-		else
-		{
-			// The user hasn't accessed a page for 2 hours, we log em' out for security reasons.
+			else
+			{
+				// The user hasn't accessed a page for 2 hours, we log em' out for security reasons.
+				
+				// We save the query string, so they can easily log back in to where they were.			
+				$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
 			
-			// We save the query string, so they can easily log back in to where they were.			
-			$_SESSION["login"]["previouspage"] = $_SERVER["QUERY_STRING"];
-		
-			// log user out
-			user_logout();
+				// log user out
+				user_logout();
 
-			// set the timeout flag. (so the login message is different)
-			$_SESSION["user"]["timeout"] = "flagged";
+				// set the timeout flag. (so the login message is different)
+				$_SESSION["user"]["timeout"] = "flagged";
+			}
 		}
 	}
 
@@ -443,8 +455,9 @@ function user_logout()
 		$sql_obj->execute();
 
 		// log the user out.
-		$_SESSION["user"] = array();
-		$_SESSION["form"] = array();
+		$GLOBALS["cache"]["user"]	= array();
+		$_SESSION["user"]		= array();
+		$_SESSION["form"]		= array();
 
 		return 1;		
 	}
@@ -476,7 +489,7 @@ function user_newuser($username, $password, $realname, $email)
 			$sql_obj->string	= "INSERT INTO `users` (username, realname, contact_email) VALUES ('$username', '$realname', '$email')";
 			$sql_obj->execute();
 
-			$userid = mysql_insert_id();
+			$userid = $sql_obj->fetch_insert_id() ;
 
 			// set the password
 			user_changepwd($userid, $password);
@@ -562,35 +575,42 @@ function user_permissions_get($type)
 		return 1;
 	}
 
-	// other permissions... make sure user is valid, and logged in.
-	if ($userid = user_information("id"))
+
+	if ($GLOBALS["cache"]["user"]["perms"][$type])
 	{
-		// get the id of the permission
-		$mysql_perm_string	= "SELECT id FROM `permissions` WHERE value='$type' LIMIT 1";
-		$mysql_perm_result	= mysql_query($mysql_perm_string);
-		$mysql_perm_num_rows	= mysql_num_rows($mysql_perm_result);
-
-		// if nothing found, deny.
-		if (!$mysql_perm_num_rows)
-			return 0;
-
-		// get the ID
-		$mysql_perm_data	= mysql_fetch_array($mysql_perm_result);
-
-		// see if the user has this particular permission.
-		$mysql_user_string	= "SELECT id FROM `users_permissions` WHERE userid='$userid' AND permid='" . $mysql_perm_data["id"] . "'";
-		$mysql_user_result	= mysql_query($mysql_user_string);
-		$mysql_user_num_rows	= mysql_num_rows($mysql_user_result);
-
-		if ($mysql_user_num_rows)
+		return 1;
+	}
+	else
+	{
+		// other permissions... make sure user is valid, and logged in.
+		if ($userid = user_information("id"))
 		{
-			// user has an entry for that permission.
-			return 1;
+			// get the id of the permission
+			$permid = sql_get_singlevalue("SELECT id as value FROM `permissions` WHERE value='$type' LIMIT 1");
+
+			// if nothing found, deny.
+			if (!$permid)
+				return 0;
+
+			// see if the user has this particular permission.
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='$userid' AND permid='$permid' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				// user has an entry for that permission.
+
+				// save to cache & return success
+				$GLOBALS["cache"]["user"]["perms"][$type] = 1;
+				return 1;
+				
+			} // if permission exists
 			
-		} // if permission exists
-		
-	} // if user is logged in
+		} // if user is logged in
+	}
 	
+	// default to deny
 	return 0;
 }
 
@@ -606,9 +626,9 @@ function user_information($field)
 	log_debug("inc_user", "Executing user_information($field)");
 
 
-	if ($GLOBALS["cache"]["user"][$field])
+	if ($GLOBALS["cache"]["user"]["info"][$field])
 	{
-		return $GLOBALS["cache"]["user"][$field];
+		return $GLOBALS["cache"]["user"]["info"][$field];
 	}
 	else
 	{
@@ -619,7 +639,7 @@ function user_information($field)
 			$value = sql_get_singlevalue("SELECT $field as value FROM `users` WHERE username='" . $_SESSION["user"]["name"] . "' LIMIT 1");
 
 			// cache the value
-			$GLOBALS["cache"]["user"][$field] = $value;
+			$GLOBALS["cache"]["user"]["info"][$field] = $value;
 
 			// return the value
 			return $value;
