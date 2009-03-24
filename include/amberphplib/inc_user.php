@@ -425,7 +425,7 @@ function user_login($instance, $username, $password)
 			// IP is not currently in the list. We need to add it.
 			$newtime       		= time();
 
-			$sql_obj		= New sql_obj;
+			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `users_blacklist` (ipaddress, failedcount, time) VALUES ('" . $_SERVER["REMOTE_ADDR"] . "', '1', '$newtime')";
 			$sql_obj->execute();
 		}
