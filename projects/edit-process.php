@@ -40,13 +40,13 @@ if (user_permissions_get('projects_write'))
 		$mode = "edit";
 
 		// make sure the project actually exists
-		$mysql_string		= "SELECT id FROM `projects` WHERE id='$id'";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "The project you have attempted to edit - $id - does not exist in this system.";
+			log_write("error", "process", "The project you have attempted to edit - $id - does not exist in this system.");
 		}
 	}
 	else
@@ -60,15 +60,17 @@ if (user_permissions_get('projects_write'))
 
 
 	// make sure we don't choose a project name that has already been taken
-	$mysql_string	= "SELECT id FROM `projects` WHERE name_project='". $data["name_project"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `projects` WHERE name_project='". $data["name_project"] ."'";
 
-	if ($mysql_num_rows)
+	if ($id)
+		$sql_obj->string .= " AND id!='$id'";
+
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "This project name is already used for another project - please choose a unique name.";
+		log_write("error", "process", "This project name is already used for another project - please choose a unique name.");
 		$_SESSION["error"]["name_project-error"] = 1;
 	}
 
@@ -76,21 +78,20 @@ if (user_permissions_get('projects_write'))
 	// make sure we don't choose a projet code that has already been taken
 	if ($data["code_project"])
 	{
-		$mysql_string	= "SELECT id FROM `projects` WHERE code_project='". $data["code_project"] ."'";
-		if ($id)
-			$mysql_string .= " AND id!='$id'";
-		$mysql_result	= mysql_query($mysql_string);
-		$mysql_num_rows	= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `projects` WHERE code_project='". $data["code_project"] ."'";
 
-		if ($mysql_num_rows)
+		if ($id)
+			$sql_obj->string .= " AND id!='$id'";
+
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "This project code is already used for another project - please choose a unique code, or leave it blank to recieve an auto-generated value.";
+			log_write("error", "process", "This project code is already used for another project - please choose a unique code, or leave it blank to recieve an auto-generated value.");
 			$_SESSION["error"]["code_project-error"] = 1;
 		}
 	}
-
-
-	
 
 
 	/// if there was an error, go back to the entry page
@@ -121,30 +122,29 @@ if (user_permissions_get('projects_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `projects` (name_project) VALUES ('".$data["name_project"]."')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `projects` (name_project) VALUES ('".$data["name_project"]."')";
+			$sql_obj->execute();
 
-			$id = mysql_insert_id();
+			$id = sql_obj->fetch_insert_id();
 		}
 
 		if ($id)
 		{
 			// update project details
-			$mysql_string = "UPDATE `projects` SET "
-						."name_project='". $data["name_project"] ."', "
-						."code_project='". $data["code_project"] ."', "
-						."date_start='". $data["date_start"] ."', "
-						."date_end='". $data["date_end"] ."', "
-						."internal_only='". $data["internal_only"] ."', "
-						."details='". $data["details"] ."' "
-						."WHERE id='$id'";
-						
-			if (!mysql_query($mysql_string))
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `projects` SET "
+							."name_project='". $data["name_project"] ."', "
+							."code_project='". $data["code_project"] ."', "
+							."date_start='". $data["date_start"] ."', "
+							."date_end='". $data["date_end"] ."', "
+							."internal_only='". $data["internal_only"] ."', "
+							."details='". $data["details"] ."' "
+							."WHERE id='$id' LIMIT 1";
+
+			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+				log_write("error", "process", "An error occured whilst attempting to update project information");
 			}
 			else
 			{

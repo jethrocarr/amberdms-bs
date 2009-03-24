@@ -33,13 +33,13 @@ if (user_permissions_get('projects_write'))
 	
 	
 	// make sure the project actually exists
-	$mysql_string		= "SELECT id FROM `projects` WHERE id='$id'";
-	$mysql_result		= mysql_query($mysql_string);
-	$mysql_num_rows		= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$id' LIMIT 1";
+	$sql_obj->execute();
 
-	if (!$mysql_num_rows)
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The project you have attempted to delete - $id - does not exist in this system.";
+		log_write("error", "process", "The project you have attempted to delete - $id - does not exist in this system.");
 	}
 
 

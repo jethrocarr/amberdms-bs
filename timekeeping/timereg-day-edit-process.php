@@ -36,21 +36,21 @@ if (user_permissions_get('timekeeping'))
 		$mode = "edit";
 
 		// make sure the time entry actually exists
-		$mysql_string		= "SELECT id, locked FROM `timereg` WHERE id='$id' LIMIT 1";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, locked FROM `timereg` WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "The time entry you have attempted to edit - $id - does not exist in this system.";
+			log_write("error", "process", "The time entry you have attempted to edit - $id - does not exist in this system.");
 		}
 		else
 		{
-			$mysql_data = mysql_fetch_array($mysql_result);
+			$sql_obj->fetch_array();
 
-			if ($mysql_data["locked"])
+			if ($sql_obj->data[0]["locked"])
 			{
-				$_SESSION["error"]["message"][] = "This time entry has been locked and can not be adjusted.";
+				log_write("error", "process", "This time entry has been locked and can not be adjusted.");
 			}
 		}
 	}
@@ -74,19 +74,22 @@ if (user_permissions_get('timekeeping'))
 	// make sure we don't end up with more than 24 hours booked for one day
 
 	// get a total of the time currently booked for this date
-	$mysql_string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='". $data["employeeid"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-		
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT time_booked FROM `timereg` WHERE date='". $data["date"] ."' AND employeeid='". $data["employeeid"] ."'";
 
+	if ($id)
+		$sql_obj->string .= " AND id!='$id'";
+		
+	$sql_obj->execute();
 	$timetotal = 0;
-	if ($mysql_num_rows)
+
+	if ($sql_obj->num_rows())
 	{
-		while ($mysql_data = mysql_fetch_array($mysql_result))
+		$sql_obj->fetch_array();
+
+		foreach ($sql_obj->data as $data_sql)
 		{
-			$timetotal += $mysql_data["time_booked"];
+			$timetotal += $data_sql["time_booked"];
 		}
 	}
 
@@ -133,29 +136,28 @@ if (user_permissions_get('timekeeping'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `timereg` (date) VALUES ('". $data["date"]."')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
-			}
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `timereg` (date) VALUES ('". $data["date"]."')";
+			$sql_obj->execute();
 
-			$id = mysql_insert_id();
+			$id = $sql_obj->fetch_array();
 		}
 
 		if ($id)
 		{
 			// update timereg details
-			$mysql_string = "UPDATE `timereg` SET "
-						."date='". $data["date"] ."', "
-						."employeeid='". $employeeid ."', "
-						."phaseid='". $data["phaseid"] ."', "
-						."time_booked='". $data["time_booked"] ."', "
-						."description='". $data["description"] ."' "
-						."WHERE id='$id'";
-						
-			if (!mysql_query($mysql_string))
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `timereg` SET "
+							."date='". $data["date"] ."', "
+							."employeeid='". $employeeid ."', "
+							."phaseid='". $data["phaseid"] ."', "
+							."time_booked='". $data["time_booked"] ."', "
+							."description='". $data["description"] ."' "
+							."WHERE id='$id' LIMIT 1";
+
+			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+				log_write("error", "process", "A problem occured whilst attempting to update timereg details");
 			}
 			else
 			{

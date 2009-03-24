@@ -36,17 +36,16 @@ if (user_permissions_get('admin'))
 	else
 	{
 		// remove entry
-		$mysql_string = "DELETE FROM `users_blacklist` WHERE id='$id'";
-		if (!mysql_query($mysql_string))
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `users_blacklist` WHERE id='$id' LIMIT 1";
+
+		if ($sql_obj->execute())
 		{
-			die('MySQL Error: ' . mysql_error());
+			$_SESSION["notification"]["message"][] = "Blacklist entry removed successfully.";
 		}
-		
-		
+
 		// take the user to the message page
-		$_SESSION["notification"]["message"][] = "Blacklist entry removed successfully.";
 		header("Location: ../index.php?page=admin/blacklist.php");
-	
 		exit(0);
 	}
 

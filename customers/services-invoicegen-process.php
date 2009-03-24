@@ -27,13 +27,13 @@ if (user_permissions_get('customers_write'))
 	
 	
 	// make sure the customer actually exists
-	$mysql_string		= "SELECT id FROM `customers` WHERE id='$id'";
-	$mysql_result		= mysql_query($mysql_string);
-	$mysql_num_rows		= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `customers` WHERE id='$id' LIMIT 1";
+	$sql_obj->execute();
 
-	if (!$mysql_num_rows)
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The customer you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The customer you have attempted to edit - $id - does not exist in this system.");
 	}
 
 

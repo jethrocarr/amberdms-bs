@@ -28,13 +28,13 @@ if (user_permissions_get('projects_write'))
 	
 
 	// check that the specified project actually exists
-	$mysql_string	= "SELECT id FROM `projects` WHERE id='$projectid'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid' LIMIT 1";
+	$sql_obj->execute();
 
-	if (!$mysql_num_rows)
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The project you have attempted to edit - $projectid - does not exist in this system.";
+		log_write("error", "process", "The project you have attempted to edit - $projectid - does not exist in this system.");
 	}
 	else
 	{
@@ -43,23 +43,22 @@ if (user_permissions_get('projects_write'))
 			$mode = "edit";
 			
 			// are we editing an existing phase? make sure it exists and belongs to this project
-			$mysql_string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid'";
-			$mysql_result	= mysql_query($mysql_string);
-			$mysql_num_rows	= mysql_num_rows($mysql_result);
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid' LIMIT 1";
+			$sql_obj->execute();
 
-			if (!$mysql_num_rows)
+			if (!$sql_obj->num_rows())
 			{
-				$_SESSION["error"]["message"][] = "The phase you have attempted to edit - $phaseid - does not exist in this system.";
+				log_write("error", "process", "The phase you have attempted to edit - $phaseid - does not exist in this system.");
 			}
 			else
 			{
-				$mysql_data = mysql_fetch_array($mysql_result);
+				$sql_obj->fetch_array();
 
-				if ($mysql_data["projectid"] != $projectid)
+				if ($sql_obj->data[0]["projectid"] != $projectid)
 				{
-					$_SESSION["error"]["message"][] = "The requested phase does not match the provided project ID. Potential application bug?";
+					log_write("error", "process", "The requested phase does not match the provided project ID. Potential application bug?");
 				}
-				
 			}
 		}
 		else
@@ -76,15 +75,18 @@ if (user_permissions_get('projects_write'))
 
 	// make sure we don't choose a phase name that has already been used for this project
 	// Note: we don't mind if this phase name is the same as other phases in DIFFERENT projects
-	$mysql_string	= "SELECT id FROM `project_phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid'";
-	if ($phaseid)
-		$mysql_string .= " AND id!='$phaseid'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
 
-	if ($mysql_num_rows)
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `project_phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid' LIMIT 1";
+	
+	if ($phaseid)
+		$sql_obj->string .= " AND id!='$phaseid'";
+
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "This phase name is already used in this project - please choose a unique name.";
+		log_write("error", "process", "This phase name is already used in this project - please choose a unique name.");
 		$_SESSION["error"]["name_project-error"] = 1;
 	}
 
@@ -101,26 +103,25 @@ if (user_permissions_get('projects_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `project_phases` (projectid) VALUES ('$projectid')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `project_phases` (projectid) VALUES ('$projectid')";
+			$sql_obj->execute();
 
-			$phaseid = mysql_insert_id();
+			$phaseid = $sql_obj->fetch_insert_id();
 		}
 
 		if ($phaseid)
 		{
 			// update phase details
-			$mysql_string = "UPDATE `project_phases` SET "
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `project_phases` SET "
 						."name_phase='". $data["name_phase"] ."', "
 						."description='". $data["description"] ."' "
-						."WHERE id='$phaseid'";
-			
-			if (!mysql_query($mysql_string))
+						."WHERE id='$phaseid' LIMIT 1";
+		
+			if (!$sql_obj->execute())
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+				log_write("error", "process", "A fatal error occuring whilst attempting to update the phase.");
 			}
 			else
 			{

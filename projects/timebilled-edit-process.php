@@ -31,13 +31,13 @@ if (user_permissions_get('projects_timegroup'))
 	
 
 	// check that the specified project actually exists
-	$mysql_string	= "SELECT id FROM `projects` WHERE id='$projectid'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid' LIMIT 1";
+	$sql_obj->execute();
 
-	if (!$mysql_num_rows)
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The project you have attempted to edit - $projectid - does not exist in this system.";
+		log_write("error", "process", "The project you have attempted to edit - $projectid - does not exist in this system.");
 	}
 	else
 	{
@@ -46,28 +46,27 @@ if (user_permissions_get('projects_timegroup'))
 			$mode = "edit";
 			
 			// are we editing an existing group? make sure it exists and belongs to this project
-			$mysql_string	= "SELECT projectid FROM time_groups WHERE id='$groupid'";
-			$mysql_result	= mysql_query($mysql_string);
-			$mysql_num_rows	= mysql_num_rows($mysql_result);
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid FROM time_groups WHERE id='$groupid' LIMIT 1";
+			$sql_obj->execute();
 
-			if (!$mysql_num_rows)
+			if (!$sql_obj->num_rows());
 			{
-				$_SESSION["error"]["message"][] = "The time group you have attempted to edit - $groupid - does not exist in this system.";
+				log_write("error", "process", "The time group you have attempted to edit - $groupid - does not exist in this system.");
 			}
 			else
 			{
-				$mysql_data = mysql_fetch_array($mysql_result);
+				$sql_obj->fetch_array();
 
-				if ($mysql_data["projectid"] != $projectid)
+				if ($sql_obj->data[0]["projectid"] != $projectid)
 				{
-					$_SESSION["error"]["message"][] = "The requested time group does not match the provided project ID. Potential application bug?";
+					log_write("error", "process", "The requested time group does not match the provided project ID. Potential application bug?");
 				}
 
-				if ($mysql_data["locked"])
+				if ($sql_obj->data[0]["locked"])
 				{
-					$_SESSION["error"]["message"][] = "This time group can not be adjusted since it has now been locked.";
+					log_write("error", "process", "This time group can not be adjusted since it has now been locked.");
 				}
-				
 			}
 		}
 		else
@@ -163,13 +162,11 @@ if (user_permissions_get('projects_timegroup'))
 		*/
 		if ($mode == "add")
 		{
-			$mysql_string = "INSERT INTO `time_groups` (projectid) VALUES ('$projectid')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `time_groups` (projectid) VALUES ('$projectid')";
+			$sql_obj->execute();
 
-			$groupid = mysql_insert_id();
+			$groupid = $sql_obj->fetch_insert_id();
 		}
 
 

@@ -47,27 +47,22 @@ if (user_permissions_get('admin'))
 	else
 	{
 		// enable/disable blacklisting
-		$mysql_string = "UPDATE config SET value='". $data["blacklist_enable"] ."' WHERE name='BLACKLIST_ENABLE'";
-		if (!mysql_query($mysql_string))
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
-		}
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE config SET value='". $data["blacklist_enable"] ."' WHERE name='BLACKLIST_ENABLE' LIMIT 1";
+		$sql_obj->execute();
 
 		// update limit value
-		$mysql_string = "UPDATE config SET value='". $data["blacklist_limit"] ."' WHERE name='BLACKLIST_LIMIT'";
-		if (!mysql_query($mysql_string))
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
-		}
-
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE config SET value='". $data["blacklist_limit"] ."' WHERE name='BLACKLIST_LIMIT' LIMIT 1";
+		$sql_obj->execute();
 
 		// if blacklisting was disabled, we should flush the blacklist table
 		if ($data["blacklist_enable"] == "disabled")
 		{
-			$mysql_string = "DELETE FROM `users_blacklist`";
-			mysql_query($mysql_string);
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "DELETE FROM `users_blacklist`";
+			$sql_obj->execute();
 		}
-		
 
 		// take the user to the message page
 		$_SESSION["notification"]["message"][] = "Blacklisting configuration changes applied.";

@@ -32,13 +32,13 @@ if (user_permissions_get('support_write'))
 		$mode = "edit";
 
 		// make sure the ticket exists
-		$mysql_string		= "SELECT id FROM `support_tickets` WHERE id='$id'";
-		$mysql_result		= mysql_query($mysql_string);
-		$mysql_num_rows		= mysql_num_rows($mysql_result);
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `support_tickets` WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
-		if (!$mysql_num_rows)
+		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "The ticket you have attempted to edit - $id - does not exist in this system.";
+			log_write("error", "process", "The ticket you have attempted to edit - $id - does not exist in this system.");
 		}
 	}
 	else
@@ -52,15 +52,17 @@ if (user_permissions_get('support_write'))
 
 
 	// make sure we don't choose a ticket that has already been taken
-	$mysql_string	= "SELECT id FROM `support_tickets` WHERE title='". $data["title"] ."'";
-	if ($id)
-		$mysql_string .= " AND id!='$id'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `support_tickets` WHERE title='". $data["title"] ."'";
 
-	if ($mysql_num_rows)
+	if ($id)
+		$sql_obj->string .= " AND id!='$id'";
+
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "This title is already used by another support ticket - please choose a unique title.";
+		log_write("error", "process", "This title is already used by another support ticket - please choose a unique title.");
 		$_SESSION["error"]["title-error"] = 1;
 	}
 
@@ -86,30 +88,28 @@ if (user_permissions_get('support_write'))
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$mysql_string = "INSERT INTO `support_tickets` (title) VALUES ('".$data["title"]."')";
-			if (!mysql_query($mysql_string))
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". $mysql_error();
-			}
-
-			$id = mysql_insert_id();
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "INSERT INTO `support_tickets` (title) VALUES ('".$data["title"]."')";
+			$sql_obj->execute();
+	
+			$id = $sql_obj->fetch_insert_id();
 		}
 
 		if ($id)
 		{
 			// update ticket details
-			$mysql_string = "UPDATE `support_tickets` SET "
-						."title='". $data["title"] ."', "
-						."priority='". $data["priority"] ."', "
-						."details='". $data["details"] ."', "
-						."status='". $data["status"] ."', "
-						."date_start='". $data["date_start"] ."', "
-						."date_end='". $data["date_end"] ."' "
-						."WHERE id='$id'";
-			
-			if (!mysql_query($mysql_string))
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `support_tickets` SET "
+							."title='". $data["title"] ."', "
+							."priority='". $data["priority"] ."', "
+							."details='". $data["details"] ."', "
+							."status='". $data["status"] ."', "
+							."date_start='". $data["date_start"] ."', "
+							."date_end='". $data["date_end"] ."' "
+							."WHERE id='$id' LIMIT 1";
+			if (!$sql_obj->execute())			
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+				log_write("error", "process", "An error occured whilst updating support ticket");
 			}
 			else
 			{

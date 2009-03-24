@@ -22,21 +22,21 @@ if (user_permissions_get('timekeeping'))
 
 	
 	// make sure the time entry actually exists
-	$mysql_string		= "SELECT id, locked FROM `timereg` WHERE id='$id'";
-	$mysql_result		= mysql_query($mysql_string);
-	$mysql_num_rows		= mysql_num_rows($mysql_result);
-	
-	if (!$mysql_num_rows)
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id, locked FROM `timereg` WHERE id='$id' LIMIT 1";
+	$sql_obj->execute();
+
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The time entry you have attempted to delete - $id - does not exist in this system.";
+		log_write("error", "process", "The time entry you have attempted to delete - $id - does not exist in this system.");
 	}
 	else
 	{
-		$mysql_data = mysql_fetch_array($mysql_result);
+		$sql_obj->fetch_array();
 
-		if ($mysql_data["locked"])
+		if ($sql_obj->data[0]["locked"])
 		{
-			$_SESSION["error"]["message"][] = "This time entry has been locked and can not be adjusted.";
+			log_write("error", "process", "This time entry has been locked and can not be adjusted.");
 		}
 	}
 
@@ -55,11 +55,13 @@ if (user_permissions_get('timekeeping'))
 	else
 	{
 		// delete
-		$mysql_string = "DELETE FROM `timereg` WHERE id='$id'";
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `timereg` WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 						
-		if (!mysql_query($mysql_string))
+		if (!$sql_obj->num_rows())
 		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured: ". mysql_error();
+			log_write("error", "process", "An error occured whilst deleting entry");
 		}
 		else
 		{

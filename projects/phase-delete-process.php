@@ -34,13 +34,13 @@ if (user_permissions_get('projects_write'))
 	
 
 	// check that the specified project actually exists
-	$mysql_string	= "SELECT id FROM `projects` WHERE id='$projectid'";
-	$mysql_result	= mysql_query($mysql_string);
-	$mysql_num_rows	= mysql_num_rows($mysql_result);
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT id FROM `projects` WHERE id='$projectid' LIMIT 1";
+	$sql_obj->execute();
 
-	if (!$mysql_num_rows)
+	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The project you have attempted to edit - $projectid - does not exist in this system.";
+		log_write("error", "process", "The project you have attempted to edit - $projectid - does not exist in this system.");
 	}
 	else
 	{
@@ -49,21 +49,21 @@ if (user_permissions_get('projects_write'))
 			$mode = "edit";
 			
 			// are we editing an existing phase? make sure it exists and belongs to this project
-			$mysql_string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid'";
-			$mysql_result	= mysql_query($mysql_string);
-			$mysql_num_rows	= mysql_num_rows($mysql_result);
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT projectid FROM `project_phases` WHERE id='$phaseid' LIMIT 1";
+			$sql_obj->execute();
 
-			if (!$mysql_num_rows)
+			if (!$sql_obj->num_rows())
 			{
-				$_SESSION["error"]["message"][] = "The phase you have attempted to edit - $phaseid - does not exist in this system.";
+				log_write("error", "process", "The phase you have attempted to edit - $phaseid - does not exist in this system.");
 			}
 			else
 			{
-				$mysql_data = mysql_fetch_array($mysql_result);
+				$sql_obj->fetch_array();
 
-				if ($mysql_data["projectid"] != $projectid)
+				if ($sql_obj->data[0]["projectid"] != $projectid)
 				{
-					$_SESSION["error"]["message"][] = "The requested phase does not match the provided project ID. Potential application bug?";
+					log_write("error", "process", "The requested phase does not match the provided project ID. Potential application bug?");
 				}
 				
 			}
