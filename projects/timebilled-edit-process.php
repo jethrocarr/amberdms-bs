@@ -158,11 +158,17 @@ if (user_permissions_get('projects_timegroup'))
 	else
 	{
 		/*
-			Add a new group if required
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Add a new group (if required)
 		*/
 		if ($mode == "add")
 		{
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `time_groups` (projectid) VALUES ('$projectid')";
 			$sql_obj->execute();
 
@@ -176,80 +182,36 @@ if (user_permissions_get('projects_timegroup'))
 				Update details
 			*/
 			
-			$sql_obj = New sql_query;
 			$sql_obj->string = "UPDATE time_groups SET "
 						."name_group='". $data["name_group"] ."', "
 						."customerid='". $data["customerid"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$groupid'";
 			
-			if (!$sql_obj->execute())
+			$sql_obj->execute();
+
+
+			/*
+				Update time entries
+
+				Here we run though all the entries returned from the database, and
+				then compare them to the entries that the user has selected.
+
+				This will allow us to work out if there have been any changes - eg: changed
+				from billable to non-billable, or removed from the group.
+			*/
+			
+			foreach ($sql_entries_obj->data as $entries_data)
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to update details";
-			}
-			else
-			{
-
-				/*
-					Update time entries
-
-					Here we run though all the entries returned from the database, and
-					then compare them to the entries that the user has selected.
-
-					This will allow us to work out if there have been any changes - eg: changed
-					from billable to non-billable, or removed from the group.
-				*/
-				
-				foreach ($sql_entries_obj->data as $entries_data)
+				if ($entries_data["groupid"])
 				{
-					if ($entries_data["groupid"])
-					{
-						// time entry already part of this group
+					// time entry already part of this group
 
-						if ($data["time_entries"][ $entries_data["id"] ])
-						{
-							if ($entries_data["billable"] != $data["time_entries"][ $entries_data["id"] ]["billable"])
-							{
-								// the billable status of this entry has changed.
-
-								if ($entries_data["locked"] == "1")
-								{
-									$locked = "1";
-								}
-								else
-								{
-									$locked = "2";
-								}
-								
-								$sql_obj		= New sql_query;
-								$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."'";
-								$sql_obj->execute();
-							}
-						}
-						else
-						{
-							// the user has removed this entry from the group
-							if ($entries_data["locked"] == "1")
-							{
-								// keep the entry locked
-								$locked = "1";
-							}
-							else
-							{
-								// time entry was locked by this group, we can unlock it
-								$locked = "0";
-							}
-							
-							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='$locked' WHERE id='". $entries_data["id"] ."'";
-							$sql_obj->execute();
-						}
-					}
-					else
+					if ($data["time_entries"][ $entries_data["id"] ])
 					{
-						if ($data["time_entries"][ $entries_data["id"] ])
+						if ($entries_data["billable"] != $data["time_entries"][ $entries_data["id"] ]["billable"])
 						{
-							// the entry has been added to the group.
+							// the billable status of this entry has changed.
 
 							if ($entries_data["locked"] == "1")
 							{
@@ -259,33 +221,85 @@ if (user_permissions_get('projects_timegroup'))
 							{
 								$locked = "2";
 							}
-								
 							
-							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."'";
+							$sql_obj->string	= "UPDATE timereg SET billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."' LIMIT 1";
 							$sql_obj->execute();
 						}
 					}
-				}
-				
-
-
-			
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Time billing group successfully created.";
+					else
+					{
+						// the user has removed this entry from the group
+						if ($entries_data["locked"] == "1")
+						{
+							// keep the entry locked
+							$locked = "1";
+						}
+						else
+						{
+							// time entry was locked by this group, we can unlock it
+							$locked = "0";
+						}
+						
+						$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='$locked' WHERE id='". $entries_data["id"] ."' LIMIT 1";
+						$sql_obj->execute();
+					}
 				}
 				else
 				{
-					$_SESSION["notification"]["message"][] = "Time billing group successfully updated.";
+					if ($data["time_entries"][ $entries_data["id"] ])
+					{
+						// the entry has been added to the group.
+
+						if ($entries_data["locked"] == "1")
+						{
+							$locked = "1";
+						}
+						else
+						{
+							$locked = "2";
+						}
+							
+						
+						$sql_obj->string	= "UPDATE timereg SET groupid='$groupid', billable='". $data["time_entries"][ $entries_data["id"] ]["billable"] ."', locked='$locked' WHERE id='". $entries_data["id"] ."'";
+						$sql_obj->execute();
+					}
 				}
-				
+			}
+
+
+			/*
+				Commit
+			*/
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+
+				log_write("error", "process", "An error occured whilst attempting to update the time group. No changes have been made.");
+		
+				$_SESSION["error"]["form"]["timebilled_view"] = "failed";
+				header("Location: ../index.php?page=projects/timebilled-edit.php&id=$projectid&groupid=$groupid");
+				exit(0);
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+
+				if ($mode == "add")
+				{
+					log_write("notification", "process", "Time billing group successfully created.");
+				}
+				else
+				{
+					log_write("notification", "process", "Time billing group successfully updated.");
+				}
+
+
+				header("Location: ../index.php?page=projects/timebilled.php&id=$projectid");
+				exit(0);
 			}
 		}
 
-		// display updated details
-		header("Location: ../index.php?page=projects/timebilled.php&id=$projectid");
-		exit(0);
 	}
 
 	/////////////////////////

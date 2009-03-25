@@ -86,26 +86,24 @@ if (user_permissions_get('customers_write'))
 		// fetch the name of the service, as we need this for some of the journal entries.
 		$data["name_service"]	= sql_get_singlevalue("SELECT name_service as value FROM services WHERE id='$serviceid'");
 	
-	
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		/*
 			Delete service
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM services_customers WHERE id='$services_customers_id' LIMIT 1";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service";
-		}
+		$sql_obj->execute();
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM services_customers_options WHERE services_customers_id='$services_customers_id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service options";
-		}
+		$sql_obj->execute();
 
 
 
@@ -113,43 +111,51 @@ if (user_permissions_get('customers_write'))
 			Delete service period history
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='$services_customers_id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service period history";
-		}
+		$sql_obj->execute();
 
 
 		/*
 			Delete service usage records
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='$services_customers_id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the service usage records";
-		}
-
-
+		$sql_obj->execute();
 
 
 
 		/*
-			Complete
+			Update Journal
+		*/
+		
+		journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been deleted from this customers account.");
+
+
+
+		/*
+			Commit
 		*/
 
-		if (!$_SESSION["error"]["message"])
+		if (error_check())
 		{
-			$_SESSION["notification"]["message"][] = "Service has been successfully deleted.";
-			journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been deleted from this customers account.");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the service from the customer's account. No changes were made.");
+		
+			$_SESSION["error"]["form"]["service_delete"] = "failed";
+			header("Location: ../index.php?page=customers/service-delete.php&customerid=$customerid&serviceid=$services_customers_id");
+			exit(0);
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Service has been successfully deleted.");
+		
+			header("Location: ../index.php?page=customers/services.php&id=$customerid");
+			exit(0);
 		}
 		
-		header("Location: ../index.php?page=customers/services.php&id=$customerid");
-		exit(0);
 	}
 
 	/////////////////////////

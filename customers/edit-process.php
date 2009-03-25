@@ -133,9 +133,23 @@ if (user_permissions_get('customers_write'))
 		Process Data
 	*/
 
-	$obj_customer->action_update();
+	// start transaction
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
 
+	// update customer
+	$obj_customer->action_update();
 	$obj_customer->action_update_taxes();
+
+	// commit
+	if (error_check())
+	{
+		$sql_obj->trans_rollback();
+	}
+	else
+	{
+		$sql_obj->trans_commit();
+	}
 
 
 	// display updated details

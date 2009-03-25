@@ -112,27 +112,41 @@ if (user_permissions_get('projects_write'))
 	}
 	else
 	{
+		/*
+			Start Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		// set a default code
 		if (!$data["code_project"])
 		{
 			$data["code_project"] = config_generate_uniqueid("CODE_PROJECT", "SELECT id FROM projects WHERE code_project='VALUE'");
 		}
 		
-	
+
+
+		/*
+			Create a new project (if required)
+		*/
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `projects` (name_project) VALUES ('".$data["name_project"]."')";
 			$sql_obj->execute();
 
 			$id = sql_obj->fetch_insert_id();
 		}
 
+
+		/*
+			Update project details
+		*/
 		if ($id)
 		{
 			// update project details
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `projects` SET "
 							."name_project='". $data["name_project"] ."', "
 							."code_project='". $data["code_project"] ."', "
@@ -142,29 +156,61 @@ if (user_permissions_get('projects_write'))
 							."details='". $data["details"] ."' "
 							."WHERE id='$id' LIMIT 1";
 
-			if (!$sql_obj->execute())
+			$sql_obj->execute();
+		}
+
+
+		/*
+			Update Journal
+		*/
+		if ($mode == "add")
+		{
+			journal_quickadd_event("projects", $id, "Project successfully created.");
+		}
+		else
+		{
+			journal_quickadd_event("projects", $id, "Project successfully created.");
+		}
+
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to update project. No changes have been made.");
+
+			if ($mode == "add")
 			{
-				log_write("error", "process", "An error occured whilst attempting to update project information");
+				header("Location: ../index.php?page=projects/add.php");
+				exit(0);
 			}
 			else
 			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Project successfully created.";
-					journal_quickadd_event("projects", $id, "Project successfully created.");
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Project successfully updated.";
-					journal_quickadd_event("projects", $id, "Project successfully created.");
-				}
-				
+				header("Location: ../index.php?page=projects/view.php&id=$id");
+				exit(0);
 			}
 		}
+		else
+		{
+			$sql_obj->trans_commit();
 
-		// display updated details
-		header("Location: ../index.php?page=projects/view.php&id=$id");
-		exit(0);
+			if ($mode == "add")
+			{
+				log_write("notification", "process", "Project successfully created.");
+			}
+			else
+			{
+				log_write("notification", "process", "Project successfully updated.");
+			}
+		
+			header("Location: ../index.php?page=projects/view.php&id=$id");
+			exit(0);
+		}
+
 	}
 
 	/////////////////////////

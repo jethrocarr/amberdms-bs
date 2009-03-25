@@ -238,22 +238,7 @@ class hr_staff
 
 		$this->id = $sql_obj->fetch_insert_id();
 
-		if ($this->id)
-		{
-			// call update function to load all the fields
-			if ($this->action_update())
-			{
-				// post to journal
-				journal_quickadd_event("staff", $this->id, "Employee successfully created.");
-
-				// success
-				log_write("notification", "inc_staff", "Employee successfully created.");
-				return $this->id;
-			}
-		}
-
-		// failure
-		return 0;
+		return $this->id;
 
 	} // end of action_create
 
@@ -266,12 +251,41 @@ class hr_staff
 		Update an employee's details based on the data in $this->data
 
 		Returns
-		0	failure
-		1	success
+		0	Failure
+		#	Success - return ID of employee
 	*/
 	function action_update()
 	{
 		log_debug("inc_staff", "Executing action_update()");
+
+
+		/*
+			Start the transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID exists, create a new employee first
+		*/
+		if (!$this->id)
+		{
+			$mode = "create";
+
+			if (!$this->action_create())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			$mode = "update";
+		}
+
+
 
 
 		// All staff require a staff_code value. If one has not been provided, automatically generate one
@@ -281,8 +295,9 @@ class hr_staff
 		}
 
 
-		// update the employee
-		$sql_obj		= New sql_query;
+		/*
+			Update Employee
+		*/
 		$sql_obj->string	= "UPDATE `staff` SET "
 						."name_staff='". $this->data["name_staff"] ."', "
 						."staff_code='". $this->data["staff_code"] ."', "
@@ -292,42 +307,53 @@ class hr_staff
 						."contact_fax='". $this->data["contact_fax"] ."', "
 						."date_start='". $this->data["date_start"] ."', "
 						."date_end='". $this->data["date_end"] ."' "
-						."WHERE id='". $this->id ."'";
-		if (!$sql_obj->execute())
-		{
-			return 0;
-		}
-
-		unset($sql_obj);
-
-
-		// add journal entry
-		//
-		// note that we only want to do this if updating an existing employee, but
-		// if the action_update function has been called by the action_create function this should not be posted.
-		//
-		// We check this by seeing if any journal entries currently exist for the employee. If none do, then must be
-		// a new employee.
-		//
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM journal WHERE journalname='staff' AND customid='". $this->id ."' LIMIT 1";
+						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
-		if ($sql_obj->num_rows())
-		{
-			// employee already exists, so post update message to journal
-			journal_quickadd_event("staff", $this->id, "Employee successfully adjusted.");
 
-			// UI notification
-			log_write("notification", "inc_staff", "Employee successfully adjusted.");
+
+		/*
+			Update the Journal
+		*/
+		if ($mode == "update")
+		{
+			journal_quickadd_event("staff", $this->id, "Employee successfully adjusted.");
+		}
+		else
+		{
+			journal_quickadd_event("staff", $this->id, "Employee successfully created.");
 		}
 
-		unset($sql_obj);
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst updating employee details. No changes were made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_staff", "Employee successfully adjusted.");
+			}
+			else
+			{
+				log_write("notification", "inc_staff", "Employee successfully created.");
+			}
 
 
-		// success
-		return 1;
+			// success
+			return $this->id;
+		}
+
 
 	} // end of action_update
 
@@ -349,33 +375,29 @@ class hr_staff
 	{
 		log_debug("inc_staff", "Executing action_delete()");
 
+
+		/*
+			Start Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		/*
 			Delete Employee
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM staff WHERE id='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_staff", "A fatal SQL error occured whilst trying to delete the employee");
-			return 0;
-		}
+		$sql_obj->string	= "DELETE FROM staff WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
 			Delete User <-> Employee permissions mappings
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM users_permissions_staff WHERE staffid='$this->id'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_staff", "A fatal SQL error occured whilst trying to delete the user-employee permissions mappings");
-			return 0;
-		}	
-
+		$sql_obj->execute();
 
 
 		/*
@@ -384,9 +406,26 @@ class hr_staff
 		journal_delete_entire("staff", $this->id);
 
 
-		log_write("notification", "inc_staff", "Employee has been successfully deleted.");
 
-		return 1;
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_staff", "An error occured whilst attempting to delete the employee. No changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_staff", "Employee has been successfully deleted.");
+
+			return 1;
+		}
 	}
 
 

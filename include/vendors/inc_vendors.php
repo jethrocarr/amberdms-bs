@@ -219,29 +219,14 @@ class vendor
 	{
 		log_debug("inc_vendors", "Executing action_create()");
 
-		// transaction start
-		$sql_obj = New sql_query;
-		$sql_obj->trans_begin();
-
 
 		// create a new vendor
 		$sql_obj->string = "INSERT INTO `vendors` (name_vendor) VALUES ('". $this->data["name_vendor"]. "')";
+		$sql_obj->execute();
 
+		$this->id = $sql_obj->fetch_insert_id();
 
-		// commit
-		if (!$sql_obj->execute())
-		{
-			$sql_obj->trans_rollback();
-			return 0;
-		}
-		else
-		{
-			$sql_obj->trans_commit();
-
-			$this->id = $sql_obj->fetch_insert_id();
-
-			return $this->id;
-		}
+		return $this->id;
 
 	} // end of action_create
 

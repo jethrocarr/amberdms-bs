@@ -57,15 +57,14 @@ if (user_permissions_get('timekeeping'))
 		// delete
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM `timereg` WHERE id='$id' LIMIT 1";
-		$sql_obj->execute();
-						
-		if (!$sql_obj->num_rows())
+
+		if (!$sql_obj->execute())
 		{
-			log_write("error", "process", "An error occured whilst deleting entry");
+			log_write("error", "process", "An error occured whilst attempting to delete the time entry. No changes have been made.");
 		}
 		else
 		{
-			$_SESSION["notification"]["message"][] = "Time entry successfully removed.";
+			log_write("notification", "process", "Time entry successfully removed.");
 		}
 
 		// display updated details

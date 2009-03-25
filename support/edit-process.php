@@ -85,10 +85,14 @@ if (user_permissions_get('support_write'))
 	}
 	else
 	{
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `support_tickets` (title) VALUES ('".$data["title"]."')";
 			$sql_obj->execute();
 	
@@ -98,7 +102,6 @@ if (user_permissions_get('support_write'))
 		if ($id)
 		{
 			// update ticket details
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `support_tickets` SET "
 							."title='". $data["title"] ."', "
 							."priority='". $data["priority"] ."', "
@@ -107,25 +110,39 @@ if (user_permissions_get('support_write'))
 							."date_start='". $data["date_start"] ."', "
 							."date_end='". $data["date_end"] ."' "
 							."WHERE id='$id' LIMIT 1";
-			if (!$sql_obj->execute())			
+			$sql_obj->execute();
+		}
+
+
+		// update journal
+		if ($mode == "add")
+		{
+			journal_quickadd_event("support_tickets", $id, "Support ticket created");
+		}
+		else
+		{
+			journal_quickadd_event("support_tickets", $id, "Support ticket details updated");
+		}
+
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst updating support ticket. No changes have been made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "add")
 			{
-				log_write("error", "process", "An error occured whilst updating support ticket");
+				log_write("notification", "process", "Support ticket successfully created.");
 			}
 			else
 			{
-				if ($mode == "add")
-				{
-					// message + journal entry
-					$_SESSION["notification"]["message"][] = "Support ticket successfully created.";
-					journal_quickadd_event("support_tickets", $id, "Support ticket created");
-				}
-				else
-				{
-					// message + journal entry
-					$_SESSION["notification"]["message"][] = "Support ticket successfully updated.";
-					journal_quickadd_event("support_tickets", $id, "Support ticket details updated");
-				}
-				
+				log_write("notification", "process", "Support ticket successfully updated.");
 			}
 		}
 

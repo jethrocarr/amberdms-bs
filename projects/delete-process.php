@@ -88,61 +88,69 @@ if (user_permissions_get('projects_write'))
 	else
 	{
 		/*
+			Start Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			Delete Project
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM projects WHERE id='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the project";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Project has been successfully deleted.";
-		}
-
+		$sql_obj->string	= "DELETE FROM projects WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
 			Delete Phases
 		*/
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM project_phases WHERE projectid='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the project phases";
-		}
 
+		$sql_obj->string	= "DELETE FROM project_phases WHERE projectid='$id'";
+		$sql_obj->execute();
 
 
 		/*
 			Delete Time Groups
 		*/
 		
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM time_groups WHERE projectid='$id'";
+		$sql_obj->execute();
 			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete time groups belonging to the project";
-		}
-
-
 
 		/*
 			Delete Project Journal
 		*/
+
 		journal_delete_entire("projects", $id);
 
+
+
+		/*
+			Commit
+		*/
 		
-		// display updated details
-		header("Location: ../index.php?page=projects/projects.php");
-		exit(0);
-	}
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the project, no changes have been made");
+
+			header("Location: ../index.php?page=projects/delete.php&id=$id");
+			exit(0);
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Project deleted successfully");
+		
+			header("Location: ../index.php?page=projects/projects.php");
+			exit(0);
+		}
+
+		
 
 	/////////////////////////
 	

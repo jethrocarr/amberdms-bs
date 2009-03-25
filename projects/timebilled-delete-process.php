@@ -74,12 +74,13 @@ if (user_permissions_get('projects_timegroup'))
 		}
 	}
 
+
 		
 	//// ERROR CHECKING ///////////////////////
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["timebilled_delete"] = "failed";
 		header("Location: ../index.php?page=projects/timebilled-delete.php&id=$projectid&groupid=$groupid");
@@ -88,37 +89,53 @@ if (user_permissions_get('projects_timegroup'))
 	else
 	{
 		/*
+			Start Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			Delete Time Group
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM time_groups WHERE id='$groupid' LIMIT 1";
-			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the time group";
-		}
-	
+		$sql_obj->execute();
 
 
 		/*
 			Unassign time entries from the deleted time_group
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE timereg SET billable='0', groupid='0', locked='0' WHERE groupid='$groupid'";
-	
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to unassign the unwanted time entries.";
-		}
-	
-		
-		$_SESSION["notification"]["message"][] = "Time billing group has been removed.";
+		$sql_obj->execute();
 
-		// display updated details
-		header("Location: ../index.php?page=projects/timebilled.php&id=$projectid");
-		exit(0);
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the time group. No changes were made.");
+		
+			$_SESSION["error"]["form"]["timebilled_delete"] = "failed";
+			header("Location: ../index.php?page=projects/timebilled-delete.php&id=$projectid&groupid=$groupid");
+			exit(0);
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			log_write("notification", "process", "Time billing group has been removed.");
+
+			header("Location: ../index.php?page=projects/timebilled.php&id=$projectid");
+			exit(0);
+		}
 	}
 
 	/////////////////////////

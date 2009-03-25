@@ -219,6 +219,7 @@ class product
 
 		$this->id = $sql_obj->fetch_insert_id();
 
+
 		return $this->id;
 
 	} // end of action_create
@@ -238,6 +239,14 @@ class product
 	function action_update()
 	{
 		log_debug("inc_products", "Executing action_update()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			If no ID exists, create a new product first
@@ -276,7 +285,6 @@ class product
 			Update product details
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `products` SET "
 						."name_product='". $this->data["name_product"] ."', "
 						."units='". $this->data["units"] ."', "
@@ -293,34 +301,54 @@ class product
 						."quantity_vendor='". $this->data["quantity_vendor"] ."', "
 						."vendorid='". $this->data["vendorid"] ."', "
 						."code_product_vendor='". $this->data["code_product_vendor"] ."' "
-						."WHERE id='". $this->id ."'";
+						."WHERE id='". $this->id ."' LIMIT 1";
 
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "action_update", "Failure while executing update SQL query");
-			return 0;
-		}
-
-		unset($sql_obj);
+		$sql_obj->execute();
 
 
 
-		
-		// notification & journal
+		/*
+			Update Journal
+		*/
+
 		if ($mode == "update")
 		{
-			log_write("notification", "inc_products", "Product successfully updated.");
-			journal_quickadd_event("products", $this->id, "Product details update.");
+			journal_quickadd_event("products", $this->id, "Product details updated.");
 		}
 		else
 		{
-			log_write("notification", "inc_products", "Product successfully created.");
 			journal_quickadd_event("products", $this->id, "Product created.");
 		}
 
 
-		// success
-		return $this->id;
+	
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to update the product. No changes were made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_products", "Product successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_products", "Product successfully created.");
+			}
+
+
+			return $this->id;
+		}
 
 	} // end of action_update_details
 
@@ -342,34 +370,38 @@ class product
 	{
 		log_debug("inc_products", "Executing action_delete()");
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		// delete the product
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM products WHERE id='". $this->id ."' LIMIT 1";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the product");
-			return 0;
-		}
+		$sql_obj->execute();
 
 
 		// delete the product taxes
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM products_taxes WHERE productid='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the taxes assigned to the product");
-			return 0;
-		}
+		$sql_obj->execute();
 
 
 		// delete product journal
 		journal_delete_entire("products", $this->id);
 
-		// success
-		log_write("notification", "inc_products", "Product has been successfully deleted.");
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error". "inc_products". "An error occured whilst attempting to delete the product. No changes have been made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_products", "Product has been successfully deleted.");
+		}
 
 		return 1;
 	}
@@ -531,6 +563,13 @@ class product_tax
 		log_debug("inc_products", "Executing action_update()");
 
 		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			If no ID exists, create a new tax item first
 		*/
 		if (!$this->itemid)
@@ -560,40 +599,61 @@ class product_tax
 			Update tax item details
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `products_taxes` SET "
 						."taxid='". $this->data["taxid"] ."', "
 						."description='". $this->data["description"] ."', "
 						."manual_amount='". $this->data["manual_amount"] ."', "
 						."manual_option='". $this->data["manual_option"] ."', "
 						."productid='". $this->id ."' "
-						."WHERE id='". $this->itemid ."'";
+						."WHERE id='". $this->itemid ."' LIMIT 1";
 
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "action_update", "Failure while executing update SQL query");
-			return 0;
-		}
-
-		unset($sql_obj);
+		$sql_obj->execute();
 
 
-		
-		// notification & journal
+		/*
+			Update the Journal
+		*/
 		if ($mode == "update")
 		{
-			log_write("notification", "inc_products", "Tax item successfully updated.");
 			journal_quickadd_event("products", $this->id, "Tax item details updated.");
 		}
 		else
 		{
-			log_write("notification", "inc_products", "Tax item successfully created.");
 			journal_quickadd_event("products", $this->id, "New tax item added.");
 		}
 
 
-		// success
-		return $this->itemid;
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst updating product details. No changes were made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_products", "Tax item successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_products", "Tax item successfully created.");
+			}
+
+
+			// success
+			return $this->itemid;
+		}
+
+
 
 	} // end of action_update
 
@@ -619,7 +679,7 @@ class product_tax
 			
 		if (!$sql_obj->execute())
 		{
-			log_write("error", "inc_products", "A fatal SQL error occured whilst trying to delete the product");
+			log_write("error", "inc_products", "A fatal error occured whilst trying to delete the product");
 			return 0;
 		}
 

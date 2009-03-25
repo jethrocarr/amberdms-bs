@@ -293,8 +293,17 @@ class customer
 	{
 		log_debug("inc_customers", "Executing action_update()");
 
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
 
-		// if no ID exists, create a new customer first
+
+
+		/*
+			If no ID supplied, create a new customer first
+		*/
 		if (!$this->id)
 		{
 			$mode = "create";
@@ -317,8 +326,11 @@ class customer
 		}
 	
 
-		// update
-		$sql_obj		= New sql_query;
+
+		/*
+			Update Customer Details
+		*/
+
 		$sql_obj->string	= "UPDATE `customers` SET "
 						."code_customer='". $this->data["code_customer"] ."', "
 						."name_customer='". $this->data["name_customer"] ."', "
@@ -340,30 +352,53 @@ class customer
 						."address2_state='". $this->data["address2_state"] ."', "
 						."address2_country='". $this->data["address2_country"] ."', "
 						."address2_zipcode='". $this->data["address2_zipcode"] ."' "
-						."WHERE id='". $this->id ."'";
-		if (!$sql_obj->execute())
-		{
-			return 0;
-		}
+						."WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
 
-		unset($sql_obj);
+		
 
+		/*
+			Update the journal
+		*/
 
-		// add journal entry
 		if ($mode == "update")
 		{
 			journal_quickadd_event("customers", $this->id, "Customer details updated.");
-			log_write("notification", "inc_customers", "Customer details successfully updated.");
 		}
 		else
 		{
 			journal_quickadd_event("customers", $this->id, "Initial Account Creation.");
-			log_write("notification", "inc_customers", "Customer successfully created.");
 		}
 
 
-		// success
-		return $this->id;
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_customers", "An error occured when updating customer details. No changes have been made");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_customers", "Customer details successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_customers", "Customer successfully created.");
+			}
+			
+			return $this->id;
+		}
 
 	} // end of action_update
 
@@ -406,23 +441,28 @@ class customer
 				{
 					// enable tax for customer
 					$sql_obj->string	= "INSERT INTO customers_taxes (customerid, taxid) VALUES ('". $this->id ."', '". $data_tax["id"] ."')";
-					
-					if (!$sql_obj->execute())
-					{
-						log_write("error", "inc_customers", "A fatal error occured whilst attempting to update customer tax information. Changes have not been applied.");
-
-						$sql_obj->trans_rollback();
-						return 0;
-					}
+					$sql_obj->execute();		
 				}
 			}
 		}
 
 		// commit
-		$sql_obj->trans_commit();
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
 
-		return 1;
+			log_write("error", "inc_customers", "A fatal error occured whilst attempting to update customer tax information. Changes have not been applied.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 	}
+
 
 
 	/*
@@ -441,44 +481,58 @@ class customer
 	{
 		log_debug("inc_customers", "Executing action_delete()");
 
+		/*
+			Start Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete Customer
 		*/
 			
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM customers WHERE id='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_customers", "A fatal SQL error occured whilst trying to delete the customer");
-			return 0;
-		}
+		$sql_obj->string	= "DELETE FROM customers WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
 			Delete customer taxes
 		*/
-		$sql_obj		= New sql_query;
+		
 		$sql_obj->string	= "DELETE FROM customers_taxes WHERE customerid='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_vendors", "A fatal SQL error occured whilst trying to delete the taxes assigned to the customer.");
-			return 0;
-		}
-
+		$sql_obj->execute();
 
 
 		/*
 			Delete Journal
 		*/
+
 		journal_delete_entire("customers", $this->id);
 
 
-		log_write("notification", "inc_customers", "Customer has been successfully deleted.");
+		/*
+			Commit
+		*/
+		
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
 
-		return 1;
+			log_write("error", "inc_customers", "An error occured whilst trying to delete the customer. No changes have been made.");
+
+			return 0
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_customers", "Customer has been successfully deleted.");
+
+			return 1;
+		}
 	}
 
 

@@ -110,11 +110,11 @@ if (user_permissions_get('projects_write'))
 			
 		if (!$sql_obj->execute())
 		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the phase";
+			log_write("error", "process", "A fatal SQL error occured whilst trying to delete the phase");
 		}
 		else
 		{		
-			$_SESSION["notification"]["message"][] = "Phase has been successfully deleted.";
+			log_write("notification", "process", "Phase has been successfully deleted.");
 		}
 
 		// display updated details

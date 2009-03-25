@@ -32,7 +32,7 @@ if (user_permissions_get('support_write'))
 	
 	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][] = "The support ticket you have attempted to edit - $id - does not exist in this system.";
+		log_write("error", "process", "The support ticket you have attempted to edit - $id - does not exist in this system.");
 	}
 
 
@@ -51,29 +51,39 @@ if (user_permissions_get('support_write'))
 	}
 	else
 	{
+		// begin transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete Support Ticket
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM support_tickets WHERE id='$id'";
+		$sql_obj->string	= "DELETE FROM support_tickets WHERE id='$id' LIMIT 1";
+		$sql_obj->execute();
 			
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst trying to delete the support ticket";
-		}
-		else
-		{		
-			$_SESSION["notification"]["message"][] = "Support Ticket has been successfully deleted.";
-		}
-
-
 
 		/*
 			Delete Journal
 		*/
 		journal_delete_entire("support_tickets", $id);
+
+
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "A fatal error occured whilst trying to delete the support ticket. No changes have been made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("error", "notification", "Support Ticket has been successfully deleted.");
+		}
 
 
 

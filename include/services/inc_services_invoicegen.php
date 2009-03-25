@@ -338,25 +338,43 @@ function service_periods_add($services_customers_id, $billing_mode)
 
 
 
+	/*
+		Start Transaction
+	*/
 
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
 
 
 	/*
 		Add a new period
 	*/
-	$sql_obj		= New sql_query;
 	$sql_obj->string	= "INSERT INTO services_customers_periods (services_customers_id, date_start, date_end, date_billed) VALUES ('$services_customers_id', '$date_period_start', '$date_period_end', '$date_period_billing')";
 	$sql_obj->execute();
-
 			
 
 	/*
 		Update services_customers
 	*/
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "UPDATE services_customers SET date_period_next='$date_period_next' WHERE id='$services_customers_id'";
+	$sql_obj->string	= "UPDATE services_customers SET date_period_next='$date_period_next' WHERE id='$services_customers_id' LIMIT 1";
 	$sql_obj->execute();
 
+
+
+	/*
+		Commit
+	*/
+	if (error_check())
+	{
+		$sql_obj->trans_rollback();
+
+		log_write("error", "process", "An error occured whilst attempting to add a new period to a service. No changes were made.");
+		return 0;
+	}
+	else
+	{
+		$sql_obj->trans_commit();
+	}
 
 	return 1;
 }
@@ -449,6 +467,17 @@ function service_invoices_generate($customerid = NULL)
 
 
 				/*
+					Start Transaction
+
+					(one transaction per invoice)
+				*/
+
+				$sql_obj = New sql_query;
+				$sql_obj->trans_begin();
+
+
+
+				/*
 					Create new invoice
 				*/
 				$invoice		= New invoice;
@@ -484,14 +513,18 @@ function service_invoices_generate($customerid = NULL)
 
 				if (!$invoice->data["dest_account"])
 				{
-					log_debug("services_invoicegen", "Error: No AR summary account could be found");
+					log_write("error", "services_invoicegen", "No AR summary account could be found");
+
+					$sql_obj->trans_rollback();
 					return 0;
 				}
 
 
 				if (!$invoice->action_create())
 				{
-					log_debug("services_invoicegen","Error: Unexpected problem occured whilst attempting to create invoice.");
+					log_write("error", "services_invoicegen", "Unexpected problem occured whilst attempting to create invoice.");
+
+					$sql_obj->trans_rollback();
 					return 0;
 				}
 
@@ -896,11 +929,30 @@ function service_invoices_generate($customerid = NULL)
 				} // end of processing periods
 
 
-				// invoice creation complete - remove any notifications made by the invoice functions and return
-				// our own notification
-				$_SESSION["notification"]["message"] = array();
 
-				log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
+
+				/*
+					Commit
+				*/
+				$sql_obj = New sql_query;
+
+				if (error_check())
+				{
+					$sql_obj->trans_rollback();
+
+					log_write("error", "inc_services_invoicegen", "An error occured whilst creating service invoice. No changes have been made.");
+				}
+				else
+				{
+					$sql_obj->trans_commit();
+
+					// invoice creation complete - remove any notifications made by the invoice functions and return
+					// our own notification
+					$_SESSION["notification"]["message"] = array();
+
+					log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
+				}
+
 
 
 				/*

@@ -100,40 +100,63 @@ if (user_permissions_get('projects_write'))
 	}
 	else
 	{
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Create a new phase (if required)
+		*/
 		if ($mode == "add")
 		{
 			// create a new entry in the DB
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `project_phases` (projectid) VALUES ('$projectid')";
 			$sql_obj->execute();
 
 			$phaseid = $sql_obj->fetch_insert_id();
 		}
 
+
+
+		/*
+			Update Phase Details
+		*/
 		if ($phaseid)
 		{
-			// update phase details
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE `project_phases` SET "
 						."name_phase='". $data["name_phase"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$phaseid' LIMIT 1";
 		
-			if (!$sql_obj->execute())
+			$sql_obj->execute();
+		}
+
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "A fatal error occuring whilst attempting to update the phase. No changes were made.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "add")
 			{
-				log_write("error", "process", "A fatal error occuring whilst attempting to update the phase.");
+				log_write("notification", "project", "Phase successfully created.");
 			}
 			else
 			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Phase successfully created.";
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Phase successfully updated.";
-				}
-				
+				log_write("notification", "project", "Phase successfully updated.");
 			}
 		}
 

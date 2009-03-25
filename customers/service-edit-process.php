@@ -131,30 +131,49 @@ if (user_permissions_get('customers_write'))
 		if ($mode == "add")
 		{
 			/*
+				Start Transaction
+			*/
+
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			/*
 				Add new service
 			*/
 			
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `services_customers` (customerid, serviceid, date_period_first, date_period_next, description) VALUES ('$customerid', '". $data["serviceid"] ."', '". $data["date_period_first"] ."', '". $data["date_period_next"] ."', '". $data["description"] ."')";
-			
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to subscribe customer to service";
-			}
+			$sql_obj->execute();
 
 			$services_customers_id = $sql_obj->fetch_insert_id();
 
 
+
 			/*
-				Complete
+				Update the Journal
 			*/
-			
-			if (!$_SESSION["error"]["message"])
+
+			journal_quickadd_event("customers", $customerid, "New service ". $data["name_service"] ." added to account with start date of ". $data["date_period_first"] ."");
+
+
+			/*
+				Commit
+			*/
+
+			if (error_check())
 			{
-				$_SESSION["notification"]["message"][] = "New service added successfully. You now need to fill in any additional fields and activate the service.";
-				$_SESSION["error"]["active-error"] = 1;
-				
-				journal_quickadd_event("customers", $customerid, "New service ". $data["name_service"] ." added to account with start date of ". $data["date_period_first"] ."");
+				$sql_obj->trans_rollback();
+
+				log_write("error", "process", "An error occured whilst attemping to create the new service. No changes have been made.");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+			
+				log_write("notification", "process", "New service added successfully. You now need to fill in any additional fields and activate the service.");
+
+				// flag the active field to make it clear to the user that they need to activate it.
+				$_SESSION["error"]["active-error"] = 1;	
 			}
 			
 			header("Location: ../index.php?page=customers/service-edit.php&customerid=$customerid&serviceid=$services_customers_id");
@@ -163,45 +182,72 @@ if (user_permissions_get('customers_write'))
 		else
 		{
 			/*
-				Update service details
+				Start Transaction
 			*/
-			
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE `services_customers` SET "
-							."active='". $data["active"] ."', "
-							."quantity='". $data["quantity"] ."', "
-							."description='". $data["description"] ."' "
-							."WHERE id='$services_customers_id'";
 
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to subscribe customer to service";
-			}
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
 
 
 
 			/*
-				Complete
+				Update service details
+			*/
+
+			$sql_obj->string	= "UPDATE `services_customers` SET "
+							."active='". $data["active"] ."', "
+							."quantity='". $data["quantity"] ."', "
+							."description='". $data["description"] ."' "
+							."WHERE id='$services_customers_id' LIMIT 1";
+
+			$sql_obj->execute();
+
+
+
+			/*
+				Update the journal
 			*/
 
 			// note the status change
 			if ($data["active_changed"] == "enabled")
 			{
-				$_SESSION["notification"]["message"][] = "Service changed to state enabled.";
 				journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been enabled.");
 			}
 			elseif ($data["active_changed"] == "disabled")
 			{
-				$_SESSION["notification"]["message"][] = "Service changed to state disabled.";
 				journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been disabled..");
 			}
 			
+			journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." configuration has been updated.");
 
-			// success message
-			if (!$_SESSION["error"]["message"])
+
+
+			/*
+				Commit
+			*/
+
+			if (error_check())
 			{
-				$_SESSION["notification"]["message"][] = "Service changes completed successfully.";
-				journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." configuration has been updated.");
+				$sql_obj->trans_rollback();
+
+				log_write("error", "process", "An error occured whilst attempting to update service information. No changes have been made");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				log_write("notification", "process", "Service changes completed successfully.");
+
+
+				// note the status change
+				if ($data["active_changed"] == "enabled")
+				{
+					log_write("notification", "process", "Service changed to state enabled.");
+				}
+				elseif ($data["active_changed"] == "disabled")
+				{
+					log_write("notification", "process", "Service changed to state disabled.");
+				}
 			}
 
 

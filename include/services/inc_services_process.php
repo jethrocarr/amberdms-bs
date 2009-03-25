@@ -126,20 +126,19 @@ function service_form_details_process()
 	}
 	else
 	{
-		// APPLY GENERAL OPTIONS
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		if ($mode == "add")
 		{
 			/*
 				Create new service
 			*/
 			
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO services (name_service, typeid) VALUES ('".$data["name_service"]."', '". $data["typeid"] ."')";
-
-			if (!$sql_obj->execute())
-			{
-				log_write("inc_services_process", "error", "A fatal SQL error occured whilst attempting to create the service");
-			}
+			$sql_obj->execute();
 
 			$id = $sql_obj->fetch_insert_id();
 		}
@@ -150,19 +149,13 @@ function service_form_details_process()
 				Update general service details
 			*/
 			
-			$sql_obj = New sql_query;
-			
 			$sql_obj->string = "UPDATE services SET "
 						."name_service='". $data["name_service"] ."', "
 						."chartid='". $data["chartid"] ."', "
 						."description='". $data["description"] ."' "
-						."WHERE id='$id'";
+						."WHERE id='$id' LIMIT 1";
 			
-			if (!$sql_obj->execute())
-			{
-				log_write("inc_services_process", "error", "A fatal SQL error occured whilst attempting to save changes");
-			}
-
+			$sql_obj->execute();
 
 
 			/*
@@ -170,9 +163,8 @@ function service_form_details_process()
 			*/
 
 			// delete existing tax options for this service (if any)
-			$sql_tax_obj		= New sql_query;
-			$sql_tax_obj->string	= "DELETE FROM services_taxes WHERE serviceid='$id'";
-			$sql_tax_obj->execute();
+			$sql_obj->string	= "DELETE FROM services_taxes WHERE serviceid='$id'";
+			$sql_obj->execute();
 
 			// fetch list of tax IDs
 			$sql_tax_obj		= New sql_query;
@@ -188,7 +180,6 @@ function service_form_details_process()
 					if ($data["tax_". $data_tax["id"] ] == "on")
 					{
 						// enable selected tax options
-						$sql_obj		= New sql_query;
 						$sql_obj->string	= "INSERT INTO services_taxes (serviceid, taxid) VALUES ('$id', '". $data_tax["id"] ."')";
 						$sql_obj->execute();
 					}
@@ -199,14 +190,45 @@ function service_form_details_process()
 
 
 			/*
+				Update Journal
+			*/
+
+			if ($mode == "add")
+			{
+				journal_quickadd_event("services", $id, "Service successfully created");
+			}
+			else
+			{
+				journal_quickadd_event("services", $id, "Service successfully updated");
+			}
+
+
+
+			/*
 				Success! :-)
 			*/
-			if (!$_SESSION["error"]["message"])
+			if (error_check())
 			{
+				$sql_obj->trans_rollback();
+
+				log_write("error", "process", "An error occured whilst attempting to update the service - no changes have been made.");
+
 				if ($mode == "add")
 				{
-					$_SESSION["notification"]["message"][] = "Service successfully created.";
-					journal_quickadd_event("services", $id, "Service successfully created");
+					header("Location: ../index.php?page=services/add.php");
+				}
+				else
+				{
+					header("Location: ../index.php?page=services/view.php&id=$id");
+				}
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				if ($mode == "add")
+				{
+					log_write("notification", "process", "Service successfully created.");
 					
 					// take user to plan configuration page
 					header("Location: ../index.php?page=services/plan.php&id=$id");
@@ -214,8 +236,7 @@ function service_form_details_process()
 				}
 				else
 				{
-					$_SESSION["notification"]["message"][] = "Service successfully updated.";
-					journal_quickadd_event("services", $id, "Service successfully updated");
+					log_write("notification", "process", "Service successfully updated.");
 
 					// display updated details
 					header("Location: ../index.php?page=services/view.php&id=$id");
@@ -223,18 +244,6 @@ function service_form_details_process()
 				}
 			}
 
-
-			/*
-				Failure
-			*/
-			if ($mode == "add")
-			{
-				header("Location: ../index.php?page=services/add.php");
-			}
-			else
-			{
-				header("Location: ../index.php?page=services/view.php&id=$id");
-			}
 		
 			
 		} // end if ID
@@ -348,6 +357,14 @@ function service_form_plan_process()
 	else
 	{
 		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
 			Update plan details
 		*/
 			
@@ -416,19 +433,32 @@ function service_form_plan_process()
 			break;
 		}
 
-		if (!$sql_obj->execute())
+		$sql_obj->execute();
+
+
+
+		/*
+			Update the Journal
+		*/
+
+		journal_quickadd_event("services", $id, "Service plan configuration changed");
+
+	
+
+		/*
+			Commit
+		*/
+		if (error_check())
 		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to update service plan information. No changes have been made.");
 		}
-
-
-
-
-		
-		if (!$_SESSION["error"]["message"])
+		else
 		{
-			$_SESSION["notification"]["message"][] = "Service successfully updated.";
-			journal_quickadd_event("services", $id, "Service plan configuration changed");
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Service successfully update.");
 		}
 
 		// display updated details
@@ -501,10 +531,17 @@ function service_form_delete_process()
 	else
 	{
 		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
 			Delete the service data
 		*/
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM services WHERE id='$id'";
+		$sql_obj->string	= "DELETE FROM services WHERE id='$id' LIMIT 1";
 		$sql_obj->execute();
 
 
@@ -512,14 +549,8 @@ function service_form_delete_process()
 			Delete the service taxes
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM services_taxes WHERE serviceid='$id'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_services", "A fatal SQL error occured whilst trying to delete the taxes assigned to the service");
-			return 0;
-		}
+		$sql_obj->execute();
 
 
 		/*
@@ -530,10 +561,26 @@ function service_form_delete_process()
 
 
 		/*
-			Complete
+			Commit
 		*/
-		header("Location: ../index.php?page=services/services.php&id=$id");
-		exit(0);
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the transaction. No changes have been made.");
+
+			header("Location: ../index.php?page=services/view.php&id=$id");
+			exit(0);
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Service successfully deleted");
+
+			header("Location: ../index.php?page=services/services.php");
+			exit(0);
+		}
 			
 	} // end if passed tests
 
