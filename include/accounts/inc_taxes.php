@@ -519,13 +519,28 @@ class tax
 		log_debug("inc_taxes", "Executing action_update()");
 
 
-		// if no ID exists, create a new tax first
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID exists, create a new tax first
+		*/
 		if (!$this->id)
 		{
 			$mode = "create";
 
 			if (!$this->action_create())
 			{
+				$sql_obj->trans_rollback();
+
+				log_write("error", "inc_taxes", "An error occured whilst attempting to create the new tax. No changes were made.");
+
 				return 0;
 			}
 		}
@@ -538,7 +553,6 @@ class tax
 		/*
 			Update tax details
 		*/
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `account_taxes` SET "
 						."name_tax='". $this->data["name_tax"] ."', "
 						."taxrate='". $this->data["taxrate"] ."', "
@@ -547,13 +561,7 @@ class tax
 						."description='". $this->data["description"] ."' "
 						."WHERE id='$this->id'";
 
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_taxes", "Unexpected DB error attempting to update tax information");
-			return 0;
-		}
-
-		unset($sql_obj);
+		$sql_obj->execute();
 
 
 		/*
@@ -573,7 +581,6 @@ class tax
 				foreach ($sql_cust_obj->data as $data_customer)
 				{
 					// insert tax assignment for this customer
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO customers_taxes (customerid, taxid) VALUES ('". $data_customer["id"] ."', '". $this->id ."')";
 					$sql_obj->execute();
 				}
@@ -594,7 +601,6 @@ class tax
 				foreach ($sql_vendor_obj->data as $data_vendor)
 				{
 					// insert tax assignment for this vendor
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO vendors_taxes (vendorid, taxid) VALUES ('". $data_vendor["id"] ."', '". $this->id ."')";
 					$sql_obj->execute();
 				}
@@ -603,19 +609,35 @@ class tax
 
 
 
-		// return notification
-		if ($mode == "update")
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			log_write("notification", "inc_taxes", "Tax successfully updated.");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_taxes", "An error occured whilst attempting to update the tax. No changes have been made.");
+
+			return 0;
 		}
 		else
 		{
-			log_write("notification", "inc_taxes", "Tax successfully created.");
+			$sql_obj->trans_commit();
+
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_taxes", "Tax successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_taxes", "Tax successfully created.");
+			}
+
+
+			return $this->id;
 		}
-
-
-		// success
-		return $this->id;
 
 	} // end of action_update
 
@@ -639,24 +661,26 @@ class tax
 
 
 		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			Delete Tax
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_taxes WHERE id='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_taxes", "A fatal SQL error occured whilst trying to delete the tax");
-			return 0;
-		}
+		$sql_obj->string	= "DELETE FROM account_taxes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
 
 
 		/*
 			Delete tax from any products it is assigned to
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM products_taxes WHERE taxid='". $this->id ."'";
 		$sql_obj->execute();
 
@@ -665,7 +689,6 @@ class tax
 			Delete tax from any services it is assigned to
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM services_taxes WHERE taxid='". $this->id ."'";
 		$sql_obj->execute();
 
@@ -675,12 +698,10 @@ class tax
 		*/
 
 		// delete mapping from table
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM vendors_taxes WHERE taxid='". $this->id ."'";
 		$sql_obj->execute();
 
 		// unset any defaulttax usage
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE vendors SET tax_default='0' WHERE tax_default='". $this->id ."'";
 		$sql_obj->execute();
 
@@ -691,19 +712,35 @@ class tax
 		*/
 
 		// delete mapping from table
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM customers_taxes WHERE taxid='". $this->id ."'";
 		$sql_obj->execute();
 
 		// unset any defaulttax usage
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE customers SET tax_default='0' WHERE tax_default='". $this->id ."'";
 		$sql_obj->execute();
 
 
-		log_write("notification", "inc_taxes", "Tax has been successfully deleted.");
 
-		return 1;
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_taxes", "An error occured whilst attempting to delete the tax. No change has been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			log_write("notification", "inc_taxes", "Tax has been successfully deleted.");
+
+			return 1;
+		}
 	}
 
 

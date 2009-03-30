@@ -117,8 +117,19 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 	}
 	else
 	{
-		// GENERATE INVOICE ID
-		// if no quote ID has been supplied, we now need to generate a unique quote id
+
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Generate Quote ID
+		
+			If no quote ID has been supplied, we now need to generate a unique quote id
+		*/
 		if (!$data["code_quote"])
 			$data["code_quote"] = config_generate_uniqueid("ACCOUNTS_QUOTES_NUM", "SELECT id FROM account_quotes WHERE code_quote='VALUE'");
 
@@ -130,12 +141,8 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 				Create new quote
 			*/
 			
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO `account_quotes` (code_quote, date_create) VALUES ('".$data["code_quote"]."', '". date("Y-m-d") ."')";
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create quote";
-			}
+			$sql_obj->execute();
 
 			$id = $sql_obj->fetch_insert_id();
 		}
@@ -146,8 +153,6 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 				Update general quote details
 			*/
 			
-			$sql_obj = New sql_query;
-			
 			$sql_obj->string = "UPDATE `account_quotes` SET "
 						."customerid='". $data["customerid"] ."', "
 						."employeeid='". $data["employeeid"] ."', "
@@ -155,32 +160,57 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 						."code_quote='". $data["code_quote"] ."', "
 						."date_trans='". $data["date_trans"] ."', "
 						."date_validtill='". $data["date_validtill"] ."' "
-						."WHERE id='$id'";
+						."WHERE id='$id' LIMIT 1";
 		
-			if (!$sql_obj->execute())
+			$sql_obj->execute();
+		}
+
+
+
+		/*
+			Update the Journal
+		*/
+
+		if ($mode == "add")
+		{
+			journal_quickadd_event("account_quotes", $id, "Quote successfully created");
+		}
+		else
+		{
+			journal_quickadd_event("account_quotes", $id, "Quote successfully updated");
+		}
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_quotes_details", "An error occured whilst attempting to update the quote details");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+
+			if ($mode == "add")
 			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to save changes";
+				log_write("notification", "inc_quotes_details", "Quote successfully created.");
 			}
 			else
 			{
-				if ($mode == "add")
-				{
-					$_SESSION["notification"]["message"][] = "Quote successfully created.";
-					journal_quickadd_event("account_quotes", $id, "Quote successfully created");
-				}
-				else
-				{
-					$_SESSION["notification"]["message"][] = "Quote successfully updated.";
-					journal_quickadd_event("account_quotes", $id, "Quote successfully updated");
-				}
-				
+				log_write("notification", "inc_quotes_details", "Quote successfully updated.");
 			}
 
 			// display updated details
 			header("Location: ../../index.php?page=$returnpage_success&id=$id");
 			exit(0);
 			
-		} // end if ID
+		}
 
 	} // end if passed tests
 
@@ -224,6 +254,7 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 
 	//// ERROR CHECKING ///////////////////////
 	
+
 	// make sure the quote actually exists, and fetch various fields that we need to create the invoice.
 	$sql_quote_obj		= New sql_query;
 	$sql_quote_obj->string	= "SELECT id, employeeid, customerid, amount_total, amount_tax, amount, notes FROM `account_quotes` WHERE id='$id' LIMIT 1";
@@ -249,6 +280,13 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 	}
 	else
 	{
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+	
+
 		// make an invoice ID if one is not supplied by the user
 		if (!$data["code_invoice"])
 			$data["code_invoice"] = config_generate_uniqueid("ACCOUNTS_AR_INVOICENUM", "SELECT id FROM account_ar WHERE code_invoice='VALUE'");
@@ -258,12 +296,8 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 			Create new invoice
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "INSERT INTO `account_ar` (code_invoice, date_create) VALUES ('".$data["code_invoice"]."', '". date("Y-m-d") ."')";
-		if (!$sql_obj->execute())
-		{
-			$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to create invoice";
-		}
+		$sql_obj->execute();
 
 		$invoiceid = $sql_obj->fetch_insert_id();
 		
@@ -273,8 +307,6 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 			/*
 				Update general invoice details
 			*/
-			
-			$sql_obj = New sql_query;
 			
 			$sql_obj->string = "UPDATE `account_ar` SET "
 						."customerid='". $sql_quote_obj->data[0]["customerid"] ."', "
@@ -289,12 +321,9 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 						."amount='". $sql_quote_obj->data[0]["amount"] ."', "
 						."amount_tax='". $sql_quote_obj->data[0]["amount_tax"] ."', "
 						."amount_total='". $sql_quote_obj->data[0]["amount_total"] ."' "
-						."WHERE id='$invoiceid'";
+						."WHERE id='$invoiceid' LIMIT 1";
 
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to fill in invoice details.";
-			}
+			$sql_obj->execute();
 
 
 
@@ -302,13 +331,9 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 				Migrate all the items from the quote to the invoice
 			*/
 			
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE account_items SET invoiceid='$invoiceid', invoicetype='ar' WHERE invoiceid='$id' AND invoicetype='quotes'";
-			
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to migrate quote items to invoice.";
-			}
+			$sql_obj->execute();
+
 
 
 			/*
@@ -331,14 +356,8 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 				Migrate the journal
 			*/
 			
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE journal SET customid='$invoiceid', journalname='account_ar' WHERE customid='$id' AND journalname='account_quotes'";
-			
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to migrate quote journal to invoice.";
-			}
-
+			$sql_obj->execute();
 
 
 
@@ -346,28 +365,41 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 				Delete the quote
 			*/
 			
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "DELETE FROM account_quotes WHERE id='$id'";
-			
-			if (!$sql_obj->execute())
-			{
-				$_SESSION["error"]["message"][] = "A fatal SQL error occured whilst attempting to delete the quote.";
-			}
+			$sql_obj->string	= "DELETE FROM account_quotes WHERE id='$id' LIMIT 1";
+			$sql_obj->execute();
 		}
 
 
+		/*
+			Update the Journal
+		*/
 
-		if (!$_SESSION["error"]["message"])
+		journal_quickadd_event("account_ar", $invoiceid, "Converted quotation into invoice");
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			$_SESSION["notification"]["message"][] = "Quotation has been converted to an invoice successfully.";
+			$sql_obj->trans_rollback();
 
-			journal_quickadd_event("account_ar", $invoiceid, "Converted quotation into invoice");
+			log_write("error", "inc_quotes_forms", "An error occured whilst attempting to convert the quote into an invoice. No changes have been made.");
+
+			$_SESSION["error"]["form"]["quote_convert"] = "failed";
+			header("Location: ../../index.php?page=$returnpage_error&id=$id");
+			exit(0);
 		}
-	
+		else
+		{
+			$sql_obj->trans_commit();
 
-		// display updated details
-		header("Location: ../../index.php?page=$returnpage_success&id=$invoiceid");
-		exit(0);
+			log_write("notification", "inc_quotes_forms"], "Quotation has been converted to an invoice successfully.");
+
+			header("Location: ../../index.php?page=$returnpage_success&id=$invoiceid");
+			exit(0);
+		}
 			
 	} // end if passed tests
 
@@ -429,13 +461,27 @@ function quotes_form_delete_process($returnpage_error, $returnpage_success)
 	}
 	else
 	{
+		/*
+			Start SQL Transaction
+		*/
 
-		// delete quote itself
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_quotes WHERE id='$id'";
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			delete quote itself
+		*/
+
+		$sql_obj->string	= "DELETE FROM account_quotes WHERE id='$id' LIMIT 1";
 		$sql_obj->execute();
 
-		// delete all the item options
+
+		/*
+			delete all the item options
+		*/
+
 		$sql_item_obj		= New sql_query;
 		$sql_item_obj->string	= "SELECT id FROM account_items WHERE invoicetype='quotes' AND invoiceid='$id'";
 		$sql_item_obj->execute();
@@ -446,24 +492,51 @@ function quotes_form_delete_process($returnpage_error, $returnpage_success)
 
 			foreach ($sql_item_obj->data as $data)
 			{
-				$sql_obj		= New sql_query;
 				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data["id"] ."'";
 				$sql_obj->execute();
 			}
 		}
 
 
-		// delete all the quote items
-		$sql_obj		= New sql_query;
+
+		/*
+			delete all the quote items
+		*/
+
 		$sql_obj->string	= "DELETE FROM account_items WHERE invoicetype='quotes' AND invoiceid='$id'";
 		$sql_obj->execute();
-				
-		// delete quote journal entries
+		
+
+		/*
+			delete quote journal entries
+		*/
+
 		journal_delete_entire("account_quotes", $id);
 
-		// display updated details
-		header("Location: ../../index.php?page=$returnpage_success&id=$id");
-		exit(0);
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_quotes_forms", "An error occured whilst attempting to delete the quote. No changes have been made.");
+
+			$_SESSION["error"]["form"]["quote_delete"] = "failed";
+			header("Location: ../../index.php?page=$returnpage_error&id=$id");
+			exit(0);
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_quotes_forms", "The quotation has been successfully deleted.");
+		
+			header("Location: ../../index.php?page=$returnpage_success");
+			exit(0);
+		}
 			
 	} // end if passed tests
 

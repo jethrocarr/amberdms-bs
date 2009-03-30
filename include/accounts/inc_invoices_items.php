@@ -1403,6 +1403,13 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	}
 	else
 	{
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 
 		/*
 			APPLY ITEM CHANGES
@@ -1410,17 +1417,11 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	
 		if ($mode == "add")
 		{
-			if (!$item->action_create())
-			{
-				$_SESSION["error"]["message"][] = "Unexpected problem occured whilst attempting to create new invoice item.";
-			}
+			$item->action_create();
 		}
 		else
 		{
-			if (!$item->action_update())
-			{
-				$_SESSION["error"]["message"][] = "Unexpected problem occured whilst attempting to update invoice item.";
-			}
+			$item->action_update();
 		}
 
 
@@ -1461,8 +1462,19 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 
 		/*
-			Return to success page
+			Commit
 		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_invoice_items", "An error occured whilst updating the invoice item. No changes have been made.")
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		}
 
 		// display updated details
 		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice."");
@@ -1544,6 +1556,14 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	}
 	else
 	{
+
+		/* 
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		/*
 			Delete the item
 		*/
@@ -1578,8 +1598,22 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		}
 
 
-		// success
-		$_SESSION["notification"]["message"][] = "Item deleted successfully";
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_invoice_items", "An error occured whilst deleting the invoice item. No changes have been made.")
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		}
+
 		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice ."");
 		exit(0);
 	}
@@ -1653,6 +1687,13 @@ function invoice_form_tax_override_process($returnpage)
 	else
 	{
 		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			Depending on the amount, we either delete the tax item (if the amount is 0) or we
 			adjust the tax item.
 		*/
@@ -1686,6 +1727,21 @@ function invoice_form_tax_override_process($returnpage)
 		// update ledger
 		$item->action_update_ledger();
 
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_invoice_items", "An error occured whilst overriding tax. No changes have been made");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		}
 
 		// done
 		header("Location: ../../index.php?page=$returnpage&id=". $item->id_invoice);

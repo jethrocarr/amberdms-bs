@@ -281,6 +281,14 @@ class chart
 
 
 		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
 			If no ID exists, create a new account first
 		*/
 		if (!$this->id)
@@ -301,25 +309,39 @@ class chart
 		// update details
 		if (!$this->action_update_details())
 		{
-			return 0;
+			log_write("error", "inc_charts", "An error occured when updating account details.");
 		}
 
 
 		// update menu options
 		if (!$this->action_update_menu())
 		{
-			return 0;
+			log_write("error", "inc_charts", "An error occured when updating account menu options.");
 		}
 
 		
-		// notification
-		if ($mode == "update")
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			log_write("notification", "inc_charts", "Account details successfully updated.");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_charts", "An error occured whilst attempting to update account. No changes have been made.");
 		}
 		else
 		{
-			log_write("notification", "inc_charts", "Account successfully created.");
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_charts", "Account details successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_charts", "Account successfully created.");
+			}
 		}
 
 
@@ -343,6 +365,13 @@ class chart
 	function action_update_details()
 	{
 		log_debug("inc_charts", "Executing action_update()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
 
 
 		/*
@@ -376,23 +405,29 @@ class chart
 			Update chart details
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `account_charts` SET "
 						."code_chart='". $this->data["code_chart"] ."', "
 						."description='". $this->data["description"] ."' "
-						."WHERE id='". $this->id ."'";
-		if (!$sql_obj->execute())
+						."WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
 		{
-			log_write("error", "action_update", "Failure while executing update SQL query");
+			$sql_obj->trans_rollback();
+			
 			return 0;
 		}
+		else
+		{
+			$sql_obj->trans_commit();
 
-		unset($sql_obj);
-
-
-
-		// success
-		return $this->id;
+			return $this->id;
+		}
 
 	} // end of action_update_details
 
@@ -422,6 +457,11 @@ class chart
 	{
 		log_debug("inc_charts", "Executing action_update_menu()");
 
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		// fetch all the menu options
 		$sql_obj_menu		= New sql_query;
 		$sql_obj_menu->string	= "SELECT id, value FROM `account_chart_menu`";
@@ -431,8 +471,7 @@ class chart
 		foreach ($sql_obj_menu->data as $data_menu)
 		{
 			// check if any current settings exist
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."'";
+			$sql_obj->string	= "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."' LIMIT 1";
 			$sql_obj->execute();
 
 			
@@ -443,8 +482,7 @@ class chart
 				// if the new setting is "off", delete the current setting.
 				if ($this->data["menuoptions"][ $data_menu["value"] ] != "on")
 				{
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."'";
+					$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $data_menu["id"] ."' LIMIT 1";
 					$sql_obj->execute();
 				}
 
@@ -456,7 +494,6 @@ class chart
 				// if the new option is "on", insert a new entry
 				if ($this->data["menuoptions"][ $data_menu["value"] ] == "on")
 				{
-					$sql_obj		= New sql_query;
 					$sql_obj->string	= "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('". $this->id ."', '". $data_menu["id"] ."')";
 					$sql_obj->execute();
 				}
@@ -467,8 +504,19 @@ class chart
 		} // end of loop through menu items
 
 
-		// success
-		return 1;
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 
 	} // end of action_update_menu
 
@@ -523,8 +571,12 @@ class chart
 			if ($status == "off")
 			{
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $menuid ."'";
-				$sql_obj->execute();
+				$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $menuid ."' LIMIT 1";
+
+				if (!$sql_obj->execute())
+				{
+					return 0;
+				}
 			}
 
 			// if new setting is "on", we don't need todo anything.
@@ -537,8 +589,12 @@ class chart
 			if ($status == "on")
 			{
 				$sql_obj = New sql_query;
-				$sql_obj->string = "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('". $this->id ."', '". $menuid ."')";
-				$sql_obj->execute();
+				$sql_obj->string = "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('". $this->id ."', '". $menuid ."') LIMIT 1";
+				
+				if (!$sql_obj->execute())
+				{
+					return 0;
+				}
 			}
 
 			// if new option is "off", we don't need todo anything.
@@ -567,41 +623,53 @@ class chart
 	{
 		log_debug("inc_charts", "Executing action_delete()");
 
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete chart
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM account_charts WHERE id='". $this->id ."' LIMIT 1";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_charts", "A fatal SQL error occured whilst trying to delete the account");
-			return 0;
-		}
+		$sql_obj->execute();
+
 
 
 		/*
 			Delete all chart menu options
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			log_write("error", "inc_charts", "A fatal SQL error occured whilst trying to delete the menu options for the account");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_charts", "An error occured whilst attempting to delete account. No changes have been made.");
+
 			return 0;
 		}
+		else
+		{
+			$sql_obj->trans_commit();
 
+			log_write("notification", "inc_charts", "Account has been successfully deleted.");
 
+			return 1;
+		}
 
-		// success
-		log_write("notification", "inc_charts", "Account has been successfully deleted.");
-
-		return 1;
-	}
+	} // end of action_delete
 
 
 } // end of class:charts

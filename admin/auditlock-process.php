@@ -41,10 +41,17 @@ if (user_permissions_get("admin"))
 
 
 		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
 			Lock GL Transactions
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE account_gl SET locked='1' WHERE locked='0' AND date_trans < '". $data["date_lock"] ."'";
 		$sql_obj->execute();
 
@@ -63,7 +70,6 @@ if (user_permissions_get("admin"))
 			if ($data["lock_invoices_open"])
 			{
 				// lock all invoices
-				$sql_obj		= New sql_query;
 				$sql_obj->string	= "UPDATE account_$type SET locked='1' WHERE locked='0' AND date_trans < '". $data["date_lock"] ."'";
 				$sql_obj->execute();
 			}
@@ -71,7 +77,6 @@ if (user_permissions_get("admin"))
 			{
 				// lock fully paid invoices only
 				// (this code also locks any invoices with no items)
-				$sql_obj		= New sql_query;
 				$sql_obj->string	= "UPDATE account_$type SET locked='1' WHERE amount_total=amount_paid AND locked='0' AND date_trans < '". $data["date_lock"] ."'";
 				$sql_obj->execute();
 			}
@@ -84,7 +89,6 @@ if (user_permissions_get("admin"))
 
 		if ($data["lock_journals"] == "on")
 		{
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE journal SET locked='1' WHERE locked='0' AND timestamp < '". $data["date_lock_timestamp"] ."'";
 			$sql_obj->execute();
 		}
@@ -97,17 +101,29 @@ if (user_permissions_get("admin"))
 
 		if ($data["lock_timesheets"] == "on")
 		{
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE timereg SET locked='1' WHERE date < '". $data["date_lock"] ."'";
 			$sql_obj->execute();
 		}
 
 
+
 		/*
-			Complete
+			Commit
 		*/
-		
-		log_write("notification", "auditlock-process", "Successfully locked records up to ". $data["date_lock"] ."");
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to perform audit locking");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "auditlock-process", "Successfully locked records up to ". $data["date_lock"] ."");
+		}
+
 		header("Location: ../index.php?page=admin/auditlock.php");
 		exit(0);
 

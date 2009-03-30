@@ -276,6 +276,13 @@ class gl_transaction
 
 
 		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
 			If no ID exists, create a new transaction first
 		*/
 		if (!$this->id)
@@ -293,33 +300,45 @@ class gl_transaction
 		}
 
 
-		// update details
-		if (!$this->action_update_details())
-		{
-			return 0;
-		}
+		/*
+			Update GL Transaction
+		*/
 
+		// update details
+		$this->action_update_details();
 
 		// update transaction rows
-		if (!$this->action_update_rows())
-		{
-			return 0;
-		}
+		$this->action_update_rows();
 
-		
-		// notification
-		if ($mode == "update")
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			log_write("notification", "inc_gl", "Transaction successfully updated.");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_gl", "An error occured whilst updating the GL transaction. No changes have been made");
+
+			return 0;
 		}
 		else
 		{
-			log_write("notification", "inc_gl", "Transaction successfully created.");
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_gl", "Transaction successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_gl", "Transaction successfully created.");
+			}
+			
+			return $this->id;
 		}
-
-
-		// success
-		return $this->id;
 
 	} // end of action_update
 
@@ -339,6 +358,12 @@ class gl_transaction
 	{
 		log_debug("inc_gl", "Executing action_update_details()");
 
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			If no ID exists, create a new account first
@@ -350,6 +375,8 @@ class gl_transaction
 		{
 			if (!$this->action_create())
 			{
+				$sql_obj->trans_rollback()
+
 				return 0;
 			}
 		}
@@ -371,27 +398,32 @@ class gl_transaction
 			Update chart details
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE `account_gl` SET "
 						."code_gl='". $this->data["code_gl"] ."', "
 						."date_trans='". $this->data["date_trans"] ."', "
 						."employeeid='". $this->data["employeeid"] ."', "
 						."description='". $this->data["description"] ."', "
 						."notes='". $this->data["chart_type"] ."' "
-						."WHERE id='". $this->id ."'";
+						."WHERE id='". $this->id ."' LIMIT 1";
 
-		if (!$sql_obj->execute())
+		$sql_obj->execute();
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
 		{
-			log_write("error", "action_update", "Failure while executing update SQL query");
+			$sql_obj->trans_rollback();
+
 			return 0;
 		}
+		else
+		{
+			$sql_obj->trans_commit();
 
-		unset($sql_obj);
-
-
-
-		// success
-		return $this->id;
+			return $this->id;
+		}
 
 	} // end of action_update_details
 
@@ -426,11 +458,24 @@ class gl_transaction
 		log_debug("inc_gl", "Executing action_update_rows()");
 
 
-		// delete all existing transactions
-		$sql_obj		= New sql_query;
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Delete existing transaction rows
+		*/
 		$sql_obj->string	= "DELETE FROM account_trans WHERE type='gl' AND customid='". $this->id ."'";
 		$sql_obj->execute();
 	
+
+		/*
+			Create new transaction rows
+		*/
 
 		// run through all transactions
 		for ($i = 0; $i < $this->data["num_trans"]; $i++)
@@ -447,17 +492,39 @@ class gl_transaction
 			{
 				if ($this->data["trans"][$i]["debit"] != "0.00")
 				{
-					ledger_trans_add("debit", "gl", $this->id, $this->data["date_trans"], $this->data["trans"][$i]["account"], $this->data["trans"][$i]["debit"], $this->data["trans"][$i]["source"], $this->data["trans"][$i]["description"]);
+					if (!ledger_trans_add("debit", "gl", $this->id, $this->data["date_trans"], $this->data["trans"][$i]["account"], $this->data["trans"][$i]["debit"], $this->data["trans"][$i]["source"], $this->data["trans"][$i]["description"]))
+					{
+						$sql_obj->trans_rollback();
+						return 0;
+					}
 				}
 				else
 				{
-					ledger_trans_add("credit", "gl", $this->id, $this->data["date_trans"], $this->data["trans"][$i]["account"], $this->data["trans"][$i]["credit"], $this->data["trans"][$i]["source"], $this->data["trans"][$i]["description"]);
+					if (!ledger_trans_add("credit", "gl", $this->id, $this->data["date_trans"], $this->data["trans"][$i]["account"], $this->data["trans"][$i]["credit"], $this->data["trans"][$i]["source"], $this->data["trans"][$i]["description"]))
+					{
+						$sql_obj->trans_rollback();
+						return 0;
+					}
 				}
 			}
 		}
 
-		// success
-		return 1;
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 
 	} // end of action_update_rows
 
@@ -480,46 +547,48 @@ class gl_transaction
 		log_debug("inc_gl", "Executing action_delete()");
 
 
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		/*
 			Delete general ledger details
 		*/
 			
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_gl WHERE id='". $this->id ."'";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_gl", "A fatal SQL error occured whilst trying to delete the transaction");
-			return 0;
-		}
-
-		unset($sql_obj);
-
+		$sql_obj->string	= "DELETE FROM account_gl WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
 			Delete transaction items
 		*/
 		
-		$sql_obj		= New sql_query();
 		$sql_obj->string	= "DELETE FROM account_trans WHERE type='gl' AND customid='". $this->id ."'";
 		$sql_obj->execute();
-		
-		if (!$sql_obj->execute())
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
 		{
-			log_write("error", "inc_gl", "A fatal SQL error occured whilst trying to delete the transaction items.");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_gl", "An error occured whilst attempting to delete the transaction. No changes have been made.");
+
 			return 0;
 		}
+		else
+		{
+			$sql_obj->trans_commit();
 
-		unset($sql_obj);
+			log_write("notification", "inc_gl", "Transaction has been successfully deleted.");
 
-
-
-		// success
-		log_write("notification", "inc_gl", "Transaction has been successfully deleted.");
-
-		return 1;
+			return 1;
+		}
 	}
 
 

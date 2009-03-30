@@ -28,7 +28,7 @@ function invoice_calc_duedate($date)
 	log_debug("inc_invoices", "Executing invoice_calc_duedate($date)");
 	
 	// get the terms
-	$terms = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_TERMS_DAYS'");
+	$terms = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_TERMS_DAYS' LIMIT 1");
 
 	// break up the date, and reconfigure
 	$date_array	= split("-", $date);
@@ -513,12 +513,17 @@ class invoice
 		$this->data["dest_account_orig"] = sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
 
 
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 
 		/*
 			Update the invoice details
 		*/
-		$sql_obj = New sql_query;
 			
 		if ($this->type == "ap")
 		{
@@ -532,7 +537,7 @@ class invoice
 						."date_trans='". $this->data["date_trans"] ."', "
 						."date_due='". $this->data["date_due"] ."', "
 						."dest_account='". $this->data["dest_account"] ."' "
-						."WHERE id='". $this->id ."'";
+						."WHERE id='". $this->id ."' LIMIT 1";
 		}
 		else
 		{
@@ -546,12 +551,15 @@ class invoice
 						."date_trans='". $this->data["date_trans"] ."', "
 						."date_due='". $this->data["date_due"] ."', "
 						."dest_account='". $this->data["dest_account"] ."' "
-						."WHERE id='". $this->id ."'";
+						."WHERE id='". $this->id ."' LIMIT 1";
 		}
 		
 		if (!$sql_obj->execute())
 		{
-			log_write("error", "invoice", "Unable to update database with new invoice information");
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice", "Unable to update database with new invoice information. No changes have been made.");
+
 			return 0;
 		}
 
@@ -584,9 +592,23 @@ class invoice
 		}
 
 
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
 
-	
-		return 1;
+			log_write("error", "invoice", "An error occured whilst attempting to update invoice. No changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 		
 		
 	} // end of action_update
@@ -615,45 +637,47 @@ class invoice
 		}
 
 
-		// track errors
-		$error = 0;
 
-	
-		// delete invoice itself
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."'";
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Delete Invoice
+		*/
+
+		$sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
 		
-		if (!$sql_obj->execute())
-		{
-			$error = 1;
-			log_write("error", "invoice", "Problem occured whilst deleting invoice from acccount_". $this->type ." in DB");
-		}
 
-		// delete all the invoice items.
-		//
-		// we do this by using the invoice_items::action_delete() function, since there are number of complex
-		// steps when deleting certain invoice items (such as time items)
 
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
-				
-		if (!$sql_obj->execute())
-		{
-			$error = 1;
-			log_write("error", "invoice", "Problem occured whilst deleting invoice items from DB");
-		}
-		else
-		{
-			$sql_obj->fetch_array();
+		/*
+			Delete Invoice Items
+		
+			We do this by using the invoice_items::action_delete() function, since there are number of complex
+			steps when deleting certain invoice items (such as time items)
+		*/
 
-			foreach ($sql_obj->data as $data)
+		$sql_items_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
+		$sql_items_obj->execute();
+
+		if ($sql_items_obj->num_rows())
+		{
+			$sql_items_obj->fetch_array();
+
+			foreach ($sql_items_obj->data as $data_sql)
 			{
 				// delete each invoice one-at-a-time.
 				$obj_invoice_item			= New invoice_items;
 
 				$obj_invoice_item->type_invoice		= $this->type;
 				$obj_invoice_item->id_invoice		= $this->id;
-				$obj_invoice_item->id_item		= $data["id"];
+				$obj_invoice_item->id_item		= $data_sql["id"];
 				$obj_invoice_item->action_delete();
 
 				unset($obj_invoice_item);
@@ -663,28 +687,43 @@ class invoice
 		unset($sql_obj);
 
 
-
-		// delete invoice journal entries
+		/*
+			Delete Journal
+		*/
 		journal_delete_entire("account_". $this->type ."", $this->id);
 
 
-		// delete invoice transactions
-		$sql_obj		= New sql_query;
+
+		/*
+			Delete transactions from ledger
+			
+			(Most transactions are deleted by the item deletion code, but tax, pay and AR/AP
+			 ledger transactions need to be removed manually)
+		*/
+
 		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='". $this->type ."' || type='". $this->type ."_tax' || type='". $this->type ."_pay') AND customid='". $this->id ."'";
-		
-		if (!$sql_obj->execute())
-		{
-			$error = 1;
-			log_write("error", "invoice", "Problem occured whilst deleting invoice transactions");
-		}
+		$sql_obj->execute();
 
 
-		if ($error)
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice", "An error occured whilst deleting the invoice. No changes have been made.");
+
 			return 0;
 		}
-		
-		return 1;
+		else
+		{
+			$sql_obj->trans_commit();
+			
+			return 1;
+		}
 		
 	} // end of action_delete
 
@@ -1528,32 +1567,51 @@ class invoice_items
 	function action_create()
 	{
 		log_debug("invoice_items", "Executing action_create");
-		
-		$sql_obj		= New sql_query;
+
+
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Create new invoice item
+		*/
 		$sql_obj->string	= "INSERT INTO `account_items` (invoiceid, invoicetype) VALUES ('". $this->id_invoice ."', '". $this->type_invoice ."')";
-		
-		if (!$sql_obj->execute())
+		$sql_obj->execute();
+
+		$this->id_item		= $sql_obj->fetch_insert_id();
+
+
+		/*
+			Update Journal
+		*/
+		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
+
+
+
+		/*
+			Commit
+		*/
+		if (error_check() || $this->id_item == 0)
 		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice_items", "An error occured preventing the creation of the invoice item");
+
 			return 0;
 		}
 		else
 		{
-			$this->id_item = $sql_obj->fetch_insert_id();
+			log_write("notification", "invoice_items", "Successfully created new invoice item");
 
-			if ($this->action_update())
-			{
-				// notify success
-				$_SESSION["notification"]["message"] = array();
-
-				log_write("notification", "invoice_items", "Successfully created new invoice item");
-				journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully created");
-
-
-				return $this->id_item;
-			}
+			return $this->id_item;
 		}
 
-		return 0;
 	} // end of action_create
 
 
@@ -1587,9 +1645,16 @@ class invoice_items
 
 
 		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin()
+
+
+		/*
 			Update Item
 		*/
-		$sql_obj = New sql_query;
 			
 		$sql_obj->string = "UPDATE `account_items` SET "
 					."type='". $this->type_item ."', "
@@ -1600,22 +1665,16 @@ class invoice_items
 					."quantity='". $this->data["quantity"] ."', "
 					."units='". $this->data["units"] ."', "
 					."description='". $this->data["description"] ."' "
-					."WHERE id='". $this->id_item ."'";
+					."WHERE id='". $this->id_item ."' LIMIT 1";
 						
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "invoice_items", "A fatal problem ocurred whilst attempting to update the DB.");
-			return 0;
-		}
-
-
+		$sql_obj->execute();
+	
 
 		/*
 			Update Item Options
 		*/
 
 		// remove all existing options
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $this->id_item ."'";
 		$sql_obj->execute();
 
@@ -1636,7 +1695,6 @@ class invoice_items
 				{
 					if ($this->data["tax_". $data_tax["id"] ] == "on")
 					{
-						$sql_obj		= New sql_query;
 						$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TAX_CHECKED', '". $data_tax["id"] ."')";
 						$sql_obj->execute();
 					}
@@ -1650,12 +1708,10 @@ class invoice_items
 		if ($this->type_item == "payment")
 		{
 			// source
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'SOURCE', '". $this->data["source"] ."')";
 			$sql_obj->execute();
 
 			// date_trans
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'DATE_TRANS', '". $this->data["date_trans"] ."')";
 			$sql_obj->execute();
 		}
@@ -1665,7 +1721,6 @@ class invoice_items
 		if ($this->type_item == "time")
 		{
 			// create options entry for the timegroupid
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TIMEGROUPID', '". $this->data["timegroupid"] ."')";
 			$sql_obj->execute();
 
@@ -1679,17 +1734,39 @@ class invoice_items
 			}
 
 			// update the time_group with the status, invoiceid and itemid
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE time_groups SET invoiceid='". $this->id_invoice ."', invoiceitemid='". $this->id_item ."', locked='". $locked ."' WHERE id='". $this->data["timegroupid"] ."'";
 			$sql_obj->execute();
 		}
 
 
-		// success
-		log_write("notification", "invoice_items", "Successfully updated invoice item");
-		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully updated");
-	
-		return $this->id_item;	
+		/*
+			Update Journal
+		*/
+
+		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Invoice Item Updated");
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice_items", "An error occured whilst updating invoice item - No changes have been made");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "invoice_items", "Successfully updated invoice item");
+
+			return $this->id_item;	
+		}
 		
 	} // end of action_update
 	
@@ -1716,6 +1793,14 @@ class invoice_items
 
 
 		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin()
+
+
+		/*
 			Delete all taxes currently on the selected invoice.
 		*/
 
@@ -1733,17 +1818,14 @@ class invoice_items
 			foreach ($sql_items_obj->data as $data_item)
 			{
 				// delete the tax items
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "DELETE FROM account_items WHERE id='". $data_item["id"] ."'";
+				$sql_obj->string	= "DELETE FROM account_items WHERE id='". $data_item["id"] ."' LIMIT 1";
 				$sql_obj->execute();
 
 				// delete the tax items options
-				$sql_obj		= New sql_query;
 				$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $data_item["id"] ."'";
 				$sql_obj->execute();
 			}
 		}
-
 
 
 
@@ -1943,7 +2025,27 @@ class invoice_items
 				
 		} // end of loop through tax structure
 
-		return 1;
+
+
+		/*
+			Commit
+		*/
+		$sql_obj = New sql_query;
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice_items", "An error occured whilst attempting to update invoice taxes. No changes have been made.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 
 	} // end of action_update_tax
 
@@ -2002,7 +2104,7 @@ class invoice_items
 						."amount='". $amount ."', "
 						."amount_tax='". $amount_tax ."', "
 						."amount_total='". $amount_total ."' "
-						."WHERE id='". $this->id_invoice ."'";
+						."WHERE id='". $this->id_invoice ."' LIMIT 1";
 		}
 		else
 		{
@@ -2011,7 +2113,7 @@ class invoice_items
 					."amount_tax='". $amount_tax ."', "
 					."amount_total='". $amount_total ."', "
 					."amount_paid='". $amount_paid ."' "
-					."WHERE id='". $this->id_invoice ."'";
+					."WHERE id='". $this->id_invoice ."' LIMIT 1";
 		}
 		
 
@@ -2042,6 +2144,13 @@ class invoice_items
 	{
 		log_debug("invoice_items", "Executing action_update_ledger()");
 
+	
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 
 		// fetch key information from invoice
 		$sql_inv_obj		= New sql_query;
@@ -2051,7 +2160,6 @@ class invoice_items
 
 
 		// remove all the old ledger entries belonging to this invoice
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM `account_trans` WHERE customid='". $this->id_invoice ."' AND (type='". $this->type_invoice ."' || type='". $this->type_invoice ."_pay' || type='". $this->type_invoice ."_tax')";
 		$sql_obj->execute();
 
@@ -2186,7 +2294,25 @@ class invoice_items
 		}
 
 
-		return 1;
+		/*
+			Commit
+		*/
+		$sql_obj = New sql_query;
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice_items", "An error occured whilst attempting to update ledger for invoice. No changes have been made.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 
 	} // end of action_update_ledger
 
@@ -2220,6 +2346,15 @@ class invoice_items
 		}
 
 
+
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
 		/*
 			Unlock time_groups if required
 		*/
@@ -2236,7 +2371,6 @@ class invoice_items
 				$locked = 0;
 			}
 
-			$sql_obj		= New sql_query;
 			$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='$locked' WHERE id='$groupid'";
 			$sql_obj->execute();
 		}
@@ -2246,7 +2380,6 @@ class invoice_items
 			Delete the invoice item options
 		*/
 
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $this->id_item ."'";
 		$sql_obj->execute();
 
@@ -2255,16 +2388,8 @@ class invoice_items
 			Delete the invoice item
 		*/
 
-		// delete item
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM account_items WHERE id='". $this->id_item ."' AND invoicetype='". $this->type_invoice ."'";
-		
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "invoice_items", "Unable to delete invoice item ". $this->id_item ." from DB");
-			return 0;
-		}
-
+		$sql_obj->string	= "DELETE FROM account_items WHERE id='". $this->id_item ."' AND invoicetype='". $this->type_invoice ."' LIMIT 1";
+		$sql_obj->execute();
 
 
 		/*
@@ -2273,7 +2398,30 @@ class invoice_items
 
 		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully deleted");
 
-		return 1;
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice_items", "An error occured whilst attempting to delete invoice item. No changes have been made.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "invoice_items", "Invoice item removed successfully");
+
+			return 1;
+		}
+
+
 	}
 
 	

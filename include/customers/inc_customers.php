@@ -493,7 +493,6 @@ class customer
 			Delete Customer
 		*/
 			
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM customers WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 

@@ -153,6 +153,13 @@ if (user_permissions_get("admin"))
 	else
 	{
 		$_SESSION["error"] = array();
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 	
 		/*
 			Update all the config fields
@@ -163,8 +170,7 @@ if (user_permissions_get("admin"))
 
 		foreach (array_keys($data) as $data_key)
 		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE config SET value='". $data[$data_key] ."' WHERE name='$data_key'";
+			$sql_obj->string = "UPDATE config SET value='". $data[$data_key] ."' WHERE name='$data_key' LIMIT 1";
 			$sql_obj->execute();
 		}
 
@@ -204,10 +210,22 @@ if (user_permissions_get("admin"))
 
 	
 		/*
-			Complete
+			Commit
 		*/
 		
-		$_SESSION["notification"]["message"][] = "Configuration Updated";
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "config_process", "An error occured whilst updating configuration, no changes have been applied.");
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "config_process", "Configuration Updated Successfully");
+		}
+
 		header("Location: ../index.php?page=admin/config.php");
 		exit(0);
 
