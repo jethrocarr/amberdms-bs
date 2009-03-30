@@ -276,6 +276,14 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 				Generate a PDF of the invoice and email it to the customer
 			*/
 
+
+			// stripslashes from the variables - by default all input variables are quoted for security reasons but
+			// we don't want this going through to the email.
+			$data["subject"] = stripslashes($data["subject"]);
+			$data["message"] = stripslashes($data["message"]);
+
+
+			// send email
 			$invoice->load_data();
 			$invoice->email_invoice($data["sender"], $data["email_to"], $data["email_cc"], $data["email_bcc"], $data["subject"], $data["message"]);
 
