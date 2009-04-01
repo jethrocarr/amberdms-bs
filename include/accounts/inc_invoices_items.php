@@ -1469,7 +1469,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_invoice_items", "An error occured whilst updating the invoice item. No changes have been made.")
+			log_write("error", "inc_invoice_items", "An error occured whilst updating the invoice item. No changes have been made.");
 		}
 		else
 		{
@@ -1607,7 +1607,7 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_invoice_items", "An error occured whilst deleting the invoice item. No changes have been made.")
+			log_write("error", "inc_invoice_items", "An error occured whilst deleting the invoice item. No changes have been made.");
 		}
 		else
 		{

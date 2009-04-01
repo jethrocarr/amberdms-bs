@@ -1649,7 +1649,7 @@ class invoice_items
 		*/
 
 		$sql_obj = New sql_query;
-		$sql_obj->trans_begin()
+		$sql_obj->trans_begin();
 
 
 		/*
@@ -1797,7 +1797,7 @@ class invoice_items
 		*/
 
 		$sql_obj = New sql_query;
-		$sql_obj->trans_begin()
+		$sql_obj->trans_begin();
 
 
 		/*

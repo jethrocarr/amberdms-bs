@@ -380,7 +380,7 @@ class customer
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_customers", "An error occured when updating customer details. No changes have been made");
+			log_write("error", "inc_customers", "An error occured when updating customer details.");
 
 			return 0;
 		}
@@ -451,7 +451,7 @@ class customer
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_customers", "A fatal error occured whilst attempting to update customer tax information. Changes have not been applied.");
+			log_write("error", "inc_customers", "A fatal error occured whilst attempting to update customer tax information.");
 
 			return 0;
 		}
@@ -520,9 +520,9 @@ class customer
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_customers", "An error occured whilst trying to delete the customer. No changes have been made.");
+			log_write("error", "inc_customers", "An error occured whilst trying to delete the customer.");
 
-			return 0
+			return 0;
 		}
 		else
 		{

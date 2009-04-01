@@ -896,9 +896,16 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->data["tax_". $data["taxid"] ] = $data["status"];
 
 
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
 			// save changes
 			if (!$obj_invoice_item->action_update())
 			{
+				$sql_obj->trans_rollback();
+
 				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
 
@@ -908,8 +915,18 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				// complete
+				return $obj_invoice_item->id_item;
+			}
 
  		}
 		else
