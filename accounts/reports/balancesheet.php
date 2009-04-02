@@ -42,7 +42,7 @@ class page_output
 		*/
 
 		// fetch existing values
-		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
+		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_as_of_yyyy"] ."-". $_GET["date_as_of_mm"] ."-". $_GET["date_as_of_dd"]);
 		$this->mode		= security_script_input("/^\S*$/", $_GET["mode"]);
 
 		if (!$this->mode)
