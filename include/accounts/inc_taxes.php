@@ -356,6 +356,13 @@ class taxes_report_transactions
 
 							// nothing to do, we can use the tax amount we gained from the database
 						}
+						elseif ($payment_total > $this->obj_table->data[$i]["amount_total"])
+						{
+							log_debug("page", "Invoice has been overpaid and will not be included in the results.");
+						
+							unset($this->obj_table->data[$i]);
+							$deleted_invoices++;
+						}
 						else
 						{
 							log_debug("page", "Invoice is not fully paid, calculating tax based on amount paid.");

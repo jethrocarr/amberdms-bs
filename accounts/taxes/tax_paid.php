@@ -85,7 +85,7 @@ class page_output
 		print "<h3>TAX PAID</h3>";
 		print "<p>This page allows you to generate reports on how much tax has been paid on either an Accural/Invoice or Cash basis for a selectable time period.</p>";
 		
-		print "<p><i>Note: The cash selection mode will only display invoices which have been fully paid - any partially paid invoices will only appear when the Accural/Invoice selection mode is used.</i></p>";
+		print "<p><i>Note: The cash selection mode will display based on the payments falling in the data selection period and will include partially paid invoices. The only invoices not displayed would be an invoice which has been overpaid.</i></p>";
 
 
 		// display tax report
