@@ -1607,6 +1607,8 @@ class invoice_items
 		}
 		else
 		{
+			$sql_obj->trans_commit();
+
 			log_write("notification", "invoice_items", "Successfully created new invoice item");
 
 			return $this->id_item;

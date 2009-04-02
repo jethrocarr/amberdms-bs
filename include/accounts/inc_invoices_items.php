@@ -1418,6 +1418,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		if ($mode == "add")
 		{
 			$item->action_create();
+			$item->action_update();
 		}
 		else
 		{
