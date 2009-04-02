@@ -241,7 +241,6 @@ class ledger_account_list
 		
 		$this->obj_table->total_rows_mode	= "ledger_add_". $sql_obj->data[0]["total_mode"];
 
-
 		
 		// defaults
 		$this->obj_table->columns		= array("date_trans", "item_id", "source", "memo", "debit", "credit");
@@ -254,6 +253,24 @@ class ledger_account_list
 		$this->obj_table->sql_obj->prepare_sql_addfield("type", "account_trans.type");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("chartid='". $this->chartid ."'");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = account_trans.chartid");
+
+
+		// acceptable filter options
+		$this->obj_table->add_fixed_option("id", $this->chartid);
+			
+		$structure = NULL;
+		$structure["fieldname"] = "date_start";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "account_trans.date_trans >= 'value'";
+		$this->obj_table->add_filter($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
+		$structure["sql"]	= "account_trans.date_trans <= 'value'";
+		$this->obj_table->add_filter($structure);
+
+
 
 		// load options
 		$this->obj_table->load_options_form();
@@ -334,20 +351,6 @@ class ledger_account_list
 	{
 		log_debug("ledger_account_list", "Executing render_options_form()");
 		
-		// acceptable filter options
-		$this->obj_table->add_fixed_option("id", $this->chartid);
-			
-		$structure = NULL;
-		$structure["fieldname"] = "date_start";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "account_trans.date_trans >= 'value'";
-		$this->obj_table->add_filter($structure);
-
-		$structure = NULL;
-		$structure["fieldname"] = "date_end";
-		$structure["type"]	= "date";
-		$structure["sql"]	= "account_trans.date_trans <= 'value'";
-		$this->obj_table->add_filter($structure);
 			
 		// options form
 		$this->obj_table->render_options_form();
