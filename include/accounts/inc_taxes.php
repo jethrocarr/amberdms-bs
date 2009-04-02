@@ -99,6 +99,7 @@ class taxes_report_transactions
 		}
 		
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_". $this->type .".id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("amount_total", "account_". $this->type .".amount_total");
 
 
 
@@ -149,20 +150,91 @@ class taxes_report_transactions
 		// depending on the filter options, generate SQL filtering rules
 		if ($this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
 		{
-			// cash mode
+			/*
+				Cash Mode
+
+				We need to work out all the payments in this period, then create an array of all the invoices
+				that they belong to.
+			*/
+
+			// store invoice IDs here
+			$invoice_ids = NULL;
+
+			// select all payments in the desired time period
+			$sql_obj = New sql_query;
+			$sql_obj->string = "SELECT
+						itemid
+						FROM account_items_options
+						WHERE
+						option_name='DATE_TRANS'
+						AND
+						option_value >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'
+						AND
+						option_value <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'";
+
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data)
+				{
+					// fetch item details
+					$sql_item_obj = New sql_query;
+					$sql_item_obj->string = "SELECT invoiceid FROM account_items WHERE id='". $data["itemid"] ."' AND invoicetype='". $this->type ."' AND type='payment' LIMIT 1";
+					$sql_item_obj->execute();
+
+					if ($sql_item_obj->num_rows())
+					{
+						$sql_item_obj->fetch_array();
+
+						$invoice_ids[ $sql_item_obj->data[0]["invoiceid"] ] = "on";
+					}
+				}
+			}
+
+			unset($sql_obj);
+			unset($sql_item_obj);
 
 
-			// select all invoices in the desired time period
-			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'");
-			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'");
+			// select invoices with payments within the date range
+			$invoice_ids_keys	= array_keys($invoice_ids);
+			$invoice_ids_count	= count($invoice_ids_keys);
+			$invoice_ids_sql	= "";
 
-			// limit invoice selection to only fully paid invoices
-			$this->obj_table->sql_obj->prepare_sql_addwhere("amount_total=amount_paid");
+
+			if ($invoice_ids_count)
+			{
+				$i = 0;
+				foreach ($invoice_ids_keys as $id)
+				{
+					$i++;
+
+					if ($i == $invoice_ids_count)
+					{
+						$invoice_ids_sql .= "account_". $this->type .".id='$id' ";
+					}
+					else
+					{
+						$invoice_ids_sql .= "account_". $this->type .".id='$id' OR ";
+					}
+				}
+
+
+				$this->obj_table->sql_obj->prepare_sql_addwhere("($invoice_ids_sql)");	
+			}
+			
 		}
 		else
 		{
-			// invoice mode
-			
+			/*
+				Invoice Mode
+
+				Simply select all invoices that fall in the provided date period.
+			*/
+
+
 			// select all invoices in the desired time period
 			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'");
 			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'");
@@ -178,23 +250,201 @@ class taxes_report_transactions
 
 		/*
 			Generate tax totals per invoice
-
-			Note that the account_$this->type.total_tax may include the amount of other taxes,
-			so we need to total up the tax ourselves and work out the sum.
 		*/
 
 
 		if ($this->obj_table->data_num_rows)
 		{
-
+			
 			$deleted_invoices = 0;
 
-			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+		
+			if ($this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
 			{
-				/*
-					TODO
 
-					There are two approaches to solving this problem:
+				/*
+					Cash Mode
+
+					The main SQL query has returned a number of invoices, all which have at least one payment in the selected
+					date period.
+
+					We now need to process these invoices in one of two different ways, depending on the payments.
+
+					1. If the invoice has been fully paid, with all the payments falling into the selected date period, we can treat
+					   the invoice in the same way as the Invoice/Accural mode.
+
+					2. If the invoice has not been fully paid, or if only some of the payments fall in the selected date period, we
+					   need to calculate the tax share of the payments which *do* fall into their period and adjust the output to this value.
+
+					These calculations are nessacary to correctly comply with sales tax legislation such as the New Zealand GST laws which
+					require GST to be paid upon recipt of any payment on the period when the payment occurs, regardless whether or not
+					the invoice is fully paid.
+				*/
+
+
+				for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+				{
+					log_debug("page", "Calculating taxes on invoice ". $this->obj_table->data[$i]["code_invoice"] ." on cash method");
+
+					// create payment total
+					$payment_total = 0;
+
+					// fetch all the payments for this invoice
+					$sql_items_obj		= New sql_query;
+					$sql_items_obj->string	= "SELECT
+									id,
+									amount
+									FROM account_items
+									WHERE
+									invoicetype='$this->type'
+									AND invoiceid='". $this->obj_table->data[$i]["id"] ."'
+									AND type='payment'";
+					$sql_items_obj->execute();
+					$sql_items_obj->fetch_array();
+
+					foreach ($sql_items_obj->data as $data_item)
+					{
+						// check if payment belongs to this date range
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT
+										id
+										FROM account_items_options
+										WHERE
+										itemid='". $data_item["id"] ."'
+										AND option_name='DATE_TRANS'
+										AND option_value >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'
+										AND option_value <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'
+										LIMIT 1";
+						$sql_obj->execute();
+
+						if ($sql_obj->num_rows())
+						{
+							// add payment to total
+							$payment_total += $data_item["amount"];
+						}
+					}
+
+
+
+					// fetch total of the tax for this invoice
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='". $this->taxid ."' AND invoicetype='". $this->type ."' AND invoiceid='". $this->obj_table->data[$i]["id"] ."'";
+					$sql_obj->execute();
+					
+					$sql_obj->fetch_array();
+
+
+					if (!$sql_obj->data[0]["amount"])
+					{
+						log_debug("page", "Invoice does not have this tax, removing invoice from the list");
+
+						// delete this invoice from the list, since it has no tax items of the type that we want
+						unset($this->obj_table->data[$i]);
+						$deleted_invoices++;
+					}
+					else
+					{
+						// add the tax amount
+						$this->obj_table->data[$i]["amount_tax"] = $sql_obj->data[0]["amount"];
+
+
+
+						// is the invoice fully paid?
+						if ($payment_total == $this->obj_table->data[$i]["amount_total"])
+						{
+							log_debug("page", "Invoice is fully paid, using tax totals from DB");
+
+							// nothing to do, we can use the tax amount we gained from the database
+						}
+						else
+						{
+							log_debug("page", "Invoice is not fully paid, calculating tax based on amount paid.");
+
+
+							/*
+								Work out the payment amount with no tax
+
+								To do this, we divide the payment by the invoice total and then multiply by the invoice non-tax total.
+
+								Example:
+									Invoice of $100. Total with tax of $112.50
+
+									Payment of $20 made.
+
+									20 / 112.50 = 0.1777
+
+									0.1777 * 100 = 17.777
+
+									Therefore the amount before tax is $17.78
+
+									We can further prove the calculation by applying the original tax (12.5%) to show:
+									17.7777 * 1.125 == $20
+							*/
+
+							$payment_total = ($payment_total / $this->obj_table->data[$i]["amount_total"]) * $this->obj_table->data[$i]["amount"];
+
+
+
+							/*
+								The invoice was not fully paid in this period - in order to provide valid tax reporting we need to work out
+								the amount of tax for the amount paid.
+
+								We do this by fetching the tax total of the invoice (for the selected tax type), dividing it by the invoice
+								amount and then multiplying by the payment.
+
+								For example:
+
+									Invoice of $100 with tax of 12.5% == $112.5
+									
+									12.5 / 100 == 0.125
+
+									Payment of $20 made
+
+									0.125 * $20 = 2.5
+
+									Therefore, for a payment of $20, the tax is $2.50
+
+								This also works correctly for fixed-price taxes:
+									
+									Invoice of $100 with tax of $50 == $150
+
+									50 / 100 = 0.5
+
+									Payment of $20 made
+
+									0.5 * 20 = 10
+
+									Therefore, for a payment of $20, the tax is $10
+
+
+								This method is better than using the taxrate percentage in the DB, since that may have been changed
+								since the invoice was created, or possibly the tax amount has been adjusted if this is an AP invoice.
+							*/
+
+		
+							// work out the tax rate
+							$taxrate = $this->obj_table->data[$i]["amount_tax"] / $this->obj_table->data[$i]["amount"];
+
+							log_debug("page", "Calculated Taxrate is: ". $taxrate);
+
+							// update the invoice details for display						
+							$this->obj_table->data[$i]["amount"]		= $payment_total;
+							$this->obj_table->data[$i]["amount_tax"]	= $taxrate * $payment_total;
+						}
+					}
+				}
+			}
+			else
+			{
+				log_debug("page", "Calculating taxes on invoice ". $this->obj_table->data[$i]["code_invoice"] ." on invoice/accural method");
+
+				/*
+					Invoice / Accural Mode
+
+					We can not just use the tax amount on the invoice, since the `account_$this->type.total_tax` field may include amounts
+					of other taxes, so we need to total up the tax ourselves and work out the sum.
+
+					There are two approaches to handling this:
 					
 					1. Fetch totals for the selected tax type for all invoices into
 					   an array, and then pull the data we want from that
@@ -211,29 +461,35 @@ class taxes_report_transactions
 					Possibly some tests should be carried out in order to determine the optimal query method
 					here.
 				*/
-			
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='". $this->taxid ."' AND invoicetype='". $this->type ."' AND invoiceid='". $this->obj_table->data[$i]["id"] ."'";
-				$sql_obj->execute();
-				$sql_obj->fetch_array();
-
-				if (!$sql_obj->data[0]["amount"])
+				
+				for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 				{
-					// delete this invoice from the list, since it has no tax items of the type that we want
-					unset($this->obj_table->data[$i]);
-					$deleted_invoices++;
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT SUM(amount) as amount FROM account_items WHERE type='tax' AND customid='". $this->taxid ."' AND invoicetype='". $this->type ."' AND invoiceid='". $this->obj_table->data[$i]["id"] ."'";
+					$sql_obj->execute();
+					$sql_obj->fetch_array();
+
+					if (!$sql_obj->data[0]["amount"])
+					{
+						// delete this invoice from the list, since it has no tax items of the type that we want
+						unset($this->obj_table->data[$i]);
+
+						$deleted_invoices++;
+					}
+					else
+					{
+						// add the tax amount
+						$this->obj_table->data[$i]["amount_tax"] = $sql_obj->data[0]["amount"];
+					}					
 				}
-				else
-				{
-					
-					// add the amount to the data
-					$this->obj_table->data[$i]["amount_tax"] = $sql_obj->data[0]["amount"];
-				}
+			}
 
 
-				/*
-					Turn the code_invoice field into a hyperlink
-				*/
+			/*
+				Turn the code_invoice field into a hyperlink
+			*/
+			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+			{
 				if ($this->type == "ap")
 				{
 					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
@@ -242,14 +498,14 @@ class taxes_report_transactions
 				{
 					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
 				}
-
 			}
 
-			// re-index the data results to fix any holes created
-			// by deleted invoices
+
+			/*
+				Re-index the data results to fix any holes created by deleted invoices
+			*/
 			$this->obj_table->data		= array_values($this->obj_table->data);
 			$this->obj_table->data_num_rows	= $this->obj_table->data_num_rows - $deleted_invoices;
-
 		}
 
 		return 1;
