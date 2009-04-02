@@ -50,18 +50,34 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing execute()");
 
-		if (strlen($this->string) < 1000)
+
+		// check whether or not to display transaction number
+		if ($GLOBALS["sql"]["transaction"])
 		{
-			log_write("sql", "sql_query", $this->string);
+			$trans = "TRANS: #". $GLOBALS["sql"]["transaction"] ." ";
 		}
 		else
 		{
-			log_write("sql", "sql_query", "SQL query too long to display for debug.");
+			$trans = "";
+		}
+
+
+		// check query length for debug dispaly handling
+		if (strlen($this->string) < 1000)
+		{
+			log_write("sql", "sql_query", $trans . $this->string);
+		}
+		else
+		{
+			log_write("sql", "sql_query", $trans . "SQL query too long to display for debug.");
 		}
 		
+
+
+		// execute query
 		if (!$this->query_result = mysql_query($this->string))
 		{
-			log_write("error", "sql_query", "Problem executing SQL query - ". mysql_error());
+			log_write("error", "sql_query", $trans . "Problem executing SQL query - ". mysql_error());
 			return 0;
 		}
 		else
