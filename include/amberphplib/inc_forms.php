@@ -448,6 +448,9 @@ class form_input
 				
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
+
 			break;
 
 			case "password":
