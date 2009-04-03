@@ -299,7 +299,19 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		break;
 
 		case "float":
-			$expression = "/^[0-9]*.[0-9]*$/";
+
+			// value could be a float, or an integer - we need to check for either
+			if (preg_match("/^[0-9]*$/", $_POST[$valuename]))
+			{
+				// is an int
+				$expression = "/^[0-9]*$/";
+			}
+			else
+			{
+				// either float or invalid - run check for int
+				$expression = "/^[0-9]*.[0-9]*$/";
+			}
+
 		break;
 		
 		case "email":
@@ -401,7 +413,7 @@ function security_script_input_predefined ($type, $value)
 			// to produce the number of seconds.
 
 			// calculate the time in seconds
-			$time = split(":", $value);
+			$time	= split(":", $value);
 			$value	= ($time[1] * 60) + (($time[0] * 60) * 60);
 
 			$expression = "/^[0-9]*$/";
@@ -419,7 +431,19 @@ function security_script_input_predefined ($type, $value)
 		break;
 
 		case "float":
-			$expression = "/^[0-9]*.[0-9]*$/";
+
+			// value could be a float, or an integer - we need to check for either
+			if (preg_match("/^[0-9]*$/", $value))
+			{
+				// is an int
+				$expression = "/^[0-9]*$/";
+			}
+			else
+			{
+				// either float or invalid - run check for int
+				$expression = "/^[0-9]*.[0-9]*$/";
+			}
+
 		break;
 		
 		case "email":
