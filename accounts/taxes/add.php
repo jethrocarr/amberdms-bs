@@ -51,9 +51,12 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"] 	= "taxrate";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
+		$structure["fieldname"] 		= "taxrate";
+		$structure["type"]			= "input";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["label"]		= " %";
+		$structure["options"]["max_length"]	= "6";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
