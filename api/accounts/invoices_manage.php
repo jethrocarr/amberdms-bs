@@ -237,6 +237,9 @@ class accounts_invoices_manage_soap
 						// blank a few fields
 						$data["timegroupid"]		= "";
 						$data["timegroupid_label"]	= "";
+
+						// fetch discount (if any)
+						$data["discount"]		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='DISCOUNT'");
 					break;
 
 
@@ -247,6 +250,9 @@ class accounts_invoices_manage_soap
 						// Fetch time group ID
 						$data["timegroupid"]		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='TIMEGROUPID'");
 						$data["timegroupid_label"]	= sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='". $data["timegroupid"] ."' LIMIT 1");
+
+						// fetch discount (if any)
+						$data["discount"]		= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data["id"] ."' AND option_name='DISCOUNT'");
 					break;
 
 
@@ -259,6 +265,7 @@ class accounts_invoices_manage_soap
 						$data["units"]			= "";
 						$data["timegroupid"]		= "";
 						$data["timegroupid_label"]	= "";
+						$data["discount"]		= "";
 
 						$data["taxes"]			= NULL;;
 
@@ -328,6 +335,7 @@ class accounts_invoices_manage_soap
 				$return_tmp["price"]			= $data["price"];
 				$return_tmp["description"]		= $data["description"];
 				$return_tmp["taxes"]			= $data["taxes"];
+				$return_tmp["discount"]			= $data["discount"];
 
 				$return[] = $return_tmp;
 			}
@@ -753,21 +761,31 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
-			if ($obj_invoice_item->id_item)
+
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			if (!$obj_invoice_item->id_item)
 			{
-				if (!$obj_invoice_item->action_update())
+				if (!$obj_invoice_item->action_create())
 				{
+					$sql_obj->trans_rollback();
+
 					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 				}
 
 			}
-			else
+
+
+			if (!$obj_invoice_item->action_update())
 			{
-				if (!$obj_invoice_item->action_create())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
+
 
 
 
@@ -778,15 +796,24 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_total();
 
 
-
 			// Generate ledger entries.
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
 
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
 
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				return $obj_invoice_item->id_item;
+			}
  		}
 		else
 		{
@@ -924,7 +951,8 @@ class accounts_invoices_manage_soap
 			}
 			else
 			{
-				// complete
+				$sql_obj->trans_commit();
+
 				return $obj_invoice_item->id_item;
 			}
 
@@ -954,7 +982,8 @@ class accounts_invoices_manage_soap
 					$quantity,
 					$units,
 					$productid,
-					$description)
+					$description,
+					$discount)
 	{
 		log_debug("accounts_invoices_manage", "Executing set_invoice_item_product($id, $invoicetype, values...)");
 
@@ -1012,6 +1041,7 @@ class accounts_invoices_manage_soap
 			$data["units"]		= security_script_input_predefined("any", $units);
 			$data["customid"]	= security_script_input_predefined("int", $productid);
 			$data["description"]	= security_script_input_predefined("any", $description);
+			$data["discount"]	= security_script_input_predefined("float", $discount);
 
 			foreach (array_keys($data) as $key)
 			{
@@ -1035,20 +1065,29 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
-			if ($obj_invoice_item->id_item)
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			// create/update item
+			if (!$obj_invoice_item->id_item)
 			{
-				if (!$obj_invoice_item->action_update())
+				if (!$obj_invoice_item->action_create())
 				{
+					$sql_obj->trans_rollback();
+
 					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 				}
 
 			}
-			else
+
+
+			if (!$obj_invoice_item->action_update())
 			{
-				if (!$obj_invoice_item->action_create())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
 
 
@@ -1063,9 +1102,19 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
 
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				return $obj_invoice_item->id_item;
+			}
 
  		}
 		else
@@ -1092,7 +1141,8 @@ class accounts_invoices_manage_soap
 					$price,
 					$productid,
 					$timegroupid,
-					$description)
+					$description,
+					$discount)
 	{
 		log_debug("accounts_invoices_manage", "Executing set_invoice_item_time($id, $invoicetype, values...)");
 
@@ -1155,6 +1205,7 @@ class accounts_invoices_manage_soap
 			$data["timegroupid"]	= security_script_input_predefined("int", $timegroupid);
 			$data["description"]	= security_script_input_predefined("any", $description);
 			$data["units"]		= "hours";
+			$data["discount"]	= security_script_input_predefined("float", $discount);
 
 
 
@@ -1203,20 +1254,29 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
-			if ($obj_invoice_item->id_item)
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			// create/update item
+			if (!$obj_invoice_item->id_item)
 			{
-				if (!$obj_invoice_item->action_update())
+				if (!$obj_invoice_item->action_create())
 				{
+					$sql_obj->trans_rollback();
+
 					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 				}
 
 			}
-			else
+
+
+			if (!$obj_invoice_item->action_update())
 			{
-				if (!$obj_invoice_item->action_create())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
 
 
@@ -1231,9 +1291,20 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
 
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				return $obj_invoice_item->id_item;
+			}
 
  		}
 		else
@@ -1345,6 +1416,12 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			// update tax amounts
 			if (!$obj_invoice_item->action_update())
 			{
 				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
@@ -1358,9 +1435,20 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
 
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				return $obj_invoice_item->id_item;
+			}
 
  		}
 		else
@@ -1469,21 +1557,30 @@ class accounts_invoices_manage_soap
 				Apply Data
 			*/
 
-			if ($obj_invoice_item->id_item)
+			// create SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+			// create / update payment
+			if (!$obj_invoice_item->id_item)
 			{
-				if (!$obj_invoice_item->action_update())
+				if (!$obj_invoice_item->action_create())
 				{
+					$sql_obj->trans_rollback();
+
 					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 				}
 
 			}
-			else
+
+
+			if (!$obj_invoice_item->action_update())
 			{
-				if (!$obj_invoice_item->action_create())
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
+
 
 			// update invoice totals
 			$obj_invoice_item->action_update_total();
@@ -1492,9 +1589,19 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item->action_update_ledger();
 
 
-			// complete
-			return $obj_invoice_item->id_item;
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
 
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+
+				return $obj_invoice_item->id_item;
+			}
 
  		}
 		else
@@ -1629,20 +1736,36 @@ class accounts_invoices_manage_soap
 				Perform Changes
 			*/
 
-			if ($obj_invoice_item->action_delete())
+			// start SQL transaction
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
+
+
+			if (!$obj_invoice_item->action_delete())
 			{
-				// Re-calculate taxes, totals and ledgers as required
-				$obj_invoice_item->action_update_tax();
-				$obj_invoice_item->action_update_total();
+				$sql_obj->trans_rollback();
 
-				// Generate ledger entries.
-				$obj_invoice_item->action_update_ledger();
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
 
-				return 1;
+			// re-calculate taxes, totals and ledgers as required
+			$obj_invoice_item->action_update_tax();
+			$obj_invoice_item->action_update_total();
+			$obj_invoice_item->action_update_ledger();
+
+
+			// commit
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
 			else
 			{
-				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				$sql_obj->trans_commit();
+
+				return 1;
 			}
 		}
 		else

@@ -54,6 +54,7 @@
 					<element name="price" type="xsd:string"/>
 					<element name="description" type="xsd:string"/>
 					<element name='taxes' type='xsd1:invoice_items_tax_list'/>
+					<element name="discount" type="xsd:string"/>
 				</all>
 			</complexType>
 
@@ -227,6 +228,7 @@
 		<part name="units" type="xsd:string"/>
 		<part name="productid" type="xsd:int"/>
 		<part name="description" type="xsd:string"/>
+		<part name="discount" type="xsd:string"/>
 	</message>
 
 	<message name='set_invoice_item_product_response'>
@@ -242,6 +244,7 @@
 		<part name="productid" type="xsd:int"/>
 		<part name="timegroupid" type="xsd:int"/>
 		<part name="description" type="xsd:string"/>
+		<part name="discount" type="xsd:string"/>
 	</message>
 
 	<message name='set_invoice_item_time_response'>
