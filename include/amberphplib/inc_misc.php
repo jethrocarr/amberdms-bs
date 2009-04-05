@@ -203,8 +203,10 @@ function format_linkbox($type, $hyperlink, $text)
 
 	Formats the provided floating integer and adds the default currency and applies
 	rounding to it to make a number suitable for display.
+
+	Set nocurrency to 1 to disable addition of the currency symbol
 */
-function format_money($amount)
+function format_money($amount, $nocurrency = NULL)
 {
 	log_debug("misc", "Executing format_money($amount)");
 
@@ -215,10 +217,16 @@ function format_money($amount)
 	$amount = number_format($amount, "2", ".", ",");
 
 
-	// add currency & return
-	$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . "$amount";
-
-	return $result;
+	if ($nocurrency)
+	{
+		return $amount;
+	}
+	else
+	{
+		// add currency & return
+		$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . "$amount";
+		return $result;
+	}
 }
 
 
