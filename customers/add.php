@@ -140,6 +140,18 @@ class page_output
 		}
 
 
+		// purchase options
+		$structure = NULL;
+		$structure["fieldname"] 		= "discount";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["label"]		= " %";
+		$structure["options"]["max_length"]	= "2";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["customer_purchase"] = array("discount");
+
+
 
 		// billing address
 		$structure = NULL;

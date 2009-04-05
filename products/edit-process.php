@@ -39,9 +39,11 @@ if (user_permissions_get('products_write'))
 	
 	$obj_product->data["price_cost"]		= security_form_input_predefined("money", "price_cost", 0, "");
 	$obj_product->data["price_sale"]		= security_form_input_predefined("money", "price_sale", 0, "");
+	$obj_product->data["discount"]			= security_form_input_predefined("float", "discount", 0, "");
 	
 	$obj_product->data["quantity_instock"]		= security_form_input_predefined("int", "quantity_instock", 0, "");
 	$obj_product->data["quantity_vendor"]		= security_form_input_predefined("int", "quantity_vendor", 0, "");
+
 
 	// only get vendor ID if vendors exist, otherwise will trigger an error
 	$sql_obj		= New sql_query;

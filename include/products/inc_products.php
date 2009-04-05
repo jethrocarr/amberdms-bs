@@ -300,7 +300,8 @@ class product
 						."quantity_instock='". $this->data["quantity_instock"] ."', "
 						."quantity_vendor='". $this->data["quantity_vendor"] ."', "
 						."vendorid='". $this->data["vendorid"] ."', "
-						."code_product_vendor='". $this->data["code_product_vendor"] ."' "
+						."code_product_vendor='". $this->data["code_product_vendor"] ."', "
+						."discount='". $this->data["discount"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 
 		$sql_obj->execute();

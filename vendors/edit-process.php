@@ -49,6 +49,8 @@ if (user_permissions_get('vendors_write'))
 	
 	$obj_vendor->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
 
+	$obj_vendor->data["discount"]		= security_form_input_predefined("float", "discount", 0, "");
+
 
 	// get tax selection options
 	$sql_taxes_obj		= New sql_query;

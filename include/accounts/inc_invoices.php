@@ -663,6 +663,7 @@ class invoice
 			steps when deleting certain invoice items (such as time items)
 		*/
 
+		$sql_items_obj		= New sql_query;
 		$sql_items_obj->string	= "SELECT id FROM account_items WHERE invoicetype='". $this->type ."' AND invoiceid='". $this->id ."'";
 		$sql_items_obj->execute();
 
@@ -684,7 +685,6 @@ class invoice
 			}
 		}
 
-		unset($sql_obj);
 
 
 		/*
@@ -726,6 +726,7 @@ class invoice
 		}
 		
 	} // end of action_delete
+
 
 
 	/*
@@ -841,9 +842,9 @@ class invoice
 		}
 		
 		$this->obj_pdf->prepare_add_field("date\_trans", time_format_humandate($this->data["date_trans"]));
-		$this->obj_pdf->prepare_add_field("amount", $this->data["amount"]);
-		$this->obj_pdf->prepare_add_field("amount\_total", $this->data["amount_total"]);
-
+		$this->obj_pdf->prepare_add_field("amount", format_money($this->data["amount"]));
+		$this->obj_pdf->prepare_add_field("amount\_total", format_money($this->data["amount_total"]));
+		$this->obj_pdf->prepare_add_field("amount\_currency", sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") );
 
 
 		/*
@@ -880,6 +881,25 @@ class invoice
 					$structure["info"] = $sql_obj->data[0]["code_product"];
 					
 					unset($sql_obj);
+
+
+					/*
+						Fetch discount (if any)
+					*/
+
+					$itemdata["discount"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='DISCOUNT'");
+
+
+					/*
+						Calculate Amount
+
+						(Amount field already has discount removed, but we can't use this for export, since we want the line item to be the full
+						 amount, with an additional line item for the discount)
+					*/
+
+					$itemdata["amount"] = $itemdata["price"] * $itemdata["quantity"];
+
+
 				break;
 
 
@@ -891,6 +911,24 @@ class invoice
 					$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='TIMEGROUPID'");
 
 					$structure["info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+
+
+					/*
+						Fetch discount (if any)
+					*/
+
+					$itemdata["discount"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='DISCOUNT'");
+
+
+					/*
+						Calculate Amount
+
+						(Amount field already has discount removed, but we can't use this for export, since we want the line item to be the full
+						 amount, with an additional line item for the discount)
+					*/
+
+					$itemdata["amount"] = $itemdata["price"] * $itemdata["quantity"];
+
 				break;
 
 
@@ -917,10 +955,30 @@ class invoice
 
 			$structure["description"]	= $itemdata["description"];
 			$structure["units"]		= $itemdata["units"];
-			$structure["price"]		= $itemdata["price"];
-			$structure["amount"]		= $itemdata["amount"];
+			$structure["price"]		= format_money($itemdata["price"], 1);
+			$structure["amount"]		= format_money($itemdata["amount"], 1);
 
 			$structure_invoiceitems[] = $structure;
+
+
+			// if a discount exists, then we add an additional item row for the discount
+			if ($itemdata["discount"])
+			{
+				$structure["description"]	= "Discount of ".  $itemdata["discount"] ."%";
+				$structure["quantity"]		= "";
+				$structure["units"]		= "";
+				$structure["price"]		= "";
+
+				// work out the discount amount to remove
+				$discount_calc	= $itemdata["discount"] / 100;
+				$discount_calc	= $itemdata["amount"] * $discount_calc;
+
+				$structure["amount"]		= "-". format_money($discount_calc, 1);
+
+
+				// add extra line item
+				$structure_invoiceitems[] = $structure;
+			}
 		}
 	
 		$this->obj_pdf->prepare_add_array("invoice_items", $structure_invoiceitems);
@@ -960,8 +1018,7 @@ class invoice
 			
 				$structure["name_tax"]		= $taxdata["name_tax"];
 				$structure["taxnumber"]		= $taxdata["taxnumber"];
-				$structure["amount"]		= $taxdata["amount"];
-
+				$structure["amount"]		= format_money($taxdata["amount"]);
 				$structure_taxitems[] = $structure;
 			}
 		}
@@ -1407,9 +1464,20 @@ class invoice_items
 				$this->data["units"]		= $data["units"];
 				$this->data["customid"]		= $data["customid"];
 				$this->data["description"]	= $data["description"];
+				$this->data["discount"]		= $data["discount"];
 
 				// calculate the total amount
 				$this->data["amount"]		= $data["price"] * $data["quantity"];
+
+				// apply any discounts
+				if ($this->data["discount"])
+				{
+					// convert percentage to float
+					$discount_calc = 1 - ($this->data["discount"] / 100);
+
+					// apply discount
+					$this->data["amount"]	= $this->data["amount"] * $discount_calc;
+				}
 
 				// get the chart for the product - this will be the account_sales
 				// for ar/quotes, or account_purchase for AP invoices
@@ -1470,6 +1538,9 @@ class invoice_items
 				$this->data["timegroupid"]	= $data["timegroupid"];
 				$this->data["description"]	= $data["description"];
 				$this->data["units"]		= $data["units"];
+				$this->data["discount"]		= $data["discount"];
+
+				
 
 				// fetch the number of billable hours for the supplied timegroupid
 				$sql_obj		= New sql_query;
@@ -1502,6 +1573,18 @@ class invoice_items
 				
 				// calculate the total amount
 				$this->data["amount"] = $this->data["price"] * $this->data["quantity"];
+
+
+				// apply any discounts
+				if ($this->data["discount"])
+				{
+					// convert percentage to float
+					$discount_calc = 1 - ($this->data["discount"] / 100);
+
+					// apply discount
+					$this->data["amount"]	= $this->data["amount"] * $discount_calc;
+				}
+
 
 				// get the chart for the product
 				$sql_obj		= New sql_query;
@@ -1741,6 +1824,14 @@ class invoice_items
 		}
 
 
+		// set discount for time or product items if supplied
+		if ($this->data["discount"])
+		{
+			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'DISCOUNT', '". $this->data["discount"] ."')";
+			$sql_obj->execute();
+		}
+
+
 		/*
 			Update Journal
 		*/
@@ -1765,6 +1856,7 @@ class invoice_items
 		{
 			$sql_obj->trans_commit();
 
+			$_SESSION["notification"]["message"] = array();
 			log_write("notification", "invoice_items", "Successfully updated invoice item");
 
 			return $this->id_item;	

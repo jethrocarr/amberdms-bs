@@ -49,6 +49,7 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->data["address2_zipcode"]		= security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
 	$obj_customer->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
+	$obj_customer->data["discount"]			= security_form_input_predefined("float", "discount", 0, "");
 
 
 	// get tax selection options

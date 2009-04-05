@@ -102,6 +102,16 @@ class products_form_details
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"] 		= "discount";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["label"]		= " %";
+		$structure["options"]["max_length"]	= "6";
+		$this->obj_form->add_input($structure);
+
+
+
 		// quantity
 		$structure = NULL;
 		$structure["fieldname"]		= "quantity_instock";
@@ -126,7 +136,7 @@ class products_form_details
 
 		// define subforms
 		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
-		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale");
+		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale", "discount");
 		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$this->obj_form->subforms["product_supplier"]	= array("vendorid", "code_product_vendor");
 		

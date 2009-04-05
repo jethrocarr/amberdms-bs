@@ -207,6 +207,17 @@ class page_output
 		}
 
 
+		// purchase options
+		$structure = NULL;
+		$structure["fieldname"] 		= "discount";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["label"]		= " %";
+		$structure["options"]["max_length"]	= "6";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["vendor_purchase"] = array("discount");
+
 
 
 

@@ -61,10 +61,11 @@ class invoice_list_items
 		$this->obj_table_standard->add_column("standard", "qnty", "quantity");
 		$this->obj_table_standard->add_column("standard", "units", "");
 		$this->obj_table_standard->add_column("money", "price", "");
+		$this->obj_table_standard->add_column("standard", "discount", "NONE");
 		$this->obj_table_standard->add_column("money", "amount", "");
 
 		// defaults
-		$this->obj_table_standard->columns		= array("item_info", "description", "qnty", "units", "price", "amount");
+		$this->obj_table_standard->columns		= array("item_info", "description", "qnty", "units", "price", "discount", "amount");
 
 		// totals
 		$this->obj_table_standard->total_columns	= array("amount");
@@ -109,6 +110,20 @@ class invoice_list_items
 
 						$sql_obj->fetch_array();
 						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["code_product"];
+
+
+
+						/*
+							Fetch discount (if any)
+						*/
+
+						$discount = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->obj_table_standard->data[$i]["id"] ."' AND option_name='DISCOUNT'");
+
+						if ($discount)
+						{
+							$this->obj_table_standard->data[$i]["discount"] = $discount ."%";
+						}
+
 					break;
 
 
@@ -120,6 +135,20 @@ class invoice_list_items
 						$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->obj_table_standard->data[$i]["id"] ."' AND option_name='TIMEGROUPID'");
 
 						$this->obj_table_standard->data[$i]["item_info"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ', projects.code_project, time_groups.name_group) as value FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.id='$groupid' LIMIT 1");
+
+
+						/*
+							Fetch discount (if any)
+						*/
+
+						$discount = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->obj_table_standard->data[$i]["id"] ."' AND option_name='DISCOUNT'");
+
+						if ($discount)
+						{
+							$this->obj_table_standard->data[$i]["discount"] = $discount ."%";
+						}
+
+
 					break;
 
 
@@ -332,7 +361,7 @@ class invoice_list_items
 				Display total of all items without tax
 			*/
 			print "<tr>";
-				print "<td class=\"blank\" colspan=\"3\"></td>";
+				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Subtotal:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>". $this->obj_table_standard->data_render["total"]["amount"] ."</b></td>";
 				print "<td class=\"footer\"></td>";
@@ -355,7 +384,7 @@ class invoice_list_items
 				print "<tr>";
 
 				// padding
-				print "<td class=\"blank\" colspan=\"3\"></td>";
+				print "<td class=\"blank\" colspan=\"4\"></td>";
 
 				// tax name
 				print "<td valign=\"center\" colspan=\"2\">". $this->obj_table_taxes->data_render[$i]["name_tax"] ."</td>";
@@ -410,7 +439,7 @@ class invoice_list_items
 			$invoice_total = format_money($invoice_total);
 
 			print "<tr>";
-				print "<td class=\"blank\" colspan=\"3\"></td>";
+				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Invoice Total:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>$invoice_total</b></td>";
 				print "<td class=\"footer\"></td>";
@@ -726,6 +755,25 @@ class invoice_form_item
 
 		$form->action		= $this->processpage;
 		$form->method		= "POST";
+
+
+
+		/*
+			Fetch customer ID
+		*/
+
+		if ($this->type == "ap")
+		{
+			// fetch the vendorid for this invoice
+			$orgid = sql_get_singlevalue("SELECT vendorid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
+		}
+		else
+		{
+			// fetch the customer ID for this invoice
+			$orgid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
+		}
+					
+
 		
 
 
@@ -803,13 +851,11 @@ class invoice_form_item
 					// fetch customer/vendor tax defaults
 					if ($this->type == "ap")
 					{
-						$vendorid	= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->invoiceid ."'");
-						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $vendorid."'");
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $orgid."'");
 					}
 					else
 					{
-						$customerid	= sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->invoiceid ."'");
-						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $customerid ."'");
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $orgid ."'");
 					}
 
 
@@ -897,15 +943,25 @@ class invoice_form_item
 
 				// description
 				$structure = NULL;
-				$structure["fieldname"] 	= "description";
-				$structure["type"]		= "textarea";
-				$structure["options"]["height"]	= "50";
-				$structure["options"]["width"]	= 500;
+				$structure["fieldname"] 		= "description";
+				$structure["type"]			= "textarea";
+				$structure["options"]["height"]		= "50";
+				$structure["options"]["width"]		= 500;
 				$form->add_input($structure);
 
-		
+				// discount
+				$structure = NULL;
+				$structure["fieldname"] 		= "discount";
+				$structure["type"]			= "input";
+				$structure["options"]["width"]		= 50;
+				$structure["options"]["label"]		= " %";
+				$structure["options"]["max_length"]	= "2";
+				$form->add_input($structure);
+
+
 				// define form layout
-				$form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description");
+				$form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description", "discount");
+
 
 				// fetch data
 				//
@@ -931,7 +987,36 @@ class invoice_form_item
 				}
 
 
-			
+
+				// fetch discount (if any) from customer/vendor
+				if ($this->type == "ap")
+				{
+					$discount_org = sql_get_singlevalue("SELECT discount as value FROM vendors WHERE id='". $orgid ."' LIMIT 1");
+				}
+				else
+				{
+					$discount_org = sql_get_singlevalue("SELECT discount as value FROM customers WHERE id='". $orgid ."' LIMIT 1");
+				}
+
+
+				// fetch discount (if any) from product
+				$discount_product = sql_get_singlevalue("SELECT discount as value FROM products WHERE id='". $this->productid ."' LIMIT 1");
+
+
+				// choose the largest discount
+				if ($discount_org || $discount_product)
+				{
+					if ($discount_org > $discount_product)
+					{
+						$form->structure["discount"]["defaultvalue"] = $discount_org;
+					}
+					else
+					{
+						$form->structure["discount"]["defaultvalue"] = $discount_product;
+					}
+				}
+
+		
 			break;
 
 
@@ -949,12 +1034,8 @@ class invoice_form_item
 
 				if ($this->type == "ar")
 				{
-					// fetch the customer ID for this invoice, so we can create
-					// a list of the time groups can be added.
-					$customerid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
-					
 					// list of avaliable time groups
-					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$customerid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
+					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
 					$structure["options"]["width"]		= "600";
 					$structure["options"]["autoselect"]	= "yes";
 					$form->add_input($structure);
@@ -981,13 +1062,55 @@ class invoice_form_item
 					$structure["options"]["width"]	= 500;
 					$form->add_input($structure);
 
-			
+					// discount
+					$structure = NULL;
+					$structure["fieldname"] 		= "discount";
+					$structure["type"]			= "input";
+					$structure["options"]["width"]		= 50;
+					$structure["options"]["label"]		= " %";
+					$structure["options"]["max_length"]	= "2";
+					$form->add_input($structure);
+
+
 					// define form layout
-					$form->subforms[$this->type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description");
+					$form->subforms[$this->type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description", "discount");
 
 					// SQL query
 					$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
-					
+				
+
+
+					// fetch discount (if any) from customer/vendor
+					if ($this->type == "ap")
+					{
+						$discount_org = sql_get_singlevalue("SELECT discount as value FROM vendors WHERE id='". $orgid ."' LIMIT 1");
+					}
+					else
+					{
+						$discount_org = sql_get_singlevalue("SELECT discount as value FROM customers WHERE id='". $orgid ."' LIMIT 1");
+					}
+
+
+					// TODO: need to look at improving time <-> product relationships
+					// fetch discount (if any) from product
+					// $discount_product = sql_get_singlevalue("SELECT discount FROM products WHERE id='". $this->productid ."' LIMIT 1");
+
+
+					// choose the largest discount
+					if ($discount_org || $discount_product)
+					{
+						if ($discount_org > $discount_product)
+						{
+							$form->structure["discount"]["defaultvalue"] = $discount_org;
+						}
+						else
+						{
+							$form->structure["discount"]["defaultvalue"] = $discount_product;
+						}
+					}
+
+
+
 				
 				}
 				else
@@ -1098,7 +1221,11 @@ class invoice_form_item
 
 					// fetch the time group ID
 					$form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TIMEGROUPID' LIMIT 1");
-					
+
+
+					// fetch discount (if any) from item
+					$form->structure["discount"]["defaultvalue"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+
 				break;
 
 
@@ -1108,6 +1235,13 @@ class invoice_form_item
 					$form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DATE_TRANS' LIMIT 1");
 					$form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='SOURCE' LIMIT 1");
 				
+				break;
+
+				case "product":
+
+					// fetch discount (if any) from product
+					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+
 				break;
 			}
 		}
@@ -1344,6 +1478,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["units"]		= security_form_input_predefined("any", "units", 0, "");
 			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			$data["discount"]	= security_form_input_predefined("float", "discount", 0, "");
 
 		break;
 
@@ -1358,6 +1493,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
 			$data["timegroupid"]	= security_form_input_predefined("int", "timegroupid", 1, "");
 			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			$data["discount"]	= security_form_input_predefined("float", "discount", 0, "");
 			$data["units"]		= "hours";
 			
 		break;

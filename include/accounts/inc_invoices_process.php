@@ -424,7 +424,7 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 	
 	if ($invoice->action_delete())
 	{
-		$_SESSION["notification"]["message"][] = "Invoice has been successfully deleted.";
+		$_SESSION["notification"]["message"] = array("Invoice has been successfully deleted.");
 	}
 	else
 	{
