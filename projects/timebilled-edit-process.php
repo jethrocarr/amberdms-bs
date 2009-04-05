@@ -50,7 +50,7 @@ if (user_permissions_get('projects_timegroup'))
 			$sql_obj->string	= "SELECT projectid FROM time_groups WHERE id='$groupid' LIMIT 1";
 			$sql_obj->execute();
 
-			if (!$sql_obj->num_rows());
+			if (!$sql_obj->num_rows())
 			{
 				log_write("error", "process", "The time group you have attempted to edit - $groupid - does not exist in this system.");
 			}
