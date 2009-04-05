@@ -79,13 +79,7 @@ class page_output
 		$this->obj_form->method = "post";
 		
 
-		// general
-		$structure = NULL;
-		$structure["fieldname"] 	= "id_project";
-		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= $this->id;
-		$this->obj_form->add_input($structure);
-		
+		// general		
 		$structure = NULL;
 		$structure["fieldname"] 	= "name_project";
 		$structure["type"]		= "input";
@@ -127,9 +121,18 @@ class page_output
 		$structure["defaultvalue"]	= "Save Changes";
 		$this->obj_form->add_input($structure);
 		
+		// hidden
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_project";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->id;
+		$this->obj_form->add_input($structure);
+
+
 		
 		// define subforms
-		$this->obj_form->subforms["project_view"]		= array("id_project", "code_project", "name_project", "date_start", "date_end", "internal_only", "details");
+		$this->obj_form->subforms["project_view"]		= array("code_project", "name_project", "date_start", "date_end", "internal_only", "details");
+		$this->obj_form->subforms["hidden"]			= array("id_project");
 		
 		if (user_permissions_get("projects_write"))
 		{
