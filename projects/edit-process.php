@@ -137,7 +137,7 @@ if (user_permissions_get('projects_write'))
 			$sql_obj->string	= "INSERT INTO `projects` (name_project) VALUES ('".$data["name_project"]."')";
 			$sql_obj->execute();
 
-			$id = sql_obj->fetch_insert_id();
+			$id = $sql_obj->fetch_insert_id();
 		}
 
 
