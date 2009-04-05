@@ -59,6 +59,7 @@
 		<part name='account_sales_label' type='xsd:string'/>
 		<part name='account_purchase' type='xsd:int'/>
 		<part name='account_purchase_label' type='xsd:string'/>
+		<part name='discount' type='xsd:string'/>
 	</message>
 
 
@@ -88,6 +89,7 @@
 		<part name='code_product_vendor' type='xsd:string'/>
 		<part name='account_sales' type='xsd:int'/>
 		<part name='account_purchase' type='xsd:int'/>
+		<part name='discount' type='xsd:string'/>
 	</message>
 
 	<message name='set_product_details_response'>

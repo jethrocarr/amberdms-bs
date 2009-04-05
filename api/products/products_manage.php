@@ -100,7 +100,8 @@ class products_manage_soap
 					$obj_product->data["account_sales"], 
 					$obj_product->data["account_sales_label"],
 					$obj_product->data["account_purchase"], 
-					$obj_product->data["account_purchase_label"]);
+					$obj_product->data["account_purchase_label"],
+					$obj_product->data["discount"]);
 
 			return $return;
 		}
@@ -209,7 +210,8 @@ class products_manage_soap
 					$vendorid,
 					$code_product_vendor,
 					$account_sales,
-					$account_purchase)
+					$account_purchase,
+					$discount)
 	{
 		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
 
@@ -242,6 +244,8 @@ class products_manage_soap
 
 			$obj_product->data["vendorid"]			= security_script_input_predefined("int", $vendorid);
 			$obj_product->data["code_product_vendor"]	= security_script_input_predefined("any", $code_product_vendor);
+
+			$obj_product->data["discount"]			= security_script_input_predefined("float", $discount);
 
 			
 			foreach (array_keys($obj_product->data) as $key)

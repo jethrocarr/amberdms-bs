@@ -221,7 +221,8 @@ class vendor
 
 
 		// create a new vendor
-		$sql_obj->string = "INSERT INTO `vendors` (name_vendor) VALUES ('". $this->data["name_vendor"]. "')";
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO `vendors` (name_vendor) VALUES ('". $this->data["name_vendor"]. "')";
 		$sql_obj->execute();
 
 		$this->id = $sql_obj->fetch_insert_id();
@@ -297,7 +298,8 @@ class vendor
 						."address2_city='". $this->data["address2_city"] ."', "
 						."address2_state='". $this->data["address2_state"] ."', "
 						."address2_country='". $this->data["address2_country"] ."', "
-						."address2_zipcode='". $this->data["address2_zipcode"] ."' "
+						."address2_zipcode='". $this->data["address2_zipcode"] ."', "
+						."discount='". $this->data["discount"] ."' "
 						."WHERE id='". $this->id ."'";
 		if (!$sql_obj->execute())
 		{

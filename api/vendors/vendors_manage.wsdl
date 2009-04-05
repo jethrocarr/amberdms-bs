@@ -59,6 +59,7 @@
 		<part name='address2_state' type='xsd:string'/>
 		<part name='address2_country' type='xsd:string'/>
 		<part name='address2_zipcode' type='xsd:string'/>
+		<part name='discount' type='xsd:string'/>
 	</message>
 
 
@@ -94,6 +95,7 @@
 		<part name='address2_state' type='xsd:string'/>
 		<part name='address2_country' type='xsd:string'/>
 		<part name='address2_zipcode' type='xsd:string'/>
+		<part name='discount' type='xsd:string'/>
 	</message>
 
 	<message name='set_vendor_details_response'>

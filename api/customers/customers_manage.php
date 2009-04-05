@@ -136,7 +136,8 @@ class customers_manage_soap
 					$obj_customer->data["address2_city"],
 					$obj_customer->data["address2_state"],
 					$obj_customer->data["address2_country"],
-					$obj_customer->data["address2_zipcode"]);
+					$obj_customer->data["address2_zipcode"],
+					$obj_customer->data["discount"]);
 
 			return $return;
 		}
@@ -269,7 +270,8 @@ class customers_manage_soap
 					$address2_city,
 					$address2_state,
 					$address2_country,
-					$address2_zipcode)
+					$address2_zipcode,
+					$discount)
 	{
 		log_debug("customers_manager", "Executing set_customer_details($id, values...)");
 
@@ -307,6 +309,7 @@ class customers_manage_soap
 			
 			$obj_customer->data["tax_number"]		= security_script_input_predefined("any", $tax_number);
 			$obj_customer->data["tax_default"]		= security_script_input_predefined("int", $tax_default);
+			$obj_customer->data["discount"]			= security_script_input_predefined("float", $discount);
 
 
 			foreach (array_keys($obj_customer->data) as $key)

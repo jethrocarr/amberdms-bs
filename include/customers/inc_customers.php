@@ -351,7 +351,8 @@ class customer
 						."address2_city='". $this->data["address2_city"] ."', "
 						."address2_state='". $this->data["address2_state"] ."', "
 						."address2_country='". $this->data["address2_country"] ."', "
-						."address2_zipcode='". $this->data["address2_zipcode"] ."' "
+						."address2_zipcode='". $this->data["address2_zipcode"] ."', "
+						."discount='". $this->data["discount"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 

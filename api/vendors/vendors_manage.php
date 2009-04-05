@@ -91,7 +91,8 @@ class vendors_manage_soap
 					$obj_vendor->data["address2_city"],
 					$obj_vendor->data["address2_state"],
 					$obj_vendor->data["address2_country"],
-					$obj_vendor->data["address2_zipcode"]);
+					$obj_vendor->data["address2_zipcode"],
+					$obj_vendor->data["discount"]);
 
 			return $return;
 		}
@@ -224,7 +225,8 @@ class vendors_manage_soap
 					$address2_city,
 					$address2_state,
 					$address2_country,
-					$address2_zipcode)
+					$address2_zipcode,
+					$discount)
 	{
 		log_debug("vendors_manager", "Executing set_vendor_details($id, values...)");
 
@@ -262,6 +264,8 @@ class vendors_manage_soap
 			
 			$obj_vendor->data["tax_number"]			= security_script_input_predefined("any", $tax_number);
 			$obj_vendor->data["tax_default"]		= security_script_input_predefined("int", $tax_default);
+
+			$obj_vendor->data["discount"]			= security_script_input_predefined("float", $discount);
 
 
 			foreach (array_keys($obj_vendor->data) as $key)
