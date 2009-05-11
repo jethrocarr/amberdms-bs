@@ -1544,7 +1544,7 @@ class invoice_items
 
 				// fetch the number of billable hours for the supplied timegroupid
 				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT SUM(time_booked) as time_billable FROM timereg WHERE groupid='". $this->data["timegroupid"] ."'";
+				$sql_obj->string	= "SELECT SUM(time_booked) as time_billable FROM timereg WHERE groupid='". $this->data["timegroupid"] ."' AND billable='1'";
 				$sql_obj->execute();
 
 				if ($sql_obj->num_rows())
