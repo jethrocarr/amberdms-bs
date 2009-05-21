@@ -1,5 +1,28 @@
 CHANGELOG
 
+2009-04-07 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 1.2.0
+
+	* Bug Fix - (UI tweak) Missing label for quote_convert_financials form section
+	* Bug Fix - (UI tweak) Missing label for service_options_licenses form section
+	* Bug Fix - (UI tweak) Removed internal-only UI display of id_projects field
+	* Bug Fix - Sending emails from web-interface of billing system has ' quoted as /'
+	* Bug Fix - Removed unusable order-by option from GL dropdown.
+	* Bug Fix - Date field not allowing updates from form on balance sheet report.
+	* Bug Fix - Account ledger filter options failed to work correctly.
+	* Bug Fix - Corrected broken max 24-hour check on booked time
+	* Bug Fix - Error/Notification messages not correctly styled on vendor's invoices page.
+
+	* New Feature - Improved tax reports cash mode to report partial payments
+	* New Feature - Implemented product/customer/vendor discounting
+
+	* New Feature - Added ability to have labels appear after standard form input fields
+	* New Feature - Improved money/currency formatting
+	* New Feature - Improved float input verification to accept either floats or ints
+	* New Feature - Debugging now counts number of SQL queries made
+
+
 2009-03-10 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 1.1.0

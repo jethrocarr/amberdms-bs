@@ -1,49 +1,40 @@
 ------------------------------
-AMBERDMS BILLING SYSTEM 1.1.0
+AMBERDMS BILLING SYSTEM 1.2.0
 
 RELEASE NOTES
 ------------------------------
 
-Released on 2009-03-10, version 1.1.0 of the Amberdms Billing System is primarly
-a maintaince release but also adds supports for usage notification on services,
-better documentation and some other small improvements to make the application
-easier to use.
+Released on 2009-04-07, version 1.2.0 of the Amberdms Billing System provides
+a number of minor bug fixes as well as providing new discounting features and
+improved sales tax reports.
 
 
-NEW FEATURES / ADJUSTMENTS
+NEW APPLICATION FEATURES
 
-* New Feature - Added time group filter option to hide time groups belonging to invoices.
-* New Feature - Implemented new internal-only feature for projects to limit amount of unbilled hours shown.
-* New Feature - Implemented new usage alerts/notifications feature
-* New Feature - Added SOAP API function to fetch customer ID using the code_customer field
-* New Feature - Added SOAP API function to fetch invoice ID using the code_invoice field
-* New Feature - Generated PDF invoices now include customer/account ID on the invoice to assist customers with invoice payment.
+* New Feature - Improved tax reports cash mode to report partial payments
+* New Feature - Implemented product/customer/vendor discounting
 
-* UI Improvement - Standardised dropdown UI on various pages.
-* UI Improvement - details field on support tickets too small
-* UI Improvement - Expanded description field for project phases
-* UI Improvement - Email message field too small
-* UI Improvement - Time group customer field too small.
+
+NEW FRAMEWORK FEATURES
+
+* New Feature - Added ability to have labels appear after standard form input fields
+* New Feature - Improved money/currency formatting
+* New Feature - Improved float input verification to accept either floats or ints
+* New Feature - Debugging now counts number of SQL queries made
 
 
 BUG FIXES
 
-* Bug Fix - Account dropdowns are not sorting by chart ID.
-* Bug Fix - Tax deletion deletes taxes assigned to services.
-* Bug Fix - Fixed incorrect reference to fixed-price taxes on services page.
-* Bug Fix - Deleting a service will delete service-tax assignments.
-* Bug Fix - Deleting services from customer's accounts, removes service options, periods and usage records.
-* Bug Fix - Prevent customer deletion when services are assigned to customer account.
-* Bug Fix - Do not display hours which are marked as unbillable in a time group in the unbilled hours display.
-* Bug Fix - Dropdown generation code failed to work if label0 was empty.
-* Bug Fix - Employee code field now compulsary and automatically generates
-* Bug Fix - Removed incorrect time group date search feature
-* Bug Fix - Fixed errors on unbilled time page when there is no unbilled time.
-* Bug Fix - date_trans & source values of payments not being supplied via SOAP API.
-* Bug Fix - Add customer ID to generated invoices
-* Bug Fix - Prevent price of 0.00 from appearing on standard items on invoices
-* Bug Fix - When saving configuration with dangerous options hidden, do not disable email.
+* Bug Fix - (UI tweak) Missing label for quote_convert_financials form section
+* Bug Fix - (UI tweak) Missing label for service_options_licenses form section
+* Bug Fix - (UI tweak) Removed internal-only UI display of id_projects field
 
+* Bug Fix - Sending emails from web-interface of billing system has ' quoted as /'
+* Bug Fix - Removed unusable order-by option from GL dropdown.
+* Bug Fix - Date field not allowing updates from form on balance sheet report.
+* Bug Fix - Account ledger filter options failed to work correctly.
+* Bug Fix - Corrected broken max 24-hour check on booked time
+* Bug Fix - Error/Notification messages not correctly styled on vendor's invoices page.
 
 
 INSTALLATION

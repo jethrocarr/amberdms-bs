@@ -179,7 +179,6 @@ if (user_permissions_get("admin"))
 			Update the logo file if required
 		*/
 
-
 		if ($_FILES["COMPANY_LOGO"]["size"] > 1 && !$_SESSION["error"]["message"])
 		{
 
