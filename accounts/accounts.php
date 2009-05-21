@@ -108,7 +108,7 @@ class page_output
 
 			// overdue
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT SUM(amount_total), SUM(amount_paid) FROM account_ar WHERE amount_total!=amount_paid AND date_due < '". date("Y-m-d") ."'";
+			$sql_obj->string	= "SELECT SUM(amount_total) as amount_total, SUM(amount_paid) as amount_paid FROM account_ar WHERE amount_total!=amount_paid AND date_due < '". date("Y-m-d") ."'";
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 
@@ -200,7 +200,7 @@ class page_output
 
 			// overdue
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT SUM(amount_total), SUM(amount_paid) FROM account_ap WHERE amount_total!=amount_paid AND date_due < '". date("Y-m-d") ."'";
+			$sql_obj->string	= "SELECT SUM(amount_total) as amount_total, SUM(amount_paid) as amount_paid FROM account_ap WHERE amount_total!=amount_paid AND date_due < '". date("Y-m-d") ."'";
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 
