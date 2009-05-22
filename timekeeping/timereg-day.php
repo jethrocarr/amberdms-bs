@@ -213,7 +213,7 @@ class page_output
 			$this->obj_table_day->tablename	= "timereg_table";
 
 			// define all the columns and structure
-			$this->obj_table_day->add_column("standard", "name_project", "projects.name_project");
+			$this->obj_table_day->add_column("standard", "name_project", "CONCAT_WS(' -- ', projects.code_project, projects.name_project)");
 			$this->obj_table_day->add_column("standard", "name_phase", "project_phases.name_phase");
 			$this->obj_table_day->add_column("hourmins", "time_booked", "timereg.time_booked");
 			$this->obj_table_day->add_column("standard", "description", "timereg.description");

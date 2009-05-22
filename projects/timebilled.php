@@ -88,7 +88,7 @@ class page_output
 
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "name_group", "time_groups.name_group");
-		$this->obj_table->add_column("standard", "name_customer", "customers.name_customer");
+		$this->obj_table->add_column("standard", "name_customer", "CONCAT_WS(' -- ', customers.code_customer, customers.name_customer)");
 		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
 		$this->obj_table->add_column("standard", "description", "time_groups.description");
 		$this->obj_table->add_column("hourmins", "time_billed", "NONE");
@@ -97,7 +97,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("name_group", "name_customer", "code_invoice", "description", "time_billed", "time_not_billed");
 		$this->obj_table->columns_order		= array("name_customer", "name_group");
-		$this->obj_table->columns_order_options	= array("name_customer", "name_group", "name_customer", "code_invoice", "description", "time_billed", "time_not_billed");
+		$this->obj_table->columns_order_options	= array("name_customer", "name_group", "name_customer", "code_invoice", "description");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("time_groups");
@@ -115,7 +115,7 @@ class page_output
 
 
 		// acceptable filter options
-		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["sql"]	= "time_groups.customerid='value'";
 		$this->obj_table->add_filter($structure);
 

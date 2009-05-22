@@ -223,12 +223,14 @@ class page_output
 
 
 		// project/phase dropdown
-		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT projects.name_project as label,
-											project_phases.id as id, 
-											project_phases.name_phase as label1
-											FROM `projects` 
-											LEFT JOIN project_phases ON project_phases.projectid = projects.id
-											ORDER BY projects.name_project, project_phases.name_phase");
+		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT
+										projects.code_project as label,
+										projects.name_project as label1,
+										project_phases.id as id, 
+										project_phases.name_phase as label2
+										FROM `projects` 
+										LEFT JOIN project_phases ON project_phases.projectid = projects.id
+										ORDER BY projects.name_project, project_phases.name_phase");
 
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";

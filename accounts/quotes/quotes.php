@@ -34,8 +34,8 @@ class page_output
 
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "code_quote", "account_quotes.code_quote");
-		$this->obj_table->add_column("standard", "name_customer", "customers.name_customer");
-		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "name_customer", "CONCAT_WS(' -- ', customers.code_customer, customers.name_customer)");
+		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_table->add_column("date", "date_trans", "account_quotes.date_trans");
 		$this->obj_table->add_column("date", "date_validtill", "account_quotes.date_validtill");
 		$this->obj_table->add_column("price", "amount_tax", "account_quotes.amount_tax");
@@ -72,11 +72,11 @@ class page_output
 		$structure["sql"]	= "date_trans <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["sql"]	= "account_quotes.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, name_customer as label FROM customers ORDER BY name_customer ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["sql"]	= "account_quotes.customerid='value'";
 		$this->obj_table->add_filter($structure);
 

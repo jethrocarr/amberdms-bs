@@ -328,7 +328,8 @@ class page_output
 				$sql_obj = New sql_query;
 				$sql_obj->string = "SELECT "
 						."project_phases.name_phase, "
-						."projects.name_project "
+						."projects.name_project, "
+						."projects.code_project "
 						."FROM project_phases "
 						."LEFT JOIN projects ON project_phases.projectid = projects.id "
 						."WHERE project_phases.id='$phaseid'";
@@ -342,7 +343,7 @@ class page_output
 				$sql_obj->fetch_array();
 				foreach ($sql_obj->data as $data)
 				{
-					$tmparray["projectandphase"] = $data["name_project"] ." - ". $data["name_phase"];
+					$tmparray["projectandphase"] = $data["code_project"] ." -- ". $data["name_project"] ." - ". $data["name_phase"];
 				}
 
 

@@ -84,7 +84,7 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date", "timereg.date");
 		$this->obj_table->add_column("standard", "name_phase", "project_phases.name_phase");
-		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_table->add_column("standard", "time_group", "time_groups.name_group");
 		$this->obj_table->add_column("standard", "description", "timereg.description");
 		$this->obj_table->add_column("hourmins", "time_booked", "timereg.time_booked");
@@ -128,7 +128,7 @@ class page_output
 		$structure["sql"]	= "project_phases.id='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["sql"]	= "timereg.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 

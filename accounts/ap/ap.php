@@ -33,11 +33,11 @@ class page_output
 		$this->obj_table->tablename	= "account_ap";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "name_vendor", "vendors.name_vendor");
+		$this->obj_table->add_column("standard", "name_vendor", "CONCAT_WS(' -- ', vendors.code_vendor, vendors.name_vendor)");
 		$this->obj_table->add_column("standard", "code_invoice", "account_ap.code_invoice");
 		$this->obj_table->add_column("standard", "code_ordernumber", "account_ap.code_ordernumber");
 		$this->obj_table->add_column("standard", "code_ponumber", "account_ap.code_ponumber");
-		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_table->add_column("date", "date_trans", "account_ap.date_trans");
 		$this->obj_table->add_column("date", "date_due", "account_ap.date_due");
 		$this->obj_table->add_column("price", "amount_tax", "account_ap.amount_tax");
@@ -74,11 +74,11 @@ class page_output
 		$structure["sql"]	= "date_trans <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["sql"]	= "account_ap.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors ORDER BY name_vendor ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
 		$structure["sql"]	= "account_ap.vendorid='value'";
 		$this->obj_table->add_filter($structure);
 

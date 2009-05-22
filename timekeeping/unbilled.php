@@ -130,8 +130,8 @@ class page_output
 
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date", "timereg.date");
-		$this->obj_table->add_column("standard", "name_phase", "CONCAT_WS(' -- ', projects.name_project, project_phases.name_phase)");
-		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
+		$this->obj_table->add_column("standard", "name_phase", "CONCAT_WS(' -- ', projects.code_project, projects.name_project, project_phases.name_phase)");
+		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_table->add_column("standard", "time_group", "time_groups.name_group");
 		$this->obj_table->add_column("standard", "description", "timereg.description");
 		$this->obj_table->add_column("hourmins", "time_booked", "timereg.time_booked");
@@ -202,18 +202,23 @@ class page_output
 		$structure["sql"]	= "date <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT projects.name_project as label,
-													project_phases.id as id, 
-													project_phases.name_phase as label1
-													FROM `projects` 
-													LEFT JOIN project_phases ON project_phases.projectid = projects.id
-													WHERE projects.internal_only='0'
-													ORDER BY projects.name_project, project_phases.name_phase");
+		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT 
+											projects.code_project as label,
+											projects.name_project as label1,
+											project_phases.id as id, 
+											project_phases.name_phase as label1
+										FROM `projects` 
+										LEFT JOIN project_phases ON project_phases.projectid = projects.id
+										WHERE
+											projects.internal_only='0'
+										ORDER BY
+											projects.name_project,
+											project_phases.name_phase");
 													
 		$structure["sql"]	= "project_phases.id='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff ASC");
 		$structure["sql"]	= "timereg.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
