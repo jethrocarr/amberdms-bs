@@ -493,22 +493,6 @@ class taxes_report_transactions
 
 
 			/*
-				Turn the code_invoice field into a hyperlink
-			*/
-			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
-			{
-				if ($this->type == "ap")
-				{
-					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
-				}
-				else
-				{
-					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
-				}
-			}
-
-
-			/*
 				Re-index the data results to fix any holes created by deleted invoices
 			*/
 			$this->obj_table->data		= array_values($this->obj_table->data);
@@ -525,6 +509,29 @@ class taxes_report_transactions
 
 		// display options form
 		$this->obj_table->render_options_form();
+
+
+		/*
+			Turn the code_invoice field into a hyperlink
+
+			Because we want to support both AR and AP links, we don't use the inbuilt table
+			class functions.
+
+			This is done in render_html rather than execute to prevent breaking CSV output.
+		*/
+		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+		{
+			if ($this->type == "ap")
+			{
+				$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+			}
+			else
+			{
+				$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+			}
+		}
+
+
 
 		// Display Table
 		// Note that the render_table_html function also performs the total row and total column generation tasks.
