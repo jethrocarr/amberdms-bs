@@ -158,27 +158,14 @@ class hr_staff_manage_soap
 			/*
 				Perform Changes
 			*/
-			if ($obj_employee->id)
+			
+			if ($obj_employee->action_update())
 			{
-				if ($obj_employee->action_update())
-				{
-					return $obj_employee->id;
-				}
-				else
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				return $obj_employee->id;
 			}
 			else
 			{
-				if ($obj_employee->action_create())
-				{
-					return $obj_employee->id;
-				}
-				else
-				{
-					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-				}
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
 			}
  		}
 		else

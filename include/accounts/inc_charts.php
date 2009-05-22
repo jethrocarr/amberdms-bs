@@ -558,9 +558,14 @@ class chart
 		}
 
 
+		// Start Transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
 		// fetch the current status
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $menuid ."'";
+		$sql_obj->string	= "SELECT id FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $menuid ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -572,11 +577,7 @@ class chart
 			{
 				$sql_obj		= New sql_query;
 				$sql_obj->string	= "DELETE FROM account_charts_menus WHERE chartid='". $this->id ."' AND menuid='". $menuid ."' LIMIT 1";
-
-				if (!$sql_obj->execute())
-				{
-					return 0;
-				}
+				$sql_obj->execute();
 			}
 
 			// if new setting is "on", we don't need todo anything.
@@ -588,20 +589,27 @@ class chart
 			// if the new option is "on", insert a new entry
 			if ($status == "on")
 			{
-				$sql_obj = New sql_query;
-				$sql_obj->string = "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('". $this->id ."', '". $menuid ."') LIMIT 1";
-				
-				if (!$sql_obj->execute())
-				{
-					return 0;
-				}
+				$sql_obj->string = "INSERT INTO account_charts_menus (chartid, menuid) VALUES ('". $this->id ."', '". $menuid ."')";
+				$sql_obj->execute();
 			}
 
 			// if new option is "off", we don't need todo anything.
 		}
 
 
-		return 1;
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
 
 	} // end of action_update_menu_singleoption
 
