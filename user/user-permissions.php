@@ -75,8 +75,9 @@ class page_output
 		$sql_perms_obj		= New sql_query;
 		$sql_perms_obj->string	= "SELECT * FROM `permissions` ORDER BY value='disabled' DESC, value='admin' DESC, value";
 		$sql_perms_obj->execute();
+		$sql_perms_obj->fetch_array();
 		
-		for ($sql_perms_obj->data as $data_perms)
+		foreach ($sql_perms_obj->data as $data_perms)
 		{
 			// define the checkbox
 			$structure = NULL;

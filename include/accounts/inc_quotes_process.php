@@ -395,7 +395,7 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 		{
 			$sql_obj->trans_commit();
 
-			log_write("notification", "inc_quotes_forms"], "Quotation has been converted to an invoice successfully.");
+			log_write("notification", "inc_quotes_forms", "Quotation has been converted to an invoice successfully.");
 
 			header("Location: ../../index.php?page=$returnpage_success&id=$invoiceid");
 			exit(0);

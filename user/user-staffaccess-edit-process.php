@@ -33,7 +33,7 @@ if (user_permissions_get('admin'))
 	$sql_perms_obj->execute();
 	$sql_perms_obj->fetch_array();
 
-	for ($sql_perms_obj->data as $data_perms)
+	foreach ($sql_perms_obj->data as $data_perms)
 	{
 		$permissions[ $data_perms["value"] ] = security_form_input_predefined("any", $data_perms["value"], 0, "Form provided invalid input!");
 	}

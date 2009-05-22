@@ -24,6 +24,7 @@ if (user_permissions_get('admin'))
 
 	$sql_perms_obj		= New sql_query;
 	$sql_perms_obj->string	= "SELECT * FROM `permissions` ORDER BY value";
+	$sql_perms_obj->execute();
 	$sql_perms_obj->fetch_array();
 
 	foreach ($sql_perms_obj->data as $data_sql)

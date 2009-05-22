@@ -375,7 +375,7 @@ class gl_transaction
 		{
 			if (!$this->action_create())
 			{
-				$sql_obj->trans_rollback()
+				$sql_obj->trans_rollback();
 
 				return 0;
 			}

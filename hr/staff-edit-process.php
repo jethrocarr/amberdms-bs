@@ -91,14 +91,8 @@ if (user_permissions_get('staff_write'))
 		Process Data
 	*/
 
-	if ($obj_employee->id)
-	{
-		$obj_employee->action_update();
-	}
-	else
-	{
-		$obj_employee->action_create();
-	}
+	// create/update employee information
+	$obj_employee->action_update();
 
 	// display updated details
 	header("Location: ../index.php?page=hr/staff-view.php&id=". $obj_employee->id);
