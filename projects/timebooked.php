@@ -16,6 +16,8 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_table;
 
+	var $access_staff_ids;
+
 
 	function page_output()
 	{
@@ -41,7 +43,24 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_view");
+		if (user_permissions_get("projects_view"))
+		{
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can view project hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
 	}
 
 
@@ -104,6 +123,11 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN projects ON project_phases.projectid = projects.id");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("projects.id = '". $this->id ."'");
 		
+		if ($this->access_staff_ids)
+		{
+			$this->obj_table->sql_obj->prepare_sql_addwhere("timereg.employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
+		
 		
 		/// Filtering/Display Options
 
@@ -128,7 +152,21 @@ class page_output
 		$structure["sql"]	= "project_phases.id='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+
+		$sql_obj = New sql_query;
+		$sql_obj->prepare_sql_settable("staff");
+		$sql_obj->prepare_sql_addfield("id", "id");
+		$sql_obj->prepare_sql_addfield("label", "staff_code");
+		$sql_obj->prepare_sql_addfield("label1", "name_staff");
+		
+		if ($this->access_staff_ids)
+		{
+			$sql_obj->prepare_sql_addwhere("id IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
+
+		$sql_obj->generate_sql();
+
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
 		$structure["sql"]	= "timereg.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
@@ -170,6 +208,23 @@ class page_output
 
 		// display options form
 		$this->obj_table->render_options_form();
+
+
+		// display notice about limited access if suitable
+		if ($this->access_staff_ids)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM staff";
+			$sql_obj->execute();
+			$sql_obj->num_rows();
+			
+			if (count($this->access_staff_ids) != $sql_obj->num_rows())
+			{
+				format_msgbox("info", "<p>Please note that the following list of hours only includes the specific users whom you have been configured to view - to view all employees, ask your admin to enable the timekeeping_all_view permission.</p>");
+				print "<br>";
+			}
+		}
+
 
 		// Display table data
 		if (!$this->obj_table->data_num_rows)

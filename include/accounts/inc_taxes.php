@@ -199,13 +199,13 @@ class taxes_report_transactions
 
 
 			// select invoices with payments within the date range
-			$invoice_ids_keys	= array_keys($invoice_ids);
-			$invoice_ids_count	= count($invoice_ids_keys);
-			$invoice_ids_sql	= "";
-
-
-			if ($invoice_ids_count)
+			if ($invoice_ids)
 			{
+				$invoice_ids_keys	= array_keys($invoice_ids);
+				$invoice_ids_count	= count($invoice_ids_keys);
+				$invoice_ids_sql	= "";
+
+
 				$i = 0;
 				foreach ($invoice_ids_keys as $id)
 				{
@@ -223,6 +223,11 @@ class taxes_report_transactions
 
 
 				$this->obj_table->sql_obj->prepare_sql_addwhere("($invoice_ids_sql)");	
+
+
+				// fetch records
+				$this->obj_table->generate_sql();
+				$this->obj_table->load_data_sql();
 			}
 			
 		}
@@ -238,13 +243,13 @@ class taxes_report_transactions
 			// select all invoices in the desired time period
 			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."'");
 			$this->obj_table->sql_obj->prepare_sql_addwhere("date_trans <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'");
+
+			// fetch records
+			$this->obj_table->generate_sql();
+			$this->obj_table->load_data_sql();
 		}
 
 
-
-		// execute SQL and load data
-		$this->obj_table->generate_sql();
-		$this->obj_table->load_data_sql();
 
 
 
@@ -539,6 +544,10 @@ class taxes_report_transactions
 		{
 			format_msgbox("important", "<p><b>Please select a time period to display using the filter options above.</b></p>");
 			return 0;
+		}
+		elseif (!$this->obj_table->data_num_rows)
+		{
+				format_msgbox("important", "<p>No records matching specified date period found.</p>");
 		}
 		else
 		{

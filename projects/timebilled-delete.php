@@ -19,6 +19,7 @@ class page_output
 	var $obj_sql_entries;
 
 	var $locked;
+	var $access_staff_ids;
 
 
 	function page_output()
@@ -45,7 +46,24 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_timegroup");
+		if (user_permissions_get("projects_timegroup"))
+		{
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can delete time groups, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
 	}
 
 
@@ -164,7 +182,7 @@ class page_output
 		
 
 		// fetch the form data if editing
-		$this->obj_form->sql_query = "SELECT name_group, description, account_ar.code_invoice, customers.name_customer FROM time_groups LEFT JOIN customers ON customers.id = time_groups.customerid LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='". $this->groupid ."' LIMIT 1";
+		$this->obj_form->sql_query = "SELECT name_group, description, account_ar.code_invoice, CONCAT_WS(' -- ', customers.code_customer, customers.name_customer) as name_customer FROM time_groups LEFT JOIN customers ON customers.id = time_groups.customerid LEFT JOIN account_ar ON account_ar.id = time_groups.invoiceid WHERE time_groups.id='". $this->groupid ."' LIMIT 1";
 		$this->obj_form->load_data();
 
 

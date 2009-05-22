@@ -16,17 +16,41 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_table;
 
+	var $access_staff_ids;
+
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_timegroup");
+		if (user_permissions_get("projects_timegroup"))
+		{
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can view unbilled hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
+		else
+		{
+			log_render("error", "page", "Sorry, you must have the projects_timegroup permission enabled to view this page.");
+			return 0;
+		}
 	}
 
 
 
 	function check_requirements()
 	{
-		// do nothing
+		// nothing todo
 		return 1;
 	}
 
@@ -34,6 +58,7 @@ class page_output
 
 	function execute()
 	{
+
 		/*
 			Create an array of all unbilled time records. We need to do the following to create this list:
 			1. Exclude any internal_only projects.
@@ -163,24 +188,15 @@ class page_output
 
 		if ($unbilled_ids_count)
 		{
-			$i = 0;
-			foreach ($unbilled_ids_keys as $id)
-			{
-				$i++;
-
-				if ($i == $unbilled_ids_count)
-				{
-					$unbilled_ids_sql .= "timereg.id='$id' ";
-				}
-				else
-				{
-					$unbilled_ids_sql .= "timereg.id='$id' OR ";
-				}
-			}
-				
-			$this->obj_table->sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+			$this->obj_table->sql_obj->prepare_sql_addwhere("timereg.id IN (". format_arraytocommastring($unbilled_ids_keys) .")");
 		}
-		
+	
+
+		// if the user only has access to specific staff, filter to these staff members
+		if ($this->access_staff_ids)
+		{
+			$this->obj_table->sql_obj->prepare_sql_addwhere("timereg.employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
 
 		
 		/// Filtering/Display Options
@@ -218,9 +234,23 @@ class page_output
 		$structure["sql"]	= "project_phases.id='value'";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff ASC");
+		$sql_obj = New sql_query;
+		$sql_obj->prepare_sql_settable("staff");
+		$sql_obj->prepare_sql_addfield("id", "id");
+		$sql_obj->prepare_sql_addfield("label", "staff_code");
+		$sql_obj->prepare_sql_addfield("label1", "name_staff");
+		
+		if ($this->access_staff_ids)
+		{
+			$sql_obj->prepare_sql_addwhere("id IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
+
+		$sql_obj->generate_sql();
+
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
 		$structure["sql"]	= "timereg.employeeid='value'";
 		$this->obj_table->add_filter($structure);
+
 
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
@@ -300,6 +330,23 @@ class page_output
 		// display options form
 		$this->obj_table->render_options_form();
 
+
+		// display notice about limited access if suitable
+		if ($this->access_staff_ids)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM staff";
+			$sql_obj->execute();
+			$sql_obj->num_rows();
+			
+			if (count($this->access_staff_ids) != $sql_obj->num_rows())
+			{
+				format_msgbox("info", "<p>Please note that the following list of unbilled hours only included the specific users whom you have been configured to view - to view all employees, ask your admin to enable the timekeeping_all_view permission.</p>");
+				print "<br>";
+			}
+		}
+
+
 		// Display table data
 		if (!$this->obj_table->data_num_rows)
 		{
@@ -324,12 +371,12 @@ class page_output
 			$structure["column"]			= "name_phase";
 			$this->obj_table->add_link("tbl_lnk_project", "projects/timebooked.php", $structure);
 
-			// project/phase ID
+			// project time group
 			$structure = NULL;
 			$structure["id"]["column"]		= "projectid";
 			$structure["groupid"]["column"]		= "timegroupid";
 			$structure["column"]			= "time_group";
-			$this->obj_table->add_link("tbl_lnk_groupid", "projects/timebooked.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_groupid", "projects/timebilled-edit.php", $structure);
 
 
 

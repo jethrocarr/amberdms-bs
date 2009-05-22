@@ -8,11 +8,6 @@
 */
 
 
-// custom includes
-require("include/user/permissions_staff.php");
-
-
-
 class page_output
 {
 
@@ -26,6 +21,7 @@ class page_output
 
 	var $locked;
 	var $groupid;
+	var $access_staff_ids_write;
 	
 
 	function page_output()
@@ -83,41 +79,42 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("timekeeping");
+		if (user_permissions_get("timekeeping"))
+		{
+			// check if user has permissions to write as the selected employee
+			if ($this->employeeid)
+			{
+				if (!user_permissions_staff_get("timereg_write", $this->employeeid))
+				{
+					log_write("error", "page_output", "Sorry, you do not have permissions to adjust the timesheet for the selected employee");
+					return 0;
+				}
+			}
 
-		// we do an additional check in the check_requirements function
+	
+			// accept user if they have write access to all staff
+			if (user_permissions_get("timekeeping_all_write"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have write access to
+			if ($this->access_staff_ids_write = user_permissions_staff_getarray("timereg_write"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can add or edit timesheet hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_write permission.");
+			}
+		}
 	}
 
 
 
 	function check_requirements()
 	{
-		// make sure the user actually has access to some employees - if not,
-		// it means that they can not book or view time
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `users_permissions_staff` WHERE userid='". $_SESSION["user"]["id"] ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
-		{
-			log_write("error", "page_output", "Sorry, you are currently unable to book time - you need your administrator to configure you with staff access rights.");
-			return 0;
-		}
-
-		unset($sql_obj);
-
-
-		// check if user has permissions to write as the selected employee
-		if ($this->employeeid)
-		{
-			if (!user_permissions_staff_get("timereg_write", $this->employeeid))
-			{
-				log_write("error", "page_output", "Sorry, you do not have permissions to adjust the timesheet for the selected employee");
-				return 0;
-			}
-		}
-		
+		// nothing todo
 		return 1;
 	}
 
@@ -171,17 +168,20 @@ class page_output
 	
 
 		// employee selection box
-		$sql_string = "SELECT "
-				."staff.id as id, "
-				."staff.staff_code as label, "
-				."staff.name_staff as label1 "
-				."FROM users_permissions_staff "
-				."LEFT JOIN staff ON staff.id = users_permissions_staff.staffid "
-				."WHERE users_permissions_staff.userid='". $_SESSION["user"]["id"] ."' "
-				."GROUP BY users_permissions_staff.staffid "
-				."ORDER BY staff.name_staff";
-				
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_string);
+		$sql_obj = New sql_query;
+		$sql_obj->prepare_sql_settable("staff");
+		$sql_obj->prepare_sql_addfield("id", "id");
+		$sql_obj->prepare_sql_addfield("label", "staff_code");
+		$sql_obj->prepare_sql_addfield("label1", "name_staff");
+		
+		if ($this->access_staff_ids_write)
+		{
+			$sql_obj->prepare_sql_addwhere("id IN (". format_arraytocommastring($this->access_staff_ids_write) .")");
+		}
+
+		$sql_obj->generate_sql();
+
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
 
 		// if there is currently no employee set, and there is only one
 		// employee in the selection box, automatically select it and update

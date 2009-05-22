@@ -8,10 +8,6 @@
 */
 
 
-// custom includes
-require("include/user/permissions_staff.php");
-
-
 
 class page_output
 {
@@ -25,6 +21,8 @@ class page_output
 	var $obj_table_day;
 
 	var $config_timesheet_booktofuture;
+
+	var $access_staff_ids;
 
 
 	function page_output()
@@ -85,39 +83,47 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("timekeeping");
+		if (user_permissions_get("timekeeping"))
+		{
+			// check if user has permissions to view the selected employee
+			if ($this->employeeid)
+			{
+				if (!user_permissions_staff_get("timereg_view", $this->employeeid))
+				{
+					log_write("error", "page_output", "Sorry, you do not have permissions to view the timesheet for the selected employee");
+
+					// we unset the session variable, this prevents issues when the admin has disabled access to an employee
+					// for a specific user, and the session keeping the older user number stuck in memory forces
+					// the user to have to logout.
+					$_SESSION["form"]["timereg"]["employeeid"] = 0;
+
+					return 0;
+				}
+			}
+		
+
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can view timesheet hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
 	}
 
 
 
 	function check_requirements()
 	{
-		// make sure the user actually has access to some employees - if not,
-		// it means that they can not book or view time
-		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `users_permissions_staff` WHERE userid='". $_SESSION["user"]["id"] ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
-		{
-			log_write("error", "page_output", "Sorry, you are currently unable to book time - you need your administrator to configure you with staff access rights.");
-			return 0;
-		}
-
-		unset($sql_obj);
-
-
-		// check if user has permissions to view the selected employee
-		if ($this->employeeid)
-		{
-			if (!user_permissions_staff_get("timereg_view", $this->employeeid))
-			{
-				log_write("error", "page_output", "Sorry, you do not have permissions to view the timesheet for the selected employee");
-				return 0;
-			}
-		}
-
 		// prevent access to a date in the future
 		if ($this->config_timesheet_booktofuture == "disabled")
 		{
@@ -145,17 +151,20 @@ class page_output
 
 
 		// employee selection box
-		$sql_string = "SELECT "
-				."staff.id as id, "
-				."staff.staff_code as label, "
-				."staff.name_staff as label1 "
-				."FROM users_permissions_staff "
-				."LEFT JOIN staff ON staff.id = users_permissions_staff.staffid "
-				."WHERE users_permissions_staff.userid='". $_SESSION["user"]["id"] ."' "
-				."GROUP BY users_permissions_staff.staffid "
-				."ORDER BY staff.name_staff";
+		$sql_obj = New sql_query;
+		$sql_obj->prepare_sql_settable("staff");
+		$sql_obj->prepare_sql_addfield("id", "id");
+		$sql_obj->prepare_sql_addfield("label", "staff_code");
+		$sql_obj->prepare_sql_addfield("label1", "name_staff");
+		
+		if ($this->access_staff_ids)
+		{
+			$sql_obj->prepare_sql_addwhere("id IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
 
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_string);
+		$sql_obj->generate_sql();
+
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
 
 		
 		// if there is currently no employee set, and there is only one

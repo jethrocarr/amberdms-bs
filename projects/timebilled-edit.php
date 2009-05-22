@@ -18,6 +18,7 @@ class page_output
 	var $obj_sql_entries;
 
 	var $locked = 0;
+	var $access_staff_ids;
 
 
 	function page_output()
@@ -44,7 +45,24 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("projects_timegroup");
+		if (user_permissions_get("projects_timegroup"))
+		{
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can create time groups, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
 	}
 
 
@@ -111,9 +129,10 @@ class page_output
 	
 		// general
 		$structure = NULL;
-		$structure["fieldname"] 	= "name_group";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
+		$structure["fieldname"] 		= "name_group";
+		$structure["type"]			= "input";
+		$structure["options"]["req"]		= "yes";
+		$structure["defaultvalue"]		= date("Y-m");
 		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
@@ -163,7 +182,7 @@ class page_output
 		$this->obj_sql_entries->prepare_sql_addfield("id", "timereg.id");
 		$this->obj_sql_entries->prepare_sql_addfield("date", "timereg.date");
 		$this->obj_sql_entries->prepare_sql_addfield("name_phase", "project_phases.name_phase");
-		$this->obj_sql_entries->prepare_sql_addfield("name_staff", "staff.name_staff");
+		$this->obj_sql_entries->prepare_sql_addfield("name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_sql_entries->prepare_sql_addfield("description", "timereg.description");
 		$this->obj_sql_entries->prepare_sql_addfield("time_booked", "timereg.time_booked");
 		$this->obj_sql_entries->prepare_sql_addfield("groupid", "timereg.groupid");
@@ -180,6 +199,11 @@ class page_output
 		else
 		{
 			$this->obj_sql_entries->prepare_sql_addwhere("!groupid");
+		}
+		
+		if ($this->access_staff_ids)
+		{
+			$this->obj_sql_entries->prepare_sql_addwhere("timereg.employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
 		}
 
 		$this->obj_sql_entries->generate_sql();
@@ -279,53 +303,67 @@ class page_output
 			a custom display for this form.
 		*/
 
-		// start form
-		print "<form enctype=\"multipart/form-data\" method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
-
-
-		// GENERAL INPUTS
-		
-		// start table
-		print "<table class=\"form_table\" width=\"100%\">";
-
-		// form header
-		print "<tr class=\"header\">";
-		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_details") ."</b></td>";
-		print "</tr>";
-
-		// display all the rows
-		$this->obj_form->render_row("name_group");
-		$this->obj_form->render_row("customerid");
-
-		if ($this->groupid)
-		{
-			$this->obj_form->render_row("code_invoice");
-		}
-
-		$this->obj_form->render_row("description");
-
-
-		// end table
-		print "</table><br>";
-
-
-
-		// TIME SELECTION
-
-		print "<table class=\"form_table\" width=\"100%\">";
-		print "<tr class=\"header\">";
-		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_selection") ."</b></td>";
-		print "</tr>";
-		print "</table>";
-
-		
 		if ($this->obj_sql_entries->num_rows())
 		{
+			// start form
+			print "<form enctype=\"multipart/form-data\" method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
+
+
+			// GENERAL INPUTS
+			
+			// start table
+			print "<table class=\"form_table\" width=\"100%\">";
+
+			// form header
+			print "<tr class=\"header\">";
+			print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_details") ."</b></td>";
+			print "</tr>";
+
+			// display all the rows
+			$this->obj_form->render_row("name_group");
+			$this->obj_form->render_row("customerid");
+
+			if ($this->groupid)
+			{
+				$this->obj_form->render_row("code_invoice");
+			}
+
+			$this->obj_form->render_row("description");
+
+
+			// end table
+			print "</table><br>";
+
+
+
+			// TIME SELECTION
+
+			print "<table class=\"form_table\" width=\"100%\">";
+			print "<tr class=\"header\">";
+			print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_selection") ."</b></td>";
+			print "</tr>";
+			print "</table>";
+
+			
 			// start table
 			print "<p>Select all the time that should belong to this group from the list below - this list only shows time currently unassigned to any group.</p>";
 			print "<p>You can choose whether to add the time as billable or as unbillable. This is used to group hours that are unbilled, eg: internal paper work
 			for the customer's account or other administrative overheads so that they won't continue to show in this list.</p>";
 
+			// display notice about limited access if suitable
+			if ($this->access_staff_ids)
+			{
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT id FROM staff";
+				$sql_obj->execute();
+				$sql_obj->num_rows();
+				
+				if (count($this->access_staff_ids) != $sql_obj->num_rows())
+				{
+					format_msgbox("info", "<p>Please note that the following list of hours only includes the specific employees whom you have been configured to view - to view all employees, ask your admin to enable the timekeeping_all_view permission.</p>");
+					print "<br>";
+				}
+			}
 			
 			print "<table class=\"table_content\" width=\"100%\">";
 
@@ -363,49 +401,46 @@ class page_output
 
 			// end table
 			print "</table><br>";
+
+
+			// HIDDEN FIELDS
+			$this->obj_form->render_field("projectid");
+			$this->obj_form->render_field("groupid");
+
+
+			// SUBMIT
+			
+			// start table
+			print "<table class=\"form_table\" width=\"100%\">";
+
+			// form header
+			print "<tr class=\"header\">";
+			print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "submit") ."</b></td>";
+			print "</tr>";
+
+			// display all the rows
+			if (!$this->locked)
+			{
+				$this->obj_form->render_row("submit");
+			}
+
+			// end table
+			print "</table>";
+	
+			// end form
+			print "</form>";
+
+			// locked
+			if ($this->locked)
+			{
+				format_msgbox("locked", "<p>This time group has now been locked and can no longer be adjusted.</p>");
+			}
+
 		}
 		else
 		{
-			print "<p><i>There is currently no un-grouped time that can be selected.</i></p>";
+			format_msgbox("important", "<p>There is currently no un-grouped time that can be selected.</p>");
 		}
-
-
-
-		// HIDDEN FIELDS
-		$this->obj_form->render_field("projectid");
-		$this->obj_form->render_field("groupid");
-
-
-		// SUBMIT
-		
-		// start table
-		print "<table class=\"form_table\" width=\"100%\">";
-
-		// form header
-		print "<tr class=\"header\">";
-		print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "submit") ."</b></td>";
-		print "</tr>";
-
-		// display all the rows
-		if (!$this->locked)
-		{
-			$this->obj_form->render_row("submit");
-		}
-
-		// end table
-		print "</table>";
-
-
-		// end form
-		print "</form>";
-
-
-		// locked
-		if ($this->locked)
-		{
-			format_msgbox("locked", "<p>This time group has now been locked and can no longer be adjusted.</p>");
-		}
-
 	}
 	
 }

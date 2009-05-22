@@ -14,6 +14,16 @@ include_once("../include/amberphplib/main.php");
 
 if (user_permissions_get('projects_timegroup'))
 {
+	// select the IDs that the user does have access to, unless if they
+	// have full access
+	if (!user_permissions_get("timekeeping_all_view"))
+	{
+		if (!$access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+		{
+			log_write("error", "process", "Unable to create time group, as you have no access permissions to any staff.");
+		}
+	}
+
 	/////////////////////////
 
 	$projectid			= security_form_input_predefined("int", "projectid", 1, "");
@@ -92,11 +102,17 @@ if (user_permissions_get('projects_timegroup'))
 	
 	if ($groupid)
 	{
-		$sql_entries_obj->prepare_sql_addwhere("groupid='$groupid' OR !groupid");
+		$sql_entries_obj->prepare_sql_addwhere("(groupid='$groupid' OR !groupid)");
 	}
 	else
 	{
 		$sql_entries_obj->prepare_sql_addwhere("!groupid");
+	}
+
+	// if user has limited employee access, only process time records for those employees
+	if ($access_staff_ids)
+	{
+		$sql_entries_obj->prepare_sql_addwhere("employeeid IN (". format_arraytocommastring($access_staff_ids) .")");
 	}
 
 	$sql_entries_obj->generate_sql();

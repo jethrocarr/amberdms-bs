@@ -64,10 +64,10 @@ if (user_permissions_get('timekeeping'))
 	//// ERROR CHECKING ///////////////////////
 
 
-	// make sure user has permissions to write for this staff member
-	if (!user_permissions_staff_get("timereg_write", $employeeid))
+	// make sure user has per
+	if (!user_permissions_get("timekeeping_all_write") && !user_permissions_staff_get("timereg_write", $employeeid))
 	{
-		$_SESSION["error"]["message"][] = "Sorry, you do not have access rights to book time for this employee.";
+		log_write("error", "process", "Sorry, you do not have access rights to book time for this employee.");
 	}
 
 

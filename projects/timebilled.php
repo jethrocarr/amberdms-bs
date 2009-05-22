@@ -40,9 +40,23 @@ class page_output
 
 	function check_permissions()
 	{
-		if (user_permissions_get("projects_view") || user_permissions_get("projects_timegroup"))
+		if (user_permissions_get("projects_view"))
 		{
-			return 1;
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can view project hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
 		}
 	}
 

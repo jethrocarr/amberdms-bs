@@ -72,7 +72,7 @@ class page_output
 
 
 		// staff member dropdown
-		$structure = form_helper_prepare_dropdownfromdb("id_staff", "SELECT id, name_staff as label FROM `staff` ORDER BY name_staff");
+		$structure = form_helper_prepare_dropdownfromdb("id_staff", "SELECT id, staff_code as label, name_staff as label1 FROM `staff` ORDER BY name_staff");
 		$this->obj_form->add_input($structure);
 		
 		$this->obj_form->subforms["user_permissions_selectstaff"]	= array("id_staff");

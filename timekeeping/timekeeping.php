@@ -8,9 +8,34 @@
 
 class page_output
 {
+	var $access_staff_ids;
+
+
 	function check_permissions()
 	{
-		return user_online();
+		if (user_permissions_get("timekeeping"))
+		{
+			// accept user if they have access to all staff
+			if (user_permissions_get("timekeeping_all_view"))
+			{
+				return 1;
+			}
+
+			// select the IDs that the user does have access to
+			if ($this->access_staff_ids = user_permissions_staff_getarray("timereg_view"))
+			{
+				return 1;
+			}
+			else
+			{
+				log_render("error", "page", "Before you can view unbilled hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+			}
+		}
+		else
+		{
+			log_render("error", "page", "Sorry, you must have the timekeeping permission enabled to view this page.");
+			return 0;
+		}
 	}
 
 	function check_requirements()
@@ -30,6 +55,8 @@ class page_output
 		print "<h3>TIME KEEPING</h3>";
 		print "<br>";
 
+		
+
 
 		/*
 			Time Booked
@@ -40,6 +67,12 @@ class page_output
 		$sql_obj->prepare_sql_settable("timereg");
 		$sql_obj->prepare_sql_addfield("timebooked", "SUM(timereg.time_booked)");
 		$sql_obj->prepare_sql_addwhere("date='". date("Y-m-d") ."'");
+
+		if ($this->access_staff_ids)
+		{
+			$sql_obj->prepare_sql_addwhere("employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
+
 		$sql_obj->generate_sql();
 
 		$sql_obj->execute();
@@ -166,6 +199,12 @@ class page_output
 			$sql_obj = New sql_query;
 			$sql_obj->prepare_sql_settable("timereg");
 			$sql_obj->prepare_sql_addfield("timebooked", "SUM(timereg.time_booked)");
+		
+			if ($this->access_staff_ids)
+			{
+				$sql_obj->prepare_sql_addwhere("employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+			}
+
 			$sql_obj->prepare_sql_addjoin("LEFT JOIN time_groups ON timereg.groupid = time_groups.id");
 
 			// provide list of valid IDs
