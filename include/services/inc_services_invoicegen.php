@@ -969,12 +969,21 @@ function service_invoices_generate($customerid = NULL)
 						$invoice->type	= "ar";
 						$invoice->load_data();
 
-						// send email
-						$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
+						if ($invoice->data["amount_total"] > 0)
+						{
+							// send email
+							$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
 
-						// complete
+							// complete
+							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $customer_data["contact_email"] .")");
+						}
+						else
+						{
+							// complete - invoice is for $0, so don't want to email out
+							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has not been emailed to the customer due to invoice being for $0.");
+						}
+
 						unset ($invoice);
-						log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $customer_data["contact_email"] .")");
 					}
 				}
 
