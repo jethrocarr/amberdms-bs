@@ -1215,7 +1215,17 @@ class table
 				}
 
 				// display content
-				print "$content";
+				if ($content)
+				{
+					print "$content";
+				}
+				else
+				{
+					// this is required for table formatting to work poperly with IE 7.
+					// not required for firefox or safari
+					print "&nbsp;";
+				}
+
 
 
 				// end hyperlink
