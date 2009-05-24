@@ -38,7 +38,7 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("accounts_charts_view");
+		return user_permissions_get("accounts_gl_view");
 	}
 
 
