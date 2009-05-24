@@ -24,6 +24,7 @@ class form_input
 	
 	var $subforms;			// associative array of sub form titles and contents
 	var $structure;			// array structure of all variables and options
+	var $actions;			// array structure of javascript actions
 
 	var $sessionform;		// If this value is set, the value is the name of the session variable
 					// holding form information, which can then be manipulated by multiple
@@ -53,6 +54,26 @@ class form_input
 		$this->structure[ $option_array["fieldname"] ] = $option_array;
 		
 	}
+
+	/*
+		add_action
+
+		Configures a javascript action to trigger when a specific field value is selected. Currently only supports radio fields.
+		
+		Values
+		trigger_field		Field to act as the trigger
+		trigger_value		Value to trigger on
+		action_type		Action to type - "show", "hide"
+		target_field		Field to apply the action to.
+	*/
+	function add_action ( $trigger_field, $trigger_value, $target_field, $action_type )
+	{
+		log_debug("form", "Executing add_action ( $trigger_field, $trigger_value, $target_field, $action_type )");
+
+		$this->actions[ $trigger_field ][ $target_field ][ $trigger_value ] = $action_type;
+	}
+
+
 
 	/*
 		load_data()
@@ -295,7 +316,7 @@ class form_input
 		}
 		else
 		{
-			print "<tr>";
+			print "<tr id=\"$fieldname\">";
 		}
 
 		switch ($this->structure[$fieldname]["type"])
@@ -418,6 +439,7 @@ class form_input
 						["width"]			Width of field object.
 						["height"]			Height of field object.
 						["label"]			Label field for checkboxes or i to use instead of a translation
+						["prelabel"]			Label field displayed before the field
 						["noselectoption"]		Set to yes to prevent the display of a "select:" heading in dropdowns
 										and to automatically select the first entry in the list.
 										^ - OBSOLETE: this option should be replaced by autoselect option		
@@ -439,6 +461,9 @@ class form_input
 				if (!$this->structure[$fieldname]["options"]["width"])
 					$this->structure[$fieldname]["options"]["width"] = 250;
 		
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				// display
 				print "<input name=\"$fieldname\" ";
 				print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
@@ -455,12 +480,18 @@ class form_input
 
 			case "password":
 				
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				// set default size
 				if (!$this->structure[$fieldname]["options"]["width"])
 					$this->structure[$fieldname]["options"]["width"] = 250;
 		
 				// display
 				print "<input type=\"password\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 			break;
 			
 			case "hidden":
@@ -468,6 +499,7 @@ class form_input
 			break;
 
 			case "text":
+
 				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
 
 				print "$translation";
@@ -482,14 +514,24 @@ class form_input
 					
 				if (!$this->structure[$fieldname]["options"]["height"])
 					$this->structure[$fieldname]["options"]["height"] = 35;
-			
+
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				// display
 				print "<textarea name=\"$fieldname\" ";
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px; height: ". $this->structure[$fieldname]["options"]["height"] ."px;\" ";
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea>";
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 			break;
 
 			case "date":
+				
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				if ($this->structure[$fieldname]["defaultvalue"] == "0000-00-00" || $this->structure[$fieldname]["defaultvalue"] == 0)
 				{
 					$date_a = array("","","");
@@ -537,9 +579,17 @@ class form_input
 				}
 
 				// TODO: it would be good to have a javascript calender pop-up to use here.
+
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 			break;
 
 			case "timestamp_date":
+
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				if ($this->structure[$fieldname]["defaultvalue"] == 0)
 				{
 					$date_a = array("","","");
@@ -555,6 +605,10 @@ class form_input
 				print " <i>(dd/mm/yyyy)</i>";
 
 				// TODO: it would be good to have a javascript calender pop-up to use here.
+
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 			break;
 
 			case "hourmins":
@@ -570,9 +624,14 @@ class form_input
 					$time_mins	= $time_processed[1];
 				}
 
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				print "<input name=\"". $fieldname ."_hh\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_hours\"> hours ";
 				print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"$time_mins\"> mins";
-				
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];	
 			break;
 			
 			case "radio":
@@ -584,6 +643,9 @@ class form_input
 					2. Pass it an array of translation values with the array keys matching the value names. This
 					   is useful when you want to populate the radio with data from a different table.
 				*/
+
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
 
 				
 				if ($this->structure[$fieldname]["translations"])
@@ -618,13 +680,52 @@ class form_input
 					{
 						print "<input ";
 					}
+
+					// if actions enabled, configure all the actions that have been defined
+					if ($this->actions[$fieldname])
+					{
+						print "onclick=\"";
+
+						foreach (array_keys($this->actions[$fieldname]) as $target_field)
+						{
+							if ($this->actions[$fieldname][ $target_field ][ $value ])
+							{
+								$action = $this->actions[$fieldname][ $target_field ][ $value ];
+							}
+							else
+							{
+								$action = $this->actions[$fieldname][ $target_field ]["default"];
+							}
+
+							switch ($action)
+							{
+								case "show":
+									print "obj_show('". $target_field ."'); ";
+								break;
+
+								case "hide":
+									print "obj_hide('". $target_field ."'); ";
+								break;
+							}
+						}
+						
+						print "\" ";
+					}
 					
-					print "type=\"radio\" name=\"$fieldname\" value=\"$value\">" . $translations[$value] ."<br>";
+					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\">" . $translations[$value] ."<br>";
 				}
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 				
 			break;
 
 			case "checkbox":
+
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
+
 				print "<input ";
 
 				if ($this->structure[$fieldname]["defaultvalue"] == "on" || $this->structure[$fieldname]["defaultvalue"] == "1" || $this->structure[$fieldname]["defaultvalue"] == "enabled")
@@ -638,10 +739,14 @@ class form_input
 				{
 					$translation = language_translate_string($this->language, $fieldname);
 				}
-				print "type=\"checkbox\" name=\"". $fieldname ."\">". $translation ."<br>";
+				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\">". $translation ."<br>";
+
 			break;
 
 			case "dropdown":
+
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
 
 				/*
 					there are two ways to draw drop down tables:
@@ -716,7 +821,9 @@ class form_input
 
 				// end of select/drop down
 				print "</select>";
-			
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];			
 			break;
 
 			case "submit":
@@ -733,8 +840,14 @@ class form_input
 				// get max upload size
 				$upload_maxbytes = format_size_human( sql_get_singlevalue("SELECT value FROM config WHERE name='UPLOAD_MAXBYTES'") );
 
+				// optional prefix label/description
+				print $this->structure[$fieldname]["options"]["prelabel"];
+
 				// input field
 				print "<input type=\"file\" name=\"$fieldname\"> <i>Note: File must be no larger than $upload_maxbytes.</i>";
+
+				// optional label/description
+				print $this->structure[$fieldname]["options"]["label"];
 			break;
 
 			default:
@@ -745,6 +858,52 @@ class form_input
 		return 1;
 	}
 
+
+	/*
+		render_actionsdefault()
+
+		Processes all the javascript actions for the defaultvalue selections
+	*/
+	function render_actionsdefault()
+	{
+		log_debug("form", "Executing render_actiondefault()");
+
+
+		print "<script type=\"text/javascript\">";
+
+		foreach (array_keys($this->structure) as $fieldname)
+		{
+			// if actions enabled, configure all the actions that have been defined
+			if ($this->actions[$fieldname])
+			{
+				foreach (array_keys($this->actions[$fieldname]) as $target_field)
+				{
+					if ($this->actions[$fieldname][ $target_field ][ $value ])
+					{
+						$action = $this->actions[$fieldname][ $target_field ][ $value ];
+					}
+					else
+					{
+						$action = $this->actions[$fieldname][ $target_field ]["default"];
+					}
+
+					switch ($action)
+					{
+						case "show":
+							print "obj_show('". $target_field ."'); ";
+						break;
+
+						case "hide":
+							print "obj_hide('". $target_field ."'); ";
+						break;
+					}
+				}
+			}
+		}
+
+
+		print "</script>";
+	}
 
 
 	/*
@@ -826,6 +985,9 @@ class form_input
 
 		// end form
 		print "</form>";
+	
+		// execute javascript default actions
+		$this->render_actionsdefault();
 	}
 
 
