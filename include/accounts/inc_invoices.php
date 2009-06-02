@@ -2171,10 +2171,38 @@ class invoice_items
 			Total up all the items, and all the tax
 		*/
 
-		// calculate totals from the DB
-		$amount		= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type!='tax' AND type!='payment'");
-		$amount_tax	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type='tax'");
-		$amount_paid	= sql_get_singlevalue("SELECT sum(amount) as value FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."' AND type='payment'");
+		$amount		= 0;
+		$amount_tax	= 0;
+		$amount_paid	= 0;
+
+		// fetch item amounts from DB
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT amount, type FROM `account_items` WHERE invoicetype='". $this->type_invoice ."' AND invoiceid='". $this->id_invoice ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_sql)
+			{
+				// total up the different item types
+				if ($data_sql["type"] != "tax" && $data_sql["type"] != "payment")
+				{
+					$amount += $data_sql["amount"];
+				}
+
+				if ($data_sql["type"] == "tax")
+				{
+					$amount_tax += $data_sql["amount"];
+				}
+
+				if ($data_sql["type"] == "payment")
+				{
+					$amount_paid += $data_sql["amount"];
+				}
+			}
+		}
 
 		// final totals
 		$amount_total	= $amount + $amount_tax;

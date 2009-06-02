@@ -892,42 +892,42 @@ function service_invoices_generate($customerid = NULL)
 
 					} // end if service is usage type
 
-
-					/*
-						Update the invoice details + Ledger
-
-						Processes:
-						- taxes
-						- ledger
-						- invoice summary
-
-						We use the invoice_items class to perform these tasks, but we don't need
-						to define an item ID for the functions being used to work.
-					*/
-
-					$invoice = New invoice_items;
-					
-					$invoice->id_invoice	= $invoiceid;
-					$invoice->type_invoice	= "ar";
-
-					$invoice->action_update_tax();
-					$invoice->action_update_ledger();
-					$invoice->action_update_total();
-
-					unset($invoice);
-
-
-
-					/*
-						Update period information with invoiceid
-					*/
-					
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
-					$sql_obj->execute();
-					
 				} // end of processing periods
 
+
+				/*
+					Update the invoice details + Ledger
+
+					Processes:
+					- taxes
+					- ledger
+					- invoice summary
+
+					We use the invoice_items class to perform these tasks, but we don't need
+					to define an item ID for the functions being used to work.
+				*/
+
+				$invoice = New invoice_items;
+					
+				$invoice->id_invoice	= $invoiceid;
+				$invoice->type_invoice	= "ar";
+
+				$invoice->action_update_tax();
+				$invoice->action_update_ledger();
+				$invoice->action_update_total();
+
+				unset($invoice);
+
+
+
+				/*
+					Update period information with invoiceid
+				*/
+					
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
+				$sql_obj->execute();
+					
 
 
 
