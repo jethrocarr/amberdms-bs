@@ -838,7 +838,7 @@ class invoice
 		else
 		{
 			$this->obj_pdf->prepare_add_field("code\_quote", $this->data["code_quote"]);
-			$this->obj_pdf->prepare_add_field("date\_validto", time_format_humandate($this->data["date_validto"]));
+			$this->obj_pdf->prepare_add_field("date\_validtill", time_format_humandate($this->data["date_validtill"]));
 		}
 		
 		$this->obj_pdf->prepare_add_field("date\_trans", time_format_humandate($this->data["date_trans"]));
