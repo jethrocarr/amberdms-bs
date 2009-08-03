@@ -260,7 +260,7 @@ class invoice_list_items
 		else
 		{
 
-			print "<table width=\"100%\" class=\"table_content\" style=\"border-bottom: 0px;\">";
+			print "<table width=\"100%\" class=\"table_content\" style=\"border-bottom: 0px;\" cellspacing=\"0\">";
 
 
 			/*
@@ -276,7 +276,7 @@ class invoice_list_items
 			}
 
 			// filler for optional link column
-			print "<td class=\"header\"></td>";
+			print "<td class=\"header\">&nbsp;</td>";
 
 			print "</tr>";
 
@@ -290,6 +290,11 @@ class invoice_list_items
 				foreach ($this->obj_table_standard->columns as $columns)
 				{
 					$content = $this->obj_table_standard->data_render[$i][$columns];
+
+					if (!$content)
+					{
+						$content = "&nbsp;";
+					}
 
 					// display
 					print "<td valign=\"top\">$content</td>";
@@ -364,7 +369,7 @@ class invoice_list_items
 				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Subtotal:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>". $this->obj_table_standard->data_render["total"]["amount"] ."</b></td>";
-				print "<td class=\"footer\"></td>";
+				print "<td class=\"footer\">&nbsp;</td>";
 			print "</tr>";
 
 
@@ -421,7 +426,7 @@ class invoice_list_items
 					print "<td valign=\"top\">". $this->obj_table_taxes->data_render[$i]["amount"] ."</td>";
 
 					// links
-					print "<td></td>";
+					print "<td>&nbsp;</td>";
 				}
 
 				print "</tr>";
@@ -442,7 +447,7 @@ class invoice_list_items
 				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Invoice Total:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>$invoice_total</b></td>";
-				print "<td class=\"footer\"></td>";
+				print "<td class=\"footer\">&nbsp;</td>";
 			print "</tr>";
 
 
