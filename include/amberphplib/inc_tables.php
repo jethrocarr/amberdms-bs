@@ -1126,7 +1126,7 @@ class table
 		$this->render_table_prepare();
 		
 		// display header row
-		print "<table class=\"table_content\" width=\"100%\">";
+		print "<table class=\"table_content\" cellspacing=\"0\" width=\"100%\">";
 		print "<tr>";
 
 		foreach ($this->columns as $column)
@@ -1352,6 +1352,10 @@ class table
 				{
 					print "<b>". $this->data_render["total"][$column] ."</b>";
 				}
+				else
+				{
+					print "&nbsp;";
+				}
 		
 				print "</td>";
 			}
@@ -1365,7 +1369,7 @@ class table
 
 			// optional: filler for link column
 			if ($this->links)
-				print "<td class=\"footer\"></td>";
+				print "<td class=\"footer\">&nbsp;</td>";
 			
 			print "</tr>";
 		}
