@@ -71,6 +71,9 @@ class menu_main
 			{
 				$user_permissions[] = $data["permid"];
 			}
+
+			// (legacy) For system without a public permissions group, add the ID of 0
+			$user_permissions[] = "0";
 		}
 		else
 		{
@@ -84,6 +87,11 @@ class menu_main
 				$sql_obj->fetch_array();
 				
 				$user_permissions[] = $sql_obj->data[0]["id"];
+			}
+			else
+			{
+				// (legacy) For system without a public permissions group, add the ID of 0
+				$user_permissionsp[] = "0";
 			}
 		}
 
