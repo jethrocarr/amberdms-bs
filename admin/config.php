@@ -136,12 +136,22 @@ class page_output
 		$structure["type"]				= "input";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
-		
+				
 		$structure = NULL;
 		$structure["fieldname"]				= "CURRENCY_DEFAULT_SYMBOL";
 		$structure["type"]				= "input";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "CURRENCY_DEFAULT_SYMBOL_POSITION";
+		$structure["type"]				= "radio";
+		$structure["values"]				= array("before", "after");
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["translations"]["before"]		= "Before the currency value (eg: $20)";
+		$structure["translations"]["after"]		= "After the currency value (eg: 20 RSD)";
+		$this->obj_form->add_input($structure);
+
 
 
 		// timesheet options
@@ -348,7 +358,7 @@ class page_output
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
 		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_INVOICE_AUTOEMAIL");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
-		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL");
+		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL", "CURRENCY_DEFAULT_SYMBOL_POSITION");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
 		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT");

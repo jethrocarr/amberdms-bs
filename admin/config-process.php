@@ -47,8 +47,9 @@ if (user_permissions_get("admin"))
 	
 	$data["TIMESHEET_BOOKTOFUTURE"]		= security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
 	
-	$data["CURRENCY_DEFAULT_NAME"]		= security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
-	$data["CURRENCY_DEFAULT_SYMBOL"]	= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
+	$data["CURRENCY_DEFAULT_NAME"]			= security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
+	$data["CURRENCY_DEFAULT_SYMBOL"]		= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
+	$data["CURRENCY_DEFAULT_SYMBOL_POSITION"]	= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL_POSITION", 1, "");
 	
 	$data["ACCOUNTS_INVOICE_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_INVOICE_LOCK", 0, "");
 	$data["ACCOUNTS_GL_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_GL_LOCK", 0, "");

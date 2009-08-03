@@ -264,7 +264,17 @@ function format_money($amount, $nocurrency = NULL)
 	else
 	{
 		// add currency & return
-		$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") . "$amount";
+		$position = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL_POSITION'");
+
+		if ($position == "after")
+		{
+			$result = "$amount ". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+		}
+		else
+		{
+			$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."$amount";
+		}
+
 		return $result;
 	}
 }
