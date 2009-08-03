@@ -84,16 +84,39 @@ function service_periods_generate($customerid = NULL)
 
 					log_debug("inc_services_invoicegen", "Processing periodend/monthend service type");
 
-					if (time_date_to_timestamp($data["date_period_next"]) <= mktime())
+					// usually we only need to generate a single period, however it is possible for a service to be
+					// created with a historical date and in this situation we want to generate all the periods in the past
+					// so that the customer gets a single invoice.
+					//
+					// therefore we keep looping, until there are no outstanding periods.
+					$complete = 0;
+					while ($complete == 0)
 					{
-						// the latest billing period has finished, we need to generate a new time period.
-						if (!service_periods_add($data["id"], $billing_mode))
+						// fetch the period next date
+						$sql_service_obj		= New sql_query;
+						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->execute();
+						$sql_service_obj->fetch_array();
+
+						// check if we need to generate a new period
+						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
 						{
-							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
-							return 0;
+							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of $date_period_next");
+
+							// the latest billing period has finished, we need to generate a new time period.
+							if (!service_periods_add($data["id"], $billing_mode))
+							{
+								$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
+								return 0;
+							}
+						}
+						else
+						{
+							unset($sql_service_obj);
+
+							$complete = 1;
 						}
 					}
-				
 				break;
 
 				case "periodadvance":
@@ -121,16 +144,39 @@ function service_periods_generate($customerid = NULL)
 					// calculate period next date in the future
 					$date_period_next = mktime(0, 0, 0, date("m"), date("d")+$accounts_services_advancebilling, date("Y"));
 
-					if (time_date_to_timestamp($data["date_period_next"]) <= $date_period_next)
+
+					// usually we only need to generate a single period, however it is possible for a service to be
+					// created with a historical date and in this situation we want to generate all the periods in the past
+					// so that the customer gets a single invoice.
+					//
+					// therefore we keep looping, until there are no outstanding periods.
+					$complete = 0;
+					while ($complete == 0)
 					{
-						log_debug("inc_services_invoicegen", "Generating advance billing period for service with next billing date of $date_period_next");
+						// fetch the period next date
+						$sql_service_obj		= New sql_query;
+						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->execute();
+						$sql_service_obj->fetch_array();
 
-
-						// generate the new billing period (in advance)
-						if (!service_periods_add($data["id"], $billing_mode))
+						// check if we need to generate a new period
+						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= $date_period_next)
 						{
-							$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
-							return 0;
+							log_debug("inc_services_invoicegen", "Generating advance billing period for service with next billing date of $date_period_next");
+
+	
+							// generate the new billing period (in advance)
+							if (!service_periods_add($data["id"], $billing_mode))
+							{
+								$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
+								return 0;
+							}
+						}
+						else
+						{
+							unset($sql_service_obj);
+
+							$complete = 1;
 						}
 					}
 				
@@ -850,15 +896,16 @@ function service_invoices_generate($customerid = NULL)
 							break;
 
 
-						} // end of processing usage
+							/*
+								Update usage value for period - this summary value is visable on the service
+								history page and saves having to query lots of records to generate period totals.
+							*/
+							$sql_obj		= New sql_query;
+							$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
+							$sql_obj->execute();
 
 
-						// Update usage value for period - this summary value is visable on the service
-						// history page and saves having to query lots of records to generate period totals.
-						$sql_obj		= New sql_query;
-						$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
-						$sql_obj->execute();
-					
+						} // end of processing usage			
 
 
 
@@ -888,9 +935,19 @@ function service_invoices_generate($customerid = NULL)
 						$invoice_item->action_create();
 
 						unset($invoice_item);
-
-
+						
 					} // end if service is usage type
+
+
+
+					/*
+						Set invoice ID for period - this prevents the period from being added to
+						any other invoices and allows users to see which invoice it was billed under
+					*/
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "' LIMIT 1";
+					$sql_obj->execute();
+
 
 				} // end of processing periods
 
