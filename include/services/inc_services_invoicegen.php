@@ -253,11 +253,11 @@ function service_periods_add($services_customers_id, $billing_mode)
 		case "periodadvance":
 			// PERIODEND / PERIODADVANCE
 			//
-			// Periods start of any date of the month.
+			// Periods start of any date of the month and end on date -1 of the next month
 	
 			// Add time to the date_period_start date.
-			$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
-			$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+			$date_period_next       = sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
+			$date_period_end        = sql_get_singlevalue("SELECT DATE_SUB('$date_period_next', INTERVAL 1 DAY ) as value");
 		break;
 
 			
