@@ -133,15 +133,17 @@ class template_engine
 
 		
 		// output file data
-		$file_obj = New file_process;
+		$file_obj			= New file_storage;
+		$file_obj->data["type"]		= "COMPANY_LOGO";
+		$file_obj->data["customid"]	= "0";
 
-		if (!$file_obj->fetch_information_by_type("COMPANY_LOGO", 0))
+		if (!$file_obj->load_data_bytype())
 		{
 			log_write("error", "template_engine", "Unable to find company logo image - use the administration config page to upload a company logo");
 			return 0;
 		}
 
-		$file_obj->write_filedata($tmp_filename);
+		$file_obj->filedata_write($tmp_filename);
 
 
 		// work out the filename without path or extension

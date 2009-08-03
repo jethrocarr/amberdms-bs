@@ -979,12 +979,12 @@ class file_storage
 		
 			// fetch a list of all the rows with file data from the file_upload_data directory
 			$sql_obj = New sql_query;
-			$sql_obj->string = "SELECT id FROM file_upload_data WHERE fileid='". $this->data["id"] ."' ORDER BY id";
+			$sql_obj->string = "SELECT id FROM file_upload_data WHERE fileid='". $this->id ."' ORDER BY id";
 			$sql_obj->execute();
 
 			if (!$sql_obj->num_rows())
 			{
-				die("No data found for file". $this->data["id"] ."");
+				die("No data found for file ". $this->id ."");
 			}
 
 			$sql_obj->fetch_array();
