@@ -1149,7 +1149,7 @@ class table
 	
 		// filler for optional link column
 		if ($this->links)
-			print "<td class=\"header\"></td>";
+			print "<td class=\"header\">&nbsp;</td>";
 
 
 		print "</tr>";

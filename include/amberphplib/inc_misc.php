@@ -696,7 +696,7 @@ function log_debug_render()
 	
 	
 	// table header
-	print "<table class=\"table_content\" width=\"100%\">";
+	print "<table class=\"table_content\" width=\"100%\" cellspacing=\"0\">";
 	
 	print "<tr class=\"header\">";
 		print "<td nowrap><b>Time</b></td>";
