@@ -42,6 +42,8 @@ class page_output
 		$this->obj_table->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$this->obj_table->add_column("price", "price_cost", "");
 		$this->obj_table->add_column("price", "price_sale", "");
+		$this->obj_table->add_column("date", "date_start", "");
+		$this->obj_table->add_column("date", "date_end", "");
 		$this->obj_table->add_column("date", "date_current", "");
 		$this->obj_table->add_column("standard", "quantity_instock", "");
 		$this->obj_table->add_column("standard", "quantity_vendor", "");
@@ -57,11 +59,20 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = products.account_sales");
 
 		// acceptable filter options
-		$structure["fieldname"] = "searchbox";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "name_product LIKE '%value%' OR code_product LIKE '%value%'";
+		$structure = NULL;
+		$structure["fieldname"] 	= "searchbox";
+		$structure["type"]		= "input";
+		$structure["sql"]		= "name_product LIKE '%value%' OR code_product LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
 
+		$structure = NULL;
+		$structure["fieldname"] 	= "hide_ex_products";
+		$structure["type"]		= "checkbox";
+		$structure["sql"]		= "date_end='0000-00-00'";
+		$structure["defaultvalue"]	= "on";
+		$structure["options"]["label"]	= "Hide any products which are no longer sold";
+		$this->obj_table->add_filter($structure);
+		
 		// load options
 		$this->obj_table->load_options_form();
 
