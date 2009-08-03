@@ -2,35 +2,120 @@
 /*
 	language.php
 
-	Provides translation functions.
+	Provides translation functions for the Amberphplib framework and applications
+	using it.
+	
 
-	Translation is provided by a table in the DB called "language" which has translations
-	for various labels. The functions in this file allow programs to lookup phrases and get
-	the desired translation.
+	Translation is provided by a table in the DB called "language" which stores label
+	to translation records.
+
+	The languages supported are defined in the languages_available table, and the user
+	managment pages allow selection of a language on a per-user basis as well as the
+	default system-wide language.
+
+
+	The performance of the language functions is significantly increased by enabling the
+	language db preload feature, as this means all the language records are loaded at
+	application stat requiring only a single SQL query (but possibly more memory).
 */
+
+
+
+/*
+	lang_trans
+	
+	Performs a transalation of the string into the user's perferred language
+
+	Values
+	label		string - label of the translation
+
+	Returns
+	string		Translation upon success or input string upon failure
+*/
+function lang_trans($label)
+{
+	log_write("debug", "inc_language", "Executing lang_trans($label)");
+
+
+	// see if the value is already cached
+	if ($GLOBALS["cache"]["lang"][$label])
+	{
+		// return cached label
+		return $GLOBALS["cache"]["lang"][$label];
+	}
+	else
+	{
+		if ($GLOBALS["cache"]["lang_mode"] == "preload")
+		{
+			/*
+				All transations have been loaded, therefore requested translation
+				does not exist.
+
+				In this case, just return the label as the translation and also add it to
+				the cache to prevent extra lookups.
+			*/
+
+			$GLOBALS["cache"]["lang"][ $label ] = $label;
+
+			return $label;
+		}
+		else
+		{
+			// not cached - need to do a DB lookup.
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT translation FROM `language` WHERE language='". $_SESSION["user"]["lang"] ."' AND label='$label' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				// add to cache
+				$GLOBALS["cache"]["lang"][ $label ] = $sql_obj->data[0]["translation"];
+
+
+				// done
+				return $sql_obj->data[0]["translation"];
+			}
+			else
+			{
+				// no value was returned for the particular label we looked up, it means
+				// that no translation exists.
+				//
+				// In this case, just return the label as the translation and also add it to
+				// the cache to prevent extra lookups.
+
+				$GLOBALS["cache"]["lang"][ $label ] = $label;
+
+				return $label;
+			}
+
+			unset($sql_obj);
+		}
+			
+	} // end if lookup required
+
+
+	// unexpected failure, return the label
+	return $label;
+
+} // end of lang_translate
+
+
+
 
 
 
 /*
 	language_translate($language, $label_array)
 
-	This function translate all the labels specified in the $label_array
-	and returns an associative array with the results.
-
-	The translations are stored in a SQL database. This means that every time
-	we want to perform a translation, we would have to execute a SQL query!
-
-	A lot of the translations are often for the same thing on one page - so to
-	reduce the number of queries, this function will cache it's in a $_SESSION
-	variable.
-
-	This data will remain caches until the PHP program finishes - so the cache will
-	not survive page loads, but will cache for all lookups at each load.
+	Legacy support function. Deprecated for future removal
 	
 */
 function language_translate($language, $label_array)
 {
-	log_debug("language", "Executing language_translate($language, label_array)");
+	log_write("warning", "language", "Executing language_translate($language, label_array) -- DEPRECATED function");
 	
 	if (!$language || !$label_array)
 		print "Warning: Invalid input recieved for function language_translate<br>";
@@ -144,7 +229,7 @@ function language_translate($language, $label_array)
 */
 function language_translate_string($language, $label)
 {
-	log_debug("language", "Executing language_translate_string($language, $label)");
+	log_write("warning", "language", "Executing language_translate_string($language, $label) -- DEPRECATED function");
 
 
 	// see if the value is already cached

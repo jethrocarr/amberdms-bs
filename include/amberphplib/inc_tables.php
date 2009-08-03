@@ -74,7 +74,8 @@ class table
 				standard	- non-processed field
 				text		- same as standard, but any \n are replaced with <br>
 				date		- YYYY-MM-DD format date field
-				timestamp	- UNIX style timestamp field
+				timestamp	- UNIX style timestamp field (converts to date + time)
+				timestamp_date	- UNIX style timestamp field (converts to date only)
 				money		- displays a financial value correctly
 				price		- legacy use - just calls money
 				hourmins	- input is a number of seconds, display as H:MM
@@ -510,7 +511,21 @@ class table
 			case "timestamp":
 				if ($this->data[$row][$column])
 				{
-					$result = date("Y-m-d H:i:s", $this->data[$row][$column]);
+					$result_1 = time_format_humandate(date("Y-m-d", $this->data[$row][$column]));
+					$result_2 = date("H:i:s", $this->data[$row][$column]);
+
+					$result = "$result_1 $result_2";
+				}
+				else
+				{
+					$result = "---";
+				}
+			break;
+
+			case "timestamp_date":
+				if ($this->data[$row][$column])
+				{
+					$result = time_format_humandate(date("Y-m-d", $this->data[$row][$column]));
 				}
 				else
 				{
@@ -1438,7 +1453,317 @@ class table
 
 
 
+
+
+	/*
+		render_table_pdf($template)
+
+		This function outputs the table information as a PDF.
+
+		Since the table could have any number of columns, we can't use a standard template - instead,
+		we use a generic table template, copy it to the PATH_TMPDIR location, adjust the template with all
+		the column information and then execute as normal and pass the data to the template_engine class.
+
+		Optional Values:
+		template	Name of the latex template to use for generating the PDF from - leave blank for default template to
+				be used.
+
+	*/
+	function render_table_pdf($template = NULL)
+	{
+		log_debug("table", "Executing render_table_pdf()");
+
+		if (!$template)
+		{
+			$template = "amberphplib_table_default.tex";
+		}
+
+
+		// calculate all the totals and prepare processed values
+		$this->render_table_prepare();
+
+
+
+		// start the PDF object
+		$template_pdf = New template_engine_latex;
+
+		// load template
+		$template_pdf->prepare_load_template("templates/latex/$template");
+
+
+		
+		/*
+			Generate PDF Template
+		*/
+
+		log_write("debug", "table", "Generating custom PDF template latex...");
+
+
+		// init values
+		$output_tabledata = array();
+
+
+		// fetch the number of columns so we can draw the latex table
+		$col_num = count($this->columns);
+
+		if ($this->total_rows)
+			$col_num++;
+
+		// fetch column widths (float of percent of one)
+		$col_width = (0.9 / $col_num);
+
+		$output_tabledata[]		= '\noindent \begin{longtable}{';
+
+		for ($i=0; $i < $col_num; $i++)
+		{
+			$output_tabledata[] 	= '>{\centering}p{'. $col_width .'\columnwidth}';
+		}
+
+		$output_tabledata[]		= '}\cline{1-'. $col_num .'}';
+
+
+		// define column headers
+		for ($i=0; $i < $col_num; $i++)
+		{
+			$output_tabledata[]	= '\textbf{'. $this->render_columns[ $this->columns[$i] ] .'}';
+
+			if ($i != ($col_num - 1))
+			{
+				$output_tabledata[] = " & ";
+			}
+
+		}
+
+		if ($this->total_rows)
+		{
+			$output_tabledata[]	= ' & \textbf{Total} ';
+		}
+
+		$output_tabledata[]		= '\endfirsthead \cline{1-'. $col_num .'}';
+
+
+		
+		// table foreach loop
+		$output_tabledata[]		= '%% foreach table_data';
+
+		$line	= "";
+		$line	.= '%% ';
+
+		for ($i=0; $i < $col_num; $i++)
+		{
+			$line .= '(column_'. $i .')';
+
+			if ($i != ($col_num - 1))
+			{
+				$line .= " & ";
+			}
+		}
+
+		if ($this->total_rows)
+		{
+			$line .= ' & (total) ';
+		}
+
+		$line .= '\tabularnewline';
+
+		$output_tabledata[]		= $line;
+		$output_tabledata[]		= '%% end';
+
+
+		// display totals for columns (if required)
+		if ($this->total_columns)
+		{
+			$output_tabledata[]		= '\cline{1-'. $col_num .'}';
+
+
+			$line = "";
+
+			for ($i=0; $i < $col_num; $i++)
+			{
+				$line .= '(column\_total\_'. $i .')';
+
+				if ($i != ($col_num - 1))
+				{
+					$line .= " & ";
+				}
+			}
+
+			if ($this->total_rows)
+			{
+				$line .= ' & (column\_total\_total) ';
+			}
+
+
+			$line .= '\tabularnewline';
+			$output_tabledata[]	= $line;
+		}
+
+
+		// end data table
+		$output_tabledata[]		= '\cline{1-'. $col_num .'}';
+		$output_tabledata[]		= '\end{longtable}';
+
+
+
+		/*
+			Write changes to PDF template in memory
+		*/
+		log_write("debug", "table", "Writing custom PDF template in memory");
+
+		$template_new = array();
+
+		foreach ($template_pdf->template as $line_orig)
+		{
+			if ($line_orig == "%% TABLE_DATA\n")
+			{
+				foreach ($output_tabledata as $line_new)
+				{
+					$template_new[] = $line_new ."\n";
+				}
+			}
+			else
+			{
+				$template_new[] = $line_orig;
+			}
+		}
+
+
+		// overwrite memory version with processed version
+		$template_pdf->template = $template_new;
+		unset($template_new);
+
+
+
+
+		/*
+			Fill Template
+		*/
+
+		// company logo
+		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
+
+		// options
+		$template_pdf->prepare_add_field("", time_format_humandate($this->date_start));
+
+
+		// table name
+		$template_pdf->prepare_add_field("table\_name", language_translate_string($this->language, $this->tablename));
+
+
+		// table options
+		$structure_main = NULL;
+
+		// add date created option
+		$structure			= array();
+		$structure["option_name"]	= language_translate_string($this->language, "date_created");
+		$structure["option_value"]	= time_format_humandate();
+		$structure_main[]		= $structure;
+
+		foreach (array_keys($this->filter) as $filtername)
+		{
+			$structure = array();
+
+			$structure["option_name"] = language_translate_string($this->language, $filtername);
+
+			if ($this->filter[$filtername]["type"] == "date")
+			{
+				$structure["option_value"] = time_format_humandate($this->filter[$filtername]["defaultvalue"]);
+			}
+			else
+			{
+				if ($this->filter[$filtername]["defaultvalue"])
+				{
+					$structure["option_value"] = $this->filter[$filtername]["defaultvalue"];
+				}
+				else
+				{
+					$structure["option_value"] = "---";
+				}
+			}
+
+
+			$structure_main[] = $structure;
+		}
+
+
+
+		$template_pdf->prepare_add_array("table_options", $structure_main);
+
+
+
+		// main table data rows
+		$structure_main = NULL;
+
+		for ($i=0; $i < $this->data_num_rows; $i++)
+		{
+			$structure = array();
+
+			// add data for all selected columns
+			for ($j=0; $j < count($this->columns); $j++)
+			{
+				$structure["column_$j"]	= $this->data_render[$i]["". $this->columns[$j] .""];
+			}
+
+			// optional: row totals column
+			if ($this->total_rows)
+			{
+				$structure["column_total"] = $this->data_render[$i]["total"];
+			}
 	
+			$structure_main[] = $structure;
+		}
+
+		$template_pdf->prepare_add_array("table_data", $structure_main);
+
+
+
+		// totals
+		if ($this->total_columns)
+		{
+			for ($j=0; $j < count($this->columns); $j++)
+			{
+				$column = $this->columns[$j];
+
+				if (in_array($column, $this->total_columns))
+				{
+					$template_pdf->prepare_add_field('column\_total\_'. $j, $this->data_render["total"][ $column ]);
+				}
+				else
+				{
+					$template_pdf->prepare_add_field('column\_total\_'. $j, "");
+				}
+			}
+
+			// optional: totals for rows
+			if ($this->total_rows)
+			{
+				$template_pdf->prepare_add_field('column\_total\_total', $this->data_render["total"]["total"]);
+			}
+
+			print "\n";
+		}
+
+
+		/*
+			Output PDF
+		*/
+
+		// perform string escaping for latex
+		$template_pdf->prepare_escape_fields();
+		
+		// fill template
+		$template_pdf->prepare_filltemplate();
+
+		// generate PDF output
+		$template_pdf->generate_pdf();
+
+		// display PDF
+		print $template_pdf->output;
+//		print_r($template_pdf->processed);
+//		print_r($template_pdf->data_array);
+
+	} // end of render_table_pdf
+		
 
 } // end of table class
 

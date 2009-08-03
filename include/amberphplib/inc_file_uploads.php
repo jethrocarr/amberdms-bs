@@ -2,8 +2,8 @@
 /*
 	inc_file_uploads.php
 
-	Provides functions for displaying or uploading files. This is used for attaching files
-	to the journal, as well as for other functions.
+	Provides the file_storage class for uploading files or large amounts of
+	BLOB data to a configurable location (such as filesystem or database).
 
 
 	FILE STORAGE
@@ -50,52 +50,61 @@
 
 
 /*
-	class file_base
-	
-	Provides functions for querying the database to get information about the uploaded
-	file, such as it's filename, size and other information.
+	class file_storage
 
-	This class is included by the file_process class.
+	Provides functions for uploading files or large amounts of
+	BLOB data to a configurable location (such as filesystem or database).
+
 */
-class file_base
+class file_storage
 {
 	var $config;	// array holding some desired configuration information
+
+	var $id;	// file ID
 	var $data;	// array holding information about the file.
 
+
 	/*
-		file_base
+		file_storage
 
 		Constructor function
 	*/
-	function file_base()
+	function file_storage()
 	{
-		$this->config["data_storage_method"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_METHOD'");
-		$this->config["data_storage_location"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_LOCATION'");
+		$this->config["data_storage_method"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_METHOD' LIMIT 1");
+		$this->config["data_storage_location"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_LOCATION' LIMIT 1");
+		$this->config["upload_maxbytes"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='UPLOAD_MAXBYTES' LIMIT 1");
 	}
 
 
 	/*
-		fetch_information_by_id($id)
+		load_data
 
-		Loads the information for the file with the specified id number.
+		Fetches the information for the selected file.
 
 		Return codes:
 		0	failure to find record
 		1	success
 	*/
-	function fetch_information_by_id($id)
+	function load_data()
 	{
-		log_debug("file_base", "Executing fetch_information_by_id($id)");
+		log_debug("file_storage", "Executing load_data()");
 
+		// fetch file metadata
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, customid, file_name, file_size, file_location FROM file_uploads WHERE id='$id' LIMIT 1";
+		$sql_obj->string	= "SELECT customid, file_name, file_size, file_location FROM file_uploads WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
 		{
 			// fetch data
 			$sql_obj->fetch_array();
-			$this->data	= $sql_obj->data[0];
+
+			$this->data["customid"]		= $sql_obj->data[0]["customid"];
+			$this->data["file_name"]	= $sql_obj->data[0]["file_name"];
+			$this->data["file_size"]	= $sql_obj->data[0]["file_size"];
+			$this->data["file_size_human"]	= format_size_human($sql_obj->data[0]["file_size"]);
+			$this->data["file_location"]	= $sql_obj->data[0]["file_location"];
 
 			return 1;
 		}
@@ -105,7 +114,7 @@ class file_base
 
 	
 	/*
-		fetch_information_by_type($type, $customid)
+		load_data_bytype
 
 		Loads the information for the file with the specified type and customid. This is used
 		by functions which don't know the ID of the file, but do know the ID of the record
@@ -115,12 +124,12 @@ class file_base
 		0	failure to find record
 		1 	success
 	*/
-	function fetch_information_by_type($type, $customid)
+	function load_data_bytype()
 	{
-		log_debug("file_base", "Executing fetch_information_by_type($type, $customid)");
+		log_debug("file_storage", "Executing load_data_bytype()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, customid, file_name, file_size, file_location FROM file_uploads WHERE type='$type' AND customid='$customid' LIMIT 1";
+		$sql_obj->string	= "SELECT id, file_name, file_size, file_location FROM file_uploads WHERE type='". $this->data["type"] ."' AND customid='". $this->data["customid"] ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -128,7 +137,12 @@ class file_base
 			// fetch data
 			$sql_obj->fetch_array();
 			
-			$this->data	= $sql_obj->data[0];
+			$this->id			= $sql_obj->data[0]["id"];
+
+			$this->data["file_name"]	= $sql_obj->data[0]["file_name"];
+			$this->data["file_size"]	= $sql_obj->data[0]["file_size"];
+			$this->data["file_size_human"]	= format_size_human($sql_obj->data[0]["file_size"]);
+			$this->data["file_location"]	= $sql_obj->data[0]["file_location"];
 
 			return 1;
 		}
@@ -139,101 +153,168 @@ class file_base
 
 
 	/*
-		format_filesize_human()
+		verify_upload_form
 
-		Returns a filesize in human readable format. (the raw filesize is in bytes)
+		Verifies that supplied form field file upload confirms to all requirements
+		and is within configured limits for uploading.
+
+		Values
+		fieldname		Name of the POST field
+		acceptable_formats	(optional) array of formats which are acceptable for upload
 	*/
-	function format_filesize_human()
+	function verify_upload_form($fieldname, $acceptable_formats = NULL)
 	{
-		log_debug("file_base", "Executing format_filesize_human()");
-	
-		return format_size_human($this->data["file_size"]);
-	}
-	
-	
-} // end of file_base class
-
-
-
-
-
-/*
-	class file_process
-
-	Functions for processing file information - outputting or uploading files
-*/
-class file_process extends file_base
-{
-
-	/*
-		process_upload_from_from($fieldname)
-
-		Uploads a file to the database - will replace an existing file if one already exists.
-
-		Set $fieldname to the name of the form name of the field to upload
-
-		Return Codes:
-		0	failure
-		#	ID number of the successfully uploaded file.
-	*/
-	function process_upload_from_form($fieldname)
-	{
-		log_debug("file_process", "Executing process_upload_from_form($fieldname)");
-
-
-		// new upload - create DB place holder
-		if (!$this->data["id"])
+		// check the filesize is less than or equal to the max upload size
+		if ($_FILES[ $fieldname ]['size'] >= $this->config["upload_maxbytes"])
 		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "INSERT INTO file_uploads (customid, type) VALUES ('". $this->data["customid"] ."', '". $this->data["type"] ."')";
-			
-			$sql_obj->execute();
-			
-			if (!$this->data["id"] = $sql_obj->fetch_insert_id())
+			$filesize_max_human	= format_size_human($this->config["upload_maxbytes"]);
+			$filesize_upload_human	= format_size_human($_FILES[ $fieldname ]['size']);	
+	
+			log_write("error", "file_storage", "Files must be no larger than $filesize_max_human. You attempted to upload a $filesize_upload_human file.");
+			$_SESSION["error"]["$fieldname-error"] = 1;
+
+			return 0;
+		}
+
+		// check if the upload format is acceptable
+		if ($acceptable_formats)
+		{
+			if (!in_array(format_file_extension($_FILES[ $fieldname ]["name"]), $acceptable_formats))
 			{
-				log_debug("file_process", "Error: Failed to create DB entry for file upload.");
+				log_write("error", "file_storage", "Unsupported file format, only the following file formats are acceptable: ". format_arraytocommastring($acceptable_formats) );
+				$_SESSION["error"]["$fieldname-error"] = 1;
+
 				return 0;
 			}
 		}
 
-		// upload the data to the location chosen by the configuration
+
+		// no problems
+		return 1;
+	}
+
+
+	
+	/*
+		action_create
+
+		Creates a place holder in the database for the uploaded file which is then used by the action_update
+		fuction to upload the file data.
+
+		Results
+		0	failure
+		#	ID of the new metadata entry
+	*/
+	function action_create()
+	{
+		log_write("debug", "file_storage", "Executing action_create()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO file_uploads (customid, type) VALUES ('". $this->data["customid"] ."', '". $this->data["type"] ."')";
+			
+		if (!$sql_obj->execute())
+		{
+			return 0;
+		}
+
+		$this->id = $sql_obj->fetch_insert_id();
+
+		return $this->id;
+
+	} // end of action_create
+
+
+
+	/*
+		action_update_form
+
+		Uploads a new file from a POST form. (will over-write an existing file if $this->id is supplied)
+
+		Values
+		fieldname	Name of the POST form field
+
+		Results
+		0		failure
+		#		ID of the successfully uploaded file.
+	*/
+	function action_update_form($fieldname)
+	{
+		log_write("debug", "file_storage", "Executing action_update_form($fieldname)");
+
+
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			If no ID exists, create a new file entry first
+		*/
+		if (!$this->id)
+		{
+			if (!$this->action_create())
+			{
+				$sql_obj->trans_rollback();
+
+				log_write("error", "file_storage", "Unexpected DB error whilst attempting to create a new file metadata entry");
+				return 0;
+			}
+		}
+
+
+		/*
+			Fetch file metadata - most of the information we want about the file
+			is provided from the POST upload.
+		*/
+
+		$this->data["file_size"]		= $_FILES[ $fieldname ]["size"];
+
+		if (!$this->data["file_name"])
+		{
+			// no filename supplied, take the filename of the uploaded fie
+ 			$this->data["file_name"]	= $_FILES[ $fieldname ]["name"];
+		}
+
+
+
+
 		if ($this->config["data_storage_method"] == "filesystem")
 		{
 			/*
 				Upload file to configured location on filesystem
+
+				For this, we simply need to copy the temporary file that has been uploaded to the new location.
 			*/
-			$uploadname = $this->config["data_storage_location"] ."/". $this->data["id"];
+			$uploadname = $this->config["data_storage_location"] ."/". $this->id;
 			
-			// move uploaded file to storage location
 			if (!copy($_FILES[$fieldname]["tmp_name"],  $uploadname))
 			{
-				$_SESSION["error"]["message"][] = "Unable to upload file to storage location - possibly no write permissions.";
-
-				log_debug("file_process", "Error: Failed to move file to storage location ($uploadname)");
-				return 0;
+				log_write("error", "file_storage", "Unable to upload file to filesystem storage location ('$uploadname')- possible permissions issue.");
 			}
 			
 			$this->data["file_location"] = "fs";
+
 		}
 		elseif ($this->config["data_storage_method"])
 		{
 			/*
 				Upload file to database
 
-				We need to split the file into 64kb chunks, and add a new row to the file_upload_data table for	each chunk.
+				We need to split the file into 64kb chunks, and add a new row to the file_upload_data table for	each chunk - by splitting
+				the file we reduce memory usage when retrieving the file data as well as supporting standard MySQL database configurations.
 			*/
 
 			if (!file_exists($_FILES[$fieldname]["tmp_name"]))
 			{
-				log_debug("file_process", "Uploaded file ". $_FILES[$fieldname]["tmp_name"] ." was not found and could not be loaded into the database");
-				return 0;
+				log_write("error", "file_storage", "Uploaded file ". $_FILES[$fieldname]["tmp_name"] ." was not found and could not be loaded into the database");
 			}
 			else
 			{
-
 				// delete any existing files from the database
-				$sql_obj = New sql_query;
-				$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->data["id"] ."'";
+				$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->id ."'";
 				$sql_obj->execute();
 			
 				
@@ -251,13 +332,8 @@ class file_process extends file_base
 					// upload the row
 					// note that the ID of the rows will increase, so if we sort the rows
 					// in ascenting order, we will recieve the correct data.
-					$sql_obj->string = "INSERT INTO file_upload_data (fileid, data) values ('". $this->data["id"] ."', '". $binarydata ."')";
-					
-					if (!$sql_obj->execute())
-					{
-						log_debug("file_process", "Error: Unable to insert binary data row.");
-						return 0;
-					}
+					$sql_obj->string = "INSERT INTO file_upload_data (fileid, data) values ('". $this->id ."', '". $binarydata ."')";
+					$sql_obj->execute();
 				}
 
 				// close the file
@@ -269,102 +345,372 @@ class file_process extends file_base
 		}
 		else
 		{
-			log_debug("file_process", "Error: Invalid data_storage_method (". $this->config["data_storage_method"] .") configured.");
-			return 0;
+			log_write("error", "file_storage", "Invalid data_storage_method (". $this->config["data_storage_method"] .") configured, unable to upload file.");
 		}
 
+
 		// update database record
-		$sql_obj		= New sql_query;
 		$sql_obj->string	= "UPDATE file_uploads SET "
-					."timestamp='". time() ."', "
-					."file_name='". $this->data["file_name"] ."', "
-					."file_size='". $this->data["file_size"] ."', "
-					."file_location='". $this->data["file_location"] ."' "
-					."WHERE id='". $this->data["id"] ."'";
+						."timestamp='". time() ."', "
+						."file_name='". $this->data["file_name"] ."', "
+						."file_size='". $this->data["file_size"] ."', "
+						."file_location='". $this->data["file_location"] ."' "
+						."WHERE id='". $this->id ."' LIMIT 1";
+
+		$sql_obj->execute();
 
 
-		if ($sql_obj->execute())
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			return 1;
+			$sql_obj->trans_rollback();
+
+			log_write("error", "file_storage", "An error occured whilst attempting to upload the file, no changes have been made.");
+			return 0;
 		}
 		else
 		{
-			log_debug("file_process", "Error: Failed to update database record after file upload");
-			return 0;
+			$sql_obj->trans_commit();
+
+			log_write("debug". "file_storage", "Successfully uploaded file ID '". $this->id ."'");
+			return $this->id;
 		}
-		
-	} // end of process_upload_from_form
+
+	} // end of action_update_form
+
+
+
 
 
 	/*
-		process_delete()
+		action_update_file
 
-		Deletes the file specified by $this->data["id"].
+		Uploads a new file from another file on the local server filesystem.
+
+		Values
+		filepath	File name & path of the file to upload
+
+		Results
+		0		failure
+		#		ID of the successfully uploaded file.
+	*/
+	function action_update_file($filepath)
+	{
+		log_write("debug", "file_storage", "Executing action_update_file($filepath)");
+
+
+		/*
+			Make sure the supplied file exists
+		*/
+		if (!file_exists($filepath))
+		{
+			log_write("error", "file_storage", "The requested file $filepath does not exist, unable to upload new file.");
+			return 0;
+		}
+
+
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID exists, create a new file entry first
+		*/
+		if (!$this->id)
+		{
+			if (!$this->action_create())
+			{
+				$sql_obj->trans_rollback();
+
+				log_write("error", "file_storage", "Unexpected DB error whilst attempting to create a new file metadata entry");
+				return 0;
+			}
+		}
+
+
+
+		/*
+			Fetch metadata from file
+		*/
+
+		$this->data["file_size"]	= filesize($filepath);
+
+		if (!$this->data["file_name"])
+		{
+			// no filename supplied, take the filename of the provided file path
+ 			$this->data["file_name"] = format_file_name($filepath);
+		}
+
+
+		if ($this->config["data_storage_method"] == "filesystem")
+		{
+			/*
+				Upload file to configured location on filesystem
+
+				For this, we simply need to copy the temporary file that has been uploaded to the new location.
+			*/
+			$uploadname = $this->config["data_storage_location"] ."/". $this->id;
+			
+			if (!copy($filepath,  $uploadname))
+			{
+				log_write("error", "file_storage", "Unable to upload file to filesystem storage location ('$uploadname')- possible permissions issue.");
+			}
+			
+			$this->data["file_location"] = "fs";
+
+		}
+		elseif ($this->config["data_storage_method"])
+		{
+			/*
+				Upload file to database
+
+				We need to split the file into 64kb chunks, and add a new row to the file_upload_data table for	each chunk - by splitting
+				the file we reduce memory usage when retrieving the file data as well as supporting standard MySQL database configurations.
+			*/
+
+			
+			// delete any existing files from the database
+			$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->id ."'";
+			$sql_obj->execute();
+			
+				
+			// open the file - read only & binary
+        		$file_handle = fopen($filepath, "rb");
+
+		    	while (!feof($file_handle))
+		   	{
+				// make the data safe for MySQL, we don't want any
+				// SQL injections from file uploads!
+		        
+				$binarydata = addslashes(fread($file_handle, 65535));
+
+
+				// upload the row
+				// note that the ID of the rows will increase, so if we sort the rows
+				// in ascenting order, we will recieve the correct data.
+				$sql_obj->string = "INSERT INTO file_upload_data (fileid, data) values ('". $this->id ."', '". $binarydata ."')";
+				$sql_obj->execute();
+			}
+
+			// close the file
+			fclose($file_handle);
+
+			$this->data["file_location"] = "db";
+		}
+		else
+		{
+			log_write("error", "file_storage", "Invalid data_storage_method (". $this->config["data_storage_method"] .") configured, unable to upload file.");
+		}
+
+
+		// update database record
+		$sql_obj->string	= "UPDATE file_uploads SET "
+						."timestamp='". time() ."', "
+						."file_name='". $this->data["file_name"] ."', "
+						."file_size='". $this->data["file_size"] ."', "
+						."file_location='". $this->data["file_location"] ."' "
+						."WHERE id='". $this->id ."' LIMIT 1";
+
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "file_storage", "An error occured whilst attempting to upload the file, no changes have been made.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("debug". "file_storage", "Successfully uploaded file ID '". $this->id ."'");
+			return $this->id;
+		}
+
+	} // end of action_update_form
+
+
+
+
+
+	/*
+		action_update_var
+
+		Uploads the provided file in the form of BLOB data provided as a string.
+
+		This function works by writing the blob to a tempory file before uploading, as this solves various
+		issues with splitting the data into chunks & correctly reading the file size.
+
+		Values
+		blob		file data
+
+		Results
+		0		failure
+		#		ID of the successfully uploaded file.
+	*/
+	function action_update_var($blob)
+	{
+		log_write("debug", "file_storage", "Executing action_update_var(BLOB)");
+
+
+		/*
+			Create temp file
+		*/
+
+		$temp_file = file_generate_tmpfile();
+
+
+		/*
+			Write blob to disk
+		*/
+		
+		if (!$fhandle = fopen($temp_file, "w"))
+		{
+			log_write("error", "file_storage", "Unable to open output file '$temp_file' for writing.");
+			return 0;
+		}
+	
+		// write all blob data
+		fwrite($fhandle, $blob);
+		
+		// close the output file
+		fclose($fhandle);
+
+
+
+		/*
+			Process with action_update_file
+		*/
+		if ($this->action_update_file($temp_file))
+		{
+			// clean up temp file
+			unlink($temp_file);
+
+			return $this->id;
+		}
+		else
+		{
+			unlink($temp_file);
+
+			return 0;
+		}
+
+	} // end of action_update_var
+
+
+
+
+
+	/*
+		action_delete
+
+		Deletes the selected file. (based on $this->id)
 
 		Return code:
 		0	failure
 		1	success
 	*/
-	function process_delete()
+	function action_delete()
 	{
-		log_debug("file_process", "Excuting process_delete()");
+		log_write("debug", "file_storage", "Executing action_delete()");
 
 
-		// Remove File
-		
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Remove file data
+		*/		
 		if ($this->data["file_location"] == "db")
 		{
 			// delete file from the database
-			$sql_obj = New sql_query;
-			$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->data["id"] ."'";
+			$sql_obj->string = "DELETE FROM file_upload_data WHERE fileid='". $this->id ."'";
 			$sql_obj->execute();
 		}
 		else
 		{
 			// delete file from the filesystem
-			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
+			$file_path = $this->config["data_storage_location"] . "/". $this->id;
 			@unlink($file_path);
 		}
 
 
-		// Remove DB entry		
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM file_uploads WHERE id='". $this->data["id"] . "'";
-		
-		if ($sql_obj->execute())
+		/*
+			Remove metadata information from database
+		*/
+		$sql_obj->string	= "DELETE FROM file_uploads WHERE id='". $this->id . "'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
 		{
-			return 1;
+			$sql_obj->trans_rollback();
+
+			log_write("error", "file_storage", "An error occured whilst attempting to upload the file, no changes have been made.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("debug", "file_storage", "Successfully deleted file ID '". $this->id ."'");
+			return $this->id;
 		}
 
-		return 0;
 	}
 	
 
+
 	/*
-		render_filedata()
-		
+		filedata_render()
+
 		This function outputs all the data for the file, including content headers. This function
 		should be called by download scripts that output nothing other than this function.
 
-		NOTE: fetch_information_by_SOMETHING must be called to load required database
-		before executing this function
+		NOTE: One of the load_data functions needs to be called before executing this function, as
+		we need to have metadata in order to correctly output the data.
 
 		Return codes:
 		0	failure
 		1	success
 	*/
-		
-	function render_filedata()
+	
+	function filedata_render()
 	{
-		log_debug("file_process", "Executing render_filedata()");
+		log_write("debug", "file_storage", "Executing filedata_render()");
 
-		// check that values required are provided
-		// if there were not and we didn't have this check, we would see some very weird bugs.
-		if (!$this->data["id"] || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
+		// the metadata is vital, so die if we don't have it
+		if (!$this->id || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
 		{
-			log_debug("file_information", "Error: function fetch_information_by_SOMETHING must be executed before function render_filedata");
-			return 0;
+			die("load_data or load_data_bytype must be called before executing filedata_render!");
 		}
+
 
 
 		/*
@@ -377,7 +723,7 @@ class file_process extends file_base
 
 		
 		// set the relevant content type
-		$file_extension = strtolower(substr(strrchr($this->data["file_name"],"."),1));
+		$file_extension = format_file_extension($this->data["file_name"]);
 
 		switch ($file_extension)
 		{
@@ -416,7 +762,7 @@ class file_process extends file_base
 			has some files on disk and some in the DB, we can handle it accordingly.
 		*/
 
-		log_debug("file_information", "Fetching file ". $this->data["id"] ." from location ". $this->data["file_location"] ."");
+		log_write("debug", "file_storage", "Fetching file ". $this->id ." from location ". $this->data["file_location"] ."");
 		
 		if ($this->data["file_location"] == "db")
 		{
@@ -425,30 +771,31 @@ class file_process extends file_base
 			*/
 		
 			// fetch a list of all the rows with file data from the file_upload_data directory
-			$sql_obj = New sql_query;
-			$sql_obj->string = "SELECT id FROM file_upload_data WHERE fileid='". $this->data["id"] ."' ORDER BY id";
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM file_upload_data WHERE fileid='". $this->id ."' ORDER BY id";
 			$sql_obj->execute();
 
 			if (!$sql_obj->num_rows())
 			{
-				die("No data found for file". $this->data["id"] ."");
+				die("No data found for file". $this->id ."");
 			}
 
 			$sql_obj->fetch_array();
 
+
 			// create an array of all the IDs
 			$file_data_ids = array();
-			foreach ($sql_obj->data as $data)
+			foreach ($sql_obj->data as $data_sql)
 			{
-				$file_data_ids[] = $data["id"];
+				$file_data_ids[] = $data_sql["id"];
 			}
 
 			
 			// fetch the data for each ID
 			foreach ($file_data_ids as $id)
 			{
-				$sql_obj = New sql_query;
-				$sql_obj->string = "SELECT data FROM file_upload_data WHERE id='$id' LIMIT 1";
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT data FROM file_upload_data WHERE id='$id' LIMIT 1";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 
@@ -460,8 +807,8 @@ class file_process extends file_base
 			/*
 				Output data from filesystem
 			*/
-			// get file from filesystem
-			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
+
+			$file_path = $this->config["data_storage_location"] . "/". $this->id;
 			
 			if (file_exists($file_path))
 			{
@@ -469,46 +816,139 @@ class file_process extends file_base
 			}
 			else
 			{
-				die("FATAL ERROR: File ". $this->data["id"] . " $file_path is missing or inaccessible.");
+				die("FATAL ERROR: File ". $this->id . " $file_path is missing or inaccessible.");
 			}
 		}
-	}
+
+
+		return 1;
+
+	} // end of filedata_render
+
 
 
 
 	/*
-		write_filedata
+		filedata_var
+
+		This function returns only the file data as a single string value - useful for rendering small
+		files, but not recommended for using with large files due to memory consumption.
+
+		NOTE: One of the load_data functions needs to be called before executing this function, as
+		we need to have metadata in order to correctly output the data.
+
+		Return codes:
+		0	failure
+		BLOB	Requested file data
+	*/
+
+	function filedata_var()
+	{
+		log_write("debug", "file_storage", "Executing filedata_var()");
+
+		// the metadata is vital, so die if we don't have it
+		if (!$this->id || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
+		{
+			die("load_data or load_data_bytype must be called before executing filedata_var!");
+		}
+
+
+
+		/*
+			Output File Data
+
+			Each file in the DB has a field to show where the file is located, so if a user
+			has some files on disk and some in the DB, we can handle it accordingly.
+		*/
+
+		$return_string = NULL;
+
+		log_write("debug", "file_storage", "Fetching file ". $this->id ." from location ". $this->data["file_location"] ."");
+		
+		if ($this->data["file_location"] == "db")
+		{
+			/*
+				Fetch file data from database
+
+				Because we are loading all the data into memory, we can assume that this is a small file
+				and execute a single SQL query to fetch all the information.
+
+				This consumes more memory, but reduces the number of SQL queries made dramaticly.
+			*/
+		
+
+			// fetch a list of all the rows with file data from the file_upload_data directory
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT data FROM file_upload_data WHERE fileid='". $this->id ."' ORDER BY id";
+			$sql_obj->execute();
+
+			if (!$sql_obj->num_rows())
+			{
+				die("No data found for file". $this->id ."");
+			}
+			
+
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_sql)
+			{
+				$return_string .= $data_sql["data"];
+			}
+		}
+		else
+		{
+			/*
+				Output data from filesystem
+			*/
+
+			$file_path = $this->config["data_storage_location"] . "/". $this->id;
+			
+			if (file_exists($file_path))
+			{
+				$return_string = file_get_contents($file_path);
+			}
+			else
+			{
+				die("FATAL ERROR: File ". $this->id . " $file_path is missing or inaccessible.");
+			}
+		}
+
+		// return the data
+		return $return_string;
+
+	} // end of filedata_var
+
+
+
+	/*
+		filedata_write
 
 		Writes the contents of the file data to a file on the server's filesystem. This is useful when generating documents and need
 		to include images out of the file upload system.
 
-		NOTE: fetch_information_by_SOMETHING must be called to load required database
-		before executing this function
+		NOTE: One of the load_data functions needs to be called before executing this function, as
+		we need to have metadata in order to correctly output the data.
 
 		Fields
-		$filename		File to write to
+		filename	File to write to.
 
 		Return codes:
-		0	failure
-		1	success
+		0		failure
+		1		success
 	*/
-		
-	function write_filedata($filename)
+	function filedata_write($filename)
 	{
-		log_debug("file_process", "Executing write_filedata($filename)");
+		log_write("debug", "file_storage", "Executing filedata_write($filename)");
 
-		// check that values required are provided
-		// if there were not and we didn't have this check, we would see some very weird bugs.
-		if (!$this->data["id"] || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
+		// the metadata is vital, so die if we don't have it
+		if (!$this->id || !$this->data["file_size"] || !$this->data["file_name"] || !$this->data["file_location"])
 		{
-			log_debug("file_information", "Error: function fetch_information_by_SOMETHING must be executed before function render_filedata");
-			return 0;
+			die("load_data or load_data_bytype must be called before executing filedata_var!");
 		}
 
 		if (!$filename)
 		{
-			log_debug("file_information", "Error: A filename must be supplied.");
-			return 0;
+			die("A filename must be supplied to the write_filedata function!");
 		}
 
 	
@@ -521,14 +961,14 @@ class file_process extends file_base
 			has some files on disk and some in the DB, we can handle it accordingly.
 		*/
 
-		log_debug("file_information", "Fetching file ". $this->data["id"] ." from location ". $this->data["file_location"] ."");
+		log_write("debug", "file_storage", "Fetching file ". $this->id ." from location ". $this->data["file_location"] ."");
 		
 		if ($this->data["file_location"] == "db")
 		{
 			// open output file
 			if (!$fhandle = fopen($filename, "w"))
 			{
-				log_write("error", "file_information", "Unable to open output file \"$filename\" for writing.");
+				log_write("error", "file_storage", "Unable to open output file \"$filename\" for writing.");
 				return 0;
 			}
 	
@@ -551,9 +991,9 @@ class file_process extends file_base
 
 			// create an array of all the IDs
 			$file_data_ids = array();
-			foreach ($sql_obj->data as $data)
+			foreach ($sql_obj->data as $data_sql)
 			{
-				$file_data_ids[] = $data["id"];
+				$file_data_ids[] = $data_sql["id"];
 			}
 
 			
@@ -577,26 +1017,30 @@ class file_process extends file_base
 				Output data from filesystem
 			*/
 			// get file from filesystem
-			$file_path = $this->config["data_storage_location"] . "/". $this->data["id"];
+			$file_path = $this->config["data_storage_location"] . "/". $this->id;
 			
 			if (file_exists($file_path))
 			{
 				// copy the file
 				if (!copy($file_path, $filename))
 				{
-					log_write("error", "file_information", "A fatal error occured trying to copy file \"$file_path\" to \"$filename\"");
+					log_write("error", "file_storage", "A fatal error occured trying to copy file \"$file_path\" to \"$filename\"");
+					return 0;
 				}
 			}
 			else
 			{
-				die("FATAL ERROR: File ". $this->data["id"] . " $file_path is missing or inaccessible.");
+				die("FATAL ERROR: File ". $this->id . " $file_path is missing or inaccessible.");
 			}
 		}
 
-	}
+
+		return 1;
+
+	} // end of filedata_write
 
 
-} // end of file_process class
+} // end of file_storage class
 
 
 

@@ -187,6 +187,16 @@ if (version_compare(PHP_VERSION, '5.2.0') === 1)
 */
 
 
+
+// ensure a language has been set in the user's profile, otherwise select
+// a default from the main configuration database
+if (!$_SESSION["user"]["lang"])
+{
+	$_SESSION["user"]["lang"] = sql_get_singlevalue("SELECT value FROM config WHERE name='LANGUAGE_DEFAULT' LIMIT 1");
+}
+
+
+// determine whether or not to preload the language
 $language_mode			= sql_get_singlevalue("SELECT value FROM config WHERE name='LANGUAGE_LOAD' LIMIT 1");
 $GLOBALS["cache"]["lang_mode"]	= $language_mode;
 
@@ -194,19 +204,10 @@ if ($language_mode == "preload")
 {
 	log_debug("start", "Preloading Language DB");
 
-	// fetch the user's language
-	$language = $_SESSION["user"]["lang"];
-
-	if (!$language)
-	{
-		// fetch system default
-		$language = sql_get_singlevalue("SELECT value FROM config WHERE name='LANGUAGE_DEFAULT' LIMIT 1");
-	}
-
 
 	// load all transactions
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='en_us'";
+	$sql_obj->string	= "SELECT label, translation FROM `language` WHERE language='". $_SESSION["user"]["lang"] ."'";
 	$sql_obj->execute();
 	$sql_obj->fetch_array();
 
@@ -218,8 +219,6 @@ if ($language_mode == "preload")
 
 	log_debug("start", "Completed Language DB Preload");
 }
-
-
 
 
 

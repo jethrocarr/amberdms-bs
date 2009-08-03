@@ -878,9 +878,9 @@ class form_input
 			{
 				foreach (array_keys($this->actions[$fieldname]) as $target_field)
 				{
-					if ($this->actions[$fieldname][ $target_field ][ $value ])
+					if ($this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ])
 					{
-						$action = $this->actions[$fieldname][ $target_field ][ $value ];
+						$action = $this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ];
 					}
 					else
 					{

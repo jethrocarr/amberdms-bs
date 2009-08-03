@@ -106,6 +106,46 @@ function config_generate_uniqueid($config_name, $check_sql)
 
 
 /*
+	format_file_extension
+
+	Returns only the extension portion of the supplied filename/filepath.
+
+	Values
+	filename	Filename or path
+
+	Returns
+	string		file extension (lowercase)
+*/
+function format_file_extension($filename)
+{
+	log_debug("misc", "Executing format_file_extension($filename)");
+
+	return strtolower(substr(strrchr($filename,"."),1));
+}
+
+
+/*
+	format_file_name
+
+	Returns the filename & extension of the supplied filepath - effectively strips
+	off the directory path.
+
+	Values
+	filepath	File path
+
+	Returns
+	string		filename
+*/
+function format_file_name($filepath)
+{
+	log_debug("misc", "Executing format_file_name($filename)");
+
+	return substr(strrchr($filename,"/"),1);
+}
+
+
+
+/*
 	format_text_display($text)
 
 	Formats a block of text from a database into a form suitable for display as HTML by
@@ -259,6 +299,34 @@ function format_arraytocommastring($array)
 
 
 
+/*
+	format_arraytocommastring($array)
+
+	returns a provided array as a comma seporated string - very useful for creating value
+	lists to be used in a SQL query.
+*/
+function format_arraytocommastring($array)
+{
+	log_debug("misc", "Executing format_arraytocommastring(Array)");
+
+	$returnstring = "";
+
+	$array_num = count($array);
+
+	for ($i=0; $i < $array_num; $i++)
+	{
+		$returnstring .= $array[$i];
+
+		if ($i != ($array_num - 1))
+		{
+			$returnstring .= ", ";
+		}
+	}
+
+	return $returnstring;
+}
+
+
 
 /* TIME FUNCTION */
 
@@ -291,6 +359,13 @@ function time_format_hourmins($seconds)
 	$hours		= sprintf("%d",$minutes / 60);
 
 	$excess_minutes = sprintf("%02d", $minutes - ($hours * 60));
+
+
+	// excess minutes must never be negative
+	if ($excess_minutes < 0)
+	{
+		$excess_minutes = $excess_minutes * -1;
+	}
 
 	return "$hours:$excess_minutes";
 }
@@ -764,6 +839,28 @@ function file_generate_name($basename, $extension = NULL)
 		}
 	}
 }
+
+
+
+/*
+	file_generate_tmpfile
+
+	Generates a tempory file and returns the full path & filename - files do
+	not automatically get deleted, unless the temp dir is subject to an external
+	process such as tmpwatch.
+
+	Returns
+	string		tmp filename & path
+*/
+function file_generate_tmpfile()
+{
+	log_debug("inc_misc", "Executing file_generate_tmpfile()");
+
+	$path_tmpdir = sql_get_singlevalue("SELECT value FROM config WHERE name='PATH_TMPDIR'");
+
+	return file_generate_name("$path_tmpdir/temporary_file");
+}
+
 
 
 ?>
