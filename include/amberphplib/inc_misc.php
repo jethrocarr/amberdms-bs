@@ -299,35 +299,6 @@ function format_arraytocommastring($array)
 
 
 
-/*
-	format_arraytocommastring($array)
-
-	returns a provided array as a comma seporated string - very useful for creating value
-	lists to be used in a SQL query.
-*/
-function format_arraytocommastring($array)
-{
-	log_debug("misc", "Executing format_arraytocommastring(Array)");
-
-	$returnstring = "";
-
-	$array_num = count($array);
-
-	for ($i=0; $i < $array_num; $i++)
-	{
-		$returnstring .= $array[$i];
-
-		if ($i != ($array_num - 1))
-		{
-			$returnstring .= ", ";
-		}
-	}
-
-	return $returnstring;
-}
-
-
-
 /* TIME FUNCTION */
 
 
