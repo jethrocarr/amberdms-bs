@@ -600,11 +600,13 @@ class journal_display extends journal_base
 
 
 						// fetch information about the file
-						$file_obj = New file_base;
+						$file_obj = New file_storage;
+						$file_obj->data["type"]		= "journal";
+						$file_obj->data["customid"]	= $data["id"];
 
-						if (!$file_obj->fetch_information_by_type("journal", $data["id"]))
+						if (!$file_obj->load_data_bytype())
 						{
-							log_debug("journal_display", "Error returned by fetch_information_by_type.");
+							log_debug("journal_display", "Unable to load journal file!");
 						}
 
 
@@ -622,9 +624,8 @@ class journal_display extends journal_base
 							print "<tr><td width=\"100%\">$content</td></tr>";
 						}
 
-						// file link + size
-						$file_size_human = $file_obj->format_filesize_human();
-						print "<tr><td width=\"50%\"><b><a href=\"". $this->structure["download_page"] ."?customid=". $file_obj->data["customid"] ."&fileid=". $file_obj->data["id"] ."\">Download File</a></b> ($file_size_human)</td></tr>";
+						// file download link
+						print "<tr><td width=\"50%\"><b><a href=\"". $this->structure["download_page"] ."?customid=". $file_obj->data["customid"] ."&fileid=". $file_obj->id ."\">Download File</a></b> (". $file_obj->data["file_size_human"] .")</td></tr>";
 
 						print "</table>";
 					break;
@@ -1354,6 +1355,62 @@ class journal_process extends journal_base
 	}
 
 
+	/*
+		check_lock
+
+		Check if the requested journal entry is locked or writable.
+
+		0	Journal entry can be written to
+		1	Journal entry is locked, no changes permitted
+	*/
+	function check_lock()
+	{
+		log_write("debug", "journal_process", "Executing check_lock()");
+
+
+		if ($this->structure["id"])
+		{
+			// make sure the user is permitted to adjust the journal entry
+			if ($this->structure["userid"] != $_SESSION["user"]["id"])
+			{
+				log_write("error", "journal_process", "You do not have permissions to update this journal entry");
+				return 1;
+			}
+
+	
+			// make sure the journal entry is valid and is not locked
+			switch ($this->verify_journalid())
+			{
+				case 0:
+					log_write("error", "journal_process", "The requested journal entry is invalid");
+					return 1;
+				break;
+
+				case 1:
+					// unlocked
+					return 0;
+				break;
+
+				case 2:
+					log_write("error", "journal_process", "The requested journal entry is now locked, and can not be updated.");
+					return 1;
+				break;
+
+				default:
+					log_write("error", "journal_process", "Unexpected error with verify_journalid function.");
+					return 1;
+				break;
+			}
+		}
+		else
+		{
+			// no entry selected, return unlocked
+			return 0;
+		}
+	}
+
+
+
 
 	/*
 		process_form_input()
@@ -1408,28 +1465,18 @@ class journal_process extends journal_base
 				else
 				{
 					// no file has been uploaded. We better get the old title so we don't lose it
-					$this->structure["title"] = sql_get_singlevalue("SELECT title as value FROM journal WHERE id='". $this->structure["id"] ."'");
+					$this->structure["title"] = sql_get_singlevalue("SELECT title as value FROM journal WHERE id='". $this->structure["id"] ."' LIMIT 1");
 				}
 			}
 			else
 			{
-				// a file has been uploaded
-				$this->structure["file_size"] = $_FILES['upload']['size'];
+				// a file has been uploaded - perform verification of the file, if there
+				// are any problems, the function will raise errors.
+				$file_obj = New file_storage;
+				$file_obj->verify_upload_form("upload");
 
-				// set the title to the filename
-				$this->structure["title"] = security_script_input("/^\S*$/", $_FILES["upload"]["name"]);
-
-				// check the filesize is less than or equal to the max upload size
-				$filesize_max = sql_get_singlevalue("SELECT value FROM config WHERE name='UPLOAD_MAXBYTES'");
-		
-				if ($_FILES['upload']['size'] >= $filesize_max)
-				{
-					$filesize_max_human	= format_size_human($filesize_max);
-					$filesize_upload_human	= format_size_human($_FILES['upload']['size']);	
-			
-					log_write("error", "journal_process", "Files must be no larger than $filesize_max_human. You attempted to upload a $filesize_upload_human file.");
-					$_SESSION["error"]["upload-error"] = 1;
-				}
+				// set the title of the journal entry to the filename
+				$this->structure["title"] = security_script_input("/^[\S\s]*$/", $_FILES["upload"]["name"]);
 			}
 
 		}
@@ -1441,11 +1488,11 @@ class journal_process extends journal_base
 	/*
 		action_create()
 
-		Create a new journal entry
+		Create a new journal entry. Usually executed by $this->action_update()
 
 		Return codes:
 		0	failure
-		1	success
+		#	success - returns ID of journal entry
 	*/
 	function action_create()
 	{
@@ -1458,11 +1505,8 @@ class journal_process extends journal_base
 		if ($sql_obj->execute())
 		{
 			$this->structure["id"] = $sql_obj->fetch_insert_id();
-
-			if ($this->structure["id"])
-			{
-				return $this->action_update();
-			}
+			
+			return $this->structure["id"];
 		}
 	
 		return 0;
@@ -1483,99 +1527,109 @@ class journal_process extends journal_base
 	{
 		log_debug("journal_process", "Executing action_update()");
 
-		if ($this->structure["id"])
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			If no ID supplied, create a new journal entry first
+		*/
+		if (!$this->structure["id"])
 		{
-			// make sure the user is permitted to adjust the journal entry
-			if ($this->structure["userid"] != $_SESSION["user"]["id"])
+			$mode = "create";
+
+			if (!$this->action_create())
 			{
-				$_SESSION["error"]["message"][] = "You do not have permissions to update this journal entry";
 				return 0;
-			}
-
-			// make sure the journal entry is valid and is not locked
-			switch ($this->verify_journalid())
-			{
-				case 0:
-					$_SESSION["error"]["message"][] = "The requested journal entry is invalid";
-					return 0;
-				break;
-
-				case 1:
-					// acceptable
-				break;
-
-				case 2:
-					$_SESSION["error"]["message"][] = "The requested journal entry is now locked, and can not be updated.";
-					return 0;
-				break;
-
-				default:
-					log_debug("journal_input", "Unexpected output from verify_journalid function");
-					$_SESSION["error"]["message"][] = "Unexpected error with verify_journalid function.";
-					return 0;
-				break;
-			}
-
-			// prepare SQL
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE `journal` SET "
-						."userid='". $this->structure["userid"] ."', "
-						."customid='". $this->structure["customid"] ."', "
-						."timestamp='". $this->structure["timestamp"] ."', "
-						."title='". $this->structure["title"] ."', "
-						."content='". $this->structure["content"] ."' "
-						."WHERE id='". $this->structure["id"] ."'";
-
-			// execute
-			if ($sql_obj->execute())
-			{
-				// upload file (if any)
-				if ($this->structure["type"] == "file" && $this->structure["file_size"])
-				{
-					$file_obj = New file_process;
-					
-					// see if a file already exists
-					if ($file_obj->fetch_information_by_type("journal", $this->structure["id"]))
-					{
-						log_debug("journal_process", "Old file exists, will overwrite.");
-					}
-					else
-					{
-						log_debug("journal_process", "No previous file exists, performing clean upload.");
-					}
-					
-					// set file variables	
-					$file_obj->data["type"]			= "journal";
-					$file_obj->data["customid"]		= $this->structure["id"];
-					$file_obj->data["file_name"]		= $this->structure["title"];
-					$file_obj->data["file_size"]		= $this->structure["file_size"];
-
-					// call the upload function
-					if ($file_obj->process_upload_from_form("upload"))
-					{
-						return 1;
-					}
-					else
-					{
-						log_debug("journal_process", "Unable to upload file for journal entry id ". $this->structure["id"] . "");
-						return 0;
-					}
-				}
-				else
-				{
-					// no file to upload
-					return 1;
-				}
 			}
 		}
 		else
 		{
-			log_debug("journal_process", "Unable to update journal entry, due to no ID being supplied");
+			$mode = "update";
 		}
 
 
+		/*
+			Update journal record
+		*/
+
+		$sql_obj->string	= "UPDATE `journal` SET "
+					."userid='". $this->structure["userid"] ."', "
+					."customid='". $this->structure["customid"] ."', "
+					."timestamp='". $this->structure["timestamp"] ."', "
+					."title='". $this->structure["title"] ."', "
+					."content='". $this->structure["content"] ."' "
+					."WHERE id='". $this->structure["id"] ."' LIMIT 1";
+
+		$sql_obj->execute();
+
+
+
+		/*
+			If journal entry is a file, upload the data
+		*/
+		if ($this->structure["type"] == "file" && $_FILES["upload"]["size"] > 1)
+		{
+			// output file data
+			$file_obj			= New file_storage;
+			$file_obj->data["type"]		= "journal";
+			$file_obj->data["customid"]	= $this->structure["id"];
+
+			if ($file_obj->load_data_bytype())
+			{
+				log_debug("journal_process", "Old file exists, will overwrite.");
+			
+				// unset the title variable - otherwise the action_update_form function will retain the existing title
+				$file_obj->data["file_name"] = NULL;
+			}
+			else
+			{
+				log_debug("journal_process", "No previous file exists, performing clean upload.");
+			}
+
+					
+			// call the upload function
+			if (!$file_obj->action_update_form("upload"))
+			{
+				log_write("error", "journal_process", "Unable to upload file for journal entry id ". $this->structure["id"] . "");
+			}
+		}
+
+
+		
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+			
+			log_write("error", "journal_process", "An error occured whilst updating the journal.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "journal_process", "Journal entry updated successfully.");
+			}
+			else
+			{
+				log_write("notification", "journal_process", "New record added to the journal successfully.");
+			}
+
+			return 1;
+		}
+
 		return 0;
 	}
+
 
 
 	/*
@@ -1591,72 +1645,52 @@ class journal_process extends journal_base
 	{
 		log_debug("journal_process", "Executing action_delete()");
 
-		if ($this->structure["id"])
-		{
-			// get the journal entry information
-			$this->sql_obj->prepare_sql_addwhere("id='". $this->structure["id"] . "'");
-			$this->generate_sql();
-			$this->load_data();
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
 		
-			// make sure the user is permitted to adjust the journal entry
-			if ($this->structure["userid"] != $_SESSION["user"]["id"])
-			{
-				$_SESSION["error"]["message"][] = "You do not have permissions to delete this journal entry";
-				return 0;
-			}
+		/*
+			Delete files (if applicable)
+		*/
+		if ($this->structure["type"] == "file")
+		{
+			$file_obj			= New file_storage;
+			$file_obj->data["type"]		= "journal";
+			$file_obj->data["customid"]	= $this->structure["id"];
 
-			// make sure the journal entry is valid and is not locked
-			switch ($this->verify_journalid())
-			{
-				case 0:
-					$_SESSION["error"]["message"][] = "The requested journal entry is invalid";
-					return 0;
-				break;
-
-				case 1:
-					// acceptable
-				break;
-
-				case 2:
-					$_SESSION["error"]["message"][] = "The requested journal entry is now locked, and can not be deleted.";
-					return 0;
-				break;
-
-				default:
-					log_debug("journal_input", "Unexpected output from verify_journalid function");
-					$_SESSION["error"]["message"][] = "Unexpected error with verify_journalid function.";
-					return 0;
-				break;
-			}
-
-			
-			if ($this->structure["type"] == "file")
-			{
-				$file_obj = New file_process;
-				$file_obj->fetch_information_by_type("journal", $this->structure["id"]);
-				
-				if (!$file_obj->process_delete())
-					return 0;
-			}
+			$file_obj->load_data_bytype();
+			$file_obj->action_delete();
+		}
 
 
-			// prepare SQL
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "DELETE FROM `journal` WHERE id='". $this->structure["id"] ."'";
+		/*
+			Delete journal record
+		*/
+		$sql_obj->string	= "DELETE FROM `journal` WHERE id='". $this->structure["id"] ."' LIMIT 1";
+		$sql_obj->execute();
 
-			// execute
-			if ($sql_obj->execute())
-			{
-				// successful deletion
-				return 1;
-			}
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			log_write("error", "journal_process", "An error occured preventing the journal record from being deleted");
+
+			$sql_obj->trans_rollback();
+			return 0;
 		}
 		else
 		{
-			log_debug("journal_process", "Unable to delete journal entry, due to no ID being supplied");
+			log_write("error", "journal_process", "Journal record cleanly removed.");
+			$sql_obj->trans_commit();
+			return 1;
 		}
-
-
 
 		return 0;
 	}
@@ -1709,6 +1743,12 @@ function journal_delete_entire($journalname, $customid)
 {
 	log_debug("inc_journal", "Executing journal_delete_entire($journalname, $customid)");
 	
+	
+	// start transaction
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
+
+
 
 	/*
 		Run though the journal items and delete any attached files
@@ -1724,9 +1764,12 @@ function journal_delete_entire($journalname, $customid)
 
 		foreach ($sql_journal_obj->data as $data)
 		{
-			$file_obj = New file_process;
-			$file_obj->fetch_information_by_type("journal", $data["id"]);
-			$file_obj->process_delete();
+			$file_obj			= New file_storage;
+			$file_obj->data["type"]		= "journal";
+			$file_obj->data["customid"]	= $data["id"];
+
+			$file_obj->load_data_bytype();
+			$file_obj->action_delete();
 		}
 	}
 
@@ -1739,6 +1782,19 @@ function journal_delete_entire($journalname, $customid)
 	$sql_journal_obj->string	= "DELETE FROM journal WHERE journalname='$journalname' AND customid='$customid'";
 	$sql_journal_obj->execute();
 
+
+
+	// commit
+	if (error_check())
+	{
+		$sql_obj->trans_rollback();
+		return 0;
+	}
+	else
+	{
+		$sql_obj->trans_commit();
+		return 1;
+	}
 }
 
 

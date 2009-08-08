@@ -164,6 +164,8 @@ class file_storage
 	*/
 	function verify_upload_form($fieldname, $acceptable_formats = NULL)
 	{
+		log_write("debug", "file_storage", "Executing verify_upload_form($fieldname, Array)");
+
 		// check the filesize is less than or equal to the max upload size
 		if ($_FILES[ $fieldname ]['size'] >= $this->config["upload_maxbytes"])
 		{
@@ -543,7 +545,7 @@ class file_storage
 			return $this->id;
 		}
 
-	} // end of action_update_form
+	} // end of action_update_file
 
 
 
