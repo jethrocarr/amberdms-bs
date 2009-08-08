@@ -134,8 +134,8 @@ class template_engine
 		
 		// output file data
 		$file_obj			= New file_storage;
-		$file_obj->data["type"]		= "COMPANY_LOGO";
-		$file_obj->data["customid"]	= "0";
+		$file_obj->data["type"]		= $file_type;
+		$file_obj->data["customid"]	= $file_id;
 
 		if (!$file_obj->load_data_bytype())
 		{
