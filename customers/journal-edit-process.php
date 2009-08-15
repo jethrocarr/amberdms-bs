@@ -28,19 +28,27 @@ if (user_permissions_get('customers_write'))
 	//// ERROR CHECKING ///////////////////////
 
 
+	// TODO: update this section to use newer customer framework?
 	// make sure the customers ID submitted really exists
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM customers WHERE id='". $journal->structure["customid"] ."'";
+	$sql_obj->string	= "SELECT id FROM customers WHERE id='". $journal->structure["customid"] ."' LIMIT 1";
 	$sql_obj->execute();
 	
 	if (!$sql_obj->num_rows())
 	{
-		$_SESSION["error"]["message"][]	= "Unable to find requested customer record to modify journal for.";
+		log_write("error", "process", "Unable to find requested customer record to modify journal for.");
 	}
 
 
-	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	// verify journal entry status
+	if ($journal->check_lock())
+	{
+		log_write("error", "process", "Unable to edit the selected journal entry, it has been locked.");
+	}
+
+	
+	// return to previous page upon error
+	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["journal_edit"] = "failed";
 		header("Location: ../index.php?page=customers/journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."&action=". $journal->structure["action"] ."");
@@ -48,52 +56,16 @@ if (user_permissions_get('customers_write'))
 	}
 	else
 	{
-		// what action should we take?
-		if ($journal->structure["id"])
+		if ($journal->structure["action"] == "delete")
 		{
-			// update or delete?
-			if ($journal->structure["action"] == "delete")
-			{
-				// DELETE
-				
-				if ($journal->action_delete())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry successfully removed.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst deleting the journal entry.";
-				}
-			}
-			else
-			{
-				// UPDATE
-			
-				if ($journal->action_update())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry updated successfully.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst updating the journal.";
-				}
-			}
-			
+			$journal->action_delete();
 		}
 		else
 		{
-			// CREATE
-			
-			if ($journal->action_create())
-			{
-				$_SESSION["notification"]["message"][] = "Journal entry created successfully.";
-			}
-			else
-			{
-				$_SESSION["error"]["message"][] = "An error occured whilst creating the new journal entry.";
-			}
+			// update or create
+			$journal->action_update();
 		}
-
+			
 	
 		// display updated details
 		header("Location: ../index.php?page=customers/journal.php&id=". $journal->structure["customid"] ."");

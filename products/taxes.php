@@ -131,7 +131,7 @@ class page_output
 		
 		if (user_permissions_get("products_write"))
 		{
-			print "<p><b><a href=\"index.php?page=products/taxes-edit.php&id=". $this->productid ."\">Add Tax</a></b></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=products/taxes-edit.php&id=". $this->productid ."\">Add Tax</a></p>";
 		}
 
 		return 1;

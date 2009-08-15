@@ -1295,11 +1295,11 @@ class table
 
 						if ($this->links[$link]["options"]["full_link"] == "yes")
 						{
-							print "<a href=\"". $this->links[$link]["page"] ."?libfiller=n";
+							print "<a class=\"button_small\" href=\"". $this->links[$link]["page"] ."?libfiller=n";
 						}
 						else
 						{
-							print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
+							print "<a class=\"button_small\" href=\"index.php?page=". $this->links[$link]["page"] ."";
 						}
 
 						// add each option
@@ -1326,9 +1326,9 @@ class table
 						// if required, add seporator
 						if ($count < $links_count)
 						{
-							print " || ";
+							print "  ";
 						}
-						}
+					}
 
 					print "</td>";
 

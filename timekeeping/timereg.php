@@ -603,7 +603,7 @@ class page_output
 				// add time link
 				if (user_permissions_staff_get("timereg_write", $this->employeeid))
 				{
-					print "<td align=\"left\"><p><b><a href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time record.</a></b></p></td>";
+					print "<td align=\"left\"><p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time entry</a></p></td>";
 				}
 				else
 				{

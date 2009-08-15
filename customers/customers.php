@@ -142,7 +142,8 @@ class page_output
 			$this->obj_table_list->render_table_html();
 
 			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=customers/customers.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button\" style=\"font-weight: normal;\"  href=\"index-export.php?mode=csv&page=customers/customers.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button\" style=\"font-weight: normal;\" href=\"index-export.php?mode=pdf&page=customers/customers.php\">Export as PDF</a></p>";
 		}
 	}
 
@@ -157,9 +158,12 @@ class page_output
 	} // end of render_csv
 
 
+	/*
+		Output: PDF file
+	*/
 	function render_pdf()
 	{
-		// TODO: write me
+		$this->obj_table_list->render_table_pdf();
 		
 	} // end of render_pdf
 	

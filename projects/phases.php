@@ -104,7 +104,7 @@ class page_output
 
 		if (!$this->obj_table->data_num_rows)
 		{
-			format_msgbox("important", "<p>You currently have no phases belonging to this project. <a href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Click here to add a phase to your project</a>.</p>");
+			format_msgbox("important", "<p>You currently have no phases belonging to this project.<br><br><a class=\"button\" href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Add a new phase to the project</a></p>");
 		}
 		else
 		{
@@ -130,7 +130,7 @@ class page_output
 			
 			if (user_permissions_get("projects_write"))
 			{
-				print "<p><b><a href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Click here to add a new phase to your project</a>.</b></p>";
+				print "<p><a class=\"button\" href=\"index.php?page=projects/phase-edit.php&id=". $this->id ."\">Add a new phase to the project</a></p>";
 			}
 		}
 	}

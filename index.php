@@ -145,7 +145,16 @@ if (user_online())
 	if ($page_valid == 1)
 	{
 		print "<tr><td>";
-		render_menu_main($page);
+
+		$obj_menu			= New menu_main;
+		$obj_menu->page			= $page;
+
+		if ($obj_menu->load_data())
+		{
+			$obj_menu->render_menu_standard();
+		}
+
+
 		print "</td></tr>";
 	}
 		

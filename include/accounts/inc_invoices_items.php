@@ -321,11 +321,11 @@ class invoice_list_items
 
 					if ($this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
 					{
-						print "<a href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
+						print "<a class=\"button_small\" href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
 					}
 					else
 					{
-						print "<a href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
+						print "<a class=\"button_small\" href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
 					}
 
 					// add each option
@@ -352,7 +352,7 @@ class invoice_list_items
 					// if required, add seporator
 					if ($count < $links_count)
 					{
-						print " || ";
+						print " ";
 					}
 				}
 
@@ -690,7 +690,7 @@ class invoice_list_payments
 
 		if (!$this->locked)
 		{
-			print "<p><b><a href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></b></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></p>";
 		}
 
 

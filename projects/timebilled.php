@@ -251,7 +251,7 @@ class page_output
 		if (user_permissions_get("projects_timegroup"))
 		{
 			// display add time group link
-			print "<p><b><a href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group.</a></b></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group</a></p>";
 		}
 
 	}

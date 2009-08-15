@@ -342,7 +342,7 @@ class page_output
 
 			if (user_permissions_staff_get("timereg_write", $this->employeeid))
 			{
-				print "<p><b><a href=\"index.php?page=timekeeping/timereg-day-edit.php&date=". $this->date ."\">Add new time entry</a></b></p>";
+				print "<p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php&date=". $this->date ."\">Add new time entry</a></p>";
 			}
 			else
 			{

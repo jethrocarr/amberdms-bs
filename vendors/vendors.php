@@ -134,8 +134,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
+			// display CSV & PDF download links
 			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=vendors/vendors.php\">Export as PDF</a></p>";
 		}
 
 	}
@@ -146,7 +147,14 @@ class page_output
 		// display table
 		$this->obj_table->render_table_csv();
 	}
-	
+
+	function render_pdf()
+	{
+		// display table
+		$this->obj_table->render_table_pdf();
+	}
+
+
 } // end of page_output
 
 ?>

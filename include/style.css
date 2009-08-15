@@ -1,6 +1,6 @@
 body
 {
-	font-family: sans-serif;
+	font-family: Lucida Grande,Arial,sans-serif;
 	font-style: normal;
 	font-weight: normal;
 	color: black;
@@ -58,10 +58,10 @@ a:active {
 
 	Used for all the tables drawn by the table class	
 */
+
 .table_content {
 	border-bottom: 1px solid #2580a2;
-	border-spacing: 0px;
-	font-size: 10px;
+	font-size: 11px;
 }
 
 	.table_content .header {
@@ -88,6 +88,7 @@ a:active {
 	}
 
 	.table_content td {
+		border-spacing: 0px;
 		padding: 4px;
 		border-bottom: 1px solid #7e7e7e;
 	}
@@ -268,12 +269,25 @@ a:active {
 }
 
 	.form_standard input {
-		border: 1px #333333 solid;
+		border:			1px #128300 solid;
+	
+		padding: 		2px 2px;
+
+		-moz-border-radius:	5px;
+		-khtml-border-radius:	5px;
+		-webkit-border-radius:	5px;
+		border-radius:		5px;
+		-moz-box-sizing:	content-box;
+		-webkit-box-sizing:	content-box;
+		-khtml-box-sizing:	content-box;
+		box-sizing:		content-box;
+
 	}
 
 	.form_standard textarea {
-		border: 1px #333333 solid;
+		border: 1px #128300 solid;
 	}
+
 
 
 .form_error {
@@ -298,6 +312,8 @@ a:active {
 	}
 
 
+
+
 /*
 	Journal Styling
 */
@@ -306,6 +322,77 @@ a:active {
 	background-repeat: no-repeat;
 }
 
+
 	
+/*
+	Buttons
+*/
+.button:hover, .button-secondary:hover, .submit input:hover, input[type="button"]:hover, input[type="submit"]:hover
+{
+	background-color:	#74d465;
+	color:			#000000;
+}
+
+.submit input, a.button, input[type="button"], input[type="submit"]
+{
+	background-color:	#128300;
+
+	text-decoration:	none;
+	font-size:		10px !important;
+	line-height:		12px;
+	padding: 		5px 15px;
+	cursor:			pointer;
+
+	color:			#ffffff;
+	font-style:		normal;
+	font-weight:		bold;
+
+	border-width:		0px;
+	border-style:		solid;
+
+	-moz-border-radius:	9px;
+	-khtml-border-radius:	9px;
+	-webkit-border-radius:	9px;
+	border-radius:		9px;
+	-moz-box-sizing:	content-box;
+	-webkit-box-sizing:	content-box;
+	-khtml-box-sizing:	content-box;
+	box-sizing:		content-box;
+}
+
+
+.button_small:hover, .button_small:hover
+{
+	background-color:	#9ac8e5;
+	color:			#000000;
+}
+
+a.button_small
+{
+	background-color:	#2580a2;
+
+	text-decoration:	none;
+	font-size:		10px !important;
+	line-height:		10px;
+	padding: 		2px 10px;
+	cursor:			pointer;
+
+	color:			#ffffff;
+	font-style:		normal;
+	font-weight:		normal;
+
+	border-width:		0px;
+	border-style:		solid;
+
+	-moz-border-radius:	5px;
+	-khtml-border-radius:	5px;
+	-webkit-border-radius:	5px;
+	border-radius:		5px;
+	-moz-box-sizing:	content-box;
+	-webkit-box-sizing:	content-box;
+	-khtml-box-sizing:	content-box;
+	box-sizing:		content-box;
+}
+
 
 
