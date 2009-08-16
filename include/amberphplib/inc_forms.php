@@ -739,6 +739,36 @@ class form_input
 				{
 					$translation = language_translate_string($this->language, $fieldname);
 				}
+
+
+				// if actions enabled, configure all the actions that have been defined
+				if ($this->actions[$fieldname])
+				{
+					print "onclick=\"";
+
+					foreach (array_keys($this->actions[$fieldname]) as $target_field)
+					{
+						if ($this->actions[$fieldname][ $target_field ]["1"])
+						{
+							$action = $this->actions[$fieldname][ $target_field ]["1"];
+						}
+
+						switch ($action)
+						{
+							case "show":
+								print "obj_show('". $target_field ."'); ";
+							break;
+
+							case "hide":
+								print "obj_hide('". $target_field ."'); ";
+							break;
+						}
+					}
+					
+					print "\" ";
+				}
+
+
 				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\">". $translation ."<br>";
 
 			break;
