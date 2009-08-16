@@ -30,7 +30,7 @@ if (user_permissions_get('vendors_write'))
 
 	// make sure the vendors ID submitted really exists
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $journal->structure["customid"] ."'";
+	$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $journal->structure["customid"] ."' LIMIT 1";
 	$sql_obj->execute();
 	
 	if (!$sql_obj->num_rows())
@@ -48,52 +48,16 @@ if (user_permissions_get('vendors_write'))
 	}
 	else
 	{
-		// what action should we take?
-		if ($journal->structure["id"])
+		if ($journal->structure["action"] == "delete")
 		{
-			// update or delete?
-			if ($journal->structure["action"] == "delete")
-			{
-				// DELETE
-				
-				if ($journal->action_delete())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry successfully removed.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst deleting the journal entry.";
-				}
-			}
-			else
-			{
-				// UPDATE
-			
-				if ($journal->action_update())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry updated successfully.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst updating the journal.";
-				}
-			}
-			
+			$journal->action_delete();
 		}
 		else
 		{
-			// CREATE
-			
-			if ($journal->action_create())
-			{
-				$_SESSION["notification"]["message"][] = "Journal entry created successfully.";
-			}
-			else
-			{
-				$_SESSION["error"]["message"][] = "An error occured whilst creating the new journal entry.";
-			}
+			// update or create
+			$journal->action_update();
 		}
-
+			
 	
 		// display updated details
 		header("Location: ../index.php?page=vendors/journal.php&id=". $journal->structure["customid"] ."");

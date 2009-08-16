@@ -62,7 +62,7 @@ class page_output
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "services.name_service LIKE '%value%' OR services.description LIKE '%value%'";
+		$structure["sql"]	= "(services.name_service LIKE '%value%' OR services.description LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 
@@ -135,8 +135,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=services/services.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=services/services.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=services/services.php\">Export as PDF</a></p>";
 
 		}
 
@@ -146,6 +147,12 @@ class page_output
 	function render_csv()
 	{
 		$this->obj_table->render_table_csv();
+	}
+
+
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
 	}
 	
 }

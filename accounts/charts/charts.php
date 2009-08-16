@@ -147,8 +147,8 @@ class page_output
 			$this->obj_table->render_table_html();
 
 			// display CSV & PDF download link
-			print "<p align=\"right\"><a class=\"button\" href=\"index-export.php?mode=csv&page=accounts/charts/charts.php\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button\" href=\"index-export.php?mode=pdf&page=accounts/charts/charts.php\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/charts/charts.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/charts/charts.php\">Export as PDF</a></p>";
 		}
 	}
 

@@ -400,13 +400,26 @@ class invoice_list_items
 					// amount
 					print "<td valign=\"top\">";
 					
-					print "<form method=\"post\" action=\"accounts/ap/invoice-items-tax-override-process.php\">";
+					print "<form method=\"post\" action=\"accounts/ap/invoice-items-tax-override-process.php\" class=\"form_standard\">";
 
 					print "<input type=\"hidden\" name=\"invoiceid\" value=\"". $this->invoiceid ."\">";
 					print "<input type=\"hidden\" name=\"itemid\" value=\"". $this->obj_table_taxes->data[$i]["id"] ."\">";
 
-					print sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
-					print "<input name=\"amount\" value=\"". $this->obj_table_taxes->data[$i]["amount"] ."\" style=\"width: 100px; font-size: 10px;\">";
+
+					$position = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL_POSITION'");
+	
+					if ($position == "after")
+					{
+						print "<input name=\"amount\" value=\"". $this->obj_table_taxes->data[$i]["amount"] ."\" style=\"width: 100px; font-size: 10px;\"> ";
+						print sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+					}
+					else
+					{
+						print sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+						print "<input name=\"amount\" value=\"". $this->obj_table_taxes->data[$i]["amount"] ."\" style=\"width: 100px; font-size: 10px;\">";
+					}
+
+
 					
 					print "</td>";
 					
@@ -414,7 +427,25 @@ class invoice_list_items
 					// links
 					print "<td align=\"right\">";
 
-					print "<input type=\"submit\" value=\"correct\" style=\"font-size: 10px\">";
+					// use specifc inline CSS here to override default large button sizes
+					print "<input type=\"submit\" value=\"adjust\" style=\"
+						font-size:		8px !important;
+						line-height:		10px;
+						padding: 		2px 10px;
+						cursor:			pointer;
+
+						color:			#ffffff;
+						font-style:		normal;
+						font-weight:		normal;
+
+						border-width:		0px;
+						border-style:		solid;
+
+						-moz-border-radius:	5px;
+						-khtml-border-radius:	5px;
+						-webkit-border-radius:	5px;
+						border-radius:		5px;
+					\">";
 
 					print "</form>";
 

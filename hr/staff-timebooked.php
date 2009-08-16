@@ -48,7 +48,7 @@ class page_output
 	{
 		// verify that employee exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM staff WHERE id='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM staff WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -160,17 +160,21 @@ class page_output
 		}
 		else
 		{
-			$structure = NULL;
-			$structure["editid"]["column"]		= "id";
-			$structure["date"]["column"]		= "date";
-			$structure["employeeid"]["value"]	= $this->id;
-			$this->obj_table->add_link("view/edit", "timekeeping/timereg-day.php", $structure);
+			if (user_permissions_get("timekeeping"))
+			{
+				$structure = NULL;
+				$structure["editid"]["column"]		= "id";
+				$structure["date"]["column"]		= "date";
+				$structure["employeeid"]["value"]	= $this->id;
+				$this->obj_table->add_link("view/edit", "timekeeping/timereg-day.php", $structure);
+			}
 
 			$this->obj_table->render_table_html();
 
 
 			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=hr/staff-timebooked.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=hr/staff-timebooked.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=hr/staff-timebooked.php&id=". $this->id ."\">Export as PDF</a></p>";
 		}
 	}
 

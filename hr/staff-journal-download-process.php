@@ -38,7 +38,7 @@ if (user_permissions_get('staff_view'))
 	*/
 
 	// get the ID of the journal from the file ID
-	$customid = sql_get_singlevalue("SELECT customid as value FROM file_uploads WHERE id='$fileid'");
+	$customid = sql_get_singlevalue("SELECT customid as value FROM file_uploads WHERE id='$fileid' LIMIT 1");
 
 	if (!$customid)
 	{
@@ -78,10 +78,11 @@ if (user_permissions_get('staff_view'))
 	else
 	{
 		// output file data
-		$file_obj = New file_process;
+		$file_obj = New file_storage;
+		$file_obj->id = $fileid;
 
-		$file_obj->fetch_information_by_id($fileid);
-		$file_obj->render_filedata();
+		$file_obj->load_data();
+		$file_obj->filedata_render();
 	}
 
 

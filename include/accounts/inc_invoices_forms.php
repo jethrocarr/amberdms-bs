@@ -92,6 +92,7 @@ class invoice_form_details
 		}
 		else
 		{
+			// load customer dropdown
 			$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 			$structure["options"]["req"]	= "yes";
 			$structure["options"]["width"]	= "600";
@@ -102,6 +103,7 @@ class invoice_form_details
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
+		$structure["defaultvalue"]		= $_SESSION["user"]["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -191,6 +193,16 @@ class invoice_form_details
 		}
 		
 		$this->obj_form->load_data();
+
+
+		/*
+			Fetch any provided values from $_GET if adding a new invoice and no error data provided
+		*/
+		if ($this->mode == "add" && !$_SESSION["error"]["message"])
+		{
+			$this->obj_form->structure["customerid"]["defaultvalue"]	= security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+			$this->obj_form->structure["vendorid"]["defaultvalue"]		= security_script_input('/^[0-9]*$/', $_GET["vendorid"]);
+		}
 
 
 		// define subforms

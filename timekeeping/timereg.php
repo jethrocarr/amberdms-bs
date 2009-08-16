@@ -189,7 +189,18 @@ class page_output
 			$this->employeeid				= $structure["values"][0];
 			$_SESSION["form"]["timereg"]["employeeid"]	= $structure["values"][0];
 		}
-		
+
+		// if there is currently no employee set, and the user has configured
+		// a default employeeid, automatically select that ID and update the
+		// session variables
+	
+		if (!$this->employeeid && $_SESSION["user"]["default_employeeid"])
+		{
+			$this->employeeid				= $_SESSION["user"]["default_employeeid"];
+			$_SESSION["form"]["timereg"]["employeeid"]	= $_SESSION["user"]["default_employeeid"];
+		}
+
+	
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
 		$structure["defaultvalue"]		= $this->employeeid;
@@ -474,7 +485,7 @@ class page_output
 	
 		
 		print "<p><b>";
-		print "&lt;&lt; <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_previousweek ."&year=". $date_option_previousyear ."\">Previous Week</a>";
+		print "<a class=\"button\" href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_previousweek ."&year=". $date_option_previousyear ."\">&lt;&lt; Previous Week</a>";
 
 		// check for date in the future
 		if ($this->config_timesheet_booktofuture == "disabled")
@@ -482,13 +493,12 @@ class page_output
 			if (time_date_to_timestamp(time_calculate_weekstart($date_option_nextweek, $date_option_nextyear)) < mktime())
 			{
 				// end date is in not in the future
-				print " || <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week</a> &gt;&gt;";
-		
+				print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week &gt;&gt;</a>";
 			}
 		}
 		else
 		{
-			print " || <a href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week</a> &gt;&gt;";
+			print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week &gt;&gt;</a>";
 		}
 
 		print "</b></p>";
@@ -500,7 +510,7 @@ class page_output
 		// goto date form
 		print "<td width=\"30%\">";
 
-			print "<form method=\"get\" action=\"index.php\">";
+			print "<form method=\"get\" action=\"index.php\" class=\"form_standard\">";
 
 
 			$this->obj_form_goto->render_field("date");
@@ -534,7 +544,7 @@ class page_output
 			print "<table class=\"table_highlight_important\" width=\"100%\"><tr><td width=\"100%\">";
 		}
 		
-		print "<form method=\"get\" action=\"index.php\">";
+		print "<form method=\"get\" action=\"index.php\" class=\"form_standard\">";
 		print "<p><b>Select an employee to view:</b></p>";
 		$this->obj_form_employee->render_field("employeeid");
 		$this->obj_form_employee->render_field("weekofyear");
@@ -603,15 +613,18 @@ class page_output
 				// add time link
 				if (user_permissions_staff_get("timereg_write", $this->employeeid))
 				{
-					print "<td align=\"left\"><p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time entry</a></p></td>";
+					print "<td align=\"left\" valign=\"top\"><p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php\">Add new time entry</a></p></td>";
 				}
 				else
 				{
 					print "<p><i>You have read-only access to this employee and therefore can not add any more time.</i></p>";
 				}
 
-				// display CSV download link
-				print "<td align=\"right\"><p><a href=\"index-export.php?mode=csv&page=timekeeping/timereg.php\">Export as CSV</a></p></td>";
+				// display CSV/PDF download link
+				print "<td align=\"right\">";
+				print "<p><a class=\"button_export\" href=\"index-export.php?mode=csv&page=timekeeping/timereg.php\">Export as CSV</a></p>";
+				print "<p><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=timekeeping/timereg.php\">Export as PDF</a></p>";
+				print "</td>";
 
 			print "</table>";
 		}
@@ -635,6 +648,26 @@ class page_output
 			$this->obj_table_week->render_table_csv();
 		}
 	}
+
+
+	function render_pdf()
+	{
+		if ($this->employeeid)
+		{
+			// custom labels
+			$this->obj_table_week->custom_column_label("monday", "Monday (". $this->date_selected_daysofweek[0] .")");
+			$this->obj_table_week->custom_column_label("tuesday", "Tuesday (". $this->date_selected_daysofweek[1] .")");
+			$this->obj_table_week->custom_column_label("wednesday", "Wednesday (". $this->date_selected_daysofweek[2] .")");
+			$this->obj_table_week->custom_column_label("thursday", "Thursday (". $this->date_selected_daysofweek[3] .")");
+			$this->obj_table_week->custom_column_label("friday", "Friday (". $this->date_selected_daysofweek[4] .")");
+			$this->obj_table_week->custom_column_label("saturday", "Saturday (". $this->date_selected_daysofweek[5] .")");
+			$this->obj_table_week->custom_column_label("sunday", "Sunday (". $this->date_selected_daysofweek[6] .")");
+
+			// display week time table
+			$this->obj_table_week->render_table_pdf("amberphplib_table_landscape.tex");
+		}
+	}
+
 }
 
 ?>

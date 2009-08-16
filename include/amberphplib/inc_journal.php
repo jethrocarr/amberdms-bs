@@ -503,8 +503,8 @@ class journal_display extends journal_base
 					if (!$data["locked"])
 					{
 						// user is able to edit/delete this entry
-						$editlink = "(<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=edit\">edit</a> || ";
-						$editlink .= "<a href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=delete\">delete</a>)";
+						$editlink = " <a class=\"button_small\" href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=edit\">edit</a> ";
+						$editlink .= "<a class=\"button_small\" href=\"index.php?page=". $this->structure["form_process_page"] ."&id=". $data["customid"] ."&journalid=" . $data["id"] ."&type=". $data["type"] ."&action=delete\">delete</a> ";
 					}
 				}
 		

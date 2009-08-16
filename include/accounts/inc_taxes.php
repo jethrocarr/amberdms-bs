@@ -563,6 +563,11 @@ class taxes_report_transactions
 		$this->obj_table->render_table_csv();
 	}
 
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
+	}
+
 	
 } // end of taxes_report_transactions
 

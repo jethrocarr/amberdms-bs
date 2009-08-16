@@ -446,7 +446,7 @@ class page_output
 			Date selection form
 		*/
 
-		print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\">";
+		print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
 		
 		$this->obj_form->render_field("page");
 		
@@ -541,8 +541,8 @@ class page_output
 
 
 			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/reports/incomestatement.php\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=accounts/reports/incomestatement.php\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/reports/incomestatement.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/reports/incomestatement.php\">Export as PDF</a></p>";
 
 		} // end if accounts exist
 		

@@ -63,7 +63,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "code_project LIKE '%value%' OR name_project LIKE '%value%'";
+		$structure["sql"]	= "(code_project LIKE '%value%' OR name_project LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
@@ -131,10 +131,17 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=projects/projects.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=projects/projects.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=projects/projects.php\">Export as PDF</a></p>";
 		}
 
+	}
+
+
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
 	}
 
 
@@ -142,6 +149,7 @@ class page_output
 	{
 		$this->obj_table->render_table_csv();
 	}
+
 }
 
 ?>

@@ -32,7 +32,9 @@ class page_output
 		$this->obj_menu_nav = New menu_nav;
 
 		$this->obj_menu_nav->add_item("Tax Details", "page=accounts/taxes/view.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Collected", "page=accounts/taxes/tax_collected.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Tax Paid", "page=accounts/taxes/tax_paid.php&id=". $this->id ."");
 
 		if (user_permissions_get("accounts_taxes_write"))
 		{
@@ -91,8 +93,9 @@ class page_output
 		// display tax report
 		if ($this->obj_taxreport->render_html())
 		{
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/taxes/tax_collected.php&id=". $this->id ."\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/taxes/tax_collected.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/taxes/tax_collected.php&id=". $this->id ."\">Export as PDF</a></p>";
 		}
 	}
 
@@ -100,6 +103,11 @@ class page_output
 	function render_csv()
 	{
 		$this->obj_taxreport->render_csv();
+	}
+
+	function render_pdf()
+	{
+		$this->obj_taxreport->render_pdf();
 	}
 
 }

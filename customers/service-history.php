@@ -147,7 +147,7 @@ class page_output
 			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 			{
 				// make the invoice number a hyperlink
-				if ($this->obj_table->data[$i]["code_invoice"])
+				if ($this->obj_table->data[$i]["code_invoice"] && user_permissions_get("accounts_ar_view"))
 				{
 					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["invoiced"] ."\">AR ". $this->obj_table->data[$i]["code_invoice"] ."</a>";
 				}
@@ -182,8 +182,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 			
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">Export as PDF</a></p>";
 		}
 	}
 
@@ -192,6 +193,13 @@ class page_output
 	{
 		// display the table
 		$this->obj_table->render_table_csv();
+	}
+
+
+	function render_pdf()
+	{
+		// display the table
+		$this->obj_table->render_table_pdf();
 	}
 
 

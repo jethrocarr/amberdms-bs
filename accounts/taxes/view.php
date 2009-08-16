@@ -31,6 +31,9 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Tax Details", "page=accounts/taxes/view.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Collected", "page=accounts/taxes/tax_collected.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Paid", "page=accounts/taxes/tax_paid.php&id=". $this->id ."");
+
 
 		if (user_permissions_get("accounts_taxes_write"))
 		{

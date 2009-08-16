@@ -76,7 +76,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "code_customer LIKE '%value%' OR name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$structure["sql"]	= "(code_customer LIKE '%value%' OR name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%')";
 		$this->obj_table_list->add_filter($structure);
 		
 		$structure = NULL;
@@ -141,31 +141,23 @@ class page_output
 			// display the table
 			$this->obj_table_list->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a class=\"button\" style=\"font-weight: normal;\"  href=\"index-export.php?mode=csv&page=customers/customers.php\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button\" style=\"font-weight: normal;\" href=\"index-export.php?mode=pdf&page=customers/customers.php\">Export as PDF</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" style=\"font-weight: normal;\"  href=\"index-export.php?mode=csv&page=customers/customers.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" style=\"font-weight: normal;\" href=\"index-export.php?mode=pdf&page=customers/customers.php\">Export as PDF</a></p>";
 		}
 	}
 
 
-	/*
-		Output: CSV text file
-	*/
 	function render_csv()
 	{
 		$this->obj_table_list->render_table_csv();
-		
-	} // end of render_csv
-
-
-	/*
-		Output: PDF file
-	*/
+	}
+	
+	
 	function render_pdf()
 	{
 		$this->obj_table_list->render_table_pdf();
-		
-	} // end of render_pdf
+	}
 	
 
 } // end class page_output

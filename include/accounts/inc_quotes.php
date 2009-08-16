@@ -101,7 +101,7 @@ function quotes_render_summarybox($id)
 					
 					print "<tr>";
 						print "<td>Quote Total:</td>";
-						print "<td>$". $sql_obj->data[0]["amount_total"] ."</td>";
+						print "<td>". format_money($sql_obj->data[0]["amount_total"]) ."</td>";
 					print "</tr>";
 					
 					print "<tr>";

@@ -312,7 +312,7 @@ class page_output
 			// GENERAL INPUTS
 			
 			// start table
-			print "<table class=\"form_table\" width=\"100%\">";
+			print "<table class=\"form_table\" width=\"100%\" cellspacing=\"0\">";
 
 			// form header
 			print "<tr class=\"header\">";
@@ -338,7 +338,7 @@ class page_output
 
 			// TIME SELECTION
 
-			print "<table class=\"form_table\" width=\"100%\">";
+			print "<table class=\"form_table\" width=\"100%\" cellspacing=\"0\">";
 			print "<tr class=\"header\">";
 			print "<td colspan=\"2\"><b>". language_translate_string($this->obj_form->language, "timebilled_selection") ."</b></td>";
 			print "</tr>";
@@ -365,7 +365,7 @@ class page_output
 				}
 			}
 			
-			print "<table class=\"table_content\" width=\"100%\">";
+			print "<table class=\"table_content\" width=\"100%\" cellspacing=\"0\">";
 
 			// form header
 			print "<tr class=\"header\">";
@@ -411,7 +411,7 @@ class page_output
 			// SUBMIT
 			
 			// start table
-			print "<table class=\"form_table\" width=\"100%\">";
+			print "<table class=\"form_table\" width=\"100%\" cellspacing=\"0\">";
 
 			// form header
 			print "<tr class=\"header\">";

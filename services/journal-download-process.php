@@ -78,10 +78,12 @@ if (user_permissions_get('products_view'))
 	else
 	{
 		// output file data
-		$file_obj = New file_process;
+		$file_obj = New file_storage;
+		$file_obj->id = $fileid;
 
-		$file_obj->fetch_information_by_id($fileid);
-		$file_obj->render_filedata();
+		$file_obj->load_data();
+		$file_obj->filedata_render();
+
 	}
 
 

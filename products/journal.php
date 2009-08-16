@@ -95,7 +95,7 @@ class page_output
 		print "<h3>PRODUCT JOURNAL</h3><br>";
 		print "<p>The journal is a place where you can put your own notes, files and view the history of this product.</p>";
 
-		print "<p><b><a href=\"index.php?page=products/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=products/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		print "<p><a class=\"button\" href=\"index.php?page=products/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> <a class=\"button\" href=\"index.php?page=products/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></p>";
 
 		// render options form
 		$this->obj_journal->render_options_form();

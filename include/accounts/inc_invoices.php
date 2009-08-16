@@ -147,21 +147,20 @@ function invoice_render_summarybox($type, $id)
 					
 					print "<tr>";
 						print "<td>Total Due:</td>";
-						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $sql_obj->data[0]["amount_total"] ."</td>";
+						print "<td>". format_money($sql_obj->data[0]["amount_total"]) ."</td>";
 					print "</tr>";
 					
 					print "<tr>";
 						print "<td>Total Paid:</td>";
-						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $sql_obj->data[0]["amount_paid"] ."</td>";
+						print "<td>". format_money($sql_obj->data[0]["amount_paid"]) ."</td>";
 					print "</tr>";
 
 
 					$amount_due = $sql_obj->data[0]["amount_total"] - $sql_obj->data[0]["amount_paid"];
-					$amount_due = sprintf("%0.2f", $amount_due);
 
 					print "<tr>";
 						print "<td>Amount Due:</td>";
-						print "<td>". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."". $amount_due."</td>";
+						print "<td>". format_money($amount_due) ."</td>";
 					print "</tr>";
 
 				

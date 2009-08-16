@@ -45,7 +45,7 @@ class page_output
 	{
 		// verifiy that customer exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -113,7 +113,7 @@ class page_output
 		$structure["sql"]	= "date_trans <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["sql"]	= "account_ar.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
@@ -139,7 +139,14 @@ class page_output
 	{
 		// heading
 		print "<h3>CUSTOMER'S INVOICES</h3>";
-		print "<p>This page lists all the invoices belonging to this customer. <a href=\"index.php?page=accounts/ar/invoice-add.php\">Click here to add a new invoice</a></p>";
+		print "<p>This page lists all the invoices belonging to this customer.</p>";
+
+
+		// create invoice link
+		if (user_permissions_get("accounts_ar_write"))
+		{
+			print "<p><a class=\"button\" href=\"index.php?page=accounts/ar/invoice-add.php&customerid=". $this->id ."\">Create New Invoice</a></p>";
+		}
 
 	
 		// display options form	
@@ -168,8 +175,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=customers/invoices.php&id=". $this->id ."\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/invoices.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/invoices.php&id=". $this->id ."\">Export as PDF</a></p>";
 		}
 	
 	}
@@ -180,6 +188,14 @@ class page_output
 		// display table
 		$this->obj_table->render_table_csv();
 	}
+
+
+	function render_pdf()
+	{
+		// display table
+		$this->obj_table->render_table_pdf();
+	}
+
 
 } // end of page_output
 

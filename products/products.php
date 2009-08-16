@@ -62,7 +62,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "searchbox";
 		$structure["type"]		= "input";
-		$structure["sql"]		= "name_product LIKE '%value%' OR code_product LIKE '%value%'";
+		$structure["sql"]		= "(name_product LIKE '%value%' OR code_product LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
@@ -102,23 +102,35 @@ class page_output
 		}
 		else
 		{
-			// view link
+			// links
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("view", "products/view.php", $structure);
+			
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("taxes", "products/taxes.php", $structure);
+
 
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=products/products.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=products/products.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=products/products.php\">Export as PDF</a></p>";
 		}
 	}
 
 
 	function render_csv()
 	{
-		$this->obj_table->render_table_csv();
+		$this->obj_table->render_table_csv();		
+	}
+
+
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
 		
 	}
 

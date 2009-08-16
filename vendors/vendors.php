@@ -78,7 +78,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "code_vendor LIKE '%value%' OR name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$structure["sql"]	= "(code_vendor LIKE '%value%' OR name_vendor LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%')";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
@@ -135,8 +135,8 @@ class page_output
 			$this->obj_table->render_table_html();
 
 			// display CSV & PDF download links
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a href=\"index-export.php?mode=pdf&page=vendors/vendors.php\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=vendors/vendors.php\">Export as PDF</a></p>";
 		}
 
 	}

@@ -51,7 +51,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "username LIKE '%value%' OR realname LIKE '%value%' OR contact_email LIKE '%value%'";
+		$structure["sql"]	= "(username LIKE '%value%' OR realname LIKE '%value%' OR contact_email LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 
@@ -106,8 +106,23 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-		}
 
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=user/users.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=user/users.php\">Export as PDF</a></p>";
+		}
+	}
+
+
+	function render_csv()
+	{
+		$this->obj_table->render_table_csv();
+	}
+	
+	
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
 	}
 
 }

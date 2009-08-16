@@ -100,9 +100,11 @@ class page_output
 		// display ledger
 		$this->obj_ledger->render_table_html();
 
-		// display CSV download link
-		print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/charts/ledger.php&id=". $this->id ."\">Export as CSV</a></p>";
+		// display CSV/PDF download link
+		print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/charts/ledger.php&id=". $this->id ."\">Export as CSV</a></p>";
+		print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/charts/ledger.php&id=". $this->id ."\">Export as PDF</a></p>";
 	}
+
 
 	function render_csv()
 	{
@@ -110,6 +112,12 @@ class page_output
 		$this->obj_ledger->render_table_csv();
 	}
 
+
+	function render_pdf()
+	{
+		// display ledger	
+		$this->obj_ledger->render_table_pdf();
+	}
 }
 
 ?>

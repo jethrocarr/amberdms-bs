@@ -47,7 +47,7 @@ class page_output
 	{
 		// verify that vendor exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $this->id ."'";
+		$sql_obj->string	= "SELECT id FROM vendors WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
@@ -103,7 +103,7 @@ class page_output
 
 		if (user_permissions_get("vendors_write"))
 		{
-			print "<p><b><a href=\"index.php?page=vendors/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=vendors/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=vendors/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> <a class=\"button\" href=\"index.php?page=vendors/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></p>";
 		}
 
 		// display options form

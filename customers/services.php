@@ -151,8 +151,7 @@ class page_output
 
 			if (user_permissions_get("customers_write"))
 			{
-				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add a new service to your customer</a>.</b></p>";
-				print "<p><b><a href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Automatically generate any new invoices</a>.</b></p>";
+				print "<p><a class=\"button\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Add Service to Customer</a> <a class=\"button\" href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Generate any new invoices</a></p>";
 			}
 		}
 

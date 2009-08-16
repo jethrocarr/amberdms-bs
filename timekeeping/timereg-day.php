@@ -50,6 +50,11 @@ class page_output
 		{
 			// try alternative input syntax
 			$this->date = security_script_input_predefined("date", $_GET["date_yyyy"] ."-". $_GET["date_mm"] ."-". $_GET["date_dd"]);
+
+			if ($this->date == "error")
+			{
+				$this->date = NULL;
+			}
 		}
 
 		if ($this->date)
@@ -59,9 +64,16 @@ class page_output
 		}
 		else
 		{
-			// load from session vars
 			if ($_SESSION["timereg"]["date"])
+			{
+				// load from session vars
 				$this->date = $_SESSION["timereg"]["date"];
+			}
+			else
+			{
+				// use today's date
+				$this->date = date("Y-m-d");
+			}
 		}
 
 		$this->date_split = split("-", $this->date);
@@ -264,18 +276,18 @@ class page_output
 		$date_next	= date("Y-m-d", $date_next);
 
 		print "<p><b>";
-		print "&lt;&lt; <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_previous&employeeid=". $this->employeeid ."\">Previous Day</a>";
+		print "<a class=\"button\" href=\"index.php?page=timekeeping/timereg-day.php&date=$date_previous&employeeid=". $this->employeeid ."\">&lt;&lt; Previous Day</a>";
 
 		if ($this->config_timesheet_booktofuture == "disabled")
 		{
 			if (time_date_to_timestamp($date_next) < mktime())
 			{
-				print " || <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day</a> &gt;&gt;";
+				print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day &gt;&gt;</a>";
 			}
 		}
 		else
 		{
-			print " || <a href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day</a> &gt;&gt;";
+			print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day &gt;&gt;</a>";
 		}
 
 		print "</b></p><br>";
@@ -335,19 +347,33 @@ class page_output
 
 				// display table
 				$this->obj_table_day->render_table_html();
-			
-				// display CSV download link
-				print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=timekeeping/timereg-day.php\">Export as CSV</a></p>";
 			}
 
+
+			print "<table width=\"100%\">";
+
+			// add time link
 			if (user_permissions_staff_get("timereg_write", $this->employeeid))
 			{
-				print "<p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php&date=". $this->date ."\">Add new time entry</a></p>";
+				print "<td align=\"left\" valign=\"top\"><p><a class=\"button\" href=\"index.php?page=timekeeping/timereg-day-edit.php&date=". $this->date ."&employeeid=". $this->employeeid ."\">Add new time entry</a></p></td>";
 			}
 			else
 			{
 				print "<p><i>You have read-only access to this employee and therefore can not add any more time.</i></p>";
 			}
+
+			// display CSV/PDF download link
+			if ($this->obj_table_day->data_num_rows)
+			{
+				print "<td align=\"right\">";
+				print "<p><a class=\"button_export\" href=\"index-export.php?mode=csv&page=timekeeping/timereg-day.php&date=". $this->date ."&employeeid=". $this->employeeid ."\">Export as CSV</a></p>";
+				print "<p><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=timekeeping/timereg-day.php&date=". $this->date ."&employeeid=". $this->employeeid ."\">Export as PDF</a></p>";
+				print "</td>";
+			}
+
+			print "</table>";
+
+
 		}
 
 	}
@@ -358,6 +384,15 @@ class page_output
 		if ($this->employeeid)
 		{
 			$this->obj_table_day->render_table_csv();
+		}
+	}
+
+
+	function render_pdf()
+	{
+		if ($this->employeeid)
+		{
+			$this->obj_table_day->render_table_pdf();
 		}
 	}
 

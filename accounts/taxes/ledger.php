@@ -4,11 +4,8 @@
 	
 	access: accounts_taxes_view
 
-	Links to other pages with information for the best way to get tax ledgers.
+	Provides a link to the view ledger page.
 */
-
-// include ledger functions
-require("include/accounts/inc_ledger.php");
 
 
 
@@ -35,6 +32,9 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Tax Details", "page=accounts/taxes/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Tax Ledger", "page=accounts/taxes/ledger.php&id=". $this->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Tax Collected", "page=accounts/taxes/tax_collected.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Tax Paid", "page=accounts/taxes/tax_paid.php&id=". $this->id ."");
+
 
 		if (user_permissions_get("accounts_taxes_write"))
 		{
@@ -79,24 +79,8 @@ class page_output
 			Page Heading
 		*/
 		print "<h3>TAX LEDGER</h3>";
-		print "<p>There are 3 different types of ledger-style reports you can generate for taxes.</p>";
-
-
-		print "<br><p>";
-		print "<b>1. Account Ledger</b><br><br>";
-		print "Transactions for this tax are entered against account \"". $this->obj_sql_tax->data[0]["name_chart"] ."\". You can <a href=\"index.php?page=accounts/charts/ledger.php&id=". $this->obj_sql_tax->data[0]["chartid"] ."\">view the ledger for this account here</a>.<br>";
-		print "</p>";
-
-		print "<br><p>";
-		print "<b>2. Tax Collected Report</b><br><br>";
-		print "Generate reports on the amount of tax collected either on an invoice or cash basis from accounts recievables using the <a href=\"index.php?page=accounts/taxes/tax_collected.php&id=". $this->id ."\">AR tax collected report</a>.<br>";
-		print "</p>";
-
-		print "<br><p>";
-		print "<b>3. Tax Paid Report</b><br><br>";
-		print "Generate reports on the amount of tax paid either on an invoice or cash basis from accounts payable using the <a href=\"index.php?page=accounts/taxes/tax_paid.php&id=". $this->id ."\">AP tax paid report</a>.<br>";
-		print "</p>";
-	
+		print "<p>Transactions for this tax are entered against account \"". $this->obj_sql_tax->data[0]["name_chart"] ."\". If you want to inspect the ledger itself, use the button below, but be aware that the ledger could potentially be used by other taxes as well.</p>";
+		print "<p><a class=\"button\" href=\"index.php?page=accounts/charts/ledger.php&id=". $this->obj_sql_tax->data[0]["chartid"] ."\">View Account Ledger</a></p>";
 	}
 }
 

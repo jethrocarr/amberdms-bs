@@ -119,7 +119,7 @@ class page_output
 		}
 
 		// add link
-		print "<p><b><a href=\"index.php?page=user/user-staffaccess-add.php&id=". $this->id ."\">Click here to add new staff access rights</a>.</b></p>";
+		print "<p><a class=\"button\" href=\"index.php?page=user/user-staffaccess-add.php&id=". $this->id ."\">Add new staff access rights</a></p>";
 
 	}	
 }

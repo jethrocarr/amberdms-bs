@@ -71,6 +71,7 @@ class quote_form_details
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
+		$structure["defaultvalue"]		= $_SESSION["user"]["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

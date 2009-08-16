@@ -48,53 +48,16 @@ if (user_permissions_get('accounts_ap_write'))
 	}
 	else
 	{
-		// what action should we take?
-		if ($journal->structure["id"])
+		if ($journal->structure["action"] == "delete")
 		{
-			// update or delete?
-			if ($journal->structure["action"] == "delete")
-			{
-				// DELETE
-				
-				if ($journal->action_delete())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry successfully removed.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst deleting the journal entry.";
-				}
-			}
-			else
-			{
-				// UPDATE
-			
-				if ($journal->action_update())
-				{
-					$_SESSION["notification"]["message"][] = "Journal entry updated successfully.";
-				}
-				else
-				{
-					$_SESSION["error"]["message"][] = "An error occured whilst updating the journal.";
-				}
-			}
-			
+			$journal->action_delete();
 		}
 		else
 		{
-			// CREATE
-			
-			if ($journal->action_create())
-			{
-				$_SESSION["notification"]["message"][] = "Journal entry created successfully.";
-			}
-			else
-			{
-				$_SESSION["error"]["message"][] = "An error occured whilst creating the new journal entry.";
-			}
+			// update or create
+			$journal->action_update();
 		}
-
-	
+		
 		// display updated details
 		header("Location: ../../index.php?page=accounts/ap/journal.php&id=". $journal->structure["customid"] ."");
 		exit(0);

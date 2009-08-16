@@ -79,7 +79,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "memo LIKE '%value%' OR source LIKE '%value%'";
+		$structure["sql"]	= "(memo LIKE '%value%' OR source LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 
@@ -150,15 +150,16 @@ class page_output
 				// display the table
 				$this->obj_table->render_table_html();
 
-				// display CSV download link
-				print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/gl/gl.php\">Export as CSV</a></p>";
+				// display CSV/PDF download link
+				print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/gl/gl.php\">Export as CSV</a></p>";
+				print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/gl/gl.php\">Export as PDF</a></p>";
 			}
 		}
 	}
 
+
 	function render_csv()
 	{
-
 		// label all the reference links
 		for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
 		{
@@ -167,7 +168,19 @@ class page_output
 
 		// display table
 		$this->obj_table->render_table_csv();
-	
+	}
+
+
+	function render_pdf()
+	{
+		// label all the reference links
+		for ($i=0; $i < count(array_keys($this->obj_table->data)); $i++)
+		{
+			$this->obj_table->data[$i]["code_reference"] = ledger_trans_typelabel($this->obj_table->data[$i]["type"], $this->obj_table->data[$i]["customid"], FALSE);
+		}
+
+		// display table
+		$this->obj_table->render_table_pdf();
 	}
 }
 

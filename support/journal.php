@@ -100,7 +100,7 @@ class page_output
 		print "<h3>SUPPORT JOURNAL</h3><br>";
 	
 		print "<p>Use this journal to file all notes, attachments or other information relating to this support ticket.</p>";
-		print "<p><b><a href=\"index.php?page=support/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=support/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+		print "<p><a class=\"button\" href=\"index.php?page=support/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> <a class=\"button\" href=\"index.php?page=support/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></p>";
 
 		// display options form
 		$this->obj_journal->render_options_form();

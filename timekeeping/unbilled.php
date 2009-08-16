@@ -255,7 +255,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%'";
+		$structure["sql"]	= "(timereg.description LIKE '%value%' OR project_phases.name_phase LIKE '%value%' OR staff.name_staff LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
@@ -383,8 +383,9 @@ class page_output
 			$this->obj_table->render_table_html();
 
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=timekeeping/unbilled.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=timekeeping/unbilled.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=timekeeping/unbilled.php\">Export as PDF</a></p>";
 		}
 	}
 
@@ -394,6 +395,11 @@ class page_output
 		$this->obj_table->render_table_csv();
 	}
 	
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf("amberphplib_table_landscape.tex");
+	}
+
 }
 
 ?>

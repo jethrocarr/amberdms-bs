@@ -156,8 +156,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/ar/ar.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/ar/ar.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/ar/ar.php\">Export as PDF</a></p>";
 		}
 	}
 
@@ -165,6 +166,11 @@ class page_output
 	function render_csv()
 	{
 		$this->obj_table->render_table_csv();
+	}
+
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf();
 	}
 
 }

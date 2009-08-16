@@ -45,9 +45,9 @@ class page_output
 		$this->obj_table->add_column("date", "date_end", "date_end");
 
 		// defaults
-		$this->obj_table->columns		= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email");
+		$this->obj_table->columns		= array("staff_code", "name_staff", "staff_position", "contact_phone", "contact_email");
 		$this->obj_table->columns_order		= array("name_staff");
-		$this->obj_table->columns_order_options	= array("name_staff", "staff_code", "staff_position", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end");
+		$this->obj_table->columns_order_options	= array("staff_code", "name_staff", "staff_position", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("staff");
@@ -70,7 +70,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "staff_code LIKE '%value%' OR name_staff LIKE '%value%' OR staff_position LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%'";
+		$structure["sql"]	= "(staff_code LIKE '%value%' OR name_staff LIKE '%value%' OR staff_position LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%')";
 		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
@@ -123,8 +123,9 @@ class page_output
 			// display the table
 			$this->obj_table->render_table_html();
 
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=hr/staff.php\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=hr/staff.php\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=hr/staff.php\">Export as PDF</a></p>";
 		}
 	}
 
@@ -134,6 +135,12 @@ class page_output
 		// display the table
 		$this->obj_table->render_table_csv();
 		
+	}
+
+	function render_pdf()
+	{
+		// display the table
+		$this->obj_table->render_table_pdf();
 	}
 	
 	

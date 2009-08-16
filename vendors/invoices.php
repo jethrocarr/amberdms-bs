@@ -113,7 +113,7 @@ class page_output
 		$structure["sql"]	= "date_trans <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, name_staff as label FROM staff ORDER BY name_staff ASC");
+		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["sql"]	= "account_ap.employeeid='value'";
 		$this->obj_table->add_filter($structure);
 
@@ -140,7 +140,13 @@ class page_output
 	{
 		// heading
 		print "<h3>VENDOR'S INVOICES</h3>";
-		print "<p>This page lists all the AP invoices from this vendor. <a href=\"index.php?page=accounts/ap/invoice-add.php\">Click here to add a new AP invoice</a>.</p>";
+		print "<p>This page lists all the AP invoices from this vendor.</p>";
+
+		// create invoice link
+		if (user_permissions_get("accounts_ap_write"))
+		{
+			print "<p><a class=\"button\" href=\"index.php?page=accounts/ap/invoice-add.php&vendorid=". $this->id ."\">Create New Invoice</a></p>";
+		}
 
 		// display options form
 		$this->obj_table->render_options_form();
@@ -169,7 +175,8 @@ class page_output
 
 
 			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=vendors/invoices.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=vendors/invoices.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=vendors/invoices.php&id=". $this->id ."\">Export as PDF</a></p>";
 		}
 	
 	}
@@ -179,6 +186,13 @@ class page_output
 	{
 		// display table
 		$this->obj_table->render_table_csv();
+	}
+
+
+	function render_pdf()
+	{
+		// display table
+		$this->obj_table->render_table_pdf();
 	}
 
 

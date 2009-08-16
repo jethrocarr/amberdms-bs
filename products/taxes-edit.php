@@ -79,13 +79,7 @@ class page_output
 
 		// tax selection
 		$structure = form_helper_prepare_dropdownfromdb("taxid", "SELECT id, name_tax as label FROM account_taxes");
-
-		if (count(array_keys($structure["values"])) == 1)
-		{
-			// if there is only 1 tax option avaliable, select it as the default
-			$structure["options"]["noselectoption"] = "yes";
-		}
-		
+		$structure["options"]["autoselect"] = "yes";
 		$this->obj_form->add_input($structure);
 		
 
@@ -100,7 +94,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "manual_option";
 		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Do not auto-calculate this tax, instead specify the amount charged for this tax in the field below.";
+		$structure["options"]["label"]	= "Do not auto-calculate this tax, instead use the specified manual value.";
 		$this->obj_form->add_input($structure);
 
 		// manual value input field
@@ -109,6 +103,9 @@ class page_output
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
 
+
+		$this->obj_form->add_action("manual_option", "default", "manual_amount", "hide");
+		$this->obj_form->add_action("manual_option", "1", "manual_amount", "show");
 
 
 		// IDs

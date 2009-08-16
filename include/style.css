@@ -327,13 +327,16 @@ a:active {
 /*
 	Buttons
 */
-.button:hover, .button-secondary:hover, .submit input:hover, input[type="button"]:hover, input[type="submit"]:hover
+
+
+.submit input:hover, input[type="button"]:hover, input[type="submit"]:hover, .button:hover, .button-secondary:hover
 {
 	background-color:	#74d465;
 	color:			#000000;
 }
 
-.submit input, a.button, input[type="button"], input[type="submit"]
+
+.submit input, input[type="button"], input[type="submit"], a.button
 {
 	background-color:	#128300;
 
@@ -388,6 +391,40 @@ a.button_small
 	-khtml-border-radius:	5px;
 	-webkit-border-radius:	5px;
 	border-radius:		5px;
+	-moz-box-sizing:	content-box;
+	-webkit-box-sizing:	content-box;
+	-khtml-box-sizing:	content-box;
+	box-sizing:		content-box;
+}
+
+
+.button_export:hover, .button_export:hover
+{
+	background-color:	#7e7e7e;
+	color:			#ffffff;
+}
+
+a.button_export
+{
+	background-color:	#333333;
+
+	text-decoration:	none;
+	font-size:		10px !important;
+	line-height:		12px;
+	padding: 		5px 15px;
+	cursor:			pointer;
+
+	color:			#ffffff;
+	font-style:		normal;
+	font-weight:		normal;
+
+	border-width:		0px;
+	border-style:		solid;
+
+	-moz-border-radius:	9px;
+	-khtml-border-radius:	9px;
+	-webkit-border-radius:	9px;
+	border-radius:		9px;
 	-moz-box-sizing:	content-box;
 	-webkit-box-sizing:	content-box;
 	-khtml-box-sizing:	content-box;

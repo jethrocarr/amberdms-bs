@@ -144,7 +144,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "time_groups.description LIKE '%value%' OR time_groups.name_group LIKE '%value%'";
+		$structure["sql"]	= "(time_groups.description LIKE '%value%' OR time_groups.name_group LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
 
@@ -241,18 +241,30 @@ class page_output
 
 			// display table data
 			$this->obj_table->render_table_html();
-
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=projects/timebilled.php&id=". $this->id ."\">Export as CSV</a></p>";
-			
+				
 		}
 
+
+		print "<table width=\"100%\"><tr>";
+		print "<td valign=\"top\">";
 
 		if (user_permissions_get("projects_timegroup"))
 		{
 			// display add time group link
 			print "<p><a class=\"button\" href=\"index.php?page=projects/timebilled-edit.php&id=". $this->id ."\">Add new time group</a></p>";
 		}
+
+		print "</td><td align=\"right\">";
+
+		if ($this->obj_table->data_num_rows)
+		{
+			// display CSV/PDF download link
+			print "<p><a class=\"button_export\" href=\"index-export.php?mode=csv&page=projects/timebilled.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=projects/timebilled.php&id=". $this->id ."\">Export as PDF</a></p>";
+		}
+
+		print "</td>";
+		print "</tr></table>";
 
 	}
 

@@ -108,7 +108,7 @@ class page_output
 		
 		if (user_permissions_get("accounts_quotes_write"))
 		{
-			print "<p><b><a href=\"index.php?page=accounts/quotes/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> || <a href=\"index.php?page=accounts/quotes/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=accounts/quotes/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> <a class=\"button\" href=\"index.php?page=accounts/quotes/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></p>";
 		}
 		else
 		{
