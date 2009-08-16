@@ -768,7 +768,7 @@ class table
 				foreach (array_keys($this->filter) as $fieldname)
 				{
 					if ($this->filter[$fieldname]["type"] == "dropdown")
-						$this->filter[$fieldname]["options"]["width"] = 150;
+						$this->filter[$fieldname]["options"]["width"] = 300;
 
 					$form->add_input($this->filter[$fieldname]);
 					$form->render_row($fieldname);
@@ -1510,20 +1510,24 @@ class table
 		// fetch the number of columns so we can draw the latex table
 		$col_num = count($this->columns);
 
+
+		// work out the number columns with the totals
+		$col_num_with_total	= $col_num;
+
 		if ($this->total_rows)
-			$col_num++;
+			$col_num_with_total++;
 
 		// fetch column widths (float of percent of one)
-		$col_width = (0.9 / $col_num);
+		$col_width = (0.9 / $col_num_with_total);
 
 		$output_tabledata[]		= '\noindent \begin{longtable}{';
 
-		for ($i=0; $i < $col_num; $i++)
+		for ($i=0; $i < $col_num_with_total; $i++)
 		{
 			$output_tabledata[] 	= '>{\centering}p{'. $col_width .'\columnwidth}';
 		}
 
-		$output_tabledata[]		= '}\cline{1-'. $col_num .'}';
+		$output_tabledata[]		= '}\cline{1-'. $col_num_with_total .'}';
 
 
 		// define column headers
@@ -1538,12 +1542,13 @@ class table
 
 		}
 
+		// add header for total
 		if ($this->total_rows)
 		{
 			$output_tabledata[]	= ' & \textbf{Total} ';
 		}
 
-		$output_tabledata[]		= '\endfirsthead \cline{1-'. $col_num .'}';
+		$output_tabledata[]		= '\endfirsthead \cline{1-'. $col_num_with_total .'}';
 
 
 		
@@ -1565,7 +1570,7 @@ class table
 
 		if ($this->total_rows)
 		{
-			$line .= ' & (total) ';
+			$line .= ' & (column_total) ';
 		}
 
 		$line .= '\tabularnewline';
@@ -1577,7 +1582,7 @@ class table
 		// display totals for columns (if required)
 		if ($this->total_columns)
 		{
-			$output_tabledata[]		= '\cline{1-'. $col_num .'}';
+			$output_tabledata[]		= '\cline{1-'. $col_num_with_total .'}';
 
 
 			$line = "";
@@ -1604,7 +1609,7 @@ class table
 
 
 		// end data table
-		$output_tabledata[]		= '\cline{1-'. $col_num .'}';
+		$output_tabledata[]		= '\cline{1-'. $col_num_with_total .'}';
 		$output_tabledata[]		= '\end{longtable}';
 
 
