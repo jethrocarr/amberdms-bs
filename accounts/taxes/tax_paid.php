@@ -96,8 +96,9 @@ class page_output
 		// display tax report
 		if ($this->obj_taxreport->render_html())
 		{
-			// display CSV download link
-			print "<p align=\"right\"><a href=\"index-export.php?mode=csv&page=accounts/taxes/tax_paid.php&id=". $this->id ."\">Export as CSV</a></p>";
+			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=accounts/taxes/tax_paid.php&id=". $this->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=accounts/taxes/tax_paid.php&id=". $this->id ."\">Export as PDF</a></p>";
 		}
 	}
 
@@ -107,6 +108,10 @@ class page_output
 		$this->obj_taxreport->render_csv();
 	}
 
+	function render_pdf()
+	{
+		$this->obj_taxreport->render_pdf();
+	}
 }
 
 ?>
