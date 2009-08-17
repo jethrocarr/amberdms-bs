@@ -1729,6 +1729,17 @@ class invoice_items
 
 
 		/*
+			Fetch required values
+		*/
+
+		if ($this->type_item == "time")
+		{
+			// fetch the current timegroup id - we need this to check if the timegroup ID has changed.
+			$this->data["timegroupid_old"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='TIMEGROUPID'");
+		}
+	
+
+		/*
 			Start SQL Transaction
 		*/
 
@@ -1804,6 +1815,25 @@ class invoice_items
 		// create options for time items
 		if ($this->type_item == "time")
 		{
+		
+			// check if the time group has been changed - if so, we need to unlock the old timegroup, otherwise
+			// the system will end up with a locked time group that can never be used.
+			if ($this->data["timegroupid_old"] != $this->data["timegroupid"])
+			{
+				// fetch the current lock status of the time group
+				// if it's set to 1, we want to keep that, otherwise if 2, set to 0
+				$locked = sql_get_singlevalue("SELECT locked as value FROM time_groups WHERE id='". $this->data["timegroupid_old"] ."' LIMIT 1");
+
+				if ($locked == 2)
+				{
+					$locked = 0;
+				}
+
+				$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='$locked' WHERE id='". $this->data["timegroupid_old"] ."' LIMIT 1";
+				$sql_obj->execute();
+			}
+
+
 			// create options entry for the timegroupid
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'TIMEGROUPID', '". $this->data["timegroupid"] ."')";
 			$sql_obj->execute();
