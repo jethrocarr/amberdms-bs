@@ -1570,7 +1570,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"][$item->type_invoice ."_invoice_". $mode] = "failed";
-		header("Location: ../../index.php?page=$returnpage_error&id=". $item->id_invoice ."&type=". $item->type_item ."");
+		header("Location: ../../index.php?page=$returnpage_error&id=". $item->id_invoice ."&itemid=". $item->id_item ."&type=". $item->type_item ."");
 		exit(0);
 	}
 	else
