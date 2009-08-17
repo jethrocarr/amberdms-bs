@@ -101,7 +101,7 @@ function service_periods_generate($customerid = NULL)
 						// check if we need to generate a new period
 						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
 						{
-							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of $date_period_next");
+							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of ". $sql_service_obj->data[0]["date_period_next"]);
 
 							// the latest billing period has finished, we need to generate a new time period.
 							if (!service_periods_add($data["id"], $billing_mode))
@@ -464,7 +464,7 @@ function service_invoices_generate($customerid = NULL)
 	$sql_customers_obj->string	= "SELECT id, code_customer, name_contact, contact_email FROM customers";
 
 	if ($customerid)
-		$sql_customers_obj->string .= " WHERE id='$customerid'";
+		$sql_customers_obj->string .= " WHERE id='$customerid' LIMIT 1";
 
 
 	$sql_customers_obj->execute();
@@ -545,7 +545,7 @@ function service_invoices_generate($customerid = NULL)
 					
 
 				// fetch the ID of the summary type label
-				$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='ar_summary_account'");
+				$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='ar_summary_account' LIMIT 1");
 
 				// fetch the top AR account
 				$sql_query	= "SELECT "
@@ -700,7 +700,7 @@ function service_invoices_generate($customerid = NULL)
 
 					// create item
 					$invoice_item->prepare_data($itemdata);
-					$invoice_item->action_create();
+					$invoice_item->action_update();
 
 					unset($invoice_item);
 
@@ -932,7 +932,7 @@ function service_invoices_generate($customerid = NULL)
 
 						// create the item
 						$invoice_item->prepare_data($itemdata);
-						$invoice_item->action_create();
+						$invoice_item->action_update();
 
 						unset($invoice_item);
 						

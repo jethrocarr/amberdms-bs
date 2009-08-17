@@ -7,7 +7,7 @@
 
 
 // define the schema version required
-$GLOBALS["config"]["schema_version"] = "20090407";
+$GLOBALS["config"]["schema_version"] = "20090817";
 
 
 if ($config["instance"] == "hosted")

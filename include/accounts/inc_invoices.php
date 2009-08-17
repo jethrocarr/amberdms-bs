@@ -1735,11 +1735,24 @@ class invoice_items
 	function action_update()
 	{
 		log_debug("invoice_items", "Executing action_update()");
-		
+	
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		// create a new item if required
 		if (!$this->id_item)
 		{
-			log_write("error", "invoice_items", "No item ID was supplied before running action_update");
-			return 0;
+			if (!$this->action_create())
+			{
+				$sql_obj->trans_rollback();
+				return 0;
+			}
 		}
 
 
@@ -1754,14 +1767,7 @@ class invoice_items
 		}
 	
 
-		/*
-			Start SQL Transaction
-		*/
-
-		$sql_obj = New sql_query;
-		$sql_obj->trans_begin();
-
-
+	
 		/*
 			Update Item
 		*/
