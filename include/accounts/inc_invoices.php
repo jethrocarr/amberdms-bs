@@ -842,8 +842,14 @@ class invoice
 		
 		$this->obj_pdf->prepare_add_field("date\_trans", time_format_humandate($this->data["date_trans"]));
 		$this->obj_pdf->prepare_add_field("amount", format_money($this->data["amount"]));
-		$this->obj_pdf->prepare_add_field("amount\_total", format_money($this->data["amount_total"]));
+		$this->obj_pdf->prepare_add_field("amount\_total", format_money($this->data["amount_total"] - $this->data["amount_paid"]));
 		$this->obj_pdf->prepare_add_field("amount\_currency", sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") );
+
+		if ($this->data["amount_paid"] > 0)
+		{
+			$this->obj_pdf->prepare_add_field("amount\_paid", format_money($this->data["amount_paid"]));
+		}
+
 
 
 		/*
@@ -945,7 +951,7 @@ class invoice
 					$structure["info"]	= $sql_obj->data[0]["name_account"];
 					$structure["quantity"]	= " ";
 
-					$itemdata["price"]	= " ";
+					$itemdata["price"]	= NULL;;
 
 					unset($sql_obj);
 				break;
@@ -954,7 +960,16 @@ class invoice
 
 			$structure["description"]	= $itemdata["description"];
 			$structure["units"]		= $itemdata["units"];
-			$structure["price"]		= format_money($itemdata["price"], 1);
+
+			if ($itemdata["price"])
+			{
+				$structure["price"]	= format_money($itemdata["price"], 1);
+			}
+			else
+			{
+				$structure["price"]	= "";
+			}
+
 			$structure["amount"]		= format_money($itemdata["amount"], 1);
 
 			$structure_invoiceitems[] = $structure;
