@@ -111,6 +111,10 @@
 %% foreach taxes
 %% & & \multicolumn{3}{l}{(name_tax)} & (amount)\tabularnewline
 %% end
+%% if amount\_paid
+%% \cline{3-6} 
+%% &  & \multicolumn{3}{l}{Amount Paid} & (amount\_paid)\tabularnewline
+%% end
 \cline{3-6} 
  &  & \multicolumn{3}{l}{Balance Owning ((amount\_currency))} & (amount\_total)\tabularnewline
 \end{tabular}
