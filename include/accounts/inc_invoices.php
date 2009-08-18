@@ -1132,6 +1132,7 @@ class invoice
 		*/
 		
 		log_debug("invoice", "Sending email");
+
 		// fetch sender address
 		//
 		// users have the choice of sending as the company or as their own staff email address & name.
@@ -1139,12 +1140,12 @@ class invoice
 		if ($email_sender == "user")
 		{
 			// send as the user
-			$email_sender = user_information("realname") . " <". user_information("contact_email") .">";
+			$email_sender = "\"". user_information("realname") . "\" <". user_information("contact_email") .">";
 		}
 		else
 		{
 			// send as the system
-			$email_sender = sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." <". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") .">";
+			$email_sender = "\"". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ."\" <". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") .">";
 		}
 
 
@@ -1172,50 +1173,87 @@ class invoice
 	 	$mail_headers	= $mail_mime->headers($mail_headers);
 
 		$mail		= & Mail::factory('mail');
-		$mail->send($email_to, $mail_headers, $mail_body);
+		$status 	= $mail->send($email_to, $mail_headers, $mail_body);
+
+		if (PEAR::isError($status))
+		{
+			log_write("error", "inc_invoice", "An error occured whilst attempting to send the email: ". $status->getMessage() ."");
+		}
+		else
+		{
+			/*
+				Start SQL Transaction to post email to journal
+			*/
+
+			$sql_obj = New sql_query;
+			$sql_obj->trans_begin();
 
 
-		/*
-			Mark the invoice as having been sent
-		*/
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "UPDATE account_". $this->type ." SET date_sent='". date("Y-m-d") ."', sentmethod='email' WHERE id='". $this->id ."'";
-		$sql_obj->execute();
+			/*
+				Mark the invoice as having been sent
+			*/
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE account_". $this->type ." SET date_sent='". date("Y-m-d") ."', sentmethod='email' WHERE id='". $this->id ."'";
+			$sql_obj->execute();
 
 
-		/*
-			Add the email information to the journal
-		*/
+			/*
+				Add the email information to the journal
+			*/
 
-		$journal = New journal_process;
-		
-		$journal->prepare_set_journalname("account_". $this->type);
-		$journal->prepare_set_customid($this->id);
-		$journal->prepare_set_type("text");
-		
-		$journal->prepare_set_title("EMAIL: $email_subject");
-
-		$data["content"] = NULL;
-		$data["content"] .= "To: ". $email_to ."\n";
-		$data["content"] .= "Cc: ". $email_cc ."\n";
-		$data["content"] .= "Bcc: ". $email_bcc ."\n";
-		$data["content"] .= "From: ". $email_sender ."\n";
-		$data["content"] .= "\n";
-		$data["content"] .= $email_message;
-		$data["content"] .= "\n\n";
-		$data["content"] .= "[attachment scrubbed]";
+			$journal = New journal_process;
 			
+			$journal->prepare_set_journalname("account_". $this->type);
+			$journal->prepare_set_customid($this->id);
+			$journal->prepare_set_type("text");
 			
-		$journal->prepare_set_content($data["content"]);
+			$journal->prepare_set_title("EMAIL: $email_subject");
 
-		$journal->action_create();
+			$data["content"] = NULL;
+			$data["content"] .= "To: ". $email_to ."\n";
+			$data["content"] .= "Cc: ". $email_cc ."\n";
+			$data["content"] .= "Bcc: ". $email_bcc ."\n";
+			$data["content"] .= "From: ". $email_sender ."\n";
+			$data["content"] .= "\n";
+			$data["content"] .= $email_message;
+			$data["content"] .= "\n\n";
+			$data["content"] .= "[attachment scrubbed]";
+				
+				
+			$journal->prepare_set_content($data["content"]);
+
+			$journal->action_create();
+
+
+			/*
+				Commit
+			*/
+			if (error_check())
+			{
+				$sql_obj->trans_rollback();
+			}
+			else
+			{
+				$sql_obj->trans_commit();
+			}
+
+		} // end if successful send
 
 
 		// cleanup - remove the temporary files
 		log_debug("inc_invoices_process", "Performing cleanup - removing temporary file $tmp_filename");
 		unlink($tmp_filename);
 
-		return 1;
+
+		// return
+		if (error_check())
+		{
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
 	
 	} // end of email_invoice
 
