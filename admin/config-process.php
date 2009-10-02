@@ -67,9 +67,11 @@ if (user_permissions_get("admin"))
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 	{
 		$data["EMAIL_ENABLE"]		= security_form_input_predefined("any", "EMAIL_ENABLE", 0, "");
+		$data["PATH_TMPDIR"]		= security_form_input_predefined("any", "PATH_TMPDIR", 1, "");
 		$data["DATA_STORAGE_LOCATION"]	= security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
 		$data["DATA_STORAGE_METHOD"]	= security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
 		$data["APP_PDFLATEX"]		= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+		$data["APP_MYSQL_DUMP"]		= security_form_input_predefined("any", "APP_MYSQL_DUMP", 1, "");
 
 		if ($data["EMAIL_ENABLE"] == "on")
 		{

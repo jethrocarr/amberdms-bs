@@ -47,7 +47,7 @@ class page_output
 		$sql_obj = New sql_query;
 		$usage = $sql_obj->stats_diskusage();
 
-		format_msgbox("info", "<p>Estimated download size: ". format_size_human($usage) ."</p>");
+		format_msgbox("info", "<p>Estimated download size: ". format_size_human($usage) ." (before compression)</p>");
 
 		
 
@@ -58,7 +58,7 @@ class page_output
 
 		if ($sql_obj->num_rows())
 		{
-			format_msgbox("important", "<p>Some of the journal files are not inside the database, these will need to be downloaded seporately from the web-server</p>");
+			format_msgbox("important", "<p>Some of the files stored in the journal have been saved to the filesystem rather than the MySQL database. This backup will provide a copy of the database, but you will also need to download the contents of the data/ directory.</p>");
 		}
 
 

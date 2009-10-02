@@ -40,9 +40,10 @@ if (user_permissions_get("admin"))
 		Export Database
 	*/
 
-	$dbname = sql_get_singlevalue("SELECT DATABASE() as value");
+	$dbname		= sql_get_singlevalue("SELECT DATABASE() as value");
+	$app_mysqldump	= sql_get_singlevalue("SELECT value FROM config WHERE name='APP_MYSQL_DUMP'");
 
-	system("/usr/bin/mysqldump --defaults-file=$file_config $dbname > $file_export");
+	system("$app_mysqldump --defaults-file=$file_config $dbname | gzip > $file_export");
 
 
 
@@ -50,7 +51,7 @@ if (user_permissions_get("admin"))
 		Set HTTP headers
 	*/
 
-	$filename = "amberdms_bs_export_". mktime() .".sql";
+	$filename = "amberdms_bs_export_". mktime() .".sql.gz";
 	
 	// required for IE, otherwise Content-disposition is ignored
 	if (ini_get('zlib.output_compression'))
