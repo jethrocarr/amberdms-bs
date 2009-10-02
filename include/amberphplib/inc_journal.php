@@ -1192,8 +1192,8 @@ class journal_input extends journal_base
 		
 
 		// define subforms
-		$this->form_obj->subforms["journal_edit"]	= array("upload", "content");
 		$this->form_obj->subforms["hidden"]		= array("id_journal", "id_custom", "type", "action");
+		$this->form_obj->subforms["journal_edit"]	= array("upload", "content");
 		$this->form_obj->subforms["submit"]		= array("submit");
 		
 		// load data
@@ -1459,8 +1459,9 @@ class journal_process extends journal_base
 				if (!$this->structure["id"])
 				{
 					// this is a new upload - a file MUST be provided for the first upload
-					$_SESSION["error"]["message"][]		= "You must upload a file.";
-					$_SESSION["error"]["upload-error"][]	= 1;
+					// use the file_storage class to perform error handling.
+					$file_obj = New file_storage;
+					$file_obj->verify_upload_form("upload");
 				}
 				else
 				{
