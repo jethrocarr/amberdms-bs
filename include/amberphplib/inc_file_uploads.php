@@ -166,6 +166,31 @@ class file_storage
 	{
 		log_write("debug", "file_storage", "Executing verify_upload_form($fieldname, Array)");
 
+		// make sure a file has been provided.
+		if (!$_FILES[ $fieldname ]['size'])
+		{
+			// no file provided - maybe it hit the PHP max?
+			switch ($_FILES[ $fieldname ]["error"])
+			{
+				case UPLOAD_ERR_INI_SIZE:
+					log_write("error", "file_storage", "File upload was in excess of maximum PHP limit of ". ini_get('upload_max_filesize') ."");
+				break;
+
+				case UPLOAD_ERR_NO_FILE:
+					log_write("error", "file_storage", "No file supplied for upload.");
+				break;
+
+				default:
+					log_write("error", "file_storage", "Unexpected upload error: ". $_FILES[ $fieldname ]["error"] ."");
+				break;
+			}
+
+
+			// return failure
+			$_SESSION["error"]["$fieldname-error"] = 1;
+			return 0;
+		}
+
 		// check the filesize is less than or equal to the max upload size
 		if ($_FILES[ $fieldname ]['size'] >= $this->config["upload_maxbytes"])
 		{
