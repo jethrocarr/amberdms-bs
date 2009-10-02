@@ -195,6 +195,7 @@ class page_output
 		$structure["fieldname"]				= "UPLOAD_MAXBYTES";
 		$structure["type"]				= "input";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["label"]			= " Bytes. Server maximum is ". ini_get('upload_max_filesize') .", to increase server limit, you must edit php.ini";
 		$this->obj_form->add_input($structure);
 		
 

@@ -113,6 +113,16 @@ if (user_permissions_get("admin"))
 	}
 
 
+	// check max upload size
+	$system_upload_max_filesize = format_size_bytes(ini_get('upload_max_filesize'));
+
+	if ($data["UPLOAD_MAXBYTES"] > $system_upload_max_filesize)
+	{
+		// adjust the value to the max possible and add notification about it.
+		$data["UPLOAD_MAXBYTES"] = $system_upload_max_filesize;
+
+		log_write("notification", "process", "The maximum upload is ". format_size_human($system_upload_max_filesize) ." due to server limits, the maximum upload value for this application has been adjusted to suit.");
+	}
 
 
 	// Process file upload data
