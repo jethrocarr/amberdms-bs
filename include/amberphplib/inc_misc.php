@@ -783,6 +783,8 @@ function log_debug_render()
 	file_generate_name
 
 	Generates a unique name based on the base name provided and touches it to reserve it.
+	
+	File permissions are 660, limiting access to webserver user for security reasons.
 
 	Fields
 	basename		Base of the filename
@@ -816,6 +818,7 @@ function file_generate_name($basename, $extension = NULL)
 		{
 			// found an avaliable ID
 			touch($filename);
+			chmod($filename, 0660);		// note: what happens on windows?
 			return $filename;
 		}
 	}
