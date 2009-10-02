@@ -632,6 +632,40 @@ class sql_query
 
 
 
+
+	/*
+		stats_diskusage($dbname)
+
+		Reports how much disk space has been used by the database.
+
+		Values
+		dbname		(optional) Name of the DB to report on, if not specified, uses current DB selected.
+
+		Returns
+		#		Amount of usage in bytes
+	*/
+	function stats_diskusage($dbname = NULL)
+	{
+		log_write("debug", "sql_query", "Executing stats_diskusage($dbname)");
+
+		// select DB & verify
+		if (!$dbname)
+		{
+			$dbname = sql_get_singlevalue("SELECT DATABASE() as value");
+
+			if (!$dbname)
+			{
+				log_write("debug", "sql_query", "No database currently selected, unable to return value");
+				return 0;
+			}
+		}
+
+		// execute query
+		return sql_get_singlevalue("SELECT sum( data_length + index_length ) as value FROM information_schema.TABLES WHERE table_schema='$dbname' GROUP BY table_schema");
+	}
+
+
+
 } // end sql_query class
 
 
