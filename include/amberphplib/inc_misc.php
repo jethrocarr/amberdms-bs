@@ -180,7 +180,7 @@ function format_size_human($bytes)
 	if(!$bytes)
 	{
 		// unknown - most likely the program hasn't called one one of the fetch_information_by_* functions first.
-		log_debug("file_base", "Error: Unable to determine file size - no value provided");	
+		log_debug("misc", "Error: Unable to determine file size - no value provided");	
 		return "unknown size";
 	}
 	else
@@ -189,6 +189,66 @@ function format_size_human($bytes)
 		return round($bytes/pow(1024, ($i = floor(log($bytes, 1024)))), 2) . $file_size_types[$i];
 	}
 }
+
+/*
+	format_size_bytes($string)
+
+	Converts a human readable size string to bytes.
+*/
+function format_size_bytes($string)
+{
+	log_debug("misc", "Executing format_size_bytes($string)");
+
+	if(!$string)
+	{
+		// unknown - most likely the program hasn't called one one of the fetch_information_by_* functions first.
+		log_debug("misc", "Error: Unable to determine file size - no value provided");	
+		return "unknown size";
+	}
+	else
+	{
+		$string	= strtolower($string);
+		$string = preg_replace("/\s*/", "", $string);			// strip spaces
+		$string = preg_replace("/,/", "", $string);			// strip formatting
+		$string = preg_match("/^([0-9]*)([a-z]*)$/", $string, $values);
+
+		if ($values[2])
+		{
+			switch ($values[2])
+			{
+		        	case "g":
+				case "gb":
+					$bytes = (($values[1] * 1024) * 1024) * 1024;
+				break;
+
+				case "m":
+				case "mb":
+					$bytes = ($values[1] * 1024) * 1024;
+				break;
+
+				case "k":
+				case "kb":
+					$bytes = $values[1] * 1024;
+				break;
+
+				case "b":
+				case "bytes":
+				default:
+					$bytes = int($values[1]);
+				break;
+			}
+		}
+		else
+		{
+			// assume value must be in bytes already.
+			$bytes = int($values[1]);
+		}
+
+		return $bytes;
+	}
+}
+
+
 
 
 /*
