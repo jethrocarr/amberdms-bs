@@ -436,6 +436,7 @@ class form_input
 						["no_fieldname"]		Do not render a field name and shift the data left by 1 column
 						["req"]				Set to "yes" to mark the field as being required
 						["max_length"]			Max length for input types
+						["wrap"]			Enable/disable wrapping for textarea boxes (set to either on or off)
 						["width"]			Width of field object.
 						["height"]			Height of field object.
 						["label"]			Label field for checkboxes or i to use instead of a translation
@@ -520,6 +521,12 @@ class form_input
 
 				// display
 				print "<textarea name=\"$fieldname\" ";
+				
+				if ($this->structure[$fieldname]["options"]["wrap"])
+				{
+					print "wrap=\"". $this->structure[$fieldname]["options"]["wrap"] ."\" ";
+				}
+
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px; height: ". $this->structure[$fieldname]["options"]["height"] ."px;\" ";
 				print ">". $this->structure[$fieldname]["defaultvalue"] ."</textarea>";
 

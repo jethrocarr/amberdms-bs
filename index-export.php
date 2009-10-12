@@ -180,6 +180,12 @@ if ($page_valid)
 			$page_obj->render_ps();
 		break;
 
+		case "raw":
+		case "patch":
+			$page_obj->render_raw();
+		break;
+
+		case "pdf":
 		default:
 			print "Invalid mode supplied";
 		break;

@@ -148,14 +148,13 @@ function format_file_name($filepath)
 /*
 	format_text_display($text)
 
-	Formats a block of text from a database into a form suitable for display as HTML by
-	replacing any \n with <br> statments
+	Formats a block of text from a database into a form suitable for display as HTML.
 
 	Returns the processed text.
 */
 function format_text_display($text)
 {
-	log_debug("misc", "Executing format_text_display($text)");
+	log_debug("misc", "Executing format_text_display(TEXT)");
 	
 	// replace unrenderable html tags of > and <
 	$text = str_replace(">", "&gt;", $text);
@@ -166,6 +165,26 @@ function format_text_display($text)
 
 	return $text;
 }
+
+
+/*
+	format_text_textarea($text)
+
+	Formats a block of text from a database into a form suitable for display inside textarea forms.
+
+	Returns the processed text.
+*/
+function format_text_textarea($text)
+{
+	log_debug("misc", "Executing format_text_textarea(TEXT)");
+	
+	// replace unrenderable html tags of > and <
+	$text = str_replace(">", "&gt;", $text);
+	$text = str_replace("<", "&lt;", $text);
+	
+	return $text;
+}
+
 
 
 /*
@@ -906,5 +925,116 @@ function file_generate_tmpfile()
 }
 
 
+
+
+/*
+	dir_generate_name
+
+	Generates a unique directory based on the base name provided and creates it.
+	
+	Dir permissions are 770, limiting access to webserver user for security reasons.
+
+	Fields
+	basename		Base of the directory name,
+
+	Returns
+	string			Name of the directory
+*/
+function dir_generate_name($basename)
+{
+	log_debug("inc_misc", "Executing dir_generate_name($basename)");
+	
+
+	// calculate a temporary directory name
+	$uniqueid = 0;
+	while ($complete == "")
+	{
+		$dirname = $basename ."_". mktime() ."_$uniqueid";
+
+		if (file_exists($dirname))
+		{
+			// the dirname has already been used, try incrementing
+			$uniqueid++;
+		}
+		else
+		{
+			// found an avaliable ID
+			mkdir($dirname);
+			chmod($dirname, 0770);		// note: what happens on windows?
+			return $dirname;
+		}
+	}
+}
+
+
+/*
+	dir_generate_tmpdir
+
+	Generates a tempory directory and returns the full path - directories do
+	not automatically get deleted, unless the temp dir is subject to an external
+	process such as tmpwatch.
+
+	Returns
+	string		directory path
+*/
+function dir_generate_tmpdir()
+{
+	log_debug("inc_misc", "Executing dir_generate_tmpfile()");
+
+	$path_tmpdir = sql_get_singlevalue("SELECT value FROM config WHERE name='PATH_TMPDIR'");
+
+	return dir_generate_name("$path_tmpdir/temporary_dir");
+}
+
+
+/*
+	dir_list_contents
+
+	Returns an array listing all files (recursively) in the selected directory.
+
+	Values
+	directory	(optional) defaults to current dir
+
+	Returns
+	0		failure
+	array		list of directories
+
+*/
+function dir_list_contents($directory='.')
+{
+	log_debug("inc_misc", "Executing dir_list_contents($directory)");
+
+	 $files = array();
+
+	  if (is_dir($directory))
+	  {
+		$fh = opendir($directory);
+
+		// loop through files
+		while (($file = readdir($fh)) !== false)
+		{
+			if ($file != "." && $file != "..")
+			{
+				$filepath = $directory . '/' . $file;
+
+				array_push($files, $filepath);
+				
+				if ( is_dir($filepath) )
+				{
+					$files = array_merge($files, dir_list_contents($filepath));
+				}
+			}
+		}
+
+		closedir($fh);
+	}
+	else
+	{
+		log_write("error", "inc_misc", "Invalid/non-existant directory supplied");
+		return 0;
+	}
+
+	return $files;
+}
 
 ?>
