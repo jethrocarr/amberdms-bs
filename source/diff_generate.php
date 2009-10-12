@@ -71,7 +71,7 @@ class page_output
 				Check if the source already exists in the temporary directory, if not, then download from Amberdms.
 			*/
 
-			// structure of all versions and md5sums
+			// download URLs
 			$amberdms_source["1.3.0"]["url"]	= "http://www.amberdms.com/repo/beta/";
 			$amberdms_source["1.3.0"]["file"]	= "amberdms-bs-1.3.0.beta1.tar.bz2";
 			
@@ -114,7 +114,7 @@ class page_output
 			}
 
 
-			// verify that file has been coppied to tmp dir
+			// verify that file has been copied to tmp dir
 			if (!file_exists($this->tmpdir ."/orig.tar.bz2"))
 			{
 				log_write("error", "execute", "An unexpected problem occured whilst copying source tarball to temporary unpacking directory.");
