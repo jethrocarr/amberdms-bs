@@ -53,13 +53,9 @@ if (user_online())
 		HTTP POST data to Amberdms's servers
 	*/
 
-/*	//$response = http_post_fields("https://www.amberdms.com/products/billing_system/", $fields, $files);
-	$response = http_post_fields("https://devel-webapps.local.amberdms.com/development/amberdms/www.amberdms.com/htdocs/api/opensource/amberdms_patch_submit.php", $fields, $files);
-*/
-
 
 	// set POST variables
-	$url = "https://devel-webapps.local.amberdms.com/development/amberdms/www.amberdms.com/htdocs/api/opensource/amberdms_patch_submit.php";
+	$url = "https://www.amberdms.com/api/opensource/amberdms_patch_submit.php";
 
 	// encode values into a string suitable for upload
 	$fields = array(
