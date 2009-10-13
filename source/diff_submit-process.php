@@ -81,24 +81,43 @@ if (user_online())
 	curl_setopt($ch,CURLOPT_URL,$url);
 	curl_setopt($ch,CURLOPT_POST,count($fields));
 	curl_setopt($ch,CURLOPT_POSTFIELDS,$fields_string);
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 	// don't validate the cert, security is not key
-								// here since it's OSS code we are submitting
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 
 	// execute post
 	if (!curl_exec($ch))
 	{
 		log_write("error", "process", "Curl error whilst POSTing data: ". curl_error($ch));
-		log_write("error", "process", "An unexpected error occured whilst attempting to submit the patch to Amberdms - try again later, or email the patch manually to <a href=\"mailto:developers@amberdms.com\">developers@amberdms.com</a> instead.");
 	}
 	else
 	{
+		// check HTTP return code
+		switch ($http_return_code = curl_getinfo($ch, CURLINFO_HTTP_CODE))
+		{
+			case "400":
+				log_write("error", "process", "Invalid data provided to Amberdms patch submission API, information refused.");
+			break;
+
+			case "200":
+				log_write("notification", "process", "THANK YOU! Your patch has been successfully submitted to Amberdms, we will email you to keep you informed on the status of your submission");
+			break;
+
+			default:
+				log_write("debug", "process", "Unexpected error, HTTP code $http_return_code returned whilst attempting to connect to Amberdms patch submission API.");
+			break;
+		}
+		
 		// TODO: would be very nice to have a proper public tracking application for patches and bug reports
-		log_write("notification", "process", "THANK YOU! Your patch has been successfully submitted to Amberdms, we will email you to keep you informed on the status of your submission");
 	}
 
 	//close connection
 	curl_close($ch);
 
+
+	// tell user about alternatives if submission failed
+	if ($_SESSION["error"]["message"])
+	{
+		log_write("error", "process", "An unexpected error occured whilst attempting to submit the patch to Amberdms - try again later, or email the patch manually to <a href=\"mailto:developers@amberdms.com\">developers@amberdms.com</a> instead.");
+	}
 
 
 	// display updated details
