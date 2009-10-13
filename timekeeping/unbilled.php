@@ -363,13 +363,13 @@ class page_output
 				$structure["date"]["column"]		= "date";
 				$structure["employeeid"]["column"]	= "employeeid";
 				$this->obj_table->add_link("tbl_lnk_view_timeentry", "timekeeping/timereg-day-edit.php", $structure);
+
 			}
 
-			// project/phase ID
-			$structure = NULL;
-			$structure["id"]["column"]		= "projectid";
-			$structure["column"]			= "name_phase";
-			$this->obj_table->add_link("tbl_lnk_project", "projects/timebooked.php", $structure);
+			// TODO:
+			// something about these two links below cause the table formatting to be slightly broken in the far right (empty?) column
+			// problem occurs with either link
+			//
 
 			// project time group
 			$structure = NULL;
@@ -378,7 +378,13 @@ class page_output
 			$structure["column"]			= "time_group";
 			$this->obj_table->add_link("tbl_lnk_groupid", "projects/timebilled-edit.php", $structure);
 
+			// project/phase ID
+			$structure = NULL;
+			$structure["id"]["column"]		= "projectid";
+			$structure["column"]			= "name_phase";
+			$this->obj_table->add_link("tbl_lnk_project", "projects/timebooked.php", $structure);
 
+			
 
 			$this->obj_table->render_table_html();
 

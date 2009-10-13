@@ -117,7 +117,7 @@ class page_output
 
 			if (user_permissions_get("customers_write"))
 			{
-				print "<p><b><a href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Click here to add this customer to a service</a>.</b></p>";
+				print "<p><b><a class=\"button\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Add a new service to this customer</a></b></p>";
 			}
 		}
 		else
