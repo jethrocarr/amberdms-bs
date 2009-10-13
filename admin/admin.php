@@ -57,6 +57,12 @@ class page_output
 			feature. This is ideal for locking all the records for a past financial year to prevent any changes
 			from being accidently made after you have balanced the books.</p>");
 
+		// database backup
+		print "<br>";
+		format_linkbox("default", "index.php?page=admin/db_backup.php", "
+			<p><b>DATABASE BACKUP</b></p>
+			<p>If you would like to download a copy of your SQL database containing all your data, use our database backup tool to export it.</p>");
+
 
 
 	}
