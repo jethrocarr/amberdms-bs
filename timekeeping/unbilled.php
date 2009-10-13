@@ -34,15 +34,6 @@ class page_output
 			{
 				return 1;
 			}
-			else
-			{
-				log_render("error", "page", "Before you can view unbilled hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
-			}
-		}
-		else
-		{
-			log_render("error", "page", "Sorry, you must have the projects_timegroup permission enabled to view this page.");
-			return 0;
 		}
 	}
 

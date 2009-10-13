@@ -28,13 +28,10 @@ class page_output
 			}
 			else
 			{
-				log_render("error", "page", "Before you can view unbilled hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+				log_write("error", "page", "Before you can view or enter values into timesheets, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+				log_write("error", "page", "Until access has been configured, the timesheet functions will be unavailable.");
+				return 1;
 			}
-		}
-		else
-		{
-			log_render("error", "page", "Sorry, you must have the timekeeping permission enabled to view this page.");
-			return 0;
 		}
 	}
 

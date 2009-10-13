@@ -120,10 +120,6 @@ class page_output
 			{
 				return 1;
 			}
-			else
-			{
-				log_render("error", "page", "Before you can view timesheet hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
-			}
 		}
 	}
 
