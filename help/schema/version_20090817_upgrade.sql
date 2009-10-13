@@ -1,5 +1,5 @@
 --
--- AMBERDMS BILLING SYSTEM VERSION 1.3.0 UPGRADES
+-- AMBERDMS BILLING SYSTEM VERSION 1.3.0 BETA 1 UPGRADES
 --
 -- There are a substantial number of database changes in this release to upgrade
 -- the database to InnoDB and also UTF8.

@@ -1,5 +1,5 @@
 --
--- AMBERDMS BILLING SYSTEM VERSION 1.3.0 BETA 1
+-- AMBERDMS BILLING SYSTEM VERSION 1.3.0
 --
 -- Inital database install SQL.
 --
@@ -1325,14 +1325,43 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2009-08-17 10:26:59
 
+
+
+--
+-- Additional changes (these were added in the changes between 1.3.0 BETa and 1.3.0 ACTUAL)
+--
+
+DELETE FROM `menu` WHERE `priority`='122';
+
+INSERT INTO `menu` (`priority`, `parent`, `topic`, `link`, `permid`) VALUES
+(122, 'Accounts Receivables', 'Add Invoice', 'accounts/ar/invoice-add.php', 21),
+(122, 'View Invoices', '', 'accounts/ar/invoice-delete.php', 21);
+
+INSERT INTO `menu` (`id` ,`priority` ,`parent` ,`topic` ,`link` ,`permid`) VALUES (NULL , '950', 'Admin', 'Database Backup', 'admin/db_backup.php', '2');
+
+INSERT INTO `language` (`id` ,`language` ,`label` ,`translation`)VALUES (NULL , 'en_us', 'patch_contents', 'Patch Contents'), (NULL , 'en_us', 'patch_submit', 'Submit Patch');
+INSERT INTO `language` (`id` ,`language` ,`label` ,`translation`)VALUES (NULL , 'en_us', 'patch_submit_contact', 'Author''s Email'), (NULL , 'en_us', 'patch_submit_credit','Developer to credit');
+INSERT INTO `language` (`id` ,`language` ,`label` ,`translation`)VALUES (NULL , 'en_us', 'patch_description', 'Patch Description');
+
+UPDATE config SET value='opensource' WHERE name='SUBSCRIPTION_SUPPORT';
+UPDATE config SET value='' WHERE name='SUBSCRIPTION_ID';
+
+INSERT INTO `config` (`name` ,`value`) VALUES ('PATH_TMPDIR', '/tmp');
+INSERT INTO `config` (`name`, `value`) VALUES ('APP_MYSQL_DUMP', '/usr/bin/mysqldump');
+INSERT INTO `config` (`name` ,`value`) VALUES ('PHONE_HOME', 'enabled');
+INSERT INTO `config` (`name`, `value`) VALUES ('PHONE_HOME_TIMER', '0');
 
 
 --
 -- Set Schema Version
 --
 
-UPDATE `config` SET `value` = '20090817' WHERE name='SCHEMA_VERSION' LIMIT 1;
+UPDATE `config` SET `value` = '20091013' WHERE name='SCHEMA_VERSION' LIMIT 1;
 
 
+
+
+--
+-- Database Installation Complete
+--
