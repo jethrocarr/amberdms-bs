@@ -449,12 +449,32 @@ class template_engine_latex extends template_engine
 		fclose($handle);
 
 
+                // create a "home directory" for texlive - some components of texlive
+		// require this dir to write files to, and if it doesn't exist the PDF
+		// will fail to build.
+		//
+		// Also note that we need to specify HOME=$tmp_filename_texlive so that
+		// texlive will use it, otherwise it will default to the home directory
+		// of whoever the last user to restart apache was
+		//
+		// (this is often root, but can sometimes be another admin who restarted
+		//  apache whilst sudoed)
+		//
+
+		mkdir($tmp_filename ."_texlive", 0700);
+																								
 
 		// process with pdflatex
 		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
 	
 		chdir("/tmp");
-		exec("$app_pdflatex $tmp_filename.tex");
+		exec("HOME=/tmp/ $app_pdflatex $tmp_filename.tex", $output);
+		
+		foreach ($output as $line)
+		{
+			log_debug("template_engine_latex", "pdflatex: $line");
+		}
+
 
 		// check that a PDF was generated
 		if (file_exists("$tmp_filename.pdf"))
@@ -470,6 +490,9 @@ class template_engine_latex extends template_engine
 			unlink("$tmp_filename.log");
 			unlink("$tmp_filename.tex");
 			unlink("$tmp_filename.pdf");
+
+			// cleanup texlive home directory
+			system("rm -rf ". $tmp_filename ."_texlive");
 
 			return 1;
 		}
