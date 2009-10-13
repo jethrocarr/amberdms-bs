@@ -33,7 +33,6 @@ mkdir -p -m0755 $RPM_BUILD_ROOT%{_datadir}/amberdms/billing_system/
 
 # install application files and resources
 cp -pr * $RPM_BUILD_ROOT%{_datadir}/amberdms/billing_system/
-chmod 700 $RPM_BUILD_ROOT%{_datadir}/amberdms/billing_system/help/resources
 
 # install configuration file
 install -m0700 include/sample_config.php $RPM_BUILD_ROOT%{_sysconfdir}/amberdms/billing_system/config.php
