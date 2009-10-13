@@ -127,6 +127,8 @@ require("inc_journal.php");
 // Menus
 require("inc_menus.php");
 
+// Phone Home Functions
+require("inc_phone_home.php");
 
 
 log_debug("start", "Framework Load Complete.");

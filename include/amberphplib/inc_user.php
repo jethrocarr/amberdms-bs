@@ -383,6 +383,24 @@ function user_login($instance, $username, $password)
 					$_SESSION["error"]["message"][] = "Your password is currently set to a default. It is highly important for you to change this password, which you can do <a href=\"index.php?page=user/options.php\">by clicking here</a>.";
 				}
 
+				
+				/*
+					If enabled, run the phone home feature now - this submits non-private
+					data to Amberdms to better understand the size and requirements of
+					our userbase.
+				*/
+
+				$phone_home = New phone_home();
+
+				if ($phone_home->check_enabled())
+				{
+					if ($phone_home->check_phone_home_timer())
+					{
+						// time to update
+						$phone_home->stats_generate();
+						$phone_home->stats_submit();
+					}
+				}
 
 				//// user is logged in.
 				return 1;
