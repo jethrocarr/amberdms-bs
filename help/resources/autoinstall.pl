@@ -70,7 +70,7 @@ print " * Amberdms Billing System MySQL user\n";
 print " * Amberdms Billing System database\n";
 print " * Amberdms Billing System configuration files\n";
 print "\n";
-print "THIS SCRIPT ONLY NEEDS TO BE RUN FOR THE VERY FIRST INSTALL OF AOCONF.\n";
+print "THIS SCRIPT ONLY NEEDS TO BE RUN FOR THE VERY FIRST INSTALL OF ABS.\n";
 print "DO NOT RUN FOR ANY OTHER REASON\n";
 print "\n";
 
