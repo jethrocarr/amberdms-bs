@@ -81,8 +81,7 @@ INSERT INTO `permissions` ( `id` , `value` , `description` ) VALUES (NULL , 'tim
 INSERT INTO `config` (`name`, `value`) VALUES ('LANGUAGE_LOAD', 'preload'), ('LANGUAGE_DEFAULT', 'en_us');
 INSERT INTO `config` (`name`, `value`) VALUES ('CURRENCY_DEFAULT_SYMBOL_POSITION', 'before');
 
-INSERT INTO `billing_system_devel`.`language` (`id`, `language`, `label`, `translation`) VALUES (NULL , 'en_us', 'date_created', 'Date Created');
-
+INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL , 'en_us', 'date_created', 'Date Created');
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL , 'en_us', 'filter_hide_ex_products', 'Hide EOL Products');
 
 

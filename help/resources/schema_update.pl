@@ -169,7 +169,7 @@ else
 			}
 			else
 			{
-				print "Current database is already uptodate.\n" if $debug;
+				print "Schema version $latestversion has already been applied, skipping...\n" if $debug;
 			}
 		}
 		else

@@ -171,7 +171,7 @@ class page_output
 			// verify successful extract
 			if (!file_exists($this->tmpdir ."/orig"))
 			{
-				log_write("error", "execute", "An unexpected error occured whilst attempting to unpack Amberdms source code");
+				log_write("error", "execute", "An unexpected error occured whilst attempting to unpack Amberdms source code - this is sometimes caused by Selinux ACL preventing apache from executing GNU tar");
 				return 0;
 			}
 
