@@ -36,7 +36,17 @@ class page_output
 
 	function check_requirements()
 	{
-		// nothing to do
+		// prevent amberdms hosted customers from running this interface, since all the code Amberdms develops
+		// goes directly into the offical release, having the patches here would be a waste of performance.
+
+		$subscription_support = sql_get_singlevalue("SELECT value FROM config WHERE name='SUBSCRIPTION_SUPPORT' LIMIT 1");
+
+		if ($subscription_support == "hosted" || $subscription_support == "hosted_phone")
+		{
+			log_write("error", "page", "This interface is only for users running ABS on their own servers, Amberdms hosted customers do not need to run it.");
+			return 0;
+		}
+
 		return 1;
 	}
 
