@@ -125,29 +125,16 @@ if (user_permissions_get("admin"))
 	}
 
 
-	// Process file upload data
-	//
+	/*
+		Process company logo upload and verify content 
+		if any has been supplied. Enforce png only
+	*/
+	$file_obj				= New file_storage;
+	$file_obj->config["upload_maxbytes"]	= $data["UPLOAD_MAXBYTES"];	// set image upload to the new maximum limit (incase they changed it at the same time)
+
 	if ($_FILES["COMPANY_LOGO"]["size"] > 1)
 	{
-		// check the filesize is less than or equal to the max upload size
-		$filesize_max = sql_get_singlevalue("SELECT value FROM config WHERE name='UPLOAD_MAXBYTES'");
-
-		if ($_FILES['COMPANY_LOGO']['size'] >= $filesize_max)
-		{
-			$filesize_max_human	= format_size_human($filesize_max);
-			$filesize_upload_human	= format_size_human($_FILES['COMPANY_LOGO']['size']);	
-	
-			$_SESSION["error"]["message"][] = "Files must be no larger than $filesize_max_human. You attempted to upload a $filesize_upload_human file.";
-			$_SESSION["error"]["COMPANY_LOGO-error"] = 1;
-		}
-
-
-		// we can only accept PNG files
-		if (!preg_match("/.png$/", $_FILES["COMPANY_LOGO"]["name"]))
-		{
-			$_SESSION["error"]["message"][] = "Only PNG files are acceptable for company logo uploads.";
-			$_SESSION["error"]["COMPANY_LOGO-error"] = 1;
-		}
+		$file_obj->verify_upload_form("COMPANY_LOGO", array("png"));
 	}
 
 
@@ -194,29 +181,27 @@ if (user_permissions_get("admin"))
 
 		if ($_FILES["COMPANY_LOGO"]["size"] > 1 && !$_SESSION["error"]["message"])
 		{
-
-			$file_obj = New file_process;
-				
-			// see if a file already exists
-			if ($file_obj->fetch_information_by_type("COMPANY_LOGO", 0))
-			{
-				log_debug("config_process", "Old file exists, will overwrite.");
-			}
-			else
-			{
-				log_debug("config_process", "No previous file exists, performing clean upload.");
-			}
-			
 			// set file variables	
 			$file_obj->data["type"]			= "COMPANY_LOGO";
 			$file_obj->data["customid"]		= "0";
-			$file_obj->data["file_name"]		= "company_logo.png";
-			$file_obj->data["file_size"]		= $_FILES['COMPANY_LOGO']['size'];
-
-			// call the upload function
-			if (!$file_obj->process_upload_from_form("COMPANY_LOGO"))
+	
+			// see if a file already exists
+			if ($file_obj->load_data_bytype())
 			{
-				log_write("error", "config_process", "Unable to upload company logo");
+				log_debug("process", "Old file exists, will overwrite.");
+			}
+			else
+			{
+				log_debug("process", "No previous file exists, performing clean upload.");
+			}
+
+			// force the filename
+			$file_obj->data["file_name"]	= "company_logo.png";
+			
+			// call the upload function
+			if (!$file_obj->action_update_form("COMPANY_LOGO"))
+			{
+				log_write("error", "process", "Unable to upload company logo");
 			}
 		}
 
@@ -229,13 +214,13 @@ if (user_permissions_get("admin"))
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "config_process", "An error occured whilst updating configuration, no changes have been applied.");
+			log_write("error", "process", "An error occured whilst updating configuration, no changes have been applied.");
 		}
 		else
 		{
 			$sql_obj->trans_commit();
 
-			log_write("notification", "config_process", "Configuration Updated Successfully");
+			log_write("notification", "process", "Configuration Updated Successfully");
 		}
 
 		header("Location: ../index.php?page=admin/config.php");
