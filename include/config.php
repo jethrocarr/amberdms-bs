@@ -11,7 +11,8 @@
 	Define Amberdms Billing System fixed values
 */
 
-// define the application version
+// define the application details
+$GLOBALS["config"]["app_name"]			= "Amberdms Billing System";
 $GLOBALS["config"]["app_version"]		= "1.3.0";
 
 // define the schema version required

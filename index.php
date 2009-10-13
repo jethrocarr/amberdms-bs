@@ -291,6 +291,10 @@ if (!preg_match('/^user/', $page))
 		<td align="left">
 		<p style="font-size: 10px">(c) Copyright 2009 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
 		</td>
+
+		<td align="right">
+		<p style="font-size: 10px">Version <?php print $GLOBALS["config"]["app_version"]; ?></p>
+		</td>
 	</tr>
 	</table>
 	
