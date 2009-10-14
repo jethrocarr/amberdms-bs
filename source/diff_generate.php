@@ -82,8 +82,8 @@ class page_output
 			*/
 
 			// download URLs
-			$amberdms_source["1.3.0"]["url"]	= "http://www.amberdms.com/repo/beta/";
-			$amberdms_source["1.3.0"]["file"]	= "amberdms-bs-1.3.0.beta1.tar.bz2";
+			$amberdms_source["1.3.0"]["url"]	= "http://www.amberdms.com/repo/source/billing_system/";
+			$amberdms_source["1.3.0"]["file"]	= "amberdms-bs-1.3.0.tar.bz2";
 			
 			$version = $GLOBALS["config"]["app_version"];
 
