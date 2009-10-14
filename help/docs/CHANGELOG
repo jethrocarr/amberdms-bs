@@ -1,5 +1,80 @@
 CHANGELOG
 
+2009-10-14 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 1.3.0
+
+	Application changes:
+	* New Feature - Upgraded all SQL queries to be transaction safe (ACID compliant) and to use sql_query framework class.
+	* New Feature - Enhanced user permission controls for handling timesheets, time groups and unbilled hours.
+	* New Feature - Service invoices for $0 are no-longer emailed to customers automatically.
+	* New Feature - Improved past period invoicing so that an invoice with a date in the past will have all the periods generated at once and added to a single invoice.
+	* New Feature - Option to change position of currency display from front to back (eg: NZD $20.00 or $20.00 NZD)
+	* New Feature - Generate PDF or CSV output of almost all record tables.
+	* New Feature - Ability to set the default employeeid to use for users when they have access to more than one employee.
+	* New Feature - Clicking the create invoice link from vendor/customer page will cause the invoice to have the customer/vendor field automatically set
+	* New Feature - PDF invoice now shows any payments already made on the invoice.
+	* New Feature - MySQL database export ability from within the application.
+	* New Feature - Integrated source download and patch generation features to meet requirements of AGPL and also providing the ability to quickly and easily submit patches to Amberdms.
+	* New Feature - All database fields and PDFs are now using UTF8 charsets.
+	* UI Improvement - Updated all displays to include code and names for fields such as customers, staff, etc in a single, unified way.
+	* UI Improvement - Unified formatting of buttons/links
+	* UI Improvement - Fixes for rendering issues on IE 7
+	* UI Improvement - Consistant ordering of columns on employee/staff list page.
+	* UI Improvement - Adjusted the menu for taxes to make tax collected/paid screens eaiser to find.
+
+	Application Bug Fixes:
+	* Bug Fix - Fixed broken overdue summary fields for AR & AP invoices.
+	* Bug Fix - Adding time item to invoice adds both billable and non-billable hours.
+	* Bug Fix - Obsolete & incorrect message about partial payments on tax page removed.
+	* Bug Fix - Exporting tax reports to CVS included hyperlinks in output.
+	* Bug Fix - Tax report generated weird output when no invoices match with numerious $0 invoices.
+	* Bug Fix - Incorrect permission check for gl/view
+	* Bug Fix - Invoice with multiple services would not be totaled correctly.
+	* Bug Fix - Removed caching from action_update_total() invoice function to prevent coding bugs.
+	* Bug Fix - Valid till date on quote PDFs was incorrect.
+	* Bug Fix - Corrected the service period code so that periods end the day before their renewal date. (eg: 14-06-2009 -> 13-07-2009)
+	* Bug Fix - Under some situations, multiple invoices were created for historical periods.
+	* Bug Fix - Products page should not display closed entries without EOL option
+	* Bug Fix - Added missing date_start and date_end fields from products list page.
+	* Bug Fix - Resolved problem where files including a space in their filename would not be accepted for upload into the journal.
+	* Bug Fix - Fixed various search filter boxes to prevent the search from ignoring the "hide closed entries" option.
+	* Bug Fix - Quote summary box in web interface didn't show correct currency, always defaulting to $.
+	* Bug Fix - When using invoice item edit, if no quantity was supplied the page would return error but forget all fields.
+	* Bug Fix - Edit a time item, change to a different time group, then no-longer able to add orig time group.
+	* Bug Fix - Eliminated 0.00 price appearing for basic items on PDF invoices.
+	* Bug Fix - All email sender names are now quoted to avoid issues with special characters.
+	* Bug Fix - Email sending is now verifed to prevent failed sends being reported as successful.
+	* Bug Fix - Both the PHP and the ABS maximum file upload limit handled gracefully.
+	* Bug Fix - Various tweaks to fix rendering issues in IE 7
+	* Bug Fix - "#" char not being slashed out \ when used in LaTeX generation.
+	* Bug Fix - Fixed problem of texlive 2007 forcing the creation of files & directories in the home directory of the webserver users. (needed for Fedora 11 OS support)
+	* Bug Fix - Fixed typo in installer. (minor)
+	* Bug Fix - Correct mistake in installation manual.
+
+	Framework changes:
+	* New Feature - Added new error handling functions
+	* New Feature - Implemented language preloading features
+	* New Feature - Implemented ACID compliance for SQL classes
+	* New Feature - Upgrade all framework code to use sql_query class rather than direct mysql calls.
+	* New Feature - Added caching for common user information lookup, reducing number of SQL queries
+	* New Feature - Created format_arraytostring function to ease SQL query development.
+	* New Feature - Implemented javascript action support in forms for changing forms when various options are selected.
+	* New Feature - Table framework can now generate PDF of the table
+	* New Feature - Implemented format_size_bytes function to convert human values to bytes.
+	* New Feature - Implemented ability to enable/disable wrapping for textarea form fields.
+	* New Feature - Implemented new temporary file and directory functions.
+	* New Feature - Implemented new text formatting and processing function.
+	* New Feature - Implemented quick HTTP return code lookup function.
+	* New Feature - Phone home feature to Amberdms with PHP & server versions for userbase statistics.
+	* Improvements - Rewrote file-upload framework code for better design reasons
+	* Improvements - Enhanced internal translation code & APIs
+	* Improvements - Restructed main menu code and added new render options.
+	* Improvements - Added checkbox and date_string input validation checks
+	* Improvements - Added various new support functions to reduce code duplication
+	* Improvements - Added timestamp_date table render type
+
+
 2009-04-07 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 1.2.0
