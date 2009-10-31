@@ -77,7 +77,7 @@ if (user_permissions_get('projects_write'))
 	// Note: we don't mind if this phase name is the same as other phases in DIFFERENT projects
 
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `project_phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid' LIMIT 1";
+	$sql_obj->string	= "SELECT id FROM `project_phases` WHERE name_phase='". $data["name_phase"] ."' AND projectid='$projectid' ";
 	
 	if ($phaseid)
 		$sql_obj->string .= " AND id!='$phaseid'";
