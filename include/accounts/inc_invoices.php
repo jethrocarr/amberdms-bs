@@ -1198,31 +1198,47 @@ class invoice
 
 
 			/*
-				Add the email information to the journal
+				Add the email information to the journal, including attaching a copy
+				of the generated PDF
 			*/
 
+			log_write("debug", "inc_invoice", "Uploading PDF and email details to journal...");
+
+
+			// create journal entry
 			$journal = New journal_process;
 			
 			$journal->prepare_set_journalname("account_". $this->type);
 			$journal->prepare_set_customid($this->id);
-			$journal->prepare_set_type("text");
+			$journal->prepare_set_type("file");
 			
 			$journal->prepare_set_title("EMAIL: $email_subject");
 
 			$data["content"] = NULL;
-			$data["content"] .= "To: ". $email_to ."\n";
-			$data["content"] .= "Cc: ". $email_cc ."\n";
-			$data["content"] .= "Bcc: ". $email_bcc ."\n";
-			$data["content"] .= "From: ". $email_sender ."\n";
+			$data["content"] .= "To:\t". $email_to ."\n";
+			$data["content"] .= "Cc:\t". $email_cc ."\n";
+			$data["content"] .= "Bcc:\t". $email_bcc ."\n";
+			$data["content"] .= "From:\t". $email_sender ."\n";
 			$data["content"] .= "\n";
 			$data["content"] .= $email_message;
-			$data["content"] .= "\n\n";
-			$data["content"] .= "[attachment scrubbed]";
+			$data["content"] .= "\n";
 				
 				
 			$journal->prepare_set_content($data["content"]);
 
-			$journal->action_update();
+			$journal->action_update();		// create journal entry
+			$journal->action_lock();		// lock it to prevent any changes to historical record of delivered email
+
+
+			// upload PDF file as an attachement
+			$file_obj			= New file_storage;
+			$file_obj->data["type"]		= "journal";
+			$file_obj->data["customid"]	= $journal->structure["id"];
+
+			if (!$file_obj->action_update_file($tmp_filename))
+			{
+				log_write("error", "inc_invoice", "Unable to upload emailed PDF to journal entry");
+			}
 
 
 			/*
