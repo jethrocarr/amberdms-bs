@@ -1222,7 +1222,7 @@ class invoice
 				
 			$journal->prepare_set_content($data["content"]);
 
-			$journal->action_create();
+			$journal->action_update();
 
 
 			/*
