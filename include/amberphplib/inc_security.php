@@ -113,7 +113,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 		if ($errormsg == "")
 		{
 			$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
-			$errormsg	= "Invalid $translation supplied, please correct.";
+			$errormsg	= "Sorry, \"$translation\" must be at least $numchars charactors.";
 		}
 
 		// report the error
@@ -148,19 +148,6 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 {
 	$expression = NULL;
-
-	// if there is no errormsg supplied, set a default one by looking
-	// up the translation of the fieldname and reporting it.
-	//
-	// Note that the security_form_input function will also do this if
-	// required, however we check here first since some of the input types
-	// do processing in this function.
-	//
-	if ($errormsg == "")
-	{
-		$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
-		$errormsg	= "Invalid $translation supplied, please correct.";
-	}
 	
 	
 	// run through the actions for each item type
@@ -173,6 +160,15 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		case "date":
 			// TODO: audit the error handling in this function, seems like it's generating
 			// messages which are used for no reason.
+
+			// if there is no errormsg supplied, set a default one by looking
+			// up the translation of the fieldname and reporting it.
+			if ($errormsg == "")
+			{
+				$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+				$errormsg	= "Invalid $translation supplied, please correct.";
+			}
+
 		
 			// dates are a special field, since they have to be passed
 			// from the form as 3 different inputs, but we want to re-assemble them
@@ -248,8 +244,16 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			// hourmins is a special field - we want to take
 			// two fields (hours + mins) and add then together
 			// to produce the number of seconds.
-			//
-			
+
+			// if there is no errormsg supplied, set a default one by looking
+			// up the translation of the fieldname and reporting it.
+			if ($errormsg == "")
+			{
+				$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+				$errormsg	= "Invalid $translation supplied, please correct.";
+			}
+
+
 			$time_hh	= intval($_POST[$valuename."_hh"]);
 			$time_mm	= intval($_POST[$valuename."_mm"]);
 
@@ -282,6 +286,14 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		break;
 
 		case "money":
+
+			// if there is no errormsg supplied, set a default one by looking
+			// up the translation of the fieldname and reporting it.
+			if ($errormsg == "")
+			{
+				$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
+				$errormsg	= "Invalid $translation supplied, please correct.";
+			}
 
 			// verify as a floating point number
 			$expression = "/^[0-9]*.[0-9]*$/";

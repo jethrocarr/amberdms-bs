@@ -81,8 +81,8 @@ if (user_permissions_get('admin'))
 	// check password (if the user has requested to change it)
 	if ($_POST["password"] || $_POST["password_confirm"])
 	{
-		$data["password"]		= security_form_input_predefined("any", "password", 1, "");
-		$data["password_confirm"]	= security_form_input_predefined("any", "password_confirm", 1, "");
+		$data["password"]		= security_form_input_predefined("any", "password", 4, "");
+		$data["password_confirm"]	= security_form_input_predefined("any", "password_confirm", 4, "");
 
 		if ($data["password"] != $data["password_confirm"])
 		{
