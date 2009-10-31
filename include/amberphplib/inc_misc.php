@@ -138,9 +138,9 @@ function format_file_extension($filename)
 */
 function format_file_name($filepath)
 {
-	log_debug("misc", "Executing format_file_name($filename)");
+	log_debug("misc", "Executing format_file_name($filepath)");
 
-	return substr(strrchr($filename,"/"),1);
+	return substr(strrchr($filepath,"/"),1);
 }
 
 

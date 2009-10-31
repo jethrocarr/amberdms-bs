@@ -1688,14 +1688,43 @@ class journal_process extends journal_base
 		}
 		else
 		{
-			log_write("error", "journal_process", "Journal record cleanly removed.");
+			log_write("notification", "journal_process", "Journal record cleanly removed.");
 			$sql_obj->trans_commit();
 			return 1;
 		}
 
 		return 0;
 	}
-	
+
+
+	/*
+		action_lock()
+
+		Locks a journal entry based on the ID in $this->structure["id"]
+
+		Return codes:
+		0	failure
+		1	success
+	*/
+	function action_lock()
+	{
+		log_debug("journal_process", "Executing action_lock()");
+
+
+		/*
+			Lock journal record
+		*/
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE `journal` SET locked='1' WHERE id='". $this->structure["id"] ."' LIMIT 1";
+
+		if (!$sql_obj->execute())
+		{
+			return 0;
+		}
+
+		return 1;
+
+	} // end of action_lock
 
 	
 
