@@ -1,0 +1,130 @@
+%%
+%% GENERIC ENGLISH INVOICE
+%%
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1cm,bmargin=1cm,lmargin=1cm,rmargin=1cm}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{longtable}
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{helvet}
+\makeatletter
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+\noindent \includegraphics{(company_logo)}
+		
+
+\noindent \begin{tabular}{>{\centering}p{0.5\columnwidth}>{\centering}p{0.5\columnwidth}}
+\noindent \begin{flushleft}
+
+(company\_name)
+
+(company\_address1\_street)
+
+(company\_address1\_zipcode) (company\_address1\_city)
+
+(company\_address1\_country)
+
+\vspace{5mm}
+
+{Email} (company\_contact\_email)
+
+{Telefon} (company\_contact\_phone)
+
+%% if company\_contact\_fax
+%% {Fax} (company\_contact\_fax)
+%% end
+
+\par\end{flushleft}
+& \begin{flushleft}
+
+(customer\_contact)
+
+(customer\_name)
+
+(customer\_address1\_street)
+
+(customer\_address1\_zipcode) (customer\_address1\_city)
+
+(customer\_address1\_country)
+
+\par\end{flushleft}
+\tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \begin{tabular}{ll}
+
+\noindent \textbf{Rechnung}
+
+\vspace{5mm}
+
+%% foreach taxes
+%% (name_tax) & (taxnumber) \tabularnewline
+%% end
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+
+\noindent \begin{tabular}{ll}
+\textbf{Konto-ID} & (code\_customer) \tabularnewline
+\textbf{Rechnungsnummer} & (code\_invoice) \tabularnewline
+\textbf{Rechnungsdatum} & (date\_trans) \tabularnewline
+\textbf{F\"allig am} & (date\_due) \tabularnewline
+\end{tabular}
+
+\noindent \vspace{10mm}
+
+\noindent \begin{tabular}{>{\raggedright}p{0.2\columnwidth}>{\raggedright}p{0.3\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}>{\raggedright}p{0.1\columnwidth}}
+\textbf{Position} & \textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis} & \textbf{Betrag}\tabularnewline
+%% foreach invoice_items
+%% (info) & (description) & (quantity) & (units) & (price) & (amount)\tabularnewline
+%% end
+\cline{1-6}
+\tabularnewline
+ &  & \multicolumn{3}{l}{Zwischensumme} & (amount)\tabularnewline
+\cline{3-6} 
+%% foreach taxes
+%% \tabularnewline
+%% & & \multicolumn{3}{l}{(name_tax)} & (amount)\tabularnewline
+%% end
+%% if amount\_paid
+%% \cline{3-6} 
+%% \tabularnewline
+%% &  & \multicolumn{3}{l}{Bezahlt} & (amount\_paid)\tabularnewline
+%% end
+\cline{3-6}
+\tabularnewline
+ & & \multicolumn{3}{l}{\textbf{Gesamttotal (amount\_currency)}} & {\bf(amount\_total)}\tabularnewline
+\end{tabular}
+
+\noindent \vspace{20mm}
+
+
+%% if company\_payment\_details
+%% \noindent \begin{flushleft}
+%% \textbf{Zahlungsart}
+%% 
+%% \vspace{5mm}
+%% 
+%% (company\_payment\_details)
+%% \end{flushleft}
+%% end
+
+\end{document}

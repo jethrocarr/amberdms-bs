@@ -745,14 +745,27 @@ class invoice
 		// note: the & allows decontructors to operate
 		$this->obj_pdf =& New template_engine_latex;
 
-		// load template
-		if (file_exists("../../templates/latex/". $this->type ."_invoice.tex"))
+		// get template filename based on currently selected options
+		$template_file = sql_get_singlevalue("SELECT template_file as value FROM templates WHERE template_type='". $this->type ."_invoice_tex' AND active='1'");
+
+		if (!$template_file)
 		{
-			$this->obj_pdf->prepare_load_template("../../templates/latex/". $this->type ."_invoice.tex");
+			// fall back to old version
+			//
+			// TODO: we can remove this fallback code once the new templating system is fully implemented, this is to
+			// just make everything work whilst stuff like quote templates are being added.
+			//
+			$template_file = "templates/latex/". $this->type ."_invoice";
+		}
+
+		// load template
+		if (file_exists("../../$template_file.tex"))
+		{
+			$this->obj_pdf->prepare_load_template("../../$template_file.tex");
 		}
 		else
 		{
-			$this->obj_pdf->prepare_load_template("../templates/latex/". $this->type ."_invoice.tex");
+			$this->obj_pdf->prepare_load_template("../$template_file.tex");
 		}
 
 		

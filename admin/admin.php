@@ -33,7 +33,12 @@ class page_output
 		format_linkbox("default", "index.php?page=admin/config.php", "<p><b>CONFIGURATION</b></p>
 			<p>Configure various application & company settings, including default user settings, company name, address, invoicing
 			options and more advanced application settings.</p>");
-			
+
+		// templates
+		print "<br>";
+		format_linkbox("default", "index.php?page=admin/templates.php", "<p><b>TEMPLATE SELECTION</b></p>
+			<p>Adjust the templates used for generating PDF invoices and other documents.</p>");
+		
 
 		// user management
 		print "<br>";
