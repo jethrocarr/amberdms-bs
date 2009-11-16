@@ -22,7 +22,7 @@ if (user_permissions_get("admin"))
 	$data["COMPANY_NAME"]			= security_form_input_predefined("any", "COMPANY_NAME", 1, "");
 	$data["COMPANY_CONTACT_EMAIL"]		= security_form_input_predefined("email", "COMPANY_CONTACT_EMAIL", 1, "");
 	$data["COMPANY_CONTACT_PHONE"]		= security_form_input_predefined("any", "COMPANY_CONTACT_PHONE", 1, "");
-	$data["COMPANY_CONTACT_FAX"]		= security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 1, "");
+	$data["COMPANY_CONTACT_FAX"]		= security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 0, "");
 	$data["COMPANY_ADDRESS1_STREET"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_STREET", 1, "");
 	$data["COMPANY_ADDRESS1_CITY"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_CITY", 1, "");
 	$data["COMPANY_ADDRESS1_STATE"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_STATE", 0, "");
