@@ -184,7 +184,6 @@ class page_output
 		$this->obj_table->add_filter($structure);
 
 
-
 		// create totals
 		$this->obj_table->total_columns	= array("time_booked");
 

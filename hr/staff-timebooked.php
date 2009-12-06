@@ -122,11 +122,17 @@ class page_output
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
+		$structure["fieldname"]	= "billable_only";
+		$structure["type"]	= "checkbox";
+		$structure["sql"]	= "projects.internal_only='0'";
+		$structure["options"]["label"] = "Only show billable projects";
+		$this->obj_table->add_filter($structure);
+
+		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
 		$structure["sql"]	= "timereg.description LIKE '%value%' OR projects.name_project LIKE '%value%' OR project_phases.name_phase LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
-
 
 
 		// create totals
