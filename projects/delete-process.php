@@ -149,6 +149,7 @@ if (user_permissions_get('projects_write'))
 			header("Location: ../index.php?page=projects/projects.php");
 			exit(0);
 		}
+	}
 
 		
 
