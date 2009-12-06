@@ -62,6 +62,7 @@ if (user_permissions_get("admin"))
 	$data["UPLOAD_MAXBYTES"]		= security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
 	$data["DATEFORMAT"]			= security_form_input_predefined("any", "DATEFORMAT", 1, "");
 	$data["TIMEZONE_DEFAULT"]		= security_form_input_predefined("any", "TIMEZONE_DEFAULT", 1, "");
+	$data["PHONE_HOME"]			= security_form_input_predefined("any", "PHONE_HOME", 0, "");
 	
 	// only fetch dangerous options if support for it is enabled
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
@@ -111,6 +112,16 @@ if (user_permissions_get("admin"))
 	{
 		$data["BLACKLIST_ENABLE"] = "disabled";
 	}
+
+	if ($data["PHONE_HOME"] == "on")
+	{
+		$data["PHONE_HOME"] = "enabled";
+	}
+	else
+	{
+		$data["PHONE_HOME"] = "disabled";
+	}
+
 
 
 	// check max upload size

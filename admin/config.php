@@ -311,7 +311,13 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
-
+		$structure = NULL;
+		$structure["fieldname"]				= "PHONE_HOME";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Phone home to Amberdms with application, OS and PHP version so we can better improve this software. (all information is anonymous and private)";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+	
 	
 		// dangerous options
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
@@ -373,7 +379,7 @@ class page_output
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL", "CURRENCY_DEFAULT_SYMBOL_POSITION");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
-		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT");
+		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT", "PHONE_HOME");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{
