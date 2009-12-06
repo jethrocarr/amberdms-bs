@@ -403,7 +403,7 @@ class file_storage
 		{
 			$sql_obj->trans_commit();
 
-			log_write("debug". "file_storage", "Successfully uploaded file ID '". $this->id ."'");
+			log_write("debug", "file_storage", "Successfully uploaded file ID '". $this->id ."'");
 			return $this->id;
 		}
 
