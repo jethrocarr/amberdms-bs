@@ -1,6 +1,6 @@
 Summary: Amberdms Billing System
 Name: amberdms-bs
-Version: 1.3.0
+Version: 1.4.0
 Release: 1.%{?dist}
 License: AGPLv3
 URL: http://www.amberdms.com/billing
@@ -52,6 +52,11 @@ install -m 644 help/resources/amberdms-bs-cron $RPM_BUILD_ROOT%{_sysconfdir}/cro
 
 %post
 
+# install SELinux policies
+echo "Installing SELinux policies"
+/usr/sbin/semodule -i %{_datadir}/amberdms/billing_system/help/resources/selinux_policies/amberdmsbs_%{?dist}.pp
+
+
 # Reload apache
 echo "Reloading httpd..."
 /etc/init.d/httpd reload
@@ -74,6 +79,9 @@ fi
 # upgrade can install.
 if [ $1 == 0 ];
 then
+	# uninstall selinux policies
+	/usr/sbin/semodule -r amberdmsbs	
+
 	# user needs to remove DB
 	echo "The Amberdms Billing System has been removed, but the MySQL database and user will need to be removed manually."
 fi
@@ -92,6 +100,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/amberdms
 
 %changelog
+* Sun Dec 06 2009 Jethro Carr <jethro.carr@amberdms.com> 1.4.0
+- Upgraded to release 1.4.0
 * Tue Oct 18 2009 Jethro Carr <jethro.carr@amberdms.com> 1.3.0
 - Upgraded to release 1.3.0
 * Mon Aug 17 2009 Jethro Carr <jethro.carr@amberdms.com> 1.3.0.beta.1
