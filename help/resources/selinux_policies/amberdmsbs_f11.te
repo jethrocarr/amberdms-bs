@@ -1,0 +1,13 @@
+
+module amberdmsbs 1.0;
+
+require {
+	type httpd_t;
+	type tetex_data_t;
+	class dir { getattr search };
+	class file { read getattr open };
+}
+
+#============= httpd_t ==============
+allow httpd_t tetex_data_t:dir { getattr search };
+allow httpd_t tetex_data_t:file { read getattr open };

@@ -1,1 +1,6 @@
 This directory contains policies for SELinux for various distributions.
+
+You can generate modules by running:
+$ checkmodule -M -m -o amberdmsbs.mod amberdmsbs.te
+$ semodule_package -o amberdmsbs.pp -m amberdmsbs.mod
+
