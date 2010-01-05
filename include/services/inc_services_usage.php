@@ -281,7 +281,7 @@ function service_usage_alerts_generate($customerid = NULL)
 	// check that email is enabled
 	if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE' LIMIT 1") != "enabled")
 	{
-		log_write("error", "inc_services_usage", "Unable to email customer usage alerts, due to EMAIL_ENABLe being disabled");
+		log_write("error", "inc_services_usage", "Unable to email customer usage alerts, due to EMAIL_ENABLE being disabled");
 		return -1;
 	}
 

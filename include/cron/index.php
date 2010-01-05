@@ -54,6 +54,18 @@ if ($GLOBALS["config"]["instance"] == "hosted")
 		print "----\n";
 
 
+		/*
+			Need to erase global cache here, otherwise stuff can linger on between instances which
+			is really, really, nasty.
+
+			This is not a problem with the web-interface since the cache only lasts for the processing
+			of each page load and is then cleared, however since this one PHP script executes code for
+			all instances the cache can survive.
+		*/
+
+		$GLOBALS["cache"] = array();
+
+
 		// if the hostname is blank, default to the current
 		if ($data["db_hostname"] == "")
 		{
