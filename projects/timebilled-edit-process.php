@@ -26,13 +26,13 @@ if (user_permissions_get('projects_timegroup'))
 
 	/////////////////////////
 
-	$projectid			= security_form_input_predefined("int", "projectid", 1, "");
-	$groupid			= security_form_input_predefined("int", "groupid", 0, "");
+	$projectid			= @security_form_input_predefined("int", "projectid", 1, "");
+	$groupid			= @security_form_input_predefined("int", "groupid", 0, "");
 	
-	$data["name_group"]		= security_form_input_predefined("any", "name_group", 1, "");
-	$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
-	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["name_group"]		= @security_form_input_predefined("any", "name_group", 1, "");
+	$data["customerid"]		= @security_form_input_predefined("int", "customerid", 1, "");
+	$data["code_invoice"]		= @security_form_input_predefined("any", "code_invoice", 0, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 
 

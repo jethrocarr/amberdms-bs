@@ -164,7 +164,7 @@ function error_check()
 {
 	log_debug("inc_errors", "Executing error_check()");
 
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{
 		return 1;
 	}

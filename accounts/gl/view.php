@@ -22,7 +22,7 @@ class page_output
 	function page_output()
 	{
 		// fetch variables
-		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -129,7 +129,7 @@ class page_output
 
 		// unless there has been error data returned, fetch all the transactions
 		// from the DB, and work out the number of rows
-		if (!$_SESSION["error"]["form"][$this->obj_form->formname])
+		if (!isset($_SESSION["error"]["form"][$this->obj_form->formname]))
 		{
 			$sql_trans_obj		= New sql_query;
 			$sql_trans_obj->string	= "SELECT date_trans, amount_debit, amount_credit, chartid, source, memo FROM `account_trans` WHERE type='gl' AND customid='". $this->id ."'";
@@ -144,7 +144,7 @@ class page_output
 		}
 		else
 		{
-			$this->num_trans = security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"]);
+			$this->num_trans = @security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"]);
 		}
 
 		// increment the row counter by 1 so we always have a spare row and make
@@ -203,7 +203,7 @@ class page_output
 			// if we have data from a sql query, load it in
 			if ($sql_trans_obj->data_num_rows)
 			{
-				if ($sql_trans_obj->data[$i]["chartid"])
+				if (isset($sql_trans_obj->data[$i]["chartid"]))
 				{
 					$this->obj_form->structure["trans_". $i ."_debit"]["defaultvalue"]		= $sql_trans_obj->data[$i]["amount_debit"];
 					$this->obj_form->structure["trans_". $i ."_credit"]["defaultvalue"]		= $sql_trans_obj->data[$i]["amount_credit"];
@@ -259,8 +259,8 @@ class page_output
 		// calculate totals
 		for ($i = 0; $i < $this->num_trans; $i++)
 		{
-			$this->obj_form->structure["total_debit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_debit"]["defaultvalue"];
-			$this->obj_form->structure["total_credit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_credit"]["defaultvalue"];
+			@$this->obj_form->structure["total_debit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_debit"]["defaultvalue"];
+			@$this->obj_form->structure["total_credit"]["defaultvalue"]	+= $this->obj_form->structure["trans_". $i ."_credit"]["defaultvalue"];
 		}
 
 	}
@@ -334,7 +334,7 @@ class page_output
 		// display all the rows
 		for ($i = 0; $i < $this->num_trans; $i++)
 		{
-			if ($_SESSION["error"]["trans_". $i ."-error"])
+			if (isset($_SESSION["error"]["trans_". $i ."-error"]))
 			{
 				print "<tr class=\"form_error\">";
 			}

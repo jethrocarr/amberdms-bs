@@ -20,7 +20,7 @@ class page_output
 	function page_output()
 	{
 		// fetch variables
-		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -164,7 +164,7 @@ class page_output
 
 
 			// fetch customer's current tax status
-			if (!$_SESSION["error"]["message"])
+			if (!isset($_SESSION["error"]["message"]))
 			{
 				$sql_customer_taxes_obj		= New sql_query;
 				$sql_customer_taxes_obj->string	= "SELECT taxid FROM customers_taxes WHERE customerid='". $this->id ."'";

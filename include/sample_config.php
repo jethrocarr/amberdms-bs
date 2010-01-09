@@ -5,8 +5,6 @@
 	This file should be read-only by the httpd user. All other users should be denied.
 */
 
-$GLOBALS["config"];
-
 
 
 /*
@@ -55,7 +53,7 @@ $config["dangerous_conf_options"] = "enabled";
 */
 
 // Initate session variables
-if ($_SERVER['SERVER_NAME'])
+if (isset($_SERVER['SERVER_NAME']))
 {
 	// proper session variables
 	session_start();

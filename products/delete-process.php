@@ -25,14 +25,14 @@ if (user_permissions_get('products_write'))
 		Import POST Data
 	*/
 
-	$obj_product->id				= security_form_input_predefined("int", "id_product", 0, "");
+	$obj_product->id				= @security_form_input_predefined("int", "id_product", 0, "");
 
 	// these exist to make error handling work right
-	$obj_product->data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
-	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 0, "");
+	$obj_product->data["code_product"]		= @security_form_input_predefined("any", "code_product", 0, "");
+	$obj_product->data["name_product"]		= @security_form_input_predefined("any", "name_product", 0, "");
 
 	// confirm deletion
-	$obj_product->data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_product->data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 

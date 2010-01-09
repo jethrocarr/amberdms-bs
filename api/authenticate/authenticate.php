@@ -25,9 +25,9 @@ class authenticate
 		log_debug("authenticate", "Executing login($account, $username, $password)");
 
 		// sanitise input
-		$account	= security_script_input_predefined("any", $account);
-		$username	= security_script_input_predefined("any", $username);
-		$password	= security_script_input_predefined("any", $password);
+		$account	= @security_script_input_predefined("any", $account);
+		$username	= @security_script_input_predefined("any", $username);
+		$password	= @security_script_input_predefined("any", $password);
 
 
 		// $account is only used by Amberdms's hosted billing system - for single instance configurations

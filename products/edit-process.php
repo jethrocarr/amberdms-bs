@@ -24,25 +24,25 @@ if (user_permissions_get('products_write'))
 		Import POST Data
 	*/
 
-	$obj_product->id				= security_form_input_predefined("int", "id_product", 0, "");
+	$obj_product->id				= @security_form_input_predefined("int", "id_product", 0, "");
 	
-	$obj_product->data["code_product"]		= security_form_input_predefined("any", "code_product", 0, "");
-	$obj_product->data["name_product"]		= security_form_input_predefined("any", "name_product", 1, "");
-	$obj_product->data["units"]			= security_form_input_predefined("any", "units", 1, "");
-	$obj_product->data["account_sales"]		= security_form_input_predefined("int", "account_sales", 1, "");
-	$obj_product->data["account_purchase"]		= security_form_input_predefined("int", "account_purchase", 1, "");
+	$obj_product->data["code_product"]		= @security_form_input_predefined("any", "code_product", 0, "");
+	$obj_product->data["name_product"]		= @security_form_input_predefined("any", "name_product", 1, "");
+	$obj_product->data["units"]			= @security_form_input_predefined("any", "units", 1, "");
+	$obj_product->data["account_sales"]		= @security_form_input_predefined("int", "account_sales", 1, "");
+	$obj_product->data["account_purchase"]		= @security_form_input_predefined("int", "account_purchase", 1, "");
 
-	$obj_product->data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
-	$obj_product->data["date_end"]			= security_form_input_predefined("date", "date_end", 0, "");
-	$obj_product->data["date_current"]		= security_form_input_predefined("date", "date_current", 0, "");
-	$obj_product->data["details"]			= security_form_input_predefined("any", "details", 0, "");
+	$obj_product->data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
+	$obj_product->data["date_end"]			= @security_form_input_predefined("date", "date_end", 0, "");
+	$obj_product->data["date_current"]		= @security_form_input_predefined("date", "date_current", 0, "");
+	$obj_product->data["details"]			= @security_form_input_predefined("any", "details", 0, "");
 	
-	$obj_product->data["price_cost"]		= security_form_input_predefined("money", "price_cost", 0, "");
-	$obj_product->data["price_sale"]		= security_form_input_predefined("money", "price_sale", 0, "");
-	$obj_product->data["discount"]			= security_form_input_predefined("float", "discount", 0, "");
+	$obj_product->data["price_cost"]		= @security_form_input_predefined("money", "price_cost", 0, "");
+	$obj_product->data["price_sale"]		= @security_form_input_predefined("money", "price_sale", 0, "");
+	$obj_product->data["discount"]			= @security_form_input_predefined("float", "discount", 0, "");
 	
-	$obj_product->data["quantity_instock"]		= security_form_input_predefined("int", "quantity_instock", 0, "");
-	$obj_product->data["quantity_vendor"]		= security_form_input_predefined("int", "quantity_vendor", 0, "");
+	$obj_product->data["quantity_instock"]		= @security_form_input_predefined("int", "quantity_instock", 0, "");
+	$obj_product->data["quantity_vendor"]		= @security_form_input_predefined("int", "quantity_vendor", 0, "");
 
 
 	// only get vendor ID if vendors exist, otherwise will trigger an error
@@ -52,10 +52,10 @@ if (user_permissions_get('products_write'))
 
 	if ($sql_obj->num_rows())
 	{
-		$obj_product->data["vendorid"]		= security_form_input_predefined("int", "vendorid", 0, "");
+		$obj_product->data["vendorid"]		= @security_form_input_predefined("int", "vendorid", 0, "");
 	}
 
-	$obj_product->data["code_product_vendor"]	= security_form_input_predefined("any", "code_product_vendor", 0, "");
+	$obj_product->data["code_product_vendor"]	= @security_form_input_predefined("any", "code_product_vendor", 0, "");
 
 
 

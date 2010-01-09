@@ -24,14 +24,14 @@ if (user_permissions_get('customers_write'))
 		Load POST data
 	*/
 
-	$obj_customer->id		= security_form_input_predefined("int", "id_customer", 1, "");
+	$obj_customer->id		= @security_form_input_predefined("int", "id_customer", 1, "");
 
 
 	// these exist to make error handling work right
-	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 0, "");
+	$data["name_customer"]		= @security_form_input_predefined("any", "name_customer", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
 

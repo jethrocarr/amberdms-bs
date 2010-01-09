@@ -25,14 +25,14 @@ if (user_permissions_get('staff_write'))
 		Load POST data
 	*/
 
-	$obj_employee->id		= security_form_input_predefined("int", "id_staff", 1, "");
+	$obj_employee->id		= @security_form_input_predefined("int", "id_staff", 1, "");
 
 
 	// these exist to make error handling work right
-	$data["name_staff"]		= security_form_input_predefined("any", "name_staff", 0, "");
+	$data["name_staff"]		= @security_form_input_predefined("any", "name_staff", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
 

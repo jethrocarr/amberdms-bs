@@ -103,7 +103,7 @@ class invoice_form_details
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
-		$structure["defaultvalue"]		= $_SESSION["user"]["default_employeeid"];
+		$structure["defaultvalue"]		= @$_SESSION["user"]["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -198,10 +198,10 @@ class invoice_form_details
 		/*
 			Fetch any provided values from $_GET if adding a new invoice and no error data provided
 		*/
-		if ($this->mode == "add" && !$_SESSION["error"]["message"])
+		if ($this->mode == "add" && error_check())
 		{
-			$this->obj_form->structure["customerid"]["defaultvalue"]	= security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-			$this->obj_form->structure["vendorid"]["defaultvalue"]		= security_script_input('/^[0-9]*$/', $_GET["vendorid"]);
+			$this->obj_form->structure["customerid"]["defaultvalue"]	= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+			$this->obj_form->structure["vendorid"]["defaultvalue"]		= @security_script_input('/^[0-9]*$/', $_GET["vendorid"]);
 		}
 
 

@@ -132,7 +132,7 @@ class taxes_report_transactions
 
 
 		// set default of 1 month range if no range has been set
-		if (!$this->obj_table->filter["filter_date_start"]["defaultvalue"])
+		if (empty($this->obj_table->filter["filter_date_start"]["defaultvalue"]))
 		{
 			$this->obj_table->filter["filter_date_start"]["defaultvalue"]	= time_calculate_monthdate_first();
 			$this->obj_table->filter["filter_date_end"]["defaultvalue"]	= time_calculate_monthdate_last();
@@ -148,7 +148,7 @@ class taxes_report_transactions
 		*/
 
 		// depending on the filter options, generate SQL filtering rules
-		if ($this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
+		if (isset($this->obj_table->filter["filter_mode"]["defaultvalue"]) && $this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
 		{
 			/*
 				Cash Mode
@@ -263,8 +263,7 @@ class taxes_report_transactions
 			
 			$deleted_invoices = 0;
 
-		
-			if ($this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
+			if (isset($this->obj_table->filter["filter_mode"]["defaultvalue"]) && $this->obj_table->filter["filter_mode"]["defaultvalue"] == "Cash")
 			{
 
 				/*
@@ -448,7 +447,7 @@ class taxes_report_transactions
 			}
 			else
 			{
-				log_debug("page", "Calculating taxes on invoice ". $this->obj_table->data[$i]["code_invoice"] ." on invoice/accural method");
+				log_debug("page", "Calculating taxes for invoice on invoice/accural method");
 
 				/*
 					Invoice / Accural Mode

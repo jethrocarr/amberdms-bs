@@ -22,16 +22,16 @@
 function security_localphp($url)
 {
 	// does the url start with a slash? (/)
-	if (ereg("^/", $url))           { return 0; }
+	if (preg_match("/^\//", $url))			{ return 0; }
 
 	// does the url start with a ../?
-	if (ereg("^\.\./", $url))         { return 0; }
+	if (preg_match("/^\.\.\//", $url))		{ return 0; }
      
 	// does the url (at any point) contain "://" (for ftp://, http://, etc)
-	if (ereg("://", $url))          { return 0; }
+	if (preg_match("/:\/\//", $url))		{ return 0; }
 
 	// make sure the file is a php file!
-	if (!ereg(".php$", $url))       { return 0; }
+	if (!preg_match("/.php$/", $url))		{ return 0; }
 
 	// everything was cool
 	return 1;
@@ -373,7 +373,7 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 	Success: Returns the value.
 	Failure: Returns "error".
 */
-function security_script_input($expression, $value)
+function security_script_input ($expression, $value)
 {
 	// if the input matches the regex, all is good, otherwise set to "error".
 	if (preg_match($expression, $value))
@@ -443,7 +443,7 @@ function security_script_input_predefined ($type, $value)
 			// to produce the number of seconds.
 
 			// calculate the time in seconds
-			$time	= split(":", $value);
+			$time	= explode(":", $value);
 			$value	= ($time[1] * 60) + (($time[0] * 60) * 60);
 
 			$expression = "/^[0-9]*$/";
@@ -491,7 +491,7 @@ function security_script_input_predefined ($type, $value)
 
 	}
 
-	return security_script_input($expression, $value);
+	return @security_script_input($expression, $value);
 }
 
 

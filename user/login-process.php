@@ -35,8 +35,8 @@ else
 		$instance = NULL;
 	}
 
-	$username	= security_form_input_predefined("any", "username_amberdms_bs", 1, "Please enter a username.");
-	$password	= security_form_input_predefined("any", "password_amberdms_bs", 4, "Please enter a password.");
+	$username	= @security_form_input_predefined("any", "username_amberdms_bs", 1, "Please enter a username.");
+	$password	= @security_form_input_predefined("any", "password_amberdms_bs", 4, "Please enter a password.");
 
 
 	if ($_SESSION["error"]["message"])

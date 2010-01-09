@@ -38,7 +38,7 @@ class page_output
 
 			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 
-			if (count($structure["values"]) == 0)
+			if (@count($structure["values"]) == 0)
 			{
 				$structure["defaultvalue"] = "No customers in database.";
 			}
@@ -130,7 +130,7 @@ class page_output
 
 			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
 
-			if (count($structure["values"]) == 0)
+			if (@count($structure["values"]) == 0)
 			{
 				$structure["defaultvalue"] = "No vendors in database.";
 			}
@@ -162,7 +162,7 @@ class page_output
 
 			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_invoice as label FROM account_ap WHERE amount_total!=amount_paid ORDER BY code_invoice");
 
-			if (count($structure["values"]) == 0)
+			if (@count($structure["values"]) == 0)
 			{
 				$structure["defaultvalue"] = "All AP invoices have been paid.";
 			}
@@ -311,7 +311,7 @@ class page_output
 					$this->obj_form_ap->render_field("id");
 					$this->obj_form_ap->render_field("page");
 
-					if (count($this->obj_form_ap->structure["id"]["values"]))
+					if (@count($this->obj_form_ap->structure["id"]["values"]))
 					{
 						$this->obj_form_ap->render_field("submit");
 					}
@@ -326,7 +326,7 @@ class page_output
 					$this->obj_form_vend->render_field("id");
 					$this->obj_form_vend->render_field("page");
 
-					if (count($this->obj_form_vend->structure["id"]["values"]))
+					if (@count($this->obj_form_vend->structure["id"]["values"]))
 					{
 						$this->obj_form_vend->render_field("submit");
 					}

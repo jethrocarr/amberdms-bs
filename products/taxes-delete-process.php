@@ -24,8 +24,8 @@ if (user_permissions_get('products_write'))
 		Import GET Data
 	*/
 	
-	$obj_product_tax->id		= security_script_input("/^[0-9]*$/", $_GET["id"]);
-	$obj_product_tax->itemid	= security_script_input("/^[0-9]*$/", $_GET["itemid"]);
+	$obj_product_tax->id		= @security_script_input("/^[0-9]*$/", $_GET["id"]);
+	$obj_product_tax->itemid	= @security_script_input("/^[0-9]*$/", $_GET["itemid"]);
 
 
 	/*

@@ -238,7 +238,6 @@ class menu_main
 
 		print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
 
-
 		// run through the menu order
 		for ($i = 0; $i <= count($this->menu_order); $i++)
 		{
@@ -250,21 +249,28 @@ class menu_main
 			// loop though the menu data
 			foreach ($this->menu_structure as $data)
 			{
-				if ($data["parent"] == $this->menu_order[$i])
+				if (isset($this->menu_order[$i]))
 				{
-					// if this entry has no topic, it only exists for the purpose of getting a parent
-					// link highlighted. In this case, ignore the current entry.
-
-					if ($data["topic"])
+					if ($data["parent"] == $this->menu_order[$i])
 					{
-						// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-						if ($this->menu_order[$i + 1] == $data["topic"] || $data["link"] == $this->page)
+						// if this entry has no topic, it only exists for the purpose of getting a parent
+						// link highlighted. In this case, ignore the current entry.
+
+						if ($data["topic"])
 						{
-							print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
-						}
-						else
-						{
-							print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+							// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+							if (isset($this->menu_order[$i + 1]) && $this->menu_order[$i + 1] == $data["topic"])
+							{
+								print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+							}
+							elseif ($data["link"] == $this->page)
+							{
+								print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+							}
+							else
+							{
+								print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+							}
 						}
 					}
 				}

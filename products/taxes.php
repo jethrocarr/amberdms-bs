@@ -23,7 +23,7 @@ class page_output
 
 	function page_output()
 	{
-		$this->productid		= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->productid		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 
 		// define the navigiation menu

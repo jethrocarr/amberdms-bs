@@ -52,7 +52,7 @@ class sql_query
 
 
 		// check whether or not to display transaction number
-		if ($GLOBALS["sql"]["transaction"])
+		if (isset($GLOBALS["sql"]["transaction"]))
 		{
 			$trans = "TRANS: #". $GLOBALS["sql"]["transaction"] ." ";
 		}
@@ -243,7 +243,7 @@ class sql_query
 	{
 		log_write("debug", "sql_query", "Executing trans_begin()");
 
-		if ($GLOBALS["sql"]["transaction"])
+		if (isset($GLOBALS["sql"]["transaction"]))
 		{
 			// a transaction is already running, do not try and start another one
 			log_debug("sql_query", "Transaction already active, not starting another");
@@ -285,7 +285,7 @@ class sql_query
 	{
 		log_write("debug", "sql_query", "Executing trans_commit()");
 		
-		if ($GLOBALS["sql"]["transaction"])
+		if (isset($GLOBALS["sql"]["transaction"]))
 		{
 			if ($GLOBALS["sql"]["transaction"] == 1)
 			{
@@ -330,7 +330,7 @@ class sql_query
 		log_write("debug", "sql_query", "Executing trans_rollback()");
 
 
-		if ($GLOBALS["sql"]["transaction"])
+		if (isset($GLOBALS["sql"]["transaction"]))
 		{
 			if ($GLOBALS["sql"]["transaction"] == 1)
 			{
@@ -389,7 +389,7 @@ class sql_query
 		{
 			$fieldname = $this->sql_structure["fields"][$i];
 
-			if ($this->sql_structure["field_dbnames"][$fieldname])
+			if (isset($this->sql_structure["field_dbnames"][$fieldname]))
 			{
 				$this->string .= $this->sql_structure["field_dbnames"][$fieldname] ." as ";
 			}
@@ -410,7 +410,7 @@ class sql_query
 		$this->string .= "FROM `". $this->sql_structure["tablename"] ."` ";
 
 		// add all joins
-		if ($this->sql_structure["joins"])
+		if (isset($this->sql_structure["joins"]))
 		{
 			foreach ($this->sql_structure["joins"] as $sql_join)
 			{
@@ -420,7 +420,7 @@ class sql_query
 
 
 		// add WHERE queries
-		if ($this->sql_structure["where"])
+		if (isset($this->sql_structure["where"]))
 		{
 			$this->string .= "WHERE ";
 		
@@ -438,7 +438,7 @@ class sql_query
 		}
 
 		// add groupby rules
-		if ($this->sql_structure["groupby"])
+		if (isset($this->sql_structure["groupby"]))
 		{
 			$this->string .= "GROUP BY ";
 			
@@ -457,7 +457,7 @@ class sql_query
 
 
 		// add orderby rules
-		if ($this->sql_structure["orderby"])
+		if (isset($this->sql_structure["orderby"]))
 		{
 			$this->string .= "ORDER BY ";
 		
@@ -490,7 +490,7 @@ class sql_query
 	
 
 		// add limit (if any)
-		if ($this->sql_structure["limit"])
+		if (isset($this->sql_structure["limit"]))
 		{
 			$this->string .= " LIMIT ". $this->sql_structure["limit"];
 		}
@@ -579,7 +579,14 @@ class sql_query
 		// work out what number to use for this orderby rule
 		// (it is important that we choose a series of numbers in order so that the orderby rules
 		//  are created correctly)
-		$i = count($this->sql_structure["orderby"]);
+		if (isset($this->sql_structure["orderby"]))
+		{
+			$i = count($this->sql_structure["orderby"]);
+		}
+		else
+		{
+			$i = 0;
+		}
 
 		$this->sql_structure["orderby"][$i]["fieldname"]	= $fieldname;
 		$this->sql_structure["orderby"][$i]["type"]		= "asc";
@@ -597,7 +604,14 @@ class sql_query
 		// work out what number to use for this orderby rule
 		// (it is important that we choose a series of numbers in order so that the orderby rules
 		//  are created correctly)
-		$i = count($this->sql_structure["orderby"]);
+		if (isset($this->sql_structure["orderby"]))
+		{
+			$i = count($this->sql_structure["orderby"]);
+		}
+		else
+		{
+			$i = 0;
+		}
 
 		$this->sql_structure["orderby"][$i]["fieldname"]	= $fieldname;
 		$this->sql_structure["orderby"][$i]["type"]		= "desc";
@@ -700,7 +714,7 @@ function sql_get_singlevalue($string)
 		die("Error: SQL queries to sql_get_singlevalue must request the field with the name of \"value\". Eg: \"SELECT name as value FROM mytable WHERE id=foo\"");
 	}
 
-	if ($GLOBALS["cache"]["sql"][$string])
+	if (isset($GLOBALS["cache"]["sql"][$string]))
 	{
 		log_write("sql", "sql_query", "Fetching results from cache");
 		return $GLOBALS["cache"]["sql"][$string];

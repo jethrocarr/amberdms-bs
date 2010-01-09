@@ -27,10 +27,10 @@ class page_output
 	function page_output()
 	{
 		// get time record ID to edit
-		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->id	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		
 		// get selected employee
-		$this->employeeid	= security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
+		$this->employeeid	= @security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
 
 		if ($this->employeeid)
 		{
@@ -46,7 +46,7 @@ class page_output
 
 
 		// get selected date (optional)
-		$this->date	= security_script_input('/^\S*$/', $_GET["date"]);
+		$this->date	= @security_script_input('/^\S*$/', $_GET["date"]);
 
 		if ($this->date)
 		{

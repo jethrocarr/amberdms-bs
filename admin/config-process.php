@@ -19,60 +19,60 @@ if (user_permissions_get("admin"))
 
 
 	// fetch all the data
-	$data["COMPANY_NAME"]			= security_form_input_predefined("any", "COMPANY_NAME", 1, "");
-	$data["COMPANY_CONTACT_EMAIL"]		= security_form_input_predefined("email", "COMPANY_CONTACT_EMAIL", 1, "");
-	$data["COMPANY_CONTACT_PHONE"]		= security_form_input_predefined("any", "COMPANY_CONTACT_PHONE", 1, "");
-	$data["COMPANY_CONTACT_FAX"]		= security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 0, "");
-	$data["COMPANY_ADDRESS1_STREET"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_STREET", 1, "");
-	$data["COMPANY_ADDRESS1_CITY"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_CITY", 1, "");
-	$data["COMPANY_ADDRESS1_STATE"]		= security_form_input_predefined("any", "COMPANY_ADDRESS1_STATE", 0, "");
-	$data["COMPANY_ADDRESS1_COUNTRY"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_COUNTRY", 1, "");
-	$data["COMPANY_ADDRESS1_ZIPCODE"]	= security_form_input_predefined("any", "COMPANY_ADDRESS1_ZIPCODE", 0, "");
-	$data["COMPANY_PAYMENT_DETAILS"]	= security_form_input_predefined("any", "COMPANY_PAYMENT_DETAILS", 1, "");
+	$data["COMPANY_NAME"]			= @security_form_input_predefined("any", "COMPANY_NAME", 1, "");
+	$data["COMPANY_CONTACT_EMAIL"]		= @security_form_input_predefined("email", "COMPANY_CONTACT_EMAIL", 1, "");
+	$data["COMPANY_CONTACT_PHONE"]		= @security_form_input_predefined("any", "COMPANY_CONTACT_PHONE", 1, "");
+	$data["COMPANY_CONTACT_FAX"]		= @security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 0, "");
+	$data["COMPANY_ADDRESS1_STREET"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_STREET", 1, "");
+	$data["COMPANY_ADDRESS1_CITY"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS1_CITY", 1, "");
+	$data["COMPANY_ADDRESS1_STATE"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS1_STATE", 0, "");
+	$data["COMPANY_ADDRESS1_COUNTRY"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_COUNTRY", 1, "");
+	$data["COMPANY_ADDRESS1_ZIPCODE"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_ZIPCODE", 0, "");
+	$data["COMPANY_PAYMENT_DETAILS"]	= @security_form_input_predefined("any", "COMPANY_PAYMENT_DETAILS", 1, "");
 	
-	$data["ACCOUNTS_AP_INVOICENUM"]		= security_form_input_predefined("int", "ACCOUNTS_AP_INVOICENUM", 1, "");
-	$data["ACCOUNTS_AR_INVOICENUM"]		= security_form_input_predefined("int", "ACCOUNTS_AR_INVOICENUM", 1, "");
-	$data["ACCOUNTS_GL_TRANSNUM"]		= security_form_input_predefined("int", "ACCOUNTS_GL_TRANSNUM", 1, "");
-	$data["ACCOUNTS_QUOTES_NUM"]		= security_form_input_predefined("int", "ACCOUNTS_QUOTES_NUM", 1, "");
-	$data["CODE_ACCOUNT"]			= security_form_input_predefined("int", "CODE_ACCOUNT", 1, "");
-	$data["CODE_CUSTOMER"]			= security_form_input_predefined("int", "CODE_CUSTOMER", 1, "");
-	$data["CODE_VENDOR"]			= security_form_input_predefined("int", "CODE_VENDOR", 1, "");
-	$data["CODE_PRODUCT"]			= security_form_input_predefined("int", "CODE_PRODUCT", 1, "");
-	$data["CODE_PROJECT"]			= security_form_input_predefined("int", "CODE_PROJECT", 1, "");
-	$data["CODE_STAFF"]			= security_form_input_predefined("int", "CODE_STAFF", 1, "");
+	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AP_INVOICENUM", 1, "");
+	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AR_INVOICENUM", 1, "");
+	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input_predefined("int", "ACCOUNTS_GL_TRANSNUM", 1, "");
+	$data["ACCOUNTS_QUOTES_NUM"]		= @security_form_input_predefined("int", "ACCOUNTS_QUOTES_NUM", 1, "");
+	$data["CODE_ACCOUNT"]			= @security_form_input_predefined("int", "CODE_ACCOUNT", 1, "");
+	$data["CODE_CUSTOMER"]			= @security_form_input_predefined("int", "CODE_CUSTOMER", 1, "");
+	$data["CODE_VENDOR"]			= @security_form_input_predefined("int", "CODE_VENDOR", 1, "");
+	$data["CODE_PRODUCT"]			= @security_form_input_predefined("int", "CODE_PRODUCT", 1, "");
+	$data["CODE_PROJECT"]			= @security_form_input_predefined("int", "CODE_PROJECT", 1, "");
+	$data["CODE_STAFF"]			= @security_form_input_predefined("int", "CODE_STAFF", 1, "");
 
-	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
-	$data["ACCOUNTS_TERMS_DAYS"]			= security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
-	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= security_form_input_predefined("any", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
+	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
+	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
+	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= @security_form_input_predefined("any", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
 	
-	$data["TIMESHEET_BOOKTOFUTURE"]		= security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
+	$data["TIMESHEET_BOOKTOFUTURE"]		= @security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
 	
-	$data["CURRENCY_DEFAULT_NAME"]			= security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
-	$data["CURRENCY_DEFAULT_SYMBOL"]		= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
-	$data["CURRENCY_DEFAULT_SYMBOL_POSITION"]	= security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL_POSITION", 1, "");
+	$data["CURRENCY_DEFAULT_NAME"]			= @security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
+	$data["CURRENCY_DEFAULT_SYMBOL"]		= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
+	$data["CURRENCY_DEFAULT_SYMBOL_POSITION"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL_POSITION", 1, "");
 	
-	$data["ACCOUNTS_INVOICE_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_INVOICE_LOCK", 0, "");
-	$data["ACCOUNTS_GL_LOCK"]		= security_form_input_predefined("int", "ACCOUNTS_GL_LOCK", 0, "");
-	$data["JOURNAL_LOCK"]			= security_form_input_predefined("int", "JOURNAL_LOCK", 0, "");
-	$data["TIMESHEET_LOCK"]			= security_form_input_predefined("int", "TIMESHEET_LOCK", 0, "");
+	$data["ACCOUNTS_INVOICE_LOCK"]		= @security_form_input_predefined("int", "ACCOUNTS_INVOICE_LOCK", 0, "");
+	$data["ACCOUNTS_GL_LOCK"]		= @security_form_input_predefined("int", "ACCOUNTS_GL_LOCK", 0, "");
+	$data["JOURNAL_LOCK"]			= @security_form_input_predefined("int", "JOURNAL_LOCK", 0, "");
+	$data["TIMESHEET_LOCK"]			= @security_form_input_predefined("int", "TIMESHEET_LOCK", 0, "");
 	
-	$data["BLACKLIST_ENABLE"]		= security_form_input_predefined("any", "BLACKLIST_ENABLE", 0, "");
-	$data["BLACKLIST_LIMIT"]		= security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
+	$data["BLACKLIST_ENABLE"]		= @security_form_input_predefined("any", "BLACKLIST_ENABLE", 0, "");
+	$data["BLACKLIST_LIMIT"]		= @security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
 	
-	$data["UPLOAD_MAXBYTES"]		= security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
-	$data["DATEFORMAT"]			= security_form_input_predefined("any", "DATEFORMAT", 1, "");
-	$data["TIMEZONE_DEFAULT"]		= security_form_input_predefined("any", "TIMEZONE_DEFAULT", 1, "");
-	$data["PHONE_HOME"]			= security_form_input_predefined("any", "PHONE_HOME", 0, "");
+	$data["UPLOAD_MAXBYTES"]		= @security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
+	$data["DATEFORMAT"]			= @security_form_input_predefined("any", "DATEFORMAT", 1, "");
+	$data["TIMEZONE_DEFAULT"]		= @security_form_input_predefined("any", "TIMEZONE_DEFAULT", 1, "");
+	$data["PHONE_HOME"]			= @security_form_input_predefined("any", "PHONE_HOME", 0, "");
 	
 	// only fetch dangerous options if support for it is enabled
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 	{
-		$data["EMAIL_ENABLE"]		= security_form_input_predefined("any", "EMAIL_ENABLE", 0, "");
-		$data["PATH_TMPDIR"]		= security_form_input_predefined("any", "PATH_TMPDIR", 1, "");
-		$data["DATA_STORAGE_LOCATION"]	= security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
-		$data["DATA_STORAGE_METHOD"]	= security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
-		$data["APP_PDFLATEX"]		= security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
-		$data["APP_MYSQL_DUMP"]		= security_form_input_predefined("any", "APP_MYSQL_DUMP", 1, "");
+		$data["EMAIL_ENABLE"]		= @security_form_input_predefined("any", "EMAIL_ENABLE", 0, "");
+		$data["PATH_TMPDIR"]		= @security_form_input_predefined("any", "PATH_TMPDIR", 1, "");
+		$data["DATA_STORAGE_LOCATION"]	= @security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
+		$data["DATA_STORAGE_METHOD"]	= @security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
+		$data["APP_PDFLATEX"]		= @security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+		$data["APP_MYSQL_DUMP"]		= @security_form_input_predefined("any", "APP_MYSQL_DUMP", 1, "");
 
 		if ($data["EMAIL_ENABLE"] == "on")
 		{

@@ -16,13 +16,13 @@ if (user_permissions_get('support_write'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_support_ticket", 1, "");
+	$id				= @security_form_input_predefined("int", "id_support_ticket", 1, "");
 
 	// these exist to make error handling work right
-	$data["title"]			= security_form_input_predefined("any", "title", 0, "");
+	$data["title"]			= @security_form_input_predefined("any", "title", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
 	// make sure the support ticket actually exists

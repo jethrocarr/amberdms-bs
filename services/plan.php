@@ -21,7 +21,7 @@ class page_output
 	function page_output()
 	{
 		$this->obj_serviceform			= New services_form_plan;
-		$this->obj_serviceform->serviceid	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->obj_serviceform->serviceid	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 
 		// define the navigiation menu

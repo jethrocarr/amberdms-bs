@@ -40,9 +40,9 @@ class page_output
 		*/
 
 		// fetch existing values
-		$this->date_start	= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_start_yyyy"] ."-". $_GET["date_start_mm"] ."-". $_GET["date_start_dd"]);
-		$this->date_end		= security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
-		$this->mode		= security_script_input("/^\S*$/", $_GET["mode"]);
+		$this->date_start	= @security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_start_yyyy"] ."-". $_GET["date_start_mm"] ."-". $_GET["date_start_dd"]);
+		$this->date_end		= @security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET["date_end_yyyy"] ."-". $_GET["date_end_mm"] ."-". $_GET["date_end_dd"]);
+		$this->mode		= @security_script_input("/^\S*$/", $_GET["mode"]);
 
 		if (!$this->mode)
 		{
@@ -254,7 +254,7 @@ class page_output
 						{
 							if ($data_item["chartid"] == $this->data_income[$i]["id"])
 							{
-								$this->data_income[$i]["amount"] += $data_item["amount"];
+								@$this->data_income[$i]["amount"] += $data_item["amount"];
 							}
 							
 						} // end of loop through charts
@@ -323,7 +323,7 @@ class page_output
 						{
 							if ($data_item["chartid"] == $this->data_expense[$i]["id"])
 							{
-								$this->data_expense[$i]["amount"] += $data_item["amount"];
+								@$this->data_expense[$i]["amount"] += $data_item["amount"];
 							}
 							
 						} // end of loop through charts
@@ -414,7 +414,7 @@ class page_output
 		$this->data_totals["income"] = 0;
 		for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
 		{
-			$this->data_totals["income"] += $this->data_income[$i]["amount"];
+			@$this->data_totals["income"] += $this->data_income[$i]["amount"];
 		}
 		
 
@@ -422,16 +422,16 @@ class page_output
 		// expense
 		for ($i = 0; $i < count(array_keys($this->data_expense)); $i++)
 		{
-			$this->data_totals["expense"] += $this->data_expense[$i]["amount"];
+			@$this->data_totals["expense"] += $this->data_expense[$i]["amount"];
 		}
 		
 
 		// final
-		$this->data_totals["final"]	= $this->data_totals["income"] - $this->data_totals["expense"];
+		$this->data_totals["final"]	= @$this->data_totals["income"] - $this->data_totals["expense"];
 		
-		$this->data_totals["income"]	= format_money($this->data_totals["income"]);
-		$this->data_totals["expense"]	= format_money($this->data_totals["expense"]);
-		$this->data_totals["final"]	= format_money($this->data_totals["final"]);
+		$this->data_totals["income"]	= @format_money($this->data_totals["income"]);
+		$this->data_totals["expense"]	= @format_money($this->data_totals["expense"]);
+		$this->data_totals["final"]	= @format_money($this->data_totals["final"]);
 	}
 
 
@@ -500,7 +500,7 @@ class page_output
 				$structure = array();
 			
 				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= format_money($itemdata["amount"]);
+				$structure["amount"]		= @format_money($itemdata["amount"]);
 
 				$structure_main[] = $structure;
 			}
@@ -516,7 +516,7 @@ class page_output
 				$structure = array();
 			
 				$structure["name_chart"] 	= $itemdata["code_chart"] . " -- ". $itemdata["description"];
-				$structure["amount"]		= format_money($itemdata["amount"]);
+				$structure["amount"]		= @format_money($itemdata["amount"]);
 
 				$structure_main[] = $structure;
 			}

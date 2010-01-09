@@ -23,7 +23,7 @@ if ($config["instance"] == "hosted")
 		relevant database server
 	*/
 
-	if ($_SESSION["user"]["instance"]["id"])
+	if (isset($_SESSION["user"]["instance"]["id"]))
 	{
 		/*
 			Connect to instance DB

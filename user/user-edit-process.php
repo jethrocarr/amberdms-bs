@@ -17,11 +17,11 @@ if (user_permissions_get('admin'))
 {
 	////// INPUT PROCESSING ////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_user", 0, "");
+	$id				= @security_form_input_predefined("int", "id_user", 0, "");
 	
-	$data["username"]		= security_form_input_predefined("any", "username", 1, "");
-	$data["realname"]		= security_form_input_predefined("any", "realname", 1, "");
-	$data["contact_email"]		= security_form_input_predefined("any", "contact_email", 1, "");
+	$data["username"]		= @security_form_input_predefined("any", "username", 1, "");
+	$data["realname"]		= @security_form_input_predefined("any", "realname", 1, "");
+	$data["contact_email"]		= @security_form_input_predefined("any", "contact_email", 1, "");
 
 	// are we editing an existing user or adding a new one?
 	if ($id)
@@ -47,13 +47,13 @@ if (user_permissions_get('admin'))
 	// account options are for edits only
 	if ($mode == "edit")
 	{
-		$data["option_lang"]			= security_form_input_predefined("any", "option_lang", 1, "");
-		$data["option_dateformat"]		= security_form_input_predefined("any", "option_dateformat", 1, "");
-		$data["option_timezone"]		= security_form_input_predefined("any", "option_timezone", 1, "");
-		$data["option_shrink_tableoptions"]	= security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
-		$data["option_default_employeeid"]	= security_form_input_predefined("any", "option_default_employeeid", 0, "");
-		$data["option_debug"]			= security_form_input_predefined("any", "option_debug", 0, "");
-		$data["option_concurrent_logins"]	= security_form_input_predefined("any", "option_concurrent_logins", 0, "");
+		$data["option_lang"]			= @security_form_input_predefined("any", "option_lang", 1, "");
+		$data["option_dateformat"]		= @security_form_input_predefined("any", "option_dateformat", 1, "");
+		$data["option_timezone"]		= @security_form_input_predefined("any", "option_timezone", 1, "");
+		$data["option_shrink_tableoptions"]	= @security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
+		$data["option_default_employeeid"]	= @security_form_input_predefined("any", "option_default_employeeid", 0, "");
+		$data["option_debug"]			= @security_form_input_predefined("any", "option_debug", 0, "");
+		$data["option_concurrent_logins"]	= @security_form_input_predefined("any", "option_concurrent_logins", 0, "");
 	}
 
 
@@ -81,8 +81,8 @@ if (user_permissions_get('admin'))
 	// check password (if the user has requested to change it)
 	if ($_POST["password"] || $_POST["password_confirm"])
 	{
-		$data["password"]		= security_form_input_predefined("any", "password", 4, "");
-		$data["password_confirm"]	= security_form_input_predefined("any", "password_confirm", 4, "");
+		$data["password"]		= @security_form_input_predefined("any", "password", 4, "");
+		$data["password_confirm"]	= @security_form_input_predefined("any", "password_confirm", 4, "");
 
 		if ($data["password"] != $data["password_confirm"])
 		{

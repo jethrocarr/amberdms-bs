@@ -14,8 +14,8 @@ require("../../include/amberphplib/main.php");
 
 if (user_permissions_get('accounts_quotes_view'))
 {
-	$journalid	= security_script_input('/^[0-9]*$/', $_GET["customid"]);
-	$fileid 	= security_script_input('/^[0-9]*$/', $_GET["fileid"]);
+	$journalid	= @security_script_input('/^[0-9]*$/', $_GET["customid"]);
+	$fileid 	= @security_script_input('/^[0-9]*$/', $_GET["fileid"]);
 
 	// check that the journal entry exists
 	if (!$journalid)

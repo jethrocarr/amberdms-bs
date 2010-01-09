@@ -19,10 +19,10 @@ class page_output
 
 	function page_output()
 	{
-		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$this->journalid	= security_script_input('/^[0-9]*$/', $_GET["journalid"]);
-		$this->action		= security_script_input('/^[a-z]*$/', $_GET["action"]);
-		$this->type		= security_script_input('/^[a-z]*$/', $_GET["type"]);
+		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->journalid	= @security_script_input('/^[0-9]*$/', $_GET["journalid"]);
+		$this->action		= @security_script_input('/^[a-z]*$/', $_GET["action"]);
+		$this->type		= @security_script_input('/^[a-z]*$/', $_GET["type"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;

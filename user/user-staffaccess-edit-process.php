@@ -21,8 +21,8 @@ if (user_permissions_get('admin'))
 {
 	////// INPUT PROCESSING ////////////////////////
 
-	$id		= security_form_input_predefined("int", "id_user", 1, "");
-	$staffid	= security_form_input_predefined("int", "id_staff", 1, "");
+	$id		= @security_form_input_predefined("int", "id_user", 1, "");
+	$staffid	= @security_form_input_predefined("int", "id_staff", 1, "");
 	
 	
 	// convert all the permissions input
@@ -35,7 +35,7 @@ if (user_permissions_get('admin'))
 
 	foreach ($sql_perms_obj->data as $data_perms)
 	{
-		$permissions[ $data_perms["value"] ] = security_form_input_predefined("any", $data_perms["value"], 0, "Form provided invalid input!");
+		$permissions[ $data_perms["value"] ] = @security_form_input_predefined("any", $data_perms["value"], 0, "Form provided invalid input!");
 	}
 
 	

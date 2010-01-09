@@ -38,7 +38,7 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 	// get the ID for an edit
 	if ($mode == "edit")
 	{
-		$id = security_form_input_predefined("int", "id_quote", 1, "");
+		$id = @security_form_input_predefined("int", "id_quote", 1, "");
 	}
 	else
 	{
@@ -47,12 +47,12 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 	
 
 	// general details
-	$data["customerid"]		= security_form_input_predefined("int", "customerid", 1, "");
-	$data["employeeid"]		= security_form_input_predefined("int", "employeeid", 1, "");
-	$data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
+	$data["customerid"]		= @security_form_input_predefined("int", "customerid", 1, "");
+	$data["employeeid"]		= @security_form_input_predefined("int", "employeeid", 1, "");
+	$data["notes"]			= @security_form_input_predefined("any", "notes", 0, "");
 	
-	$data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
-	$data["date_validtill"]		= security_form_input_predefined("date", "date_validtill", 1, "");
+	$data["date_trans"]		= @security_form_input_predefined("date", "date_trans", 1, "");
+	$data["date_validtill"]		= @security_form_input_predefined("date", "date_validtill", 1, "");
 
 
 	// are we editing an existing quote or adding a new one?
@@ -79,11 +79,11 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 	// quote must be provided by edit page, but not by add quote, since we can just generate a new one
 	if ($mode == "add")
 	{
-		$data["code_quote"]		= security_form_input_predefined("any", "code_quote", 0, "");
+		$data["code_quote"]		= @security_form_input_predefined("any", "code_quote", 0, "");
 	}
 	else
 	{
-		$data["code_quote"]		= security_form_input_predefined("any", "code_quote", 1, "");
+		$data["code_quote"]		= @security_form_input_predefined("any", "code_quote", 1, "");
 	}
 
 	//// ERROR CHECKING ///////////////////////
@@ -236,18 +236,18 @@ function quotes_form_convert_process($returnpage_error, $returnpage_success)
 		Fetch all form data
 	*/
 
-	$id				= security_form_input_predefined("int", "id_quote", 1, "");
+	$id				= @security_form_input_predefined("int", "id_quote", 1, "");
 
 
 	// general data
-	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
-	$data["code_ordernumber"]	= security_form_input_predefined("any", "code_ordernumber", 0, "");
-	$data["code_ponumber"]		= security_form_input_predefined("any", "code_ponumber", 0, "");
-	$data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
-	$data["date_due"]		= security_form_input_predefined("date", "date_due", 1, "");
+	$data["code_invoice"]		= @security_form_input_predefined("any", "code_invoice", 0, "");
+	$data["code_ordernumber"]	= @security_form_input_predefined("any", "code_ordernumber", 0, "");
+	$data["code_ponumber"]		= @security_form_input_predefined("any", "code_ponumber", 0, "");
+	$data["date_trans"]		= @security_form_input_predefined("date", "date_trans", 1, "");
+	$data["date_due"]		= @security_form_input_predefined("date", "date_due", 1, "");
 
 	// other
-	$data["dest_account"]		= security_form_input_predefined("int", "dest_account", 1, "");
+	$data["dest_account"]		= @security_form_input_predefined("int", "dest_account", 1, "");
 
 
 
@@ -430,12 +430,12 @@ function quotes_form_delete_process($returnpage_error, $returnpage_success)
 
 
 	// get form data
-	$id				= security_form_input_predefined("int", "id_quote", 1, "");
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$id				= @security_form_input_predefined("int", "id_quote", 1, "");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	// we don't use this value (since we can't trust it) but we need to read it
 	// in here to work around a limitation in the Amberphplib framework
-	$data["date_create"]		= security_form_input_predefined("any", "date_create", 1, "");
+	$data["date_create"]		= @security_form_input_predefined("any", "date_create", 1, "");
 
 
 	//// ERROR CHECKING ///////////////////////

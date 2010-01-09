@@ -26,11 +26,11 @@ if (user_online())
 
 	$data["patch"]			= $_SESSION["error"]["patch"]	= $_POST["patch"];
 
-	$data["patch_submit_notes"]	= security_form_input_predefined("any", "patch_submit_notes", 0, "");
-	$data["patch_submit_legal"]	= security_form_input_predefined("checkbox", "patch_submit_legal", 0, "");
-	$data["patch_submit_contact"]	= security_form_input_predefined("email", "patch_submit_contact", 1, "");
-	$data["patch_submit_credit"]	= security_form_input_predefined("any", "patch_submit_credit", 1, "");
-	$data["patch_description"]	= security_form_input_predefined("any", "patch_description", 1, "");
+	$data["patch_submit_notes"]	= @security_form_input_predefined("any", "patch_submit_notes", 0, "");
+	$data["patch_submit_legal"]	= @security_form_input_predefined("checkbox", "patch_submit_legal", 0, "");
+	$data["patch_submit_contact"]	= @security_form_input_predefined("email", "patch_submit_contact", 1, "");
+	$data["patch_submit_credit"]	= @security_form_input_predefined("any", "patch_submit_credit", 1, "");
+	$data["patch_description"]	= @security_form_input_predefined("any", "patch_description", 1, "");
 
 
 	if (!$data["patch_submit_legal"])

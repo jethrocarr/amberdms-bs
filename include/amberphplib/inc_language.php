@@ -38,7 +38,7 @@ function lang_trans($label)
 
 
 	// see if the value is already cached
-	if ($GLOBALS["cache"]["lang"][$label])
+	if (isset($GLOBALS["cache"]["lang"][$label]))
 	{
 		// return cached label
 		return $GLOBALS["cache"]["lang"][$label];
@@ -127,7 +127,7 @@ function language_translate($language, $label_array)
 	// run through the labels - see what ones we have cached, and what ones we need to query
 	foreach ($label_array as $label)
 	{
-		if ($GLOBALS["cache"]["lang"][$label])
+		if (isset($GLOBALS["cache"]["lang"][$label]))
 		{
 			$result[$label] = $GLOBALS["cache"]["lang"][$label];
 		}
@@ -233,7 +233,7 @@ function language_translate_string($language, $label)
 
 
 	// see if the value is already cached
-	if ($GLOBALS["cache"]["lang"][$label])
+	if (isset($GLOBALS["cache"]["lang"][$label]))
 	{
 		// return cached label
 		return $GLOBALS["cache"]["lang"][$label];

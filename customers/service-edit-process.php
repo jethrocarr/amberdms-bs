@@ -16,21 +16,21 @@ if (user_permissions_get('customers_write'))
 {
 	/////////////////////////
 
-	$customerid			= security_form_input_predefined("int", "customerid", 1, "");
-	$services_customers_id		= security_form_input_predefined("int", "services_customers_id", 0, "");
+	$customerid			= @security_form_input_predefined("int", "customerid", 1, "");
+	$services_customers_id		= @security_form_input_predefined("int", "services_customers_id", 0, "");
 	
 	if ($services_customers_id)
 	{
 		$mode = "edit";
 
 		// standard fields
-		$data["active"]			= security_form_input_predefined("any", "active", 0, "");
+		$data["active"]			= @security_form_input_predefined("any", "active", 0, "");
 
 		if ($data["active"])
 			$data["active"]		= 1; // need to handle DB bool field
 		
 		// custom
-		$data["quantity"]		= security_form_input_predefined("int", "quantity", 0, "");
+		$data["quantity"]		= @security_form_input_predefined("int", "quantity", 0, "");
 
 		if (!$data["quantity"])
 			$data["quantity"] = 1;	// all services must have at least 1
@@ -41,14 +41,14 @@ if (user_permissions_get('customers_write'))
 		$mode = "add";
 
 		// standard fields
-		$data["serviceid"]		= security_form_input_predefined("any", "serviceid", 1, "");
-		$data["date_period_first"]	= security_form_input_predefined("date", "date_period_first", 1, "");
+		$data["serviceid"]		= @security_form_input_predefined("any", "serviceid", 1, "");
+		$data["date_period_first"]	= @security_form_input_predefined("date", "date_period_first", 1, "");
 		$data["date_period_next"]	= $data["date_period_first"];
 	}
 
 
 	// general details		
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 
 

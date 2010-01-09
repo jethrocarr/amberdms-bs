@@ -36,7 +36,7 @@ class customers_manage_soap
 		if (user_permissions_get("customers_view"))
 		{
 			// sanitise input
-			$code_customer = security_script_input_predefined("any", $code_customer);
+			$code_customer = @security_script_input_predefined("any", $code_customer);
 
 			if (!$code_customer || $code_customer == "error")
 			{
@@ -84,7 +84,7 @@ class customers_manage_soap
 
 
 			// sanitise input
-			$obj_customer->id = security_script_input_predefined("int", $id);
+			$obj_customer->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_customer->id || $obj_customer->id == "error")
 			{
@@ -165,7 +165,7 @@ class customers_manage_soap
 
 
 			// sanitise input
-			$obj_customer->id = security_script_input_predefined("int", $id);
+			$obj_customer->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_customer->id || $obj_customer->id == "error")
 			{
@@ -283,33 +283,33 @@ class customers_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_customer->id				= security_script_input_predefined("int", $id);
+			$obj_customer->id				= @security_script_input_predefined("int", $id);
 			
-			$obj_customer->data["code_customer"]		= security_script_input_predefined("any", $code_customer);
-			$obj_customer->data["name_customer"]		= security_script_input_predefined("any", $name_customer);
-			$obj_customer->data["name_contact"]		= security_script_input_predefined("any", $name_contact);
+			$obj_customer->data["code_customer"]		= @security_script_input_predefined("any", $code_customer);
+			$obj_customer->data["name_customer"]		= @security_script_input_predefined("any", $name_customer);
+			$obj_customer->data["name_contact"]		= @security_script_input_predefined("any", $name_contact);
 			
-			$obj_customer->data["contact_phone"]		= security_script_input_predefined("any", $contact_phone);
-			$obj_customer->data["contact_fax"]		= security_script_input_predefined("any", $contact_fax);
-			$obj_customer->data["contact_email"]		= security_script_input_predefined("email", $contact_email);
-			$obj_customer->data["date_start"]		= security_script_input_predefined("date", $date_start);
-			$obj_customer->data["date_end"]			= security_script_input_predefined("date", $date_end);
+			$obj_customer->data["contact_phone"]		= @security_script_input_predefined("any", $contact_phone);
+			$obj_customer->data["contact_fax"]		= @security_script_input_predefined("any", $contact_fax);
+			$obj_customer->data["contact_email"]		= @security_script_input_predefined("email", $contact_email);
+			$obj_customer->data["date_start"]		= @security_script_input_predefined("date", $date_start);
+			$obj_customer->data["date_end"]			= @security_script_input_predefined("date", $date_end);
 
-			$obj_customer->data["address1_street"]		= security_script_input_predefined("any", $address1_street);
-			$obj_customer->data["address1_city"]		= security_script_input_predefined("any", $address1_city);
-			$obj_customer->data["address1_state"]		= security_script_input_predefined("any", $address1_state);
-			$obj_customer->data["address1_country"]		= security_script_input_predefined("any", $address1_country);
-			$obj_customer->data["address1_zipcode"]		= security_script_input_predefined("any", $address1_zipcode);
+			$obj_customer->data["address1_street"]		= @security_script_input_predefined("any", $address1_street);
+			$obj_customer->data["address1_city"]		= @security_script_input_predefined("any", $address1_city);
+			$obj_customer->data["address1_state"]		= @security_script_input_predefined("any", $address1_state);
+			$obj_customer->data["address1_country"]		= @security_script_input_predefined("any", $address1_country);
+			$obj_customer->data["address1_zipcode"]		= @security_script_input_predefined("any", $address1_zipcode);
 			
-			$obj_customer->data["address2_street"]		= security_script_input_predefined("any", $address2_street);
-			$obj_customer->data["address2_city"]		= security_script_input_predefined("any", $address2_city);
-			$obj_customer->data["address2_state"]		= security_script_input_predefined("any", $address2_state);
-			$obj_customer->data["address2_country"]		= security_script_input_predefined("any", $address2_country);
-			$obj_customer->data["address2_zipcode"]		= security_script_input_predefined("any", $address2_zipcode);
+			$obj_customer->data["address2_street"]		= @security_script_input_predefined("any", $address2_street);
+			$obj_customer->data["address2_city"]		= @security_script_input_predefined("any", $address2_city);
+			$obj_customer->data["address2_state"]		= @security_script_input_predefined("any", $address2_state);
+			$obj_customer->data["address2_country"]		= @security_script_input_predefined("any", $address2_country);
+			$obj_customer->data["address2_zipcode"]		= @security_script_input_predefined("any", $address2_zipcode);
 			
-			$obj_customer->data["tax_number"]		= security_script_input_predefined("any", $tax_number);
-			$obj_customer->data["tax_default"]		= security_script_input_predefined("int", $tax_default);
-			$obj_customer->data["discount"]			= security_script_input_predefined("float", $discount);
+			$obj_customer->data["tax_number"]		= @security_script_input_predefined("any", $tax_number);
+			$obj_customer->data["tax_default"]		= @security_script_input_predefined("int", $tax_default);
+			$obj_customer->data["discount"]			= @security_script_input_predefined("float", $discount);
 
 
 			foreach (array_keys($obj_customer->data) as $key)
@@ -401,9 +401,9 @@ class customers_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_customer->id	= security_script_input_predefined("int", $id);
-			$taxid			= security_script_input_predefined("int", $taxid);
-			$status			= security_script_input_predefined("any", $status);
+			$obj_customer->id	= @security_script_input_predefined("int", $id);
+			$taxid			= @security_script_input_predefined("int", $taxid);
+			$status			= @security_script_input_predefined("any", $status);
 
 			foreach (array_keys($obj_customer->data) as $key)
 			{
@@ -503,7 +503,7 @@ class customers_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_customer->id = security_script_input_predefined("int", $id);
+			$obj_customer->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_customer->id || $obj_customer->id == "error")
 			{

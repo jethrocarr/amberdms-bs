@@ -31,7 +31,7 @@ function invoice_calc_duedate($date)
 	$terms = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_TERMS_DAYS' LIMIT 1");
 
 	// break up the date, and reconfigure
-	$date_array	= split("-", $date);
+	$date_array	= explode("-", $date);
 	$timestamp	= mktime(0, 0, 0, $date_array[1], ($date_array[2] + $terms), $date_array[0]);
 
 	// generate the date
@@ -354,17 +354,17 @@ class invoice
 	{
 		log_debug("invoice", "Executing prepare_set_defaults");
 
-		if (!$this->data["code_invoice"])
+		if (empty($this->data["code_invoice"]))
 		{
 			$this->prepare_code_invoice();
 		}
 
-		if (!$this->data["date_trans"])
+		if (empty($this->data["date_trans"]))
 		{
 			$this->data["date_trans"] = date("Y-m-d");
 		}
 		
-		if (!$this->data["date_due"])
+		if (empty($this->data["date_due"]))
 		{
 			$this->data["date_due"] = invoice_calc_duedate($this->data["date_trans"]);
 		}
@@ -526,7 +526,7 @@ class invoice
 			
 		if ($this->type == "ap")
 		{
-			$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
+			@$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
 						."vendorid='". $this->data["vendorid"] ."', "
 						."employeeid='". $this->data["employeeid"] ."', "
 						."notes='". $this->data["notes"] ."', "
@@ -540,7 +540,7 @@ class invoice
 		}
 		else
 		{
-			$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
+			@$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
 						."customerid='". $this->data["customerid"] ."', "
 						."employeeid='". $this->data["employeeid"] ."', "
 						."notes='". $this->data["notes"] ."', "
@@ -742,7 +742,10 @@ class invoice
 		log_debug("invoice", "Executing prepare_generate_pdf()");
 
 		// start the PDF object
+		//
 		// note: the & allows decontructors to operate
+		//       Unfortunatly this trick is now deprecated with PHP 5.3.x and creates unsilencable errors ~JC 20100110
+		//
 		$this->obj_pdf =& New template_engine_latex;
 
 		// get template filename based on currently selected options

@@ -27,27 +27,27 @@ if (user_permissions_get('accounts_gl_write'))
 		Import POST Data
 	*/
 
-	$obj_gl->id				= security_form_input_predefined("int", "id_transaction", 0, "");
+	$obj_gl->id				= @security_form_input_predefined("int", "id_transaction", 0, "");
 
 	// general details
-	$obj_gl->data["code_gl"]		= security_form_input_predefined("any", "code_gl", 0, "");
-	$obj_gl->data["date_trans"]		= security_form_input_predefined("date", "date_trans", 1, "");
-	$obj_gl->data["employeeid"]		= security_form_input_predefined("any", "employeeid", 1, "");
-	$obj_gl->data["description"]		= security_form_input_predefined("any", "description", 1, "");
-	$obj_gl->data["description_useall"]	= security_form_input_predefined("any", "description_useall", 0, "");
-	$obj_gl->data["notes"]			= security_form_input_predefined("any", "notes", 0, "");
+	$obj_gl->data["code_gl"]		= @security_form_input_predefined("any", "code_gl", 0, "");
+	$obj_gl->data["date_trans"]		= @security_form_input_predefined("date", "date_trans", 1, "");
+	$obj_gl->data["employeeid"]		= @security_form_input_predefined("any", "employeeid", 1, "");
+	$obj_gl->data["description"]		= @security_form_input_predefined("any", "description", 1, "");
+	$obj_gl->data["description_useall"]	= @security_form_input_predefined("any", "description_useall", 0, "");
+	$obj_gl->data["notes"]			= @security_form_input_predefined("any", "notes", 0, "");
 	
 
 	// transaction rows
-	$obj_gl->data["num_trans"]		= security_form_input_predefined("int", "num_trans", $required, "");
+	$obj_gl->data["num_trans"]		= @security_form_input_predefined("int", "num_trans", $required, "");
 
 	for ($i = 0; $i < $obj_gl->data["num_trans"]; $i++)
 	{
-		$obj_gl->data["trans"][$i]["account"]		= security_form_input_predefined("int", "trans_". $i ."_account", 0, "");
-		$obj_gl->data["trans"][$i]["debit"]		= security_form_input_predefined("money", "trans_". $i ."_debit", 0, "");
-		$obj_gl->data["trans"][$i]["credit"]		= security_form_input_predefined("money", "trans_". $i ."_credit", 0, "");
-		$obj_gl->data["trans"][$i]["source"]		= security_form_input_predefined("any", "trans_". $i ."_source", 0, "");
-		$obj_gl->data["trans"][$i]["description"]	= security_form_input_predefined("any", "trans_". $i ."_description", 0, "");
+		$obj_gl->data["trans"][$i]["account"]		= @security_form_input_predefined("int", "trans_". $i ."_account", 0, "");
+		$obj_gl->data["trans"][$i]["debit"]		= @security_form_input_predefined("money", "trans_". $i ."_debit", 0, "");
+		$obj_gl->data["trans"][$i]["credit"]		= @security_form_input_predefined("money", "trans_". $i ."_credit", 0, "");
+		$obj_gl->data["trans"][$i]["source"]		= @security_form_input_predefined("any", "trans_". $i ."_source", 0, "");
+		$obj_gl->data["trans"][$i]["description"]	= @security_form_input_predefined("any", "trans_". $i ."_description", 0, "");
 
 
 		// make sure both account and an amount have been supplied together

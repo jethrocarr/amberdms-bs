@@ -43,7 +43,7 @@ class accounts_gl_manage_soap
 
 
 			// sanitise input
-			$obj_gl->id = security_script_input_predefined("int", $id);
+			$obj_gl->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_gl->id || $obj_gl->id == "error")
 			{
@@ -107,7 +107,7 @@ class accounts_gl_manage_soap
 			$obj_gl = New gl_transaction;
 
 			// sanitise input
-			$obj_gl->id = security_script_input_predefined("int", $id);
+			$obj_gl->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_gl->id || $obj_gl->id == "error")
 			{
@@ -183,12 +183,12 @@ class accounts_gl_manage_soap
 
 		if (user_permissions_get("accounts_gl_write"))
 		{
-			$this->data["code_gl"]			= security_script_input_predefined("any", $code_gl);
-			$this->data["date_trans"]		= security_script_input_predefined("any", $date_trans);
-			$this->data["employeeid"]		= security_script_input_predefined("int", $employeeid);
-			$this->data["description"]		= security_script_input_predefined("any", $description);
-			$this->data["description_useall"]	= security_script_input_predefined("any", $description_useall);
-			$this->data["notes"]			= security_script_input_predefined("any", $notes);
+			$this->data["code_gl"]			= @security_script_input_predefined("any", $code_gl);
+			$this->data["date_trans"]		= @security_script_input_predefined("any", $date_trans);
+			$this->data["employeeid"]		= @security_script_input_predefined("int", $employeeid);
+			$this->data["description"]		= @security_script_input_predefined("any", $description);
+			$this->data["description_useall"]	= @security_script_input_predefined("any", $description_useall);
+			$this->data["notes"]			= @security_script_input_predefined("any", $notes);
 			
 			foreach (array("code_gl", "date_trans", "employeeid", "description", "description_useall", "notes") as $key)
 			{
@@ -244,11 +244,11 @@ class accounts_gl_manage_soap
 				Import SOAP Data
 			*/
 
-			$this->data["trans"][$i]["account"]			= security_script_input_predefined("int", $chartid);
-			$this->data["trans"][$i]["credit"]			= security_script_input_predefined("money", $credit);
-			$this->data["trans"][$i]["debit"]			= security_script_input_predefined("money", $debit);
-			$this->data["trans"][$i]["source"]			= security_script_input_predefined("any", $source);
-			$this->data["trans"][$i]["description"]			= security_script_input_predefined("any", $description);
+			$this->data["trans"][$i]["account"]			= @security_script_input_predefined("int", $chartid);
+			$this->data["trans"][$i]["credit"]			= @security_script_input_predefined("money", $credit);
+			$this->data["trans"][$i]["debit"]			= @security_script_input_predefined("money", $debit);
+			$this->data["trans"][$i]["source"]			= @security_script_input_predefined("any", $source);
+			$this->data["trans"][$i]["description"]			= @security_script_input_predefined("any", $description);
 		
 
 			/*
@@ -427,7 +427,7 @@ class accounts_gl_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_gl->id = security_script_input_predefined("int", $id);
+			$obj_gl->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_gl->id || $obj_gl->id == "error")
 			{

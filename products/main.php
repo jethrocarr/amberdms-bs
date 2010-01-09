@@ -35,7 +35,7 @@ class page_output
 
 		$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_product as label, name_product as label1 FROM products ORDER BY code_product");
 
-		if (count($structure["values"]) == 0)
+		if (@count($structure["values"]) == 0)
 		{
 			$structure["defaultvalue"] = "No products in database";
 		}
@@ -67,7 +67,7 @@ class page_output
 
 		$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, name_service as label FROM services ORDER BY name_service");
 
-		if (count($structure["values"]) == 0)
+		if (@count($structure["values"]) == 0)
 		{
 			$structure["defaultvalue"] = "No services in database";
 		}
@@ -99,7 +99,7 @@ class page_output
 
 		$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_project as label, name_project as label1 FROM projects ORDER BY name_project");
 
-		if (count($structure["values"]) == 0)
+		if (@count($structure["values"]) == 0)
 		{
 			$structure["defaultvalue"] = "No projects in database";
 		}
@@ -158,7 +158,7 @@ class page_output
 					$this->obj_form_products->render_field("id");
 					$this->obj_form_products->render_field("page");
 
-					if (count($this->obj_form_products->structure["id"]["values"]))
+					if (@count($this->obj_form_products->structure["id"]["values"]))
 					{
 						$this->obj_form_products->render_field("submit");
 					}
@@ -198,7 +198,7 @@ class page_output
 					$this->obj_form_services->render_field("id");
 					$this->obj_form_services->render_field("page");
 
-					if (count($this->obj_form_services->structure["id"]["values"]))
+					if (@count($this->obj_form_services->structure["id"]["values"]))
 					{
 						$this->obj_form_services->render_field("submit");
 					}
@@ -240,7 +240,7 @@ class page_output
 					$this->obj_form_projects->render_field("id");
 					$this->obj_form_projects->render_field("page");
 
-					if (count($this->obj_form_projects->structure["id"]["values"]))
+					if (@count($this->obj_form_projects->structure["id"]["values"]))
 					{
 						$this->obj_form_projects->render_field("submit");
 					}

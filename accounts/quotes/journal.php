@@ -21,7 +21,7 @@ class page_output
 	function page_output()
 	{
 		// fetch quote ID
-		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;

@@ -40,7 +40,7 @@ class hr_staff_manage_soap
 
 
 			// sanatise input
-			$obj_employee->id = security_script_input_predefined("int", $id);
+			$obj_employee->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_employee->id || $obj_employee->id == "error")
 			{
@@ -104,15 +104,15 @@ class hr_staff_manage_soap
 			/*
 				Load POST Data
 			*/
-			$obj_employee->id				= security_script_input_predefined("int", $id);
-			$obj_employee->data["name_staff"]		= security_script_input_predefined("any", $name_staff);
-			$obj_employee->data["staff_code"]		= security_script_input_predefined("any", $staff_code);
-			$obj_employee->data["staff_position"]		= security_script_input_predefined("any", $staff_position);
-			$obj_employee->data["contact_phone"]		= security_script_input_predefined("any", $contact_phone);
-			$obj_employee->data["contact_fax"]		= security_script_input_predefined("any", $contact_fax);
-			$obj_employee->data["contact_email"]		= security_script_input_predefined("email", $contact_email);
-			$obj_employee->data["date_start"]		= security_script_input_predefined("date", $date_start);
-			$obj_employee->data["date_end"]			= security_script_input_predefined("date", $date_end);
+			$obj_employee->id				= @security_script_input_predefined("int", $id);
+			$obj_employee->data["name_staff"]		= @security_script_input_predefined("any", $name_staff);
+			$obj_employee->data["staff_code"]		= @security_script_input_predefined("any", $staff_code);
+			$obj_employee->data["staff_position"]		= @security_script_input_predefined("any", $staff_position);
+			$obj_employee->data["contact_phone"]		= @security_script_input_predefined("any", $contact_phone);
+			$obj_employee->data["contact_fax"]		= @security_script_input_predefined("any", $contact_fax);
+			$obj_employee->data["contact_email"]		= @security_script_input_predefined("email", $contact_email);
+			$obj_employee->data["date_start"]		= @security_script_input_predefined("date", $date_start);
+			$obj_employee->data["date_end"]			= @security_script_input_predefined("date", $date_end);
 
 			foreach (array_keys($obj_employee->data) as $key)
 			{
@@ -199,7 +199,7 @@ class hr_staff_manage_soap
 			/*
 				Load POST Data
 			*/
-			$obj_employee->id				= security_script_input_predefined("int", $id);
+			$obj_employee->id				= @security_script_input_predefined("int", $id);
 
 			if (!$obj_employee || $obj_employee == "error")
 			{

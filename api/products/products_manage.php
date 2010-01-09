@@ -39,7 +39,7 @@ class products_manage_soap
 
 
 			// sanitise input
-			$obj_product->id = security_script_input_predefined("int", $id);
+			$obj_product->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_product->id || $obj_product->id == "error")
 			{
@@ -130,7 +130,7 @@ class products_manage_soap
 
 
 			// sanitise input
-			$obj_product_tax->id = security_script_input_predefined("int", $id);
+			$obj_product_tax->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
 			{
@@ -223,29 +223,29 @@ class products_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_product->id				= security_script_input_predefined("int", $id);
+			$obj_product->id				= @security_script_input_predefined("int", $id);
 					
-			$obj_product->data["code_product"]		= security_script_input_predefined("any", $code_product);
-			$obj_product->data["name_product"]		= security_script_input_predefined("any", $name_product);
-			$obj_product->data["units"]			= security_script_input_predefined("any", $units);
-			$obj_product->data["account_sales"]		= security_script_input_predefined("int", $account_sales);
-			$obj_product->data["account_purchase"]		= security_script_input_predefined("int", $account_purchase);
+			$obj_product->data["code_product"]		= @security_script_input_predefined("any", $code_product);
+			$obj_product->data["name_product"]		= @security_script_input_predefined("any", $name_product);
+			$obj_product->data["units"]			= @security_script_input_predefined("any", $units);
+			$obj_product->data["account_sales"]		= @security_script_input_predefined("int", $account_sales);
+			$obj_product->data["account_purchase"]		= @security_script_input_predefined("int", $account_purchase);
 
-			$obj_product->data["date_start"]		= security_script_input_predefined("date", $date_start);
-			$obj_product->data["date_end"]			= security_script_input_predefined("date", $date_end);
-			$obj_product->data["date_current"]		= security_script_input_predefined("date", $date_current);
-			$obj_product->data["details"]			= security_script_input_predefined("any", $details);
+			$obj_product->data["date_start"]		= @security_script_input_predefined("date", $date_start);
+			$obj_product->data["date_end"]			= @security_script_input_predefined("date", $date_end);
+			$obj_product->data["date_current"]		= @security_script_input_predefined("date", $date_current);
+			$obj_product->data["details"]			= @security_script_input_predefined("any", $details);
 			
-			$obj_product->data["price_cost"]		= security_script_input_predefined("money", $price_cost);
-			$obj_product->data["price_sale"]		= security_script_input_predefined("money", $price_sale);
+			$obj_product->data["price_cost"]		= @security_script_input_predefined("money", $price_cost);
+			$obj_product->data["price_sale"]		= @security_script_input_predefined("money", $price_sale);
 			
-			$obj_product->data["quantity_instock"]		= security_script_input_predefined("int", $quantity_instock);
-			$obj_product->data["quantity_vendor"]		= security_script_input_predefined("int", $quantity_vendor);
+			$obj_product->data["quantity_instock"]		= @security_script_input_predefined("int", $quantity_instock);
+			$obj_product->data["quantity_vendor"]		= @security_script_input_predefined("int", $quantity_vendor);
 
-			$obj_product->data["vendorid"]			= security_script_input_predefined("int", $vendorid);
-			$obj_product->data["code_product_vendor"]	= security_script_input_predefined("any", $code_product_vendor);
+			$obj_product->data["vendorid"]			= @security_script_input_predefined("int", $vendorid);
+			$obj_product->data["code_product_vendor"]	= @security_script_input_predefined("any", $code_product_vendor);
 
-			$obj_product->data["discount"]			= security_script_input_predefined("float", $discount);
+			$obj_product->data["discount"]			= @security_script_input_predefined("float", $discount);
 
 			
 			foreach (array_keys($obj_product->data) as $key)
@@ -332,13 +332,13 @@ class products_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_product_tax->id				= security_script_input_predefined("int", $id);
+			$obj_product_tax->id				= @security_script_input_predefined("int", $id);
 					
-			$obj_product_tax->itemid			= security_script_input_predefined("int", $itemid);
-			$obj_product_tax->data["taxid"]			= security_script_input_predefined("any", $taxid);
-			$obj_product_tax->data["manual_option"]		= security_script_input_predefined("int", $manual_option);
-			$obj_product_tax->data["manual_amount"]		= security_script_input_predefined("money", $manual_amount);
-			$obj_product_tax->data["description"]		= security_script_input_predefined("any", $description);
+			$obj_product_tax->itemid			= @security_script_input_predefined("int", $itemid);
+			$obj_product_tax->data["taxid"]			= @security_script_input_predefined("any", $taxid);
+			$obj_product_tax->data["manual_option"]		= @security_script_input_predefined("int", $manual_option);
+			$obj_product_tax->data["manual_amount"]		= @security_script_input_predefined("money", $manual_amount);
+			$obj_product_tax->data["description"]		= @security_script_input_predefined("any", $description);
 
 			
 			foreach (array_keys($obj_product_tax->data) as $key)
@@ -415,7 +415,7 @@ class products_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_product->id = security_script_input_predefined("int", $id);
+			$obj_product->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_product->id || $obj_product->id == "error")
 			{
@@ -488,8 +488,8 @@ class products_manage_soap
 				Load SOAP Data
 			*/
 
-			$obj_product_tax->id		= security_script_input_predefined("int", $id);
-			$obj_product_tax->itemid	= security_script_input_predefined("int", $itemid);
+			$obj_product_tax->id		= @security_script_input_predefined("int", $id);
+			$obj_product_tax->itemid	= @security_script_input_predefined("int", $itemid);
 
 			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
 			{

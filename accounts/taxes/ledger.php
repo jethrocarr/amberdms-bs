@@ -20,11 +20,11 @@ class page_output
 	function page_output()
 	{
 		// fetch variables
-		$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 		if (!$this->id)
 		{
-			$this->id = security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
+			$this->id = @security_script_input('/^[0-9]*$/', $_GET["filter_id"]);
 		}
 
 		// define the navigiation menu

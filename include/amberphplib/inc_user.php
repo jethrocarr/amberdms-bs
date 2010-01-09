@@ -25,13 +25,13 @@ function user_online()
 {
 	log_debug("inc_user", "Executing user_online()");
 
-	if (!$_SESSION["user"]["authkey"])					// if user has no login data, don't bother trying to check
+	if (empty($_SESSION["user"]["authkey"]))				// if user has no login data, don't bother trying to check
 		return 0;
 	if (!preg_match("/^[a-zA-Z0-9]*$/", $_SESSION["user"]["authkey"]))	// make sure the key is valid info, NOT AN SQL INJECTION.
 		return 0;
 
 
-	if ($GLOBALS["cache"]["user"]["online"])
+	if (isset($GLOBALS["cache"]["user"]["online"]))
 	{
 		// we have already checked if the user is online, so don't bother checking again
 		return 1;
@@ -117,7 +117,7 @@ function user_login($instance, $username, $password)
 
 	if ($schema_version != $GLOBALS["config"]["schema_version"])
 	{
-		log_write("error", "inc_user", "The Amberdms Billing System application has been updated, but the database has not been upgraded to match. Login is disabled until this is resolved.");
+		log_write("error", "inc_user", "The application has been updated, but the database has not been upgraded to match. Login is disabled until this is resolved.");
 		return -5;
 	}
 
@@ -594,7 +594,7 @@ function user_permissions_get($type)
 	}
 
 
-	if ($GLOBALS["cache"]["user"]["perms"][$type])
+	if (isset($GLOBALS["cache"]["user"]["perms"][$type]))
 	{
 		return 1;
 	}
@@ -644,7 +644,7 @@ function user_information($field)
 	log_debug("inc_user", "Executing user_information($field)");
 
 
-	if ($GLOBALS["cache"]["user"]["info"][$field])
+	if (isset($GLOBALS["cache"]["user"]["info"][$field]))
 	{
 		return $GLOBALS["cache"]["user"]["info"][$field];
 	}
@@ -736,11 +736,15 @@ function user_permissions_staff_getarray($type)
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "SELECT staffid FROM `users_permissions_staff` WHERE userid='". $_SESSION["user"]["id"] ."' AND permid='$permid'";
 		$sql_obj->execute();
-		$sql_obj->fetch_array();
 
-		foreach ($sql_obj->data as $data_sql)
+		if ($sql_obj->num_rows())
 		{
-			$access_staff_ids[] = $data_sql["staffid"];
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_sql)
+			{
+				$access_staff_ids[] = $data_sql["staffid"];
+			}
 		}
 
 		unset($sql_obj);

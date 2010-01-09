@@ -24,13 +24,13 @@ if (user_permissions_get('vendors_write'))
 		Load POST Data
 	*/
 
-	$obj_vendor->id			= security_form_input_predefined("int", "id_vendor", 1, "");
+	$obj_vendor->id			= @security_form_input_predefined("int", "id_vendor", 1, "");
 
 	// these exist to make error handling work right
-	$data["name_vendor"]		= security_form_input_predefined("any", "name_vendor", 0, "");
+	$data["name_vendor"]		= @security_form_input_predefined("any", "name_vendor", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 

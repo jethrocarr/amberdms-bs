@@ -16,13 +16,13 @@ if (user_permissions_get('admin'))
 {
 	/////////////////////////
 
-	$id				= security_form_input_predefined("int", "id_user", 1, "");
+	$id				= @security_form_input_predefined("int", "id_user", 1, "");
 
 	// these exist to make error handling work right
-	$data["username"]		= security_form_input_predefined("any", "username", 0, "");
+	$data["username"]		= @security_form_input_predefined("any", "username", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 	
 	// make sure the user actually exists

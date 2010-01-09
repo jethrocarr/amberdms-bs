@@ -36,7 +36,7 @@ class page_output
 	function page_output()
 	{
 		// get selected employee
-		$this->employeeid	= security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
+		$this->employeeid	= @security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
 
 		if ($this->employeeid)
 		{
@@ -51,8 +51,8 @@ class page_output
 		}
 
 		// get the chosen year + week
-		$this->date_selected_year		= security_script_input('/^[0-9]*$/', $_GET["year"]);
-		$this->date_selected_weekofyear		= security_script_input('/^[0-9]*$/', $_GET["weekofyear"]);
+		$this->date_selected_year		= @security_script_input('/^[0-9]*$/', $_GET["year"]);
+		$this->date_selected_weekofyear		= @security_script_input('/^[0-9]*$/', $_GET["weekofyear"]);
 	
 		if (!$this->date_selected_year)
 		{
@@ -213,13 +213,13 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "weekofyear";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $date_selected_weekofyear;
+		$structure["defaultvalue"]	= $this->date_selected_weekofyear;
 		$this->obj_form_employee->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"]		= "year";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $date_selected_year;
+		$structure["defaultvalue"]	= $this->date_selected_year;
 		$this->obj_form_employee->add_input($structure);
 
 
@@ -391,7 +391,7 @@ class page_output
 				$sql_obj->fetch_array();
 				foreach ($sql_obj->data as $data)
 				{
-					$tmparray[ $days[ $data["date"] ] ] += $data["time_booked"];
+					@$tmparray[ $days[ $data["date"] ] ] += $data["time_booked"];
 				}
 
 

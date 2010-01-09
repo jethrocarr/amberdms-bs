@@ -76,7 +76,7 @@ class page_output
 		$sql_obj->fetch_array();
 
 
-		list($booked_time_hours, $booked_time_mins) = split(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
+		list($booked_time_hours, $booked_time_mins) = explode(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
 
 		if ($booked_time_hours > 0 && $booked_time_mins > 0)
 		{
@@ -86,7 +86,7 @@ class page_output
 		{
 			$message = "Time booked for today: $booked_time_hours hours.";
 		}
-		elseif ($unbilled_time_mins > 0)
+		elseif ($booked_time_mins > 0)
 		{
 			$message = "Time booked for today: $booked_time_mins minutes.";
 		}
@@ -234,7 +234,7 @@ class page_output
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 
-				list($unbilled_time_hours, $unbilled_time_mins) = split(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
+				list($unbilled_time_hours, $unbilled_time_mins) = explode(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
 
 
 				if ($unbilled_time_hours > 0 && $unbilled_time_mins > 0)

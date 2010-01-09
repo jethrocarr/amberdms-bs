@@ -17,12 +17,12 @@ if (user_permissions_get("admin"))
 {
 	////// INPUT PROCESSING ////////////////////////
 
-	$data["date_lock"]		= security_form_input_predefined("date", "date_lock", 1, "");
+	$data["date_lock"]		= @security_form_input_predefined("date", "date_lock", 1, "");
 	$data["date_lock_timestamp"]	= time_date_to_timestamp($data["date_lock"]);
 	
-	$data["lock_invoices_open"]	= security_form_input_predefined("any", "lock_invoices_open", 0, "");
-	$data["lock_journals"]		= security_form_input_predefined("any", "lock_journals", 0, "");
-	$data["lock_timesheets"]	= security_form_input_predefined("any", "lock_timesheets", 0, "");
+	$data["lock_invoices_open"]	= @security_form_input_predefined("any", "lock_invoices_open", 0, "");
+	$data["lock_journals"]		= @security_form_input_predefined("any", "lock_journals", 0, "");
+	$data["lock_timesheets"]	= @security_form_input_predefined("any", "lock_timesheets", 0, "");
 
 
 

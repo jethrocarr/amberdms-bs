@@ -218,7 +218,7 @@ class service_usage
 
 			Not all services do this, but we can tell, if the units is just a number, that it is an ID to the service_units table for us to use.
 		*/
-		if (preg_match("/^[0-9]*$/", $this->service_obj->data[0]["units"]))
+		if (preg_match("/^[0-9]*$/", $this->sql_service_obj->data[0]["units"]))
 		{
 			// fetch the number of raw units to unit ratio
 			$this->data["numrawunits"] = sql_get_singlevalue("SELECT numrawunits as value FROM service_units WHERE id='". $this->sql_service_obj->data[0]["units"] ."' LIMIT 1");
@@ -432,7 +432,7 @@ function service_usage_alerts_generate($customerid = NULL)
 					{
 						$usage_obj->fetch_usagedata();
 
-						if ($usage_obj->data["total_byunits"])
+						if (isset($usage_obj->data["total_byunits"]))
 						{
 							$usage = $usage_obj->data["total_byunits"];
 						}

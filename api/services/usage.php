@@ -44,11 +44,11 @@ class services_usage
 		if (user_permissions_get("services_write_usage"))
 		{
 			// sanitise input
-			$data["collector"]		= security_script_input_predefined("any", $collector);
-			$data["services_customers_id"]	= security_script_input_predefined("int", $services_customers_id);
-			$data["date"]			= security_script_input_predefined("date", $date);
-			$data["usage1"]			= security_script_input_predefined("int", $usage1);
-			$data["usage2"]			= security_script_input_predefined("int", $usage2);
+			$data["collector"]		= @security_script_input_predefined("any", $collector);
+			$data["services_customers_id"]	= @security_script_input_predefined("int", $services_customers_id);
+			$data["date"]			= @security_script_input_predefined("date", $date);
+			$data["usage1"]			= @security_script_input_predefined("int", $usage1);
+			$data["usage2"]			= @security_script_input_predefined("int", $usage2);
 
 			foreach (array_keys($data) as $key)
 			{

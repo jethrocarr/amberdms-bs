@@ -15,7 +15,7 @@ class page_output
 
 	function page_output()
 	{
-		//$this->id = security_script_input('/^[0-9]*$/', $_GET["id"]);
+		//$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$this->id = $_SESSION["user"]["id"];
 	}
 

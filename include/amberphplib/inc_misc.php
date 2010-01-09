@@ -399,10 +399,19 @@ function format_arraytocommastring($array)
 function time_date_to_timestamp($date)
 {
 	log_debug("misc", "Executing time_date_to_timestamp($date)");
-	
-	$date_a = split("-", $date);
 
-	return mktime(0, 0, 0, $date_a[1], $date_a[2] , $date_a[0]);
+
+	if ($date == "0000-00-00")
+	{
+		// feeding 0000-00-00 to mktime would cause an incorrect timedstamp to be generated
+		return 0;
+	}
+	else
+	{
+		$date_a = explode("-", $date);
+
+		return mktime(0, 0, 0, $date_a[1], $date_a[2] , $date_a[0]);
+	}
 }
 
 
@@ -437,7 +446,7 @@ function time_format_hourmins($seconds)
 	Provides a date formated in the user's perferred way. If no date is provided, will return the current date.
 
 	Values
-	date		Format YYYY-MM-DD (optional)
+	date		Format YYYY-MM-DD OR unix timestamp (optional)
 
 	Returns
 	string		Date in human-readable format.
@@ -448,8 +457,16 @@ function time_format_humandate($date = NULL)
 
 	if ($date)
 	{
-		// convert date to timestamp so we can work with it
-		$timestamp = time_date_to_timestamp($date);
+		if (is_int($date))
+		{
+			// already a timestamp, yay!
+			$timestamp = $date;
+		}
+		else
+		{
+			// convert date to timestamp so we can work with it
+			$timestamp = time_date_to_timestamp($date);
+		}
 	}
 	else
 	{
@@ -532,7 +549,7 @@ function time_calculate_daysofweek($date_selected_start)
 	$days = array();
 
 	// get the start day, month + year
-	$dates = split("-", $date_selected_start);
+	$dates = explode("-", $date_selected_start);
 	
 	// get the value for all the days
 	for ($i=0; $i < 7; $i++)
@@ -709,7 +726,7 @@ function time_calculate_monthdate_last($date = NULL)
 
 function helplink($id)
 {
-	return "<a href=\"help/viewer.php?id=$id\" target=\"new\" title=\"Click here for a popup help box\"><img src=\"images/icons/help.gif\" alt=\"?\" border=\"0\"></a>";
+	return "<a href=\"javascript:url_new_window_minimal('help/viewer.php?id=$id');\" title=\"Click here for a popup help box\"><img src=\"images/icons/help.gif\" alt=\"?\" border=\"0\"></a>";
 }
 
 
@@ -750,7 +767,7 @@ function log_error_render()
 */
 function log_notification_render()
 {
-        if ($_SESSION["notification"]["message"] && !$_SESSION["error"]["message"])
+        if (isset($_SESSION["notification"]["message"]) && !isset($_SESSION["error"]["message"]))
         {
 		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
                 print "<tr><td bgcolor=\"#c7e8ed\" style=\"border: 1px dashed #374893; padding: 3px;\">";
@@ -922,6 +939,74 @@ function file_generate_tmpfile()
 	$path_tmpdir = sql_get_singlevalue("SELECT value FROM config WHERE name='PATH_TMPDIR'");
 
 	return file_generate_name("$path_tmpdir/temporary_file");
+}
+
+
+
+/*
+	HTTP/HEADER FUNCTIONS
+*/
+
+
+/*
+	http_header_lookup
+
+	Returns the full HTTP header string for the specified return code
+
+	Fields
+	num		number of the HTTP code to return
+
+	Returns
+	string		HTTP header string
+*/
+
+function http_header_lookup($num)
+{
+	log_debug("inc_misc", "Executing http_header_lookup($num)");
+
+	$return_codes = array (
+		100 => "HTTP/1.1 100 Continue",
+		101 => "HTTP/1.1 101 Switching Protocols",
+		200 => "HTTP/1.1 200 OK",
+		201 => "HTTP/1.1 201 Created",
+		202 => "HTTP/1.1 202 Accepted",
+		203 => "HTTP/1.1 203 Non-Authoritative Information",
+		204 => "HTTP/1.1 204 No Content",
+		205 => "HTTP/1.1 205 Reset Content",
+		206 => "HTTP/1.1 206 Partial Content",
+		300 => "HTTP/1.1 300 Multiple Choices",
+		301 => "HTTP/1.1 301 Moved Permanently",
+		302 => "HTTP/1.1 302 Found",
+		303 => "HTTP/1.1 303 See Other",
+		304 => "HTTP/1.1 304 Not Modified",
+		305 => "HTTP/1.1 305 Use Proxy",
+		307 => "HTTP/1.1 307 Temporary Redirect",
+		400 => "HTTP/1.1 400 Bad Request",
+		401 => "HTTP/1.1 401 Unauthorized",
+		402 => "HTTP/1.1 402 Payment Required",
+		403 => "HTTP/1.1 403 Forbidden",
+		404 => "HTTP/1.1 404 Not Found",
+		405 => "HTTP/1.1 405 Method Not Allowed",
+		406 => "HTTP/1.1 406 Not Acceptable",
+		407 => "HTTP/1.1 407 Proxy Authentication Required",
+		408 => "HTTP/1.1 408 Request Time-out",
+		409 => "HTTP/1.1 409 Conflict",
+		410 => "HTTP/1.1 410 Gone",
+		411 => "HTTP/1.1 411 Length Required",
+		412 => "HTTP/1.1 412 Precondition Failed",
+		413 => "HTTP/1.1 413 Request Entity Too Large",
+		414 => "HTTP/1.1 414 Request-URI Too Large",
+		415 => "HTTP/1.1 415 Unsupported Media Type",
+		416 => "HTTP/1.1 416 Requested range not satisfiable",
+		417 => "HTTP/1.1 417 Expectation Failed",
+		500 => "HTTP/1.1 500 Internal Server Error",
+		501 => "HTTP/1.1 501 Not Implemented",
+		502 => "HTTP/1.1 502 Bad Gateway",
+		503 => "HTTP/1.1 503 Service Unavailable",
+		504 => "HTTP/1.1 504 Gateway Time-out"       
+	);
+
+	return $return_codes[$num];
 }
 
 

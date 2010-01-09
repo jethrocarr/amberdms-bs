@@ -22,9 +22,15 @@ log_debug("index", "Starting index-export.php");
 */
 
 // get the page to display
-$page = $_GET["page"];
-if ($page == "")
+if (!empty($_GET["page"]))
+{
+	$page = $_GET["page"];
+}
+else
+{
 	$page = "home.php";
+}
+
 
 // perform security checks on the page
 // security_localphp prevents any nasties, and then we check the the page exists.
@@ -47,7 +53,7 @@ else
 
 
 // get the mode to display
-$mode = security_script_input("/^[a-z]*$/", $_GET["mode"]);
+$mode = @security_script_input("/^[a-z]*$/", $_GET["mode"]);
 
 if (!$mode)
 {
@@ -103,7 +109,7 @@ if ($page_valid == 1)
 	Draw messages
 */
 
-if ($_SESSION["error"]["message"])
+if (error_check())
 {
 	print "<tr><td>";
 	log_error_render();

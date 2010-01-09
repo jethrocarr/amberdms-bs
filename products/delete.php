@@ -21,7 +21,7 @@ class page_output
 	function page_output()
 	{
 		$this->obj_productform			= New products_form_delete;
-		$this->obj_productform->productid	= security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->obj_productform->productid	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 
 		// define the navigiation menu

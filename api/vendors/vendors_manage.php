@@ -39,7 +39,7 @@ class vendors_manage_soap
 
 
 			// sanitise input
-			$obj_vendor->id = security_script_input_predefined("int", $id);
+			$obj_vendor->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_vendor->id || $obj_vendor->id == "error")
 			{
@@ -120,7 +120,7 @@ class vendors_manage_soap
 
 
 			// sanitise input
-			$obj_vendor->id = security_script_input_predefined("int", $id);
+			$obj_vendor->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_vendor->id || $obj_vendor->id == "error")
 			{
@@ -238,34 +238,34 @@ class vendors_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_vendor->id					= security_script_input_predefined("int", $id);
+			$obj_vendor->id					= @security_script_input_predefined("int", $id);
 			
-			$obj_vendor->data["code_vendor"]		= security_script_input_predefined("any", $code_vendor);
-			$obj_vendor->data["name_vendor"]		= security_script_input_predefined("any", $name_vendor);
-			$obj_vendor->data["name_contact"]		= security_script_input_predefined("any", $name_contact);
+			$obj_vendor->data["code_vendor"]		= @security_script_input_predefined("any", $code_vendor);
+			$obj_vendor->data["name_vendor"]		= @security_script_input_predefined("any", $name_vendor);
+			$obj_vendor->data["name_contact"]		= @security_script_input_predefined("any", $name_contact);
 			
-			$obj_vendor->data["contact_phone"]		= security_script_input_predefined("any", $contact_phone);
-			$obj_vendor->data["contact_fax"]		= security_script_input_predefined("any", $contact_fax);
-			$obj_vendor->data["contact_email"]		= security_script_input_predefined("email", $contact_email);
-			$obj_vendor->data["date_start"]			= security_script_input_predefined("date", $date_start);
-			$obj_vendor->data["date_end"]			= security_script_input_predefined("date", $date_end);
+			$obj_vendor->data["contact_phone"]		= @security_script_input_predefined("any", $contact_phone);
+			$obj_vendor->data["contact_fax"]		= @security_script_input_predefined("any", $contact_fax);
+			$obj_vendor->data["contact_email"]		= @security_script_input_predefined("email", $contact_email);
+			$obj_vendor->data["date_start"]			= @security_script_input_predefined("date", $date_start);
+			$obj_vendor->data["date_end"]			= @security_script_input_predefined("date", $date_end);
 
-			$obj_vendor->data["address1_street"]		= security_script_input_predefined("any", $address1_street);
-			$obj_vendor->data["address1_city"]		= security_script_input_predefined("any", $address1_city);
-			$obj_vendor->data["address1_state"]		= security_script_input_predefined("any", $address1_state);
-			$obj_vendor->data["address1_country"]		= security_script_input_predefined("any", $address1_country);
-			$obj_vendor->data["address1_zipcode"]		= security_script_input_predefined("any", $address1_zipcode);
+			$obj_vendor->data["address1_street"]		= @security_script_input_predefined("any", $address1_street);
+			$obj_vendor->data["address1_city"]		= @security_script_input_predefined("any", $address1_city);
+			$obj_vendor->data["address1_state"]		= @security_script_input_predefined("any", $address1_state);
+			$obj_vendor->data["address1_country"]		= @security_script_input_predefined("any", $address1_country);
+			$obj_vendor->data["address1_zipcode"]		= @security_script_input_predefined("any", $address1_zipcode);
 			
-			$obj_vendor->data["address2_street"]		= security_script_input_predefined("any", $address2_street);
-			$obj_vendor->data["address2_city"]		= security_script_input_predefined("any", $address2_city);
-			$obj_vendor->data["address2_state"]		= security_script_input_predefined("any", $address2_state);
-			$obj_vendor->data["address2_country"]		= security_script_input_predefined("any", $address2_country);
-			$obj_vendor->data["address2_zipcode"]		= security_script_input_predefined("any", $address2_zipcode);
+			$obj_vendor->data["address2_street"]		= @security_script_input_predefined("any", $address2_street);
+			$obj_vendor->data["address2_city"]		= @security_script_input_predefined("any", $address2_city);
+			$obj_vendor->data["address2_state"]		= @security_script_input_predefined("any", $address2_state);
+			$obj_vendor->data["address2_country"]		= @security_script_input_predefined("any", $address2_country);
+			$obj_vendor->data["address2_zipcode"]		= @security_script_input_predefined("any", $address2_zipcode);
 			
-			$obj_vendor->data["tax_number"]			= security_script_input_predefined("any", $tax_number);
-			$obj_vendor->data["tax_default"]		= security_script_input_predefined("int", $tax_default);
+			$obj_vendor->data["tax_number"]			= @security_script_input_predefined("any", $tax_number);
+			$obj_vendor->data["tax_default"]		= @security_script_input_predefined("int", $tax_default);
 
-			$obj_vendor->data["discount"]			= security_script_input_predefined("float", $discount);
+			$obj_vendor->data["discount"]			= @security_script_input_predefined("float", $discount);
 
 
 			foreach (array_keys($obj_vendor->data) as $key)
@@ -349,9 +349,9 @@ class vendors_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_vendor->id		= security_script_input_predefined("int", $id);
-			$taxid			= security_script_input_predefined("int", $taxid);
-			$status			= security_script_input_predefined("any", $status);
+			$obj_vendor->id		= @security_script_input_predefined("int", $id);
+			$taxid			= @security_script_input_predefined("int", $taxid);
+			$status			= @security_script_input_predefined("any", $status);
 
 			foreach (array_keys($obj_vendor->data) as $key)
 			{
@@ -451,7 +451,7 @@ class vendors_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_vendor->id = security_script_input_predefined("int", $id);
+			$obj_vendor->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_vendor->id || $obj_vendor->id == "error")
 			{

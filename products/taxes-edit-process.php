@@ -24,13 +24,13 @@ if (user_permissions_get('products_write'))
 		Import POST Data
 	*/
 
-	$obj_product_tax->id				= security_form_input_predefined("int", "id_product", 1, "");
-	$obj_product_tax->itemid			= security_form_input_predefined("int", "id_item", 0, "");
+	$obj_product_tax->id				= @security_form_input_predefined("int", "id_product", 1, "");
+	$obj_product_tax->itemid			= @security_form_input_predefined("int", "id_item", 0, "");
 
-	$obj_product_tax->data["taxid"]			= security_form_input_predefined("int", "taxid", 1, "");
-	$obj_product_tax->data["description"]		= security_form_input_predefined("any", "description", 0, "");
-	$obj_product_tax->data["manual_option"]		= security_form_input_predefined("any", "manual_option", 0, "");
-	$obj_product_tax->data["manual_amount"]		= security_form_input_predefined("money", "manual_amount", 0, "");
+	$obj_product_tax->data["taxid"]			= @security_form_input_predefined("int", "taxid", 1, "");
+	$obj_product_tax->data["description"]		= @security_form_input_predefined("any", "description", 0, "");
+	$obj_product_tax->data["manual_option"]		= @security_form_input_predefined("any", "manual_option", 0, "");
+	$obj_product_tax->data["manual_amount"]		= @security_form_input_predefined("money", "manual_amount", 0, "");
 
 
 

@@ -24,32 +24,32 @@ if (user_permissions_get('customers_write'))
 		Load POST data
 	*/
 
-	$obj_customer->id				= security_form_input_predefined("int", "id_customer", 0, "");
+	$obj_customer->id				= @security_form_input_predefined("int", "id_customer", 0, "");
 	
-	$obj_customer->data["code_customer"]		= security_form_input_predefined("any", "code_customer", 0, "");
-	$obj_customer->data["name_customer"]		= security_form_input_predefined("any", "name_customer", 1, "");
-	$obj_customer->data["name_contact"]		= security_form_input_predefined("any", "name_contact", 0, "");
+	$obj_customer->data["code_customer"]		= @security_form_input_predefined("any", "code_customer", 0, "");
+	$obj_customer->data["name_customer"]		= @security_form_input_predefined("any", "name_customer", 1, "");
+	$obj_customer->data["name_contact"]		= @security_form_input_predefined("any", "name_contact", 0, "");
 	
-	$obj_customer->data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
-	$obj_customer->data["contact_fax"]		= security_form_input_predefined("any", "contact_fax", 0, "");
-	$obj_customer->data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "");
-	$obj_customer->data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
-	$obj_customer->data["date_end"]			= security_form_input_predefined("date", "date_end", 0, "");
+	$obj_customer->data["contact_phone"]		= @security_form_input_predefined("any", "contact_phone", 0, "");
+	$obj_customer->data["contact_fax"]		= @security_form_input_predefined("any", "contact_fax", 0, "");
+	$obj_customer->data["contact_email"]		= @security_form_input_predefined("email", "contact_email", 0, "");
+	$obj_customer->data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
+	$obj_customer->data["date_end"]			= @security_form_input_predefined("date", "date_end", 0, "");
 
-	$obj_customer->data["address1_street"]		= security_form_input_predefined("any", "address1_street", 0, "");
-	$obj_customer->data["address1_city"]		= security_form_input_predefined("any", "address1_city", 0, "");
-	$obj_customer->data["address1_state"]		= security_form_input_predefined("any", "address1_state", 0, "");
-	$obj_customer->data["address1_country"]		= security_form_input_predefined("any", "address1_country", 0, "");
-	$obj_customer->data["address1_zipcode"]		= security_form_input_predefined("any", "address1_zipcode", 0, "");
+	$obj_customer->data["address1_street"]		= @security_form_input_predefined("any", "address1_street", 0, "");
+	$obj_customer->data["address1_city"]		= @security_form_input_predefined("any", "address1_city", 0, "");
+	$obj_customer->data["address1_state"]		= @security_form_input_predefined("any", "address1_state", 0, "");
+	$obj_customer->data["address1_country"]		= @security_form_input_predefined("any", "address1_country", 0, "");
+	$obj_customer->data["address1_zipcode"]		= @security_form_input_predefined("any", "address1_zipcode", 0, "");
 	
-	$obj_customer->data["address2_street"]		= security_form_input_predefined("any", "address2_street", 0, "");
-	$obj_customer->data["address2_city"]		= security_form_input_predefined("any", "address2_city", 0, "");
-	$obj_customer->data["address2_state"]		= security_form_input_predefined("any", "address2_state", 0, "");
-	$obj_customer->data["address2_country"]		= security_form_input_predefined("any", "address2_country", 0, "");
-	$obj_customer->data["address2_zipcode"]		= security_form_input_predefined("any", "address2_zipcode", 0, "");
+	$obj_customer->data["address2_street"]		= @security_form_input_predefined("any", "address2_street", 0, "");
+	$obj_customer->data["address2_city"]		= @security_form_input_predefined("any", "address2_city", 0, "");
+	$obj_customer->data["address2_state"]		= @security_form_input_predefined("any", "address2_state", 0, "");
+	$obj_customer->data["address2_country"]		= @security_form_input_predefined("any", "address2_country", 0, "");
+	$obj_customer->data["address2_zipcode"]		= @security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
-	$obj_customer->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
-	$obj_customer->data["discount"]			= security_form_input_predefined("float", "discount", 0, "");
+	$obj_customer->data["tax_number"]		= @security_form_input_predefined("any", "tax_number", 0, "");
+	$obj_customer->data["discount"]			= @security_form_input_predefined("float", "discount", 0, "");
 
 
 	// get tax selection options
@@ -60,7 +60,7 @@ if (user_permissions_get('customers_write'))
 	if ($sql_taxes_obj->num_rows())
 	{
 		// only get the default tax if taxes exist
-		$obj_customer->data["tax_default"] = security_form_input_predefined("int", "tax_default", 0, "");
+		$obj_customer->data["tax_default"] = @security_form_input_predefined("int", "tax_default", 0, "");
 
 
 		// fetch all the taxes and see which ones are enabled for the customer
@@ -68,7 +68,7 @@ if (user_permissions_get('customers_write'))
 
 		foreach ($sql_taxes_obj->data as $data_tax)
 		{
-			$obj_customer->data["tax_". $data_tax["id"] ] = security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+			$obj_customer->data["tax_". $data_tax["id"] ] = @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
 		}
 	}
 

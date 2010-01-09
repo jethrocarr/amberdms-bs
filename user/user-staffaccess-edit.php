@@ -23,8 +23,8 @@ class page_output
 	function page_output()
 	{
 		// fetch variables
-		$this->id	= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$this->staffid	= security_script_input('/^[0-9]*$/', $_GET["staffid"]);
+		$this->id	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->staffid	= @security_script_input('/^[0-9]*$/', $_GET["staffid"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;

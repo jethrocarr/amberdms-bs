@@ -125,7 +125,7 @@ class accounts_charts_manage_soap
 
 
 			// sanitise input
-			$obj_chart->id = security_script_input_predefined("int", $id);
+			$obj_chart->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_chart->id || $obj_chart->id == "error")
 			{
@@ -187,7 +187,7 @@ class accounts_charts_manage_soap
 			$obj_chart = New chart;
 
 			// sanitise input
-			$obj_chart->id = security_script_input_predefined("int", $id);
+			$obj_chart->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_chart->id || $obj_chart->id == "error")
 			{
@@ -269,11 +269,11 @@ class accounts_charts_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_chart->id				= security_script_input_predefined("int", $id);
+			$obj_chart->id				= @security_script_input_predefined("int", $id);
 			
-			$obj_chart->data["code_chart"]		= security_script_input_predefined("int", $code_chart);
-			$obj_chart->data["description"]		= security_script_input_predefined("any", $description);
-			$obj_chart->data["chart_type"]		= security_script_input_predefined("int", $chart_type);
+			$obj_chart->data["code_chart"]		= @security_script_input_predefined("int", $code_chart);
+			$obj_chart->data["description"]		= @security_script_input_predefined("any", $description);
+			$obj_chart->data["chart_type"]		= @security_script_input_predefined("int", $chart_type);
 			
 			foreach (array_keys($obj_chart->data) as $key)
 			{
@@ -348,7 +348,7 @@ class accounts_charts_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_chart->id				= security_script_input_predefined("int", $id);
+			$obj_chart->id				= @security_script_input_predefined("int", $id);
 
 			if (!$obj_chart->id || $obj_chart->id == "error")
 			{
@@ -356,8 +356,8 @@ class accounts_charts_manage_soap
 			}
 
 
-			$data["menu_value"]			= security_script_input_predefined("any", $menuvalue);
-			$data["status"]				= security_script_input_predefined("any", $status);
+			$data["menu_value"]			= @security_script_input_predefined("any", $menuvalue);
+			$data["status"]				= @security_script_input_predefined("any", $status);
 			
 			foreach (array_keys($data) as $key)
 			{
@@ -423,7 +423,7 @@ class accounts_charts_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_chart->id = security_script_input_predefined("int", $id);
+			$obj_chart->id = @security_script_input_predefined("int", $id);
 
 			if (!$obj_chart->id || $obj_chart->id == "error")
 			{

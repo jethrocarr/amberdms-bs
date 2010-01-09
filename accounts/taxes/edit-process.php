@@ -24,17 +24,17 @@ if (user_permissions_get('accounts_taxes_write'))
 		Import POST Data
 	*/
 
-	$obj_tax->id				= security_form_input_predefined("int", "id_tax", 0, "");
+	$obj_tax->id				= @security_form_input_predefined("int", "id_tax", 0, "");
 	
-	$obj_tax->data["name_tax"]		= security_form_input_predefined("any", "name_tax", 1, "");
-	$obj_tax->data["taxrate"]		= security_form_input_predefined("any", "taxrate", 1, "");
-	$obj_tax->data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
-	$obj_tax->data["taxnumber"]		= security_form_input_predefined("any", "taxnumber", 1, "");
-	$obj_tax->data["description"]		= security_form_input_predefined("any", "description", 1, "");
+	$obj_tax->data["name_tax"]		= @security_form_input_predefined("any", "name_tax", 1, "");
+	$obj_tax->data["taxrate"]		= @security_form_input_predefined("any", "taxrate", 1, "");
+	$obj_tax->data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "");
+	$obj_tax->data["taxnumber"]		= @security_form_input_predefined("any", "taxnumber", 1, "");
+	$obj_tax->data["description"]		= @security_form_input_predefined("any", "description", 1, "");
 
 	// only used when adding new taxes
-	$obj_tax->data["autoenable_tax_customers"]	= security_form_input_predefined("any", "autoenable_tax_customers", 0, "");
-	$obj_tax->data["autoenable_tax_vendors"]	= security_form_input_predefined("any", "autoenable_tax_vendors", 0, "");
+	$obj_tax->data["autoenable_tax_customers"]	= @security_form_input_predefined("any", "autoenable_tax_customers", 0, "");
+	$obj_tax->data["autoenable_tax_vendors"]	= @security_form_input_predefined("any", "autoenable_tax_vendors", 0, "");
 	
 
 

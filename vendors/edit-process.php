@@ -24,32 +24,32 @@ if (user_permissions_get('vendors_write'))
 		Load POST Data
 	*/
 	
-	$obj_vendor->id				= security_form_input_predefined("int", "id_vendor", 0, "");
+	$obj_vendor->id				= @security_form_input_predefined("int", "id_vendor", 0, "");
 	
-	$obj_vendor->data["name_vendor"]	= security_form_input_predefined("any", "name_vendor", 1, "You must set a vendor name");
-	$obj_vendor->data["name_contact"]	= security_form_input_predefined("any", "name_contact", 0, "");
+	$obj_vendor->data["name_vendor"]	= @security_form_input_predefined("any", "name_vendor", 1, "You must set a vendor name");
+	$obj_vendor->data["name_contact"]	= @security_form_input_predefined("any", "name_contact", 0, "");
 	
-	$obj_vendor->data["contact_phone"]	= security_form_input_predefined("any", "contact_phone", 0, "");
-	$obj_vendor->data["contact_fax"]	= security_form_input_predefined("any", "contact_fax", 0, "");
-	$obj_vendor->data["contact_email"]	= security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
-	$obj_vendor->data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
-	$obj_vendor->data["date_end"]		= security_form_input_predefined("date", "date_end", 0, "");
+	$obj_vendor->data["contact_phone"]	= @security_form_input_predefined("any", "contact_phone", 0, "");
+	$obj_vendor->data["contact_fax"]	= @security_form_input_predefined("any", "contact_fax", 0, "");
+	$obj_vendor->data["contact_email"]	= @security_form_input_predefined("email", "contact_email", 0, "There is a mistake in the supplied email address, please correct.");
+	$obj_vendor->data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
+	$obj_vendor->data["date_end"]		= @security_form_input_predefined("date", "date_end", 0, "");
 
-	$obj_vendor->data["address1_street"]	= security_form_input_predefined("any", "address1_street", 0, "");
-	$obj_vendor->data["address1_city"]	= security_form_input_predefined("any", "address1_city", 0, "");
-	$obj_vendor->data["address1_state"]	= security_form_input_predefined("any", "address1_state", 0, "");
-	$obj_vendor->data["address1_country"]	= security_form_input_predefined("any", "address1_country", 0, "");
-	$obj_vendor->data["address1_zipcode"]	= security_form_input_predefined("any", "address1_zipcode", 0, "");
+	$obj_vendor->data["address1_street"]	= @security_form_input_predefined("any", "address1_street", 0, "");
+	$obj_vendor->data["address1_city"]	= @security_form_input_predefined("any", "address1_city", 0, "");
+	$obj_vendor->data["address1_state"]	= @security_form_input_predefined("any", "address1_state", 0, "");
+	$obj_vendor->data["address1_country"]	= @security_form_input_predefined("any", "address1_country", 0, "");
+	$obj_vendor->data["address1_zipcode"]	= @security_form_input_predefined("any", "address1_zipcode", 0, "");
 	
-	$obj_vendor->data["address2_street"]	= security_form_input_predefined("any", "address2_street", 0, "");
-	$obj_vendor->data["address2_city"]	= security_form_input_predefined("any", "address2_city", 0, "");
-	$obj_vendor->data["address2_state"]	= security_form_input_predefined("any", "address2_state", 0, "");
-	$obj_vendor->data["address2_country"]	= security_form_input_predefined("any", "address2_country", 0, "");
-	$obj_vendor->data["address2_zipcode"]	= security_form_input_predefined("any", "address2_zipcode", 0, "");
+	$obj_vendor->data["address2_street"]	= @security_form_input_predefined("any", "address2_street", 0, "");
+	$obj_vendor->data["address2_city"]	= @security_form_input_predefined("any", "address2_city", 0, "");
+	$obj_vendor->data["address2_state"]	= @security_form_input_predefined("any", "address2_state", 0, "");
+	$obj_vendor->data["address2_country"]	= @security_form_input_predefined("any", "address2_country", 0, "");
+	$obj_vendor->data["address2_zipcode"]	= @security_form_input_predefined("any", "address2_zipcode", 0, "");
 	
-	$obj_vendor->data["tax_number"]		= security_form_input_predefined("any", "tax_number", 0, "");
+	$obj_vendor->data["tax_number"]		= @security_form_input_predefined("any", "tax_number", 0, "");
 
-	$obj_vendor->data["discount"]		= security_form_input_predefined("float", "discount", 0, "");
+	$obj_vendor->data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
 
 
 	// get tax selection options
@@ -62,13 +62,13 @@ if (user_permissions_get('vendors_write'))
 		$sql_taxes_obj->fetch_array();
 
 		// only get the default tax if taxes exist
-		$obj_vendor->data["tax_default"] = security_form_input_predefined("int", "tax_default", 0, "");
+		$obj_vendor->data["tax_default"] = @security_form_input_predefined("int", "tax_default", 0, "");
 
 
 		// fetch all the taxes and see which ones are enabled for the customer
 		foreach ($sql_taxes_obj->data as $data_tax)
 		{
-			$obj_vendor->data["tax_". $data_tax["id"] ] = security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+			$obj_vendor->data["tax_". $data_tax["id"] ] = @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
 		}
 	}
 

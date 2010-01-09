@@ -25,13 +25,13 @@ if (user_permissions_get('accounts_taxes_write'))
 		Import POST Data
 	*/
 
-	$obj_tax->id				= security_form_input_predefined("int", "id_tax", 1, "");
+	$obj_tax->id				= @security_form_input_predefined("int", "id_tax", 1, "");
 
 	// these exist to make error handling work right
-	$obj_tax->data["name_tax"]		= security_form_input_predefined("any", "name_tax", 0, "");
+	$obj_tax->data["name_tax"]		= @security_form_input_predefined("any", "name_tax", 0, "");
 
 	// confirm deletion
-	$obj_tax->data["delete_confirm"]	= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_tax->data["delete_confirm"]	= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 

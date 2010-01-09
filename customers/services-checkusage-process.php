@@ -21,8 +21,8 @@ if (user_permissions_get('customers_write'))
 {
 	/////////////////////////
 
-	$id				= security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-	$services_customers_id		= security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+	$id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+	$services_customers_id		= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
 	
 	
 	// make sure the customer actually exists

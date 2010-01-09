@@ -19,8 +19,8 @@ if (user_permissions_get('admin'))
 	/////////////////////////
 	
 	// convert the data given
-	$data["blacklist_enable"]	= security_form_input_predefined("any", "blacklist_enable", 0, "");
-	$data["blacklist_limit"]	= security_form_input_predefined("int", "blacklist_limit", 1, "");
+	$data["blacklist_enable"]	= @security_form_input_predefined("any", "blacklist_enable", 0, "");
+	$data["blacklist_limit"]	= @security_form_input_predefined("int", "blacklist_limit", 1, "");
 	
 	
 		

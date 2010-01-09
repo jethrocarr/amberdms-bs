@@ -17,15 +17,15 @@ if (user_permissions_get('projects_write'))
 	/////////////////////////
 
 	// basic input
-	$projectid			= security_form_input_predefined("int", "projectid", 1, "");
-	$phaseid			= security_form_input_predefined("int", "phaseid", 1, "");
+	$projectid			= @security_form_input_predefined("int", "projectid", 1, "");
+	$phaseid			= @security_form_input_predefined("int", "phaseid", 1, "");
 	
 	// these exist to make error handling work right
-	$data["name_phase"]		= security_form_input_predefined("any", "name_phase", 0, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["name_phase"]		= @security_form_input_predefined("any", "name_phase", 0, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 	
 
 

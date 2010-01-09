@@ -30,10 +30,10 @@ class page_output
 	function page_output()
 	{
 		// fetch vapiables
-		$this->id		= security_script_input('/^[0-9]*$/', $_GET["id"]);
-		$this->itemid		= security_script_input('/^[0-9]*$/', $_GET["itemid"]);
-		$this->item_type	= security_script_input('/^[a-z]*$/', $_GET["type"]);
-		$this->productid	= security_script_input('/^[0-9]*$/', $_GET["productid"]);
+		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
+		$this->itemid		= @security_script_input('/^[0-9]*$/', $_GET["itemid"]);
+		$this->item_type	= @security_script_input('/^[a-z]*$/', $_GET["type"]);
+		$this->productid	= @security_script_input('/^[0-9]*$/', $_GET["productid"]);
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;

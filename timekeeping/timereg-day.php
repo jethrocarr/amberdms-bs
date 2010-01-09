@@ -28,7 +28,7 @@ class page_output
 	function page_output()
 	{
 		// get selected employee
-		$this->employeeid	= security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
+		$this->employeeid	= @security_script_input('/^[0-9]*$/', $_GET["employeeid"]);
 
 		if ($this->employeeid)
 		{
@@ -38,18 +38,20 @@ class page_output
 		else
 		{
 			// load from session vars
-			if ($_SESSION["form"]["timereg"]["employeeid"])
+			if (isset($_SESSION["form"]["timereg"]["employeeid"]))
+			{
 				$this->employeeid = $_SESSION["form"]["timereg"]["employeeid"];
+			}
 		}
 
 
 		// get selected date
-		$this->date	= security_script_input('/^\S*$/', $_GET["date"]);
+		$this->date	= @security_script_input('/^\S*$/', $_GET["date"]);
 
 		if (!$this->date)
 		{
 			// try alternative input syntax
-			$this->date = security_script_input_predefined("date", $_GET["date_yyyy"] ."-". $_GET["date_mm"] ."-". $_GET["date_dd"]);
+			$this->date = @security_script_input_predefined("date", $_GET["date_yyyy"] ."-". $_GET["date_mm"] ."-". $_GET["date_dd"]);
 
 			if ($this->date == "error")
 			{
@@ -76,7 +78,7 @@ class page_output
 			}
 		}
 
-		$this->date_split = split("-", $this->date);
+		$this->date_split = explode("-", $this->date);
 
 
 

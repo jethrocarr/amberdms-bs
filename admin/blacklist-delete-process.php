@@ -17,7 +17,7 @@ if (user_permissions_get('admin'))
 	/////////////////////////
 	
 	// convert the data given
-	$id = security_script_input("/^[0-9]*$/", $_GET["id"]);
+	$id = @security_script_input("/^[0-9]*$/", $_GET["id"]);
 	
 
 	//// ERROR CHECKING ///////////////////////

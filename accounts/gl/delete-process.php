@@ -26,14 +26,14 @@ if (user_permissions_get('accounts_gl_write'))
 		Import POST Data
 	*/
 
-	$obj_gl->id				= security_form_input_predefined("int", "id_transaction", 1, "");
+	$obj_gl->id				= @security_form_input_predefined("int", "id_transaction", 1, "");
 
 	// these exist to make error handling work right
-	$obj_gl->data["code_gl"]		= security_form_input_predefined("any", "code_gl", 0, "");
-	$obj_gl->data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$obj_gl->data["code_gl"]		= @security_form_input_predefined("any", "code_gl", 0, "");
+	$obj_gl->data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
-	$obj_gl->data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$obj_gl->data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 

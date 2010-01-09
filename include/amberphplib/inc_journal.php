@@ -73,7 +73,7 @@ class journal_base
 			{
 				// note: we only add the filter if a value has been saved to default value, otherwise
 				// we assume the SQL could break.
-				if ($this->filter[$fieldname]["defaultvalue"])
+				if (!empty($this->filter[$fieldname]["defaultvalue"]))
 				{
 					$query = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["sql"]);
 					$this->sql_obj->prepare_sql_addwhere($query);
@@ -139,15 +139,14 @@ class journal_base
 
 		*/
 
-		if ($_GET["reset"] == "yes")
+		if (isset($_GET["reset"]))
 		{
 			// reset the option form
 			$_SESSION["form"][$this->journalname] = NULL;
 		}
 		else
 		{
-			
-			if ($_GET["journal_display_options"])
+			if (isset($_GET["journal_display_options"]))
 			{
 				// flag custom options as active - this is used to adjust the display of the options dropdown
 				$_SESSION["form"][$this->journalname]["custom_options_active"] = 1;
@@ -164,7 +163,7 @@ class journal_base
 					switch ($this->filter[$fieldname]["type"])
 					{
 						case "date":
-							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
+							$this->filter[$fieldname]["defaultvalue"] = @security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
 
 							if ($this->filter[$fieldname]["defaultvalue"] == "--")
 								$this->filter[$fieldname]["defaultvalue"] = "";
@@ -172,7 +171,8 @@ class journal_base
 						
 						// convert date to timestamp
 						case "timestamp_date":
-							$date = security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
+
+							$date = @security_script_input("/^[0-9]*-[0-9]*-[0-9]*$/", $_GET[$fieldname ."_yyyy"] ."-". $_GET[$fieldname ."_mm"] ."-". $_GET[$fieldname ."_dd"]);
 
 							if ($date == "--")
 							{
@@ -185,31 +185,39 @@ class journal_base
 						break;
 
 						default:
-							$this->filter[$fieldname]["defaultvalue"] = security_script_input("/^\S*$/", $_GET[$fieldname]);
+							$this->filter[$fieldname]["defaultvalue"] = @@security_script_input("/^\S*$/", $_GET[$fieldname]);
 						break;
 					}
 
 					// just blank input if it's in error
-					if ($this->filter[$fieldname]["defaultvalue"] == "error")
+					if (isset($this->filter[$fieldname]["defaultvalue"]) && $this->filter[$fieldname]["defaultvalue"] == "error")
+					{
 						$this->filter[$fieldname]["defaultvalue"] = "";
+					}
 				}
 
 			}
-			elseif ($_SESSION["form"][$this->journalname]["filters"])
+			elseif (isset($_SESSION["form"][$this->journalname]["filters"]))
 			{
 				log_debug("journal_base", "Loading options form from session data");
 			
 				// load filterby options
 				foreach (array_keys($this->filter) as $fieldname)
 				{
-					$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->journalname]["filters"][$fieldname];
+					if (isset($_SESSION["form"][$this->journalname]["filters"][$fieldname]))
+					{
+						$this->filter[$fieldname]["defaultvalue"] = $_SESSION["form"][$this->journalname]["filters"][$fieldname];
+					}
 				}
 			}
 
 			// save options to session data
 			foreach (array_keys($this->filter) as $fieldname)
 			{
-				$_SESSION["form"][$this->journalname]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
+				if (isset($this->filter[$fieldname]["defaultvalue"]))
+				{
+					$_SESSION["form"][$this->journalname]["filters"][$fieldname] = $this->filter[$fieldname]["defaultvalue"];
+				}
 			}
 		}
 
@@ -663,7 +671,7 @@ class journal_display extends journal_base
 	
 		// if the user has not configured any default options, display the dropdown
 		// link bar instead of the main options table.
-		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
+		if (isset($_SESSION["form"][$this->journalname]["custom_options_active"]))
 		{
 			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
 			{
@@ -892,7 +900,7 @@ class journal_display extends journal_base
 		print "</div>";
 
 		// auto-hide options at startup
-		if (!$_SESSION["form"][$this->journalname]["custom_options_active"])
+		if (!isset($_SESSION["form"][$this->journalname]["custom_options_active"]))
 		{
 			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
 			{
@@ -1298,7 +1306,7 @@ class journal_input extends journal_base
 		$structure = NULL;
 		$structure["fieldname"] 	= "type";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->structure["type"];
+		$structure["defaultvalue"]	= @$this->structure["type"];
 		$this->form_obj->add_input($structure);	
 		
 
@@ -1421,12 +1429,12 @@ class journal_process extends journal_base
 	{
 		log_debug("journal_process", "Executing process_form_input()");
 	
-		$this->structure["action"]	= security_form_input_predefined("any", "action", 1, "");
-		$this->structure["type"]	= security_form_input_predefined("any", "type", 1, "");
-		$this->structure["title"]	= security_form_input_predefined("any", "title", 0, "");
-		$this->structure["content"]	= security_form_input_predefined("any", "content", 0, "");
-		$this->structure["customid"]	= security_form_input_predefined("int", "id_custom", 0, "");
-		$this->structure["id"]		= security_form_input_predefined("int", "id_journal", 0, "");
+		$this->structure["action"]	= @security_form_input_predefined("any", "action", 1, "");
+		$this->structure["type"]	= @security_form_input_predefined("any", "type", 1, "");
+		$this->structure["title"]	= @security_form_input_predefined("any", "title", 0, "");
+		$this->structure["content"]	= @security_form_input_predefined("any", "content", 0, "");
+		$this->structure["customid"]	= @security_form_input_predefined("int", "id_custom", 0, "");
+		$this->structure["id"]		= @security_form_input_predefined("int", "id_journal", 0, "");
 
 
 		if ($this->structure["type"] == "text" && $this->structure["action"] != "delete")
@@ -1477,7 +1485,7 @@ class journal_process extends journal_base
 				$file_obj->verify_upload_form("upload");
 
 				// set the title of the journal entry to the filename
-				$this->structure["title"] = security_script_input("/^[\S\s]*$/", $_FILES["upload"]["name"]);
+				$this->structure["title"] = @security_script_input("/^[\S\s]*$/", $_FILES["upload"]["name"]);
 			}
 
 		}

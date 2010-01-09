@@ -31,7 +31,7 @@ function quotes_calc_duedate($date)
 	$terms = sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_TERMS_DAYS'");
 
 	// break up the date, and reconfigure
-	$date_array	= split("-", $date);
+	$date_array	= explode("-", $date);
 	$timestamp	= mktime(0, 0, 0, $date_array[1], ($date_array[2] + $terms), $date_array[0]);
 
 	// generate the date

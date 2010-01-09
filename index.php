@@ -48,9 +48,14 @@ if (!$_SERVER["HTTPS"])
 */
 
 // get the page to display
-$page = $_GET["page"];
-if ($page == "")
+if (!empty($_GET["page"]))
+{
+	$page = $_GET["page"];
+}
+else
+{
 	$page = "home.php";
+}
 
 	
 // perform security checks on the page
@@ -185,7 +190,7 @@ if ($page_valid == 1)
 			Draw navigiation menu
 		*/
 		
-		if ($page_obj->obj_menu_nav)
+		if (!empty($page_obj->obj_menu_nav))
 		{
 			print "<tr><td>";
 			$page_obj->obj_menu_nav->render_html();
@@ -222,7 +227,7 @@ if ($page_valid == 1)
 	Draw messages
 */
 
-if ($_SESSION["error"]["message"])
+if (!empty($_SESSION["error"]["message"]))
 {
 	print "<tr><td>";
 	log_error_render();
@@ -230,7 +235,7 @@ if ($_SESSION["error"]["message"])
 }
 else
 {
-	if ($_SESSION["notification"]["message"])
+	if (!empty($_SESSION["notification"]["message"]))
 	{
 		print "<tr><td>";
 		log_notification_render();
@@ -303,7 +308,7 @@ if (!preg_match('/^user/', $page))
 
 <?php
 
-if ($_SESSION["user"]["log_debug"])
+if (isset($_SESSION["user"]["log_debug"]))
 {
 	print "<tr>";
 	print "<td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed;\">";

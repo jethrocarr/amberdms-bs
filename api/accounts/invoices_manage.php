@@ -46,7 +46,7 @@ class accounts_invoices_manage_soap
 		if (user_permissions_get("accounts_". $invoicetype ."_view"))
 		{
 			// sanitise input
-			$code_invoice = security_script_input_predefined("any", $code_invoice);
+			$code_invoice = @security_script_input_predefined("any", $code_invoice);
 
 			if (!$code_invoice || $code_invoice == "error")
 			{
@@ -102,7 +102,7 @@ class accounts_invoices_manage_soap
 
 
 			// sanitise input
-			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->id	= @security_script_input_predefined("int", $id);
 
 			if (!$obj_invoice->id || $obj_invoice->id == "error")
 			{
@@ -200,7 +200,7 @@ class accounts_invoices_manage_soap
 
 
 			// sanitise input
-			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->id	= @security_script_input_predefined("int", $id);
 
 			if (!$obj_invoice->id || $obj_invoice->id == "error")
 			{
@@ -376,7 +376,7 @@ class accounts_invoices_manage_soap
 
 
 			// sanitise input
-			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->id	= @security_script_input_predefined("int", $id);
 
 			if (!$obj_invoice->id || $obj_invoice->id == "error")
 			{
@@ -454,7 +454,7 @@ class accounts_invoices_manage_soap
 
 
 			// sanitise input
-			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->id	= @security_script_input_predefined("int", $id);
 
 			if (!$obj_invoice->id || $obj_invoice->id == "error")
 			{
@@ -560,29 +560,29 @@ class accounts_invoices_manage_soap
 				TODO: a number of these options might just be ignored by the action_update command - look
 					into this possiblity
 			*/
-			$obj_invoice->id				= security_script_input_predefined("int", $id);
-			$obj_invoice->data["locked"]			= security_script_input_predefined("int", $locked);
+			$obj_invoice->id				= @security_script_input_predefined("int", $id);
+			$obj_invoice->data["locked"]			= @security_script_input_predefined("int", $locked);
 
 			if ($invoicetype == "ap")
 			{
-				$obj_invoice->data["vendorid"]		= security_script_input_predefined("int", $orgid);
+				$obj_invoice->data["vendorid"]		= @security_script_input_predefined("int", $orgid);
 			}
 			else
 			{
-				$obj_invoice->data["customerid"]	= security_script_input_predefined("int", $orgid);
+				$obj_invoice->data["customerid"]	= @security_script_input_predefined("int", $orgid);
 			}
 			
-			$obj_invoice->data["employeeid"]		= security_script_input_predefined("int", $employeeid);
-			$obj_invoice->data["dest_account"]		= security_script_input_predefined("int", $dest_account);
+			$obj_invoice->data["employeeid"]		= @security_script_input_predefined("int", $employeeid);
+			$obj_invoice->data["dest_account"]		= @security_script_input_predefined("int", $dest_account);
 			
-			$obj_invoice->data["code_invoice"]		= security_script_input_predefined("any", $code_invoice);
-			$obj_invoice->data["code_ordernumber"]		= security_script_input_predefined("any", $code_ordernumber);
-			$obj_invoice->data["code_ponumber"]		= security_script_input_predefined("any", $code_ponumber);
-			$obj_invoice->data["date_due"]			= security_script_input_predefined("date", $date_due);
-			$obj_invoice->data["date_trans"]		= security_script_input_predefined("date", $date_trans);
-			$obj_invoice->data["date_sent"]			= security_script_input_predefined("date", $date_sent);
-			$obj_invoice->data["sentmethod"]		= security_script_input_predefined("any", $sentmethod);
-			$obj_invoice->data["notes"]			= security_script_input_predefined("any", $notes);
+			$obj_invoice->data["code_invoice"]		= @security_script_input_predefined("any", $code_invoice);
+			$obj_invoice->data["code_ordernumber"]		= @security_script_input_predefined("any", $code_ordernumber);
+			$obj_invoice->data["code_ponumber"]		= @security_script_input_predefined("any", $code_ponumber);
+			$obj_invoice->data["date_due"]			= @security_script_input_predefined("date", $date_due);
+			$obj_invoice->data["date_trans"]		= @security_script_input_predefined("date", $date_trans);
+			$obj_invoice->data["date_sent"]			= @security_script_input_predefined("date", $date_sent);
+			$obj_invoice->data["sentmethod"]		= @security_script_input_predefined("any", $sentmethod);
+			$obj_invoice->data["notes"]			= @security_script_input_predefined("any", $notes);
 
 
 			foreach (array_keys($obj_invoice->data) as $key)
@@ -699,8 +699,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "standard";
 
 			/*
@@ -735,9 +735,9 @@ class accounts_invoices_manage_soap
 			*/
 
 
-			$data["amount"]		= security_script_input_predefined("money", $amount);
-			$data["chartid"]	= security_script_input_predefined("int", $chartid);
-			$data["description"]	= security_script_input_predefined("any", $description);
+			$data["amount"]		= @security_script_input_predefined("money", $amount);
+			$data["chartid"]	= @security_script_input_predefined("int", $chartid);
+			$data["description"]	= @security_script_input_predefined("any", $description);
 
 			foreach (array_keys($data) as $key)
 			{
@@ -854,8 +854,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "standard";
 
 			/*
@@ -891,8 +891,8 @@ class accounts_invoices_manage_soap
 				Load SOAP data
 			*/
 
-			$data["taxid"]		= security_script_input_predefined("int", $taxid);
-			$data["status"]		= security_script_input_predefined("any", $status);
+			$data["taxid"]		= @security_script_input_predefined("int", $taxid);
+			$data["status"]		= @security_script_input_predefined("any", $status);
 
 			foreach (array_keys($data) as $key)
 			{
@@ -1000,8 +1000,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "product";
 
 			/*
@@ -1036,12 +1036,12 @@ class accounts_invoices_manage_soap
 			*/
 
 
-			$data["price"]		= security_script_input_predefined("money", $price);
-			$data["quantity"]	= security_script_input_predefined("float", $quantity);
-			$data["units"]		= security_script_input_predefined("any", $units);
-			$data["customid"]	= security_script_input_predefined("int", $productid);
-			$data["description"]	= security_script_input_predefined("any", $description);
-			$data["discount"]	= security_script_input_predefined("float", $discount);
+			$data["price"]		= @security_script_input_predefined("money", $price);
+			$data["quantity"]	= @security_script_input_predefined("float", $quantity);
+			$data["units"]		= @security_script_input_predefined("any", $units);
+			$data["customid"]	= @security_script_input_predefined("int", $productid);
+			$data["description"]	= @security_script_input_predefined("any", $description);
+			$data["discount"]	= @security_script_input_predefined("float", $discount);
 
 			foreach (array_keys($data) as $key)
 			{
@@ -1164,8 +1164,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "time";
 
 			/*
@@ -1200,12 +1200,12 @@ class accounts_invoices_manage_soap
 			*/
 
 
-			$data["price"]		= security_script_input_predefined("money", $price);
-			$data["customid"]	= security_script_input_predefined("int", $productid);
-			$data["timegroupid"]	= security_script_input_predefined("int", $timegroupid);
-			$data["description"]	= security_script_input_predefined("any", $description);
+			$data["price"]		= @security_script_input_predefined("money", $price);
+			$data["customid"]	= @security_script_input_predefined("int", $productid);
+			$data["timegroupid"]	= @security_script_input_predefined("int", $timegroupid);
+			$data["description"]	= @security_script_input_predefined("any", $description);
 			$data["units"]		= "hours";
-			$data["discount"]	= security_script_input_predefined("float", $discount);
+			$data["discount"]	= @security_script_input_predefined("float", $discount);
 
 
 
@@ -1350,8 +1350,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "tax";
 
 			/*
@@ -1402,7 +1402,7 @@ class accounts_invoices_manage_soap
 				Load SOAP data
 			*/
 
-			$obj_invoice_item->data["amount"] = security_script_input_predefined("money", $amount);
+			$obj_invoice_item->data["amount"] = @security_script_input_predefined("money", $amount);
 			
 
 			if ($obj_invoice_item->data["amount"] == "error")
@@ -1493,8 +1493,8 @@ class accounts_invoices_manage_soap
 			$obj_invoice_item			= New invoice_items;
 
 			$obj_invoice_item->type_invoice		= $invoicetype;
-			$obj_invoice_item->id_invoice		= security_script_input_predefined("int", $id);
-			$obj_invoice_item->id_item		= security_script_input_predefined("any", $itemid);
+			$obj_invoice_item->id_invoice		= @security_script_input_predefined("int", $id);
+			$obj_invoice_item->id_item		= @security_script_input_predefined("any", $itemid);
 			$obj_invoice_item->type_item		= "payment";
 
 			/*
@@ -1528,11 +1528,11 @@ class accounts_invoices_manage_soap
 				Load SOAP data
 			*/
 
-			$data["date_trans"]	= security_script_input_predefined("date", $date_trans);
-			$data["chartid"]	= security_script_input_predefined("int", $chartid);
-			$data["amount"]		= security_script_input_predefined("money", $amount);
-			$data["source"]		= security_script_input_predefined("any", $source);
-			$data["description"]	= security_script_input_predefined("any", $description);
+			$data["date_trans"]	= @security_script_input_predefined("date", $date_trans);
+			$data["chartid"]	= @security_script_input_predefined("int", $chartid);
+			$data["amount"]		= @security_script_input_predefined("money", $amount);
+			$data["source"]		= @security_script_input_predefined("any", $source);
+			$data["description"]	= @security_script_input_predefined("any", $description);
 
 
 			foreach (array_keys($data) as $key)
@@ -1641,7 +1641,7 @@ class accounts_invoices_manage_soap
 			/*
 				Load SOAP Data
 			*/
-			$obj_invoice->id	= security_script_input_predefined("int", $id);
+			$obj_invoice->id	= @security_script_input_predefined("int", $id);
 			$obj_invoice->type	= $invoicetype;
 
 
@@ -1701,7 +1701,7 @@ class accounts_invoices_manage_soap
 		log_debug("accounts_invoices_manage", "Executing delete_invoice_itemid($itemid)");
 
 		// sanatise item ID
-		$itemid = security_script_input_predefined("any", $itemid);
+		$itemid = @security_script_input_predefined("any", $itemid);
 
 		// fetch the invoice ID and type
 		$sql_item_obj		= New sql_query;

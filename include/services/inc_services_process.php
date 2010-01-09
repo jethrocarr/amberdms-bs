@@ -29,7 +29,7 @@ function service_form_details_process()
 	// get the ID for an edit
 	if ($_POST["id_service"])
 	{
-		$id	= security_form_input_predefined("int", "id_service", 1, "");
+		$id	= @security_form_input_predefined("int", "id_service", 1, "");
 		$mode	= "edit";
 	}
 	else
@@ -40,9 +40,9 @@ function service_form_details_process()
 	
 
 	// general details
-	$data["name_service"]		= security_form_input_predefined("any", "name_service", 1, "");
-	$data["chartid"]		= security_form_input_predefined("int", "chartid", 1, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 1, "");
+	$data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// fetch information for all tax checkboxes from form
 	$sql_tax_obj		= New sql_query;
@@ -55,7 +55,7 @@ function service_form_details_process()
 
 		foreach ($sql_tax_obj->data as $data_tax)
 		{
-			$data["tax_". $data_tax["id"] ]	= security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+			$data["tax_". $data_tax["id"] ]	= @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
 		}
 
 	} // end of loop through taxes
@@ -82,7 +82,7 @@ function service_form_details_process()
 		$mode = "add";
 		
 		// only fetch the type ID when adding new services
-		$data["typeid"]	= security_form_input_predefined("int", "typeid", 1, "");
+		$data["typeid"]	= @security_form_input_predefined("int", "typeid", 1, "");
 	}
 
 
@@ -270,15 +270,15 @@ function service_form_plan_process()
 	*/
 
 
-	$id				= security_form_input_predefined("int", "id_service", 1, "");
+	$id				= @security_form_input_predefined("int", "id_service", 1, "");
 	
 	// general details
-	$data["price"]			= security_form_input_predefined("money", "price", 0, "");
-	$data["billing_cycle"]		= security_form_input_predefined("int", "billing_cycle", 1, "");
-	$data["billing_mode"]		= security_form_input_predefined("int", "billing_mode", 1, "");
+	$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
+	$data["billing_cycle"]		= @security_form_input_predefined("int", "billing_cycle", 1, "");
+	$data["billing_mode"]		= @security_form_input_predefined("int", "billing_mode", 1, "");
 
 	// needed to handle errors, but not used
-	$data["name_service"]		= security_form_input_predefined("any", "name_service", 0, "");
+	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
 
 
 	// make sure that the service actually exists
@@ -300,35 +300,35 @@ function service_form_plan_process()
 	switch ($sql_plan_obj->data[0]["name"])
 	{
 		case "generic_with_usage":
-			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
-			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
-			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
-			$data["usage_mode"]		= security_form_input_predefined("int", "usage_mode", 1, "");
+			$data["units"]			= @security_form_input_predefined("any", "units", 1, "");
+			$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
+			$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
+			$data["usage_mode"]		= @security_form_input_predefined("int", "usage_mode", 1, "");
 
-			$data["alert_80pc"]		= security_form_input_predefined("any", "alert_80pc", 0, "");
-			$data["alert_100pc"]		= security_form_input_predefined("any", "alert_100pc", 0, "");
-			$data["alert_extraunits"]	= security_form_input_predefined("any", "alert_extraunits", 0, "");
+			$data["alert_80pc"]		= @security_form_input_predefined("any", "alert_80pc", 0, "");
+			$data["alert_100pc"]		= @security_form_input_predefined("any", "alert_100pc", 0, "");
+			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
 
 
 		case "licenses":
-			$data["units"]			= security_form_input_predefined("any", "units", 1, "");
-			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
-			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
+			$data["units"]			= @security_form_input_predefined("any", "units", 1, "");
+			$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
+			$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
 		break;
 
 		case "time":
 		case "data_traffic":
-			$data["units"]			= security_form_input_predefined("int", "units", 1, "");
-			$data["included_units"]		= security_form_input_predefined("int", "included_units", 0, "");
-			$data["price_extraunits"]	= security_form_input_predefined("money", "price_extraunits", 0, "");
+			$data["units"]			= @security_form_input_predefined("int", "units", 1, "");
+			$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
+			$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
 			
 			// force data usage/time to be incrementing
 			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
 
-			$data["alert_80pc"]		= security_form_input_predefined("any", "alert_80pc", 0, "");
-			$data["alert_100pc"]		= security_form_input_predefined("any", "alert_100pc", 0, "");
-			$data["alert_extraunits"]	= security_form_input_predefined("any", "alert_extraunits", 0, "");
+			$data["alert_80pc"]		= @security_form_input_predefined("any", "alert_80pc", 0, "");
+			$data["alert_100pc"]		= @security_form_input_predefined("any", "alert_100pc", 0, "");
+			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
 	}
 
@@ -492,8 +492,8 @@ function service_form_delete_process()
 
 
 	// get form data
-	$id				= security_form_input_predefined("int", "id_service", 1, "");
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$id				= @security_form_input_predefined("int", "id_service", 1, "");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 

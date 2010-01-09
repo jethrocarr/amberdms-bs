@@ -19,7 +19,7 @@ if (user_permissions_get("admin"))
 
 
 	// fetch all the data
-	$data["ar_invoice_tex"]			= security_form_input_predefined("int", "ar_invoice_tex", 1, "Please select a valid AR invoice.");
+	$data["ar_invoice_tex"]			= @security_form_input_predefined("int", "ar_invoice_tex", 1, "Please select a valid AR invoice.");
 
 
 	// check that the returned ID belongs to the right template type

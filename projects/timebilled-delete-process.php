@@ -18,17 +18,17 @@ if (user_permissions_get('projects_timegroup'))
 	/////////////////////////
 
 	// basic input
-	$projectid			= security_form_input_predefined("int", "projectid", 1, "");
-	$groupid			= security_form_input_predefined("int", "groupid", 1, "");
+	$projectid			= @security_form_input_predefined("int", "projectid", 1, "");
+	$groupid			= @security_form_input_predefined("int", "groupid", 1, "");
 	
 	// these exist to make error handling work right
-	$data["name_group"]		= security_form_input_predefined("any", "name_group", 0, "");
-	$data["name_customer"]		= security_form_input_predefined("any", "name_customer", 0, "");
-	$data["code_invoice"]		= security_form_input_predefined("any", "code_invoice", 0, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["name_group"]		= @security_form_input_predefined("any", "name_group", 0, "");
+	$data["name_customer"]		= @security_form_input_predefined("any", "name_customer", 0, "");
+	$data["code_invoice"]		= @security_form_input_predefined("any", "code_invoice", 0, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 	
 
 

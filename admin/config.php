@@ -388,7 +388,7 @@ class page_output
 		
 		$this->obj_form->subforms["submit"]			= array("submit");
 
-		if ($_SESSION["error"]["message"])
+		if (error_check())
 		{
 			// load error datas
 			$this->obj_form->load_data_error();

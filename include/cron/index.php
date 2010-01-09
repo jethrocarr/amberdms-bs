@@ -18,7 +18,7 @@ require("../amberphplib/main.php");
 */
 
 // verify
-if (!$argv[1])
+if (!isset($argv[1]))
 {
 	die("You must supply the name of the script to execute as a command line argument\n");
 }

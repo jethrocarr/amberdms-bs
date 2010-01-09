@@ -25,18 +25,18 @@ if (user_permissions_get('staff_write'))
 		Load POST data
 	*/
 
-	$obj_employee->id				= security_form_input_predefined("int", "id_staff", 0, "");
+	$obj_employee->id				= @security_form_input_predefined("int", "id_staff", 0, "");
 	
-	$obj_employee->data["name_staff"]		= security_form_input_predefined("any", "name_staff", 1, "");
-	$obj_employee->data["staff_code"]		= security_form_input_predefined("any", "staff_code", 0, "");
-	$obj_employee->data["staff_position"]		= security_form_input_predefined("any", "staff_position", 0, "");
+	$obj_employee->data["name_staff"]		= @security_form_input_predefined("any", "name_staff", 1, "");
+	$obj_employee->data["staff_code"]		= @security_form_input_predefined("any", "staff_code", 0, "");
+	$obj_employee->data["staff_position"]		= @security_form_input_predefined("any", "staff_position", 0, "");
 	
-	$obj_employee->data["contact_phone"]		= security_form_input_predefined("any", "contact_phone", 0, "");
-	$obj_employee->data["contact_fax"]		= security_form_input_predefined("any", "contact_fax", 0, "");
-	$obj_employee->data["contact_email"]		= security_form_input_predefined("email", "contact_email", 0, "");
+	$obj_employee->data["contact_phone"]		= @security_form_input_predefined("any", "contact_phone", 0, "");
+	$obj_employee->data["contact_fax"]		= @security_form_input_predefined("any", "contact_fax", 0, "");
+	$obj_employee->data["contact_email"]		= @security_form_input_predefined("email", "contact_email", 0, "");
 	
-	$obj_employee->data["date_start"]		= security_form_input_predefined("date", "date_start", 1, "");
-	$obj_employee->data["date_end"]			= security_form_input_predefined("date", "date_end", 0, "");
+	$obj_employee->data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
+	$obj_employee->data["date_end"]			= @security_form_input_predefined("date", "date_end", 0, "");
 
 	
 

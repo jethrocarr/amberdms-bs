@@ -319,7 +319,7 @@ class invoice_list_items
 					// 1. (default) Link to index.php
 					// 2. Set the ["options]["full_link"] value to yes to force a full link
 
-					if ($this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
+					if (isset($this->obj_table_standard->links[$link]["options"]["full_link"]) && $this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
 					{
 						print "<a class=\"button_small\" href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
 					}
@@ -336,7 +336,7 @@ class invoice_list_items
 							1. The value has been passed.
 							2. The name of a column to take the value from has been passed
 						*/
-						if ($this->obj_table_standard->links[$link]["options"][$getfield]["value"])
+						if (isset($this->obj_table_standard->links[$link]["options"][$getfield]["value"]))
 						{
 							print "&$getfield=". $this->obj_table_standard->links[$link]["options"][$getfield]["value"];
 						}
@@ -502,7 +502,7 @@ class invoice_list_items
 			$form->formname		= $this->type ."_invoice_". $this->mode;
 			$form->language		= $_SESSION["user"]["lang"];
 	
-			$form->action		= ereg_replace("edit", "add-process", $this->page_view);
+			$form->action		= str_replace("edit", "add-process", $this->page_view);
 			$form->method		= "POST";
 
 			// basic details
@@ -1342,8 +1342,8 @@ function invoice_form_items_add_process($type,  $returnpage_error, $returnpage_s
 		Import POST data
 	*/
 	
-	$item		= security_form_input_predefined("any", "item", 1, "You must select the type of item to add to the invoice");
-	$invoiceid	= security_form_input_predefined("any", "id", 1, "You must select an invoice before accessing this page");
+	$item		= @security_form_input_predefined("any", "item", 1, "You must select the type of item to add to the invoice");
+	$invoiceid	= @security_form_input_predefined("any", "id", 1, "You must select an invoice before accessing this page");
 
 
 	/*
@@ -1425,11 +1425,11 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	*/
 	$item			= New invoice_items;
 	
-	$item->id_invoice	= security_form_input_predefined("int", "id_invoice", 1, "");
-	$item->id_item		= security_form_input_predefined("int", "id_item", 0, "");
+	$item->id_invoice	= @security_form_input_predefined("int", "id_invoice", 1, "");
+	$item->id_item		= @security_form_input_predefined("int", "id_item", 0, "");
 	
 	$item->type_invoice	= $type;
-	$item->type_item	= security_form_input_predefined("any", "item_type", 1, "");
+	$item->type_item	= @security_form_input_predefined("any", "item_type", 1, "");
 	
 
 	/*
@@ -1480,9 +1480,9 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 
 			// fetch information from form
-			$data["amount"]		= security_form_input_predefined("money", "amount", 0, "");
-			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
-			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			$data["amount"]		= @security_form_input_predefined("money", "amount", 0, "");
+			$data["chartid"]	= @security_form_input_predefined("int", "chartid", 1, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
 
 			// fetch information from all tax checkboxes from form
 			$sql_tax_obj		= New sql_query;
@@ -1495,7 +1495,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 				foreach ($sql_tax_obj->data as $data_tax)
 				{
-					$data["tax_". $data_tax["id"] ]	= security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+					$data["tax_". $data_tax["id"] ]	= @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
 				}
 
 			} // end of loop through taxes
@@ -1509,12 +1509,12 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 			
 			// fetch information from form
-			$data["price"]		= security_form_input_predefined("money", "price", 0, "");
-			$data["quantity"]	= security_form_input_predefined("float", "quantity", 1, "");
-			$data["units"]		= security_form_input_predefined("any", "units", 0, "");
-			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
-			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
-			$data["discount"]	= security_form_input_predefined("float", "discount", 0, "");
+			$data["price"]		= @security_form_input_predefined("money", "price", 0, "");
+			$data["quantity"]	= @security_form_input_predefined("float", "quantity", 1, "");
+			$data["units"]		= @security_form_input_predefined("any", "units", 0, "");
+			$data["customid"]	= @security_form_input_predefined("int", "productid", 1, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
+			$data["discount"]	= @security_form_input_predefined("float", "discount", 0, "");
 
 		break;
 
@@ -1525,11 +1525,11 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 		
 			// fetch information from form
-			$data["price"]		= security_form_input_predefined("money", "price", 0, "");
-			$data["customid"]	= security_form_input_predefined("int", "productid", 1, "");
-			$data["timegroupid"]	= security_form_input_predefined("int", "timegroupid", 1, "");
-			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
-			$data["discount"]	= security_form_input_predefined("float", "discount", 0, "");
+			$data["price"]		= @security_form_input_predefined("money", "price", 0, "");
+			$data["customid"]	= @security_form_input_predefined("int", "productid", 1, "");
+			$data["timegroupid"]	= @security_form_input_predefined("int", "timegroupid", 1, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
+			$data["discount"]	= @security_form_input_predefined("float", "discount", 0, "");
 			$data["units"]		= "hours";
 			
 		break;
@@ -1540,11 +1540,11 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			*/
 
 			// fetch information from form
-			$data["date_trans"]	= security_form_input_predefined("date", "date_trans", 1, "");
-			$data["amount"]		= security_form_input_predefined("money", "amount", 1, "");
-			$data["chartid"]	= security_form_input_predefined("int", "chartid", 1, "");
-			$data["source"]		= security_form_input_predefined("any", "source", 0, "");
-			$data["description"]	= security_form_input_predefined("any", "description", 0, "");
+			$data["date_trans"]	= @security_form_input_predefined("date", "date_trans", 1, "");
+			$data["amount"]		= @security_form_input_predefined("money", "amount", 1, "");
+			$data["chartid"]	= @security_form_input_predefined("int", "chartid", 1, "");
+			$data["source"]		= @security_form_input_predefined("any", "source", 0, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
 			
 		break;
 
@@ -1682,8 +1682,8 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 	*/
 	$item			= New invoice_items;
 	
-	$item->id_invoice	= security_script_input("/^[0-9]*$/", $_GET["id"]);
-	$item->id_item		= security_script_input("/^[0-9]*$/", $_GET["itemid"]);
+	$item->id_invoice	= @security_script_input("/^[0-9]*$/", $_GET["id"]);
+	$item->id_item		= @security_script_input("/^[0-9]*$/", $_GET["itemid"]);
 
 	$item->type_invoice	= $type;
 	
@@ -1816,8 +1816,8 @@ function invoice_form_tax_override_process($returnpage)
 	*/
 	$item			= New invoice_items;
 	
-	$item->id_invoice	= security_form_input_predefined("int", "invoiceid", 1, "");
-	$item->id_item		= security_form_input_predefined("int", "itemid", 1, "");
+	$item->id_invoice	= @security_form_input_predefined("int", "invoiceid", 1, "");
+	$item->id_item		= @security_form_input_predefined("int", "itemid", 1, "");
 
 	$item->type_invoice	= "ap"; // only AP invoices can have taxes overridden
 	
@@ -1826,7 +1826,7 @@ function invoice_form_tax_override_process($returnpage)
 		Fetch all form data
 	*/
 	
-	$data["amount"]		= security_form_input_predefined("money", "amount", 0, "");
+	$data["amount"]		= @security_form_input_predefined("money", "amount", 0, "");
 
 
 	

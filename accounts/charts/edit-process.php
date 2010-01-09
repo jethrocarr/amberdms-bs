@@ -26,16 +26,16 @@ if (user_permissions_get('accounts_charts_write'))
 		Import POST Data
 	*/
 	
-	$obj_chart->id				= security_form_input_predefined("int", "id_chart", 0, "");
+	$obj_chart->id				= @security_form_input_predefined("int", "id_chart", 0, "");
 
 	// general details
-	$obj_chart->data["code_chart"]		= security_form_input_predefined("int", "code_chart", 0, "A chart code can only consist of numbers.");
-	$obj_chart->data["description"]		= security_form_input_predefined("any", "description", 1, "");
+	$obj_chart->data["code_chart"]		= @security_form_input_predefined("int", "code_chart", 0, "A chart code can only consist of numbers.");
+	$obj_chart->data["description"]		= @security_form_input_predefined("any", "description", 1, "");
 	
 	// only want the chart type if create a new account
 	if (!$obj_chart->id)
 	{
-		$obj_chart->data["chart_type"]	= security_form_input_predefined("int", "chart_type", 1, "");
+		$obj_chart->data["chart_type"]	= @security_form_input_predefined("int", "chart_type", 1, "");
 	}
 	
 	// menu selection options
@@ -47,7 +47,7 @@ if (user_permissions_get('accounts_charts_write'))
 
 	foreach ($sql_obj_menu->data as $data_menu)
 	{
-		$obj_chart->data["menuoptions"][ $data_menu["value"] ] = security_form_input_predefined("any", $data_menu["value"], 0, "Form provided invalid input!");
+		$obj_chart->data["menuoptions"][ $data_menu["value"] ] = @security_form_input_predefined("any", $data_menu["value"], 0, "Form provided invalid input!");
 	}
 
 	unset($sql_obj_menu);

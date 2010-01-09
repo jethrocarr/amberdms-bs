@@ -16,11 +16,11 @@ if (user_permissions_get('projects_write'))
 {
 	/////////////////////////
 
-	$projectid			= security_form_input_predefined("int", "projectid", 1, "");
-	$phaseid			= security_form_input_predefined("int", "phaseid", 0, "");
+	$projectid			= @security_form_input_predefined("int", "projectid", 1, "");
+	$phaseid			= @security_form_input_predefined("int", "phaseid", 0, "");
 	
-	$data["name_phase"]		= security_form_input_predefined("any", "name_phase", 1, "You must set a phase name.");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["name_phase"]		= @security_form_input_predefined("any", "name_phase", 1, "You must set a phase name.");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 
 

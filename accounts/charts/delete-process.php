@@ -24,14 +24,14 @@ if (user_permissions_get('accounts_charts_write'))
 		Load POST Data
 	*/
 
-	$obj_chart->id			= security_form_input_predefined("int", "id_chart", 1, "");
+	$obj_chart->id			= @security_form_input_predefined("int", "id_chart", 1, "");
 
 	// these exist to make error handling work right
-	$data["code_chart"]		= security_form_input_predefined("any", "code_chart", 0, "");
-	$data["description"]		= security_form_input_predefined("any", "description", 0, "");
+	$data["code_chart"]		= @security_form_input_predefined("any", "code_chart", 0, "");
+	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// confirm deletion
-	$data["delete_confirm"]		= security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
+	$data["delete_confirm"]		= @security_form_input_predefined("any", "delete_confirm", 1, "You must confirm the deletion");
 
 
 
