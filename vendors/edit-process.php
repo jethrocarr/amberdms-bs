@@ -26,6 +26,7 @@ if (user_permissions_get('vendors_write'))
 	
 	$obj_vendor->id				= @security_form_input_predefined("int", "id_vendor", 0, "");
 	
+	$obj_vendor->data["code_vendor"]	= @security_form_input_predefined("any", "code_vendor", 0, "");
 	$obj_vendor->data["name_vendor"]	= @security_form_input_predefined("any", "name_vendor", 1, "You must set a vendor name");
 	$obj_vendor->data["name_contact"]	= @security_form_input_predefined("any", "name_contact", 0, "");
 	
