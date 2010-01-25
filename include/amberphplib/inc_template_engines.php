@@ -379,8 +379,8 @@ class template_engine_latex extends template_engine
 	{
 		log_debug("template_engine_latex", "Executing prepare_escape_fields()");
 
-		$target		= array('/%/', '/_/', '/\$/', '/&/', '/#/');
-		$replace	= array('\%', '\_', '\\\$', '/\&/', '/\#/');
+		$target		= array('/%/', '/_/', '/\$/', '/&/', '/#/', '/€/');
+		$replace	= array('\%', '\_', '\\\$', '/\&/', '/\#/', '\euro{}');
 
 		// escape single fields
 		if ($this->data)
