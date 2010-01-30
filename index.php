@@ -308,7 +308,7 @@ if (!preg_match('/^user/', $page))
 
 <?php
 
-if (isset($_SESSION["user"]["log_debug"]))
+if (!empty($_SESSION["user"]["log_debug"]))
 {
 	print "<tr>";
 	print "<td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed;\">";
