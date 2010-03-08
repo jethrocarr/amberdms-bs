@@ -88,6 +88,9 @@ class page_output
 			$amberdms_source["1.4.0"]["url"]	= "http://www.amberdms.com/repo/source/billing_system/";
 			$amberdms_source["1.4.0"]["file"]	= "amberdms-bs-1.4.0.tar.bz2";
 
+			$amberdms_source["1.4.1"]["url"]	= "http://www.amberdms.com/repo/source/billing_system/";
+			$amberdms_source["1.4.1"]["file"]	= "amberdms-bs-1.4.1.tar.bz2";
+
 			$amberdms_source["1.5.0"]["url"]	= "http://www.amberdms.com/repo/source/billing_system/";
 			$amberdms_source["1.5.0"]["file"]	= "amberdms-bs-1.5.0.tar.bz2";
 
