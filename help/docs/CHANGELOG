@@ -1,5 +1,26 @@
 CHANGELOG
 
+2010-03-08 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 1.4.1
+
+	Potential Security Risks:
+	* Security Fix: Fixed a bug with the bruteforce settings not being obeyed.
+	* Security Fix: Resolved issue where stale cache data could linger on in hosted installation cronjobs, breaking service usage
+
+	Application Changes:
+	* Improvements: Updated for PHP 5.3 support by removing use of deprecated functions.
+	* Improvements: Fixed E_NOTICE error messages that were appearing.
+	* Improvements: Interface enhancements to use more CSS
+	* Bug Fix: Fixes to Fedora 12 SELinux Policies
+	* Bug Fix: Everytime a vendor was saved, their code would change.
+	* Bug Fix: Fix to prevent the Euro charater from breaking PDFs due to LaTeX limitations.
+	* Bug Fix: Added missing function for PDF export of time booked to projects
+
+	Documentation Changes
+	* Bug Fix: Minor adjustments and clarifications to installation manual. (thanks to Alex King)
+
+
 2009-12-08 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 1.4.0
