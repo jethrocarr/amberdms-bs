@@ -1,7 +1,7 @@
 <?php
 /*
 	Amberdms Billing System
-	(c) Copyright 2009 Amberdms Ltd
+	(c) Copyright 2010 Amberdms Ltd
 
 	www.amberdms.com/billing
 
@@ -85,7 +85,7 @@ else
 <html>
 <head>
 	<title>Amberdms Billing System</title>
-	<meta name="copyright" content="(C)Copyright 2009 Amberdms Ltd.">
+	<meta name="copyright" content="(C)Copyright 2010 Amberdms Ltd.">
 
 
 <script type="text/javascript">
