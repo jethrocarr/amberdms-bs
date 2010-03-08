@@ -252,6 +252,12 @@ class page_output
 	{
 		$this->obj_table->render_table_csv();
 	}
+
+
+	function render_pdf()
+	{
+		$this->obj_table->render_table_pdf("amberphplib_table_landscape.tex");
+	}
 	
 }
 
