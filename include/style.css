@@ -431,5 +431,100 @@ a.button_export
 	box-sizing:		content-box;
 }
 
+  
+/*main page structure and standard header, footer, and debugging area*/
+#table_main_struct
+{
+  width:	90%;
+  border-spacing:	5px;
+  padding:	0;
+  margin-left:	auto;
+  margin-right:	auto;
+}
 
+#header_td_outer
+{
+  background-color:	#ffbf00;
+  border:	1px #747474 dashed;
+}
 
+#header_table_inner
+{
+  width:	100%;
+}
+
+#header_logo
+{
+  width:	50%;
+  text-align:	left;
+}
+
+#header_logout
+{
+  width:	50%;
+  text-align:	right;
+  vertical-align:	top;
+}
+
+#header_logout_text
+{
+  font-size:	10px;
+  font-weight:	bold;
+}
+
+#data_td_outer
+{
+  background-color:	#ffffff;
+  border:	1px #000000 dashed;
+  padding:	5px;
+}
+
+#data_table_inner
+{
+  width:	100%;
+  border-spacing:	0;
+  padding:	0;
+}
+
+#data_td_inner
+{
+  vertical-align:	top;
+  padding:	5px;
+}
+
+#footer_td_outer
+{
+  background-color:	#ffbf00;
+  border:	1px #747474 dashed;
+}
+
+#footer_table_inner
+{
+  width:	100%;
+}
+
+#footer_copyright
+{
+  text-align:	left;
+}
+
+#footer_copyright_text
+{
+  font-size:	10px;
+}
+
+#footer_version
+{
+  text-align:	right;
+}
+
+#footer_version_text
+{
+  font-size:	10px;
+}
+
+#debug_td_outer
+{
+  background-color:	#ffffff;
+  border:	1px #000000 dashed;
+}

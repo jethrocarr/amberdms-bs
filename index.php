@@ -112,22 +112,21 @@ function obj_show(obj)
 
 
 <!-- Main Structure Table -->
-<table width="90%" cellspacing="5" cellpadding="0" align="center">
-
+<table id="table_main_struct">
 
 
 <!-- Header -->
 <tr>
-	<td bgcolor="#ffbf00" style="border: 1px #747474 dashed;">
-		<table width="100%">
+	<td id="header_td_outer">
+		<table id="header_table_inner">
 		<tr>
-			<td width="50%" align="left"><img src="images/amberdms-billing-system-logo.png" alt="Amberdms Billing System"></td>
-			<td width="50%" align="right" valign="top">
+			<td id="header_logo"><img src="images/amberdms-billing-system-logo.png" alt="Amberdms Billing System"></td>
+			<td id="header_logout">
 			<?php
 
 			if (user_online())
 			{
-				print "<p style=\"font-size: 10px;\"><b>logged on as ". $_SESSION["user"]["name"] ." | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></b></p>";
+				print "<p id=\"header_logout_text\">logged on as ". $_SESSION["user"]["name"] ." | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></p>";
 			}
 
 			?>
@@ -252,10 +251,10 @@ else
 if ($page_valid)
 {
 	// HTML-formatted output
-	print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
-	print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\"><tr>";
+	print "<tr><td id=\"data_td_outer\">";
+	print "<table id=\"data_table_inner\"><tr>";
 
-	print "<td valign=\"top\" style=\"padding: 5px;\">";
+	print "<td id=\"data_td_inner\">";
 	$page_obj->render_html();
 	print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
 
@@ -265,10 +264,10 @@ if ($page_valid)
 else
 {
 	// padding
-	print "<tr><td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed; padding: 5px;\">";
-	print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">";
+	print "<tr><td id=\"data_td_outer\">";
+	print "<table id=\"data_table_inner\">";
 
-	print "<td valign=\"top\" style=\"padding: 5px;\">";
+	print "<td id=\"data_td_inner\">";
 	print "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></td>";
 	
 	print "</tr></table>";
@@ -289,16 +288,16 @@ if (!preg_match('/^user/', $page))
 
 <!-- Page Footer -->
 <tr>
-	<td bgcolor="#ffbf00" style="border: 1px #747474 dashed;">
+	<td id="footer_td_outer">
 
-	<table width="100%">
+	<table id="footer_table_inner">
 	<tr>
-		<td align="left">
-		<p style="font-size: 10px">(c) Copyright 2009 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
+		<td id="footer_copyright">
+		<p id="footer_copyright_text">(c) Copyright 2009 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
 		</td>
 
-		<td align="right">
-		<p style="font-size: 10px">Version <?php print $GLOBALS["config"]["app_version"]; ?></p>
+		<td id="footer_version">
+		<p id="footer_version_text">Version <?php print $GLOBALS["config"]["app_version"]; ?></p>
 		</td>
 	</tr>
 	</table>
@@ -311,7 +310,7 @@ if (!preg_match('/^user/', $page))
 if (!empty($_SESSION["user"]["log_debug"]))
 {
 	print "<tr>";
-	print "<td bgcolor=\"#ffffff\" style=\"border: 1px #000000 dashed;\">";
+	print "<td id=\"debug_td_outer\">";
 
 
 	log_debug_render();
