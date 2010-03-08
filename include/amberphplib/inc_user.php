@@ -203,7 +203,7 @@ function user_login($instance, $username, $password)
 	//
 
 	$blacklist_enable	= sql_get_singlevalue("SELECT value FROM `config` WHERE name='BLACKLIST_ENABLE' LIMIT 1");
-	$blacklist_limit	= sql_get_singlevalue("SELECT value as blacklist_limit FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1");
+	$blacklist_limit	= sql_get_singlevalue("SELECT value FROM `config` WHERE name='BLACKLIST_LIMIT' LIMIT 1");
 
 
 	if ($blacklist_enable == "enabled")
@@ -215,6 +215,8 @@ function user_login($instance, $username, $password)
 
 		if ($sql_blacklist_obj->num_rows())
 		{
+			$sql_blacklist_obj->fetch_array();
+
 			foreach ($sql_blacklist_obj->data as $data_blacklist)
 			{
 				// IP is in bad list - but we need to check the count against the time, to see if it's just an
