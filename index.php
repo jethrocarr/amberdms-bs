@@ -293,7 +293,7 @@ if (!preg_match('/^user/', $page))
 	<table id="footer_table_inner">
 	<tr>
 		<td id="footer_copyright">
-		<p id="footer_copyright_text">(c) Copyright 2009 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
+		<p id="footer_copyright_text">(c) Copyright 2010 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
 		</td>
 
 		<td id="footer_version">
