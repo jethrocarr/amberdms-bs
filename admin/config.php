@@ -5,7 +5,7 @@
 	access: admin users only
 
 	Allows administrators to change system-wide settings stored in the config table. Note that only a selection
-	of configuration options are provided - some are hidden since user's shouldn't be messing with them.
+	of configuration options are provided - some are hidden since users shouldn't be messing with them.
 
 	Full details are avaliable in the product documentation including information about hidden settings and when
 	it's acceptable to adjust them.
@@ -180,6 +180,12 @@ class page_output
 
 
 		// misc	
+		$structure = form_helper_prepare_dropdownfromdb("THEME_DEFAULT", "SELECT id, theme_name as label FROM themes ORDER BY theme_name");
+		$structure["options"]["autoselect"] = "yes";
+		//$structure["options"]["width"] = "600";
+		//$structure["options"]["defaultvalue"] = $options["theme"];
+		$this->obj_form->add_input($structure);
+		
 		$structure = form_helper_prepare_timezonedropdown("TIMEZONE_DEFAULT");
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
@@ -379,7 +385,7 @@ class page_output
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL", "CURRENCY_DEFAULT_SYMBOL_POSITION");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
-		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT", "PHONE_HOME");
+		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "DATEFORMAT", "TIMEZONE_DEFAULT", "THEME_DEFAULT", "PHONE_HOME");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{

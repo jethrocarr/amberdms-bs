@@ -29,9 +29,8 @@ if (user_online())
 	$data["option_dateformat"]		= @security_form_input_predefined("any", "option_dateformat", 1, "");
 	$data["option_timezone"]		= @security_form_input_predefined("any", "option_timezone", 1, "");
 	$data["option_shrink_tableoptions"]	= @security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
-	$data["option_shrink_tableoptions"]	= @security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
 	$data["option_default_employeeid"]	= @security_form_input_predefined("any", "option_default_employeeid", 0, "");
-
+	$data["option_theme"]			= @security_form_input_predefined("any", "option_theme", 0, "");
 	$data["option_debug"]			= @security_form_input_predefined("any", "option_debug", 0, "");
 	$data["option_concurrent_logins"]	= @security_form_input_predefined("any", "option_concurrent_logins", 0, "");
 
@@ -126,7 +125,10 @@ if (user_online())
 		// defaults
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'default_employeeid', '". $data["option_default_employeeid"] ."')";
 		$sql_obj->execute();
-
+		
+		//themes
+		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'theme', '". $data["option_theme"] ."')";
+		$sql_obj->execute();
 
 
 		// administrator-only options

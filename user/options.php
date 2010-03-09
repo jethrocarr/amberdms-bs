@@ -179,6 +179,15 @@ class page_output
 
 		$this->obj_form->subforms["user_options"][]	= "option_default_employeeid";
 
+		//custom theme
+		$structure = form_helper_prepare_dropdownfromdb("option_theme", "SELECT id, theme_name as label FROM themes ORDER BY theme_name");
+		$structure["options"]["autoselect"] = "yes";
+		$structure["options"]["width"] = "600";
+		$structure["options"]["defaultvalue"] = $options["theme"];
+		$this->obj_form->add_input($structure);
+		
+		$this->obj_form->subforms["user_options"][] = "option_theme";
+
 
 		// administrator-only option
 		if (user_permissions_get("admin"))
