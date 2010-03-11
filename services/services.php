@@ -64,6 +64,10 @@ class page_output
 		$structure["type"]	= "input";
 		$structure["sql"]	= "(services.name_service LIKE '%value%' OR services.description LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
+	
+		$structure		= form_helper_prepare_dropdownfromdb("service_type", "SELECT id, name as label FROM service_types ORDER BY name ASC");
+		$structure["sql"]	= "services.typeid='value'";
+		$this->obj_table->add_filter($structure);
 
 
 		// load options
