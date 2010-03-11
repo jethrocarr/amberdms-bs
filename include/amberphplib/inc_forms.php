@@ -795,7 +795,8 @@ class form_input
 						print "\" ";
 					}
 					
-					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\">" . $translations[$value] ."<br>";
+					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\" id=\"". $fieldname ."_". $value ."\">";
+					print "<label for=\"". $fieldname ."_". $value ."\">". $translations[$value] ."</label><br>";
 				}
 
 				// optional label/description
@@ -815,6 +816,7 @@ class form_input
 				}
 
 
+				// render form field
 				print "<input ";
 
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
@@ -824,17 +826,6 @@ class form_input
 						print "checked ";
 					}
 				}
-
-				if (isset($this->structure[$fieldname]["options"]["label"]))
-				{
-					$translation = $this->structure[$fieldname]["options"]["label"];
-				}
-				else
-				{
-					$translation = language_translate_string($this->language, $fieldname);
-				}
-
-
 				// if actions enabled, configure all the actions that have been defined
 				if (isset($this->actions[$fieldname]))
 				{
@@ -862,8 +853,22 @@ class form_input
 					print "\" ";
 				}
 
+				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\" id=\"". $fieldname ."\">";
 
-				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\">". $translation ."<br>";
+
+
+				// post field label
+				if (isset($this->structure[$fieldname]["options"]["label"]))
+				{
+					$translation = $this->structure[$fieldname]["options"]["label"];
+				}
+				else
+				{
+					$translation = language_translate_string($this->language, $fieldname);
+				}
+
+				print "<label for=\"$fieldname\">$translation</label><br>";
+
 
 			break;
 
