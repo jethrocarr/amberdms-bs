@@ -744,8 +744,8 @@ function log_error_render()
 {
         if ($_SESSION["error"]["message"])
         {
-		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
-                print "<tr><td bgcolor=\"#ffeda4\" style=\"border: 1px dashed #dc6d00; padding: 3px;\">";
+		print "<table class=\"error_table\">";
+                print "<tr><td class=\"error_td\">";
                 print "<p><b>Error:</b><br><br>";
 
 		foreach ($_SESSION["error"]["message"] as $errormsg)
@@ -769,8 +769,8 @@ function log_notification_render()
 {
         if (isset($_SESSION["notification"]["message"]) && !isset($_SESSION["error"]["message"]))
         {
-		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
-                print "<tr><td bgcolor=\"#c7e8ed\" style=\"border: 1px dashed #374893; padding: 3px;\">";
+		print "<table class=\"notification_table\">";
+                print "<tr><td class=\"notification_td\">";
                 print "<p><b>Notification:</b><br><br>";
 		
 		foreach ($_SESSION["notification"]["message"] as $notificationmsg)

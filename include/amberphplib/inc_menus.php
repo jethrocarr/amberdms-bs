@@ -236,13 +236,13 @@ class menu_main
 		log_debug("menu_main", "Executing render_menu_standard()");
 
 
-		print "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
+		print "<table class=\"menu_table\">";
 
 		// run through the menu order
 		for ($i = 0; $i <= count($this->menu_order); $i++)
 		{
 			print "<tr>";
-			print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+			print "<td>";
 			print "<ul id=\"menu\">";
 
 
@@ -261,11 +261,11 @@ class menu_main
 							// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
 							if (isset($this->menu_order[$i + 1]) && $this->menu_order[$i + 1] == $data["topic"])
 							{
-								print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
 							}
 							elseif ($data["link"] == $this->page)
 							{
-								print "<li><a style=\"background-color: #7e7e7e;\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
 							}
 							else
 							{
@@ -592,9 +592,9 @@ class menu_nav
 	{
 		log_debug("menu_nav", "Executing render_html()");
 
-		print "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">";
+		print "<table class=\"menu_nav_table\">";
 		print "<tr>";
-		print "<td width=\"100%\" cellpadding=\"0\" cellborder=\"0\" cellspacing=\"0\">";
+		print "<td>";
 
 		print "<ul id=\"navmenu\">";
 
@@ -605,7 +605,7 @@ class menu_nav
 				// are we viewing the current page?
 				if ($this->structure["selected"] == $this->structure["links"][$i])
 				{
-					print "<li><a style=\"background-color: #60ae62;\" href=\"index.php?". $this->structure["links"][$i] ."\" title=\"". $this->structure["title"][$i] ."\">". $this->structure["title"][$i] ."</a></li>";
+					print "<li><a class=\"menu_nav_current\" href=\"index.php?". $this->structure["links"][$i] ."\" title=\"". $this->structure["title"][$i] ."\">". $this->structure["title"][$i] ."</a></li>";
 				}
 				else
 				{
