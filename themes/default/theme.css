@@ -538,7 +538,8 @@ a.button_export
 	width:			100%;
 	border-spacing:		0;
 	padding:		0;
-	border:			0;
+	border:			1px #333333 solid;
+	background-color:	#333333;
 }
 
 .menu_current
