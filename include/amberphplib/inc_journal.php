@@ -1766,7 +1766,7 @@ function journal_quickadd_event($journalname, $customid, $message)
 		
 	$journal->prepare_set_title($message);
 
-	return $journal->action_create();
+	return $journal->action_update();
 }
 
 
