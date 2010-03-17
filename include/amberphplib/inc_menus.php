@@ -162,6 +162,13 @@ class menu_main
 			$this->page = $_SESSION["amberphplib"]["menu"]["page"];
 		}
 
+	
+		/*
+		    At this stage we have an array with all menu items that the user has access too
+		*/
+//		print "<pre>";
+//		print_r($sql_menu_obj->data);
+//		print "</pre>";
 
 		// loop though the menu items 
 		foreach ($sql_menu_obj->data as $data)
@@ -190,6 +197,14 @@ class menu_main
 		}
 
 
+		/*
+		    Once we get here, we have now ordered the menu
+		*/
+		print "<pre>";
+		print_r($this->menu_order);
+		print "</pre>";
+
+
 		// now we reverse the order array, so we can
 		// render the menus in the correct order
 		if ($this->menu_order)
@@ -206,6 +221,10 @@ class menu_main
 		
 		// sort the menu data in the opposite direction for correct rendering
 		$this->menu_structure = array_reverse($sql_menu_obj->data);
+		
+// 		print "<pre>";
+// 		print_r($this->menu_structure);
+// 		print "</pre>";
 
 
 		// return success
@@ -238,51 +257,144 @@ class menu_main
 
 		print "<table class=\"menu_table\">";
 
-		// run through the menu order
-		for ($i = 0; $i <= count($this->menu_order); $i++)
-		{
-			print "<tr>";
-			print "<td>";
-			print "<ul id=\"menu\">";
-
-
-			// loop though the menu data
-			foreach ($this->menu_structure as $data)
-			{
-				if (isset($this->menu_order[$i]))
-				{
-					if ($data["parent"] == $this->menu_order[$i])
-					{
-						// if this entry has no topic, it only exists for the purpose of getting a parent
-						// link highlighted. In this case, ignore the current entry.
-
-						if ($data["topic"])
-						{
-							// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
-							if (isset($this->menu_order[$i + 1]) && $this->menu_order[$i + 1] == $data["topic"])
-							{
-								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
-							}
-							elseif ($data["link"] == $this->page)
-							{
-								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
-							}
-							else
-							{
-								print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
-							}
-						}
-					}
+// 		// run through the menu order
+// 		for ($i = 0; $i <= count($this->menu_order); $i++)
+// 		{
+// 			print "<tr>";
+// 			print "<td>";
+// 			print "<ul id=\"menu\">";
+// 
+// 
+// 			// loop though the menu data
+// 			foreach ($this->menu_structure as $data)
+// 			{
+// 				if (isset($this->menu_order[$i]))
+// 				{
+// 					if ($data["parent"] == $this->menu_order[$i])
+// 					{
+// 						// if this entry has no topic, it only exists for the purpose of getting a parent
+// 						// link highlighted. In this case, ignore the current entry.
+// 
+// 						if ($data["topic"])
+// 						{
+// 							// highlight the entry, if it's the parent of the next sub menu, or if this is a sub menu.
+// 							if (isset($this->menu_order[$i + 1]) && $this->menu_order[$i + 1] == $data["topic"])
+// 							{
+// 								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+// 							}
+// 							elseif ($data["link"] == $this->page)
+// 							{
+// 								print "<li><a class=\"menu_current\" href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+// 							}
+// 							else
+// 							{
+// 								print "<li><a href=\"index.php?page=". $data["link"] ."\" title=". lang_trans($data["topic"]) .">". lang_trans($data["topic"]) ."</a></li>";
+// 							}
+// 						}
+// 					}
+// 				}
+// 
+// 			} // end of loop though menu data
+// 
+// 			print "</ul>";
+// 			print "</td>";
+// 			print "</tr>";
+// 			
+// 		}
+    
+		print "<tr>";
+		print "<td>";
+		print "<ul id=\"menu\" class=\"sf-menu sf-navbar\" >";
+		print "<li><a href=\"index.php?page=". $this->menu_structure[0]["link"]. "\" title=\"". lang_trans($this->menu_structure[0]["topic"]). "\">". lang_trans($this->menu_structure[0]["topic"]) ."</a>";
+		    $topparent = $this->menu_structure[0]["topic"];
+		    $i = 1;
+		    while ($i <= count($this->menu_structure)){
+		    $cur = $this->menu_structure[$i];
+			if ($cur["topic"] != ""){
+			    //check if node is a topparent
+			    if ($cur["parent"] == "top"){
+			    //check if gchild variable is set, if so close gchild ul and child li and ul and unset variable
+				if (isset($grandchild)){
+				    print "</ul>";
+				    print "</li>";
+				    print "</ul>";
+				    unset($grandchild);
+				    unset($child);
 				}
-
-			} // end of loop though menu data
-
-			print "</ul>";
-			print "</td>";
-			print "</tr>";
-			
-		}
+			    //if not set, check to see if child variable set, if so close li and ul and unset variable
+				elseif (isset($child)){
+				    print "</li>";
+				    print "</ul>";
+				    unset($child);
+				}
+			    //set new $topparent variable
+				$topparent = $cur["topic"];
+				//check if item is for current page or a parent
+				if ($cur["link"] == $this->page || $this->menu_order[0] == $cur["parent"]){
+				    print "<li class=\"current\">";
+				} /*elseif ($this->menu_order[1] == $cur["parent"]){
+				    print "<li class=\"current\">";
+				}*/
+				else{
+				    print "<li>";
+				}
+				print "<a href=\"index.php?page=". $cur["link"]. "\" title=\"". lang_trans($cur["topic"]). "\">". lang_trans($cur["topic"]) ."</a>";
+			    }
+			    
+			    //check if node is a child of the current $topparent
+			    elseif($cur["parent"]==$topparent){
+				//check if a child is currently set
+				//if not set, create a new ul and li
+				if (!isset($child)){
+				    print "<ul>";
+				}
+				//if set, check for grandchild, and if exists, close the $gchild ul, unset gchild variable
+				else {
+				    if (isset($grandchild)){
+					print "</ul>";
+					unset($grandchild);
+				    }				    
+				//close previous child li
+				print "</li>";
+				}
+				//set the new $child variable
+				//check if item is for current page or a parent
+				if ($cur["link"] == $this->page || $this->menu_order[0]==$cur["parent"]){
+				    print "<li class=\"current\">";
+				}
+				else{
+				    print "<li>";
+				}
+				print "<a href=\"index.php?page=". $cur["link"]. "\" title=\"". lang_trans($cur["topic"]). "\">". lang_trans($cur["topic"]). "</a>";
+				$child = $cur["topic"];
+			    }
+			    
+			    //check if node is a child of the current $child
+			    elseif($cur["parent"]==$child){
+				//check if a grandchild is currently set
+				//if not set, create a new ul
+				if(!isset($grandchild)){
+				    print "<ul>";
+				}
+				//create a new li
+				    //check if item is for current page
+				    if ($cur["link"] == $this->page){
+					print "<li class=\"current\"><a href=\"index.php?page=". $cur["link"]. "\" title=\"". lang_trans($cur["topic"]). "\">". lang_trans($cur["topic"]). "</a></li>";
+				    } else {
+					print "<li><a href=\"index.php?page=". $cur["link"]. "\" title=\"". lang_trans($cur["topic"]). "\">". lang_trans($cur["topic"]). "</a></li>";
+				    }
+				//set the new $grandchild variable
+				$grandchild = $cur["topic"];
+			    }
+			}    
+			$i++;
+		    }
 		
+		//check how many levels need closed at end
+		print "</li>";
+		print "</ul>";
+		print "</tr>";
+		print "</td>";
 		print "</table>";
 
 	} // end of render_menu_standard

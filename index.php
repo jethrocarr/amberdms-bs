@@ -102,6 +102,9 @@ define("THEME_PATH", $path);
 
 	<?php print "<link href=\"".THEME_PATH."theme.css\" rel=\"stylesheet\" type=\"text/css\" />"; ?>
 	
+<!--	<link href="external/superfish/superfish-1.4.8/css/superfish.css" rel="stylesheet" type="text/css"/>
+	<link href="external/superfish/superfish-1.4.8/css/superfish-navbar.css" rel="stylesheet" type="text/css"/>-->
+	
 <script type="text/javascript">
 
 function obj_hide(obj)
@@ -114,7 +117,18 @@ function obj_show(obj)
 }
 
 </script>
-	
+<script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
+<script type="text/javascript" src="external/superfish/superfish-1.4.8/js/superfish.js"></script>
+<script type="text/javascript" src="external/superfish/superfish-1.4.8/js/hoverIntent.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+	$('ul.sf-menu').superfish({
+	    pathClass:	'current'
+	});
+    });
+</script>
+
 </head>
 
 

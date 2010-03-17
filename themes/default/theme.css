@@ -1,6 +1,9 @@
 /*
 Default theme with Amberdms branding
 */
+@import url("../../external/superfish/superfish-1.4.8/css/superfish.css");
+@import url("../../external/superfish/superfish-1.4.8/css/superfish-navbar.css");
+
 
 body
 {
@@ -196,7 +199,7 @@ a:active {
 	background: #333333;
 	float: left;
 	list-style: none;
-	margin: 0;
+	margin: 0 0 -4px 0;
 	padding: 0;
 	width: 100%;
 }
@@ -322,7 +325,7 @@ a:active {
 	Journal Styling
 */
 .journal_header {
-	background-image: url("../images/colourstrip-orange.png");
+	background-image: url("../../images/colourstrip-orange.png");
 	background-repeat: no-repeat;
 }
 
@@ -538,7 +541,8 @@ a.button_export
 	width:			100%;
 	border-spacing:		0;
 	padding:		0;
-	border:			0;
+/* 	border:			1px #333333 solid; */
+	background-color:	#333333;
 }
 
 .menu_current
@@ -556,7 +560,7 @@ a.button_export
 	width:			100%;
 	border-spacing:		0;
 	padding:		0;
-	border:			1px #057b08 solid;
+/* 	border:			1px #057b08 solid; */
 	background-color:	#057b08;
 }
 
