@@ -1,6 +1,6 @@
 <?php
 /*
-	hr/inc_customers.php
+	customers/inc_customers.php
 
 	Provides classes for managing customers.
 */
@@ -536,7 +536,481 @@ class customer
 	}
 
 
-} // end of class:customers
+} // end of class:customer
+
+
+
+
+/*
+	CLASS customer_services
+
+	Functions for assigning services to customers, has logic for adding multiple services when a bundle is added to a customer.
+*/
+class customer_services extends customer
+{
+	var $id_service_customer;		// ID of service assigned to customer
+
+	var $obj_service;
+
+
+	/*
+		Constructor
+	*/
+	function customer_services()
+	{
+		log_write("debug", "customer_services", "Executing customer_services()");
+
+		// init service object
+		$this->obj_service = New service_bundle;
+
+	}
+
+
+	/*
+		verify_id_service_customer
+
+		Checks that the provided customer-service ID is valid and belongs to the selected customer, or if no customer is selected,
+		it will fetch the ID for the customer.
+
+		Results
+		0	Failure to find the ID
+		1	Success
+	*/
+
+	function verify_id_service_customer()
+	{
+		log_debug("service_customer", "Executing verify_id_service_customer()");
+
+		if ($this->id_service_customer)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT serviceid, customerid FROM `services_customers` WHERE id='". $this->id_service_customer ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				if ($this->id)
+				{
+					if ($sql_obj->data[0]["customerid"] == $this->id)
+					{
+						return 1;
+					}
+					else
+					{
+						log_write("error", "customers_services", "The seleced service-customer (". $this->id_service_customer .") does not match the selected customer (". $this->id .").");
+						return 0;
+					}
+				}
+				else
+				{
+					$this->id = $sql_obj->data[0]["customerid"];
+					return 1;
+				}
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id
+
+
+
+	/*
+		load_data_service
+
+		Loads the service object and it's associated data
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function load_data_service()
+	{
+		log_write("debug", "customer_services", "Executing load_data_service()");
+
+
+		$this->obj_service->option_type		= "customer";
+		$this->obj_service->option_type_id	= $this->id_service_customer;
+
+		if (!$this->obj_service->verify_id_options())
+		{
+			log_write("error", "customers_services", "Unable to verify service ID of ". $this->id_service_customer ." as being valid, no changes have been made to service configuration.");
+			return 0;
+		}
+		
+		$this->obj_service->load_data();
+		$this->obj_service->load_data_options();
+
+		return 1;
+	}
+	
+	
+	
+
+	/*
+		service_list
+
+		Returns an array of all the service IDs that have been assigned to the customer.
+
+		Returns
+		0		Failure
+		array		Returns array of id_service_customers
+	*/
+	function service_list()
+	{
+		log_write("debug", "service_bundle", "Executing service_list()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `services_customers` WHERE customerid='". $this->id  ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			$return = array();
+
+			foreach ($sql_obj->data as $data)
+			{
+				$return[] = $data["id"];
+			}
+		}
+
+		return $return;
+	}
+
+
+
+
+	/*
+		service_add
+
+		Fields
+		date_period_start	date to activate the service from.
+
+		Returns
+		0	Failure
+		#	ID of service-bundle maping
+
+		Adds the requested service to a customer. If the service is a bundle, it will process this and
+		add all the child services to the customer.
+
+		The service to add is defined by $this->obj_service->id
+	*/
+	function service_add($date_period_start)
+	{
+		log_debug("debug", "inc_services", "Executing service_add($date_period_start)");
+
+
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Create service entry
+		*/
+
+		$sql_obj->string	= "INSERT INTO `services_customers` (customerid,
+										serviceid,
+										date_period_first,
+										date_period_next,
+										description)
+									VALUES
+										('". $this->id ."',
+										'". $this->obj_service->id ."',
+										'". $date_period_start ."',
+										'". $date_period_start ."',
+										'". $obj_service->data["description"] ."')";
+		$sql_obj->execute();
+
+		$this->id_service_customer = $sql_obj->fetch_insert_id();
+
+
+
+		/*
+			Process Bundle Items (if any)
+		*/
+		if ($this->obj_service->data["typeid_string"] == "bundle")
+		{
+			log_write("debug", "customer_services", "Service being added is a bundle service - processing components and adding them to customer as well.");
+
+			// fetch bundle component services
+			$components = $this->obj_service->bundle_service_list();
+
+			// add each component service
+			foreach ($components as $id_component)
+			{
+				$obj_component				= New service;
+				$obj_component->option_type		= "bundle";
+				$obj_component->option_type_id		= $id_component;
+
+				$obj_component->verify_id_options();
+				$obj_component->load_data();
+				$obj_component->load_data_options();
+
+				$sql_obj->string	= "INSERT INTO `services_customers` (customerid,
+												serviceid,
+												bundleid,
+												date_period_first,
+												date_period_next,
+												description) 
+											VALUES
+												('". $this->id ."',
+												'". $id_component ."',
+												'". $this->id_service_customer ."',
+												'". $date_period_start ."',
+												'". $date_period_start ."',
+												'". $obj_component->data["description"] ."')";
+				$sql_obj->execute();
+
+				log_write("notification", "process", "Added new service ". $obj_component->data["name_service"] ." as part of the bundle service ". $this->obj_service->data["name_service"] ."");
+			}
+		}
+
+
+
+		/*
+			Update the Journal
+		*/
+		journal_quickadd_event("customers", $this->id, "New service ". $obj_service->data["name_service"] ." added to account with start date of ". $date_period_start ."");
+
+		
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attemping to create the new service. No changes have been made.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			log_write("notification", "process", "New service ". $obj_service->data["name_service"] ." added successfully.");
+
+			return $this->id_service_customer;
+		}
+
+
+	}
+
+
+
+
+	/*
+		service_status_get
+
+		Fetches the current status of the service
+
+		Returns
+		0		Service is not active or an error occured
+		1		Service is active/enabled
+	*/
+
+	function service_status_get()
+	{
+		log_write("debug", "customers_services", "Executing service_status_get()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT active FROM services_customers WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->execute();
+
+		$sql_obj->fetch_array();
+
+		if ($sql_obj->data[0]["active"])
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}	
+	}
+
+
+
+
+	/*
+		service_enable
+
+		Enables the selected service for the customer.
+
+		Returns
+		0			Unable to enable service
+		1			Service enabled successfully.
+
+		TODO: Future provisioning hooks will need to go here.
+	*/
+
+	function service_enable()
+	{
+		log_write("debug", "customers_services", "Executing service_enable()");
+
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE services_customers SET active='1' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "customers_services", "An error occured whilst attempting to enable the selected service");
+			return 0;
+		}
+		else
+		{
+			journal_quickadd_event("customers", $this->id, "Enabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			log_write("notification", "customer_services", "Enabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			return 1;
+		}	
+	}
+
+
+
+	/*
+		service_disable
+
+		Disables the selected service for the customer.
+
+		Returns
+		0			Unable to disable service
+		1			Service enabled successfully
+		
+		TODO: Future provisioning hooks will need to go here.
+	*/
+
+	function service_disable()
+	{
+		log_write("debug", "customers_services", "Executing service_disable()");
+
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE services_customers SET active='0' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "customers_services", "An error occured whilst attempting to enable the selected service");
+			return 0;
+		}
+		else
+		{
+			journal_quickadd_event("customers", $this->id, "Disabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			log_write("notification", "customer_services", "Disabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			return 1;
+		}	
+	}
+
+
+
+	/*
+		service_delete
+
+		Deletes a service from the selected customer
+
+		Returns
+		0		Unexpected Failure
+		1		Success
+	*/
+	function service_delete()
+	{
+		log_write("debug", "customers_services", "Executing service_delete())");
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+		
+		/*
+			Apply Changes
+		*/
+
+			
+		// if this is a bundle service, delete all the member services
+
+
+		/*
+			Delete service-customer entry
+		*/
+			
+		$sql_obj->string	= "DELETE FROM services_customers WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->execute();
+
+		$sql_obj->string	= "DELETE FROM services_options WHERE option_type_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+		
+
+
+		/*
+			Delete service period history
+		*/
+			
+		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+
+		/*
+			Delete service usage records
+		*/
+			
+		$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Update Journal
+		*/
+		
+		journal_quickadd_event("customers", $this->id, "Service ". $this->obj_service->data["name_service"] ." has been deleted from this customer's account.");
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the service from the customer's account. No changes were made.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Service ". $this->obj_service->data["name_service"] ." has been removed from this customer's account.");
+			return 0;
+		}
+		
+
+		return 0;
+	}
+
+
+} // end of class: customer_services
+
+
 
 
 ?>

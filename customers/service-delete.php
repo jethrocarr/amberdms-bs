@@ -7,20 +7,31 @@
 	Form to delete a customer service.
 */
 
+
+require("include/customers/inc_customers.php");
+require("include/services/inc_services.php");
+
+
 class page_output
 {
-	var $customerid;
-	var $services_customers_id;
-	
+	var $obj_customer;
+	var $obj_service;
+
 	var $obj_menu_nav;
 	var $obj_form;
 	
 
 	function page_output()
 	{
+		$this->obj_customer		= New customer;
+		$this->obj_service		= New service;
+
+
 		// fetch variables
-		$this->customerid		= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$this->services_customers_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		$this->obj_customer->id			= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		$this->obj_service->option_type		= "customer";
+		$this->obj_service->option_type_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -48,41 +59,23 @@ class page_output
 	function check_requirements()
 	{
 		// verify that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->customerid ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->customerid .") does not exist - possibly the customer has been deleted.");
+			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
-		unset($sql_obj);
 
-
-		// verify that the customer_service mapping exists and belongs to the correct customer
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT customerid FROM `services_customers` WHERE id='". $this->services_customers_id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// verify that the service-customer entry exists
+		if ($this->obj_service->option_type_id)
 		{
-			log_write("error", "page_output", "The requested service does not exist.");
-			return 0;
-		}
-		else
-		{
-			$sql_obj->fetch_array();
-
-			if ($sql_obj->data[0]["customerid"] != $this->customerid)
+			if (!$this->obj_service->verify_id_options())
 			{
-				log_write("error", "page_output", "The requested service does not match the provided customer ID. Potential application bug?");
+				log_write("error", "page_output", "The requested service (". $this->obj_service->id .") was not found and/or does not match the selected customer");
 				return 0;
 			}
 		}
 
-		unset($sql_obj);
 
 		return 1;
 	}
@@ -117,13 +110,13 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "customerid";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->customerid;
+		$structure["defaultvalue"]	= $this->obj_customer->id;
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]		= "services_customers_id";
+		$structure["fieldname"]		= "id_service_customer";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->services_customers_id;
+		$structure["defaultvalue"]	= $this->obj_service->option_type_id;
 		$this->obj_form->add_input($structure);
 		
 
@@ -145,13 +138,29 @@ class page_output
 
 		// define subforms
 		$this->obj_form->subforms["service_delete"]	= array("name_service", "description");
-		$this->obj_form->subforms["hidden"]		= array("customerid", "services_customers_id");
+		$this->obj_form->subforms["hidden"]		= array("customerid", "id_service_customer");
 		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
 
 
-		// fetch the form data
-		$this->obj_form->sql_query = "SELECT services_customers.description, services.name_service FROM services_customers LEFT JOIN services ON services.id = services_customers.serviceid WHERE services_customers.id='". $this->services_customers_id ."' LIMIT 1";
+		// fetch DB data
+		$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_service->option_type_id."' LIMIT 1";
 		$this->obj_form->load_data();
+
+		// fetch service item data
+		$this->obj_service->load_data();
+		$this->obj_service->load_data_options();
+
+		$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_service->data["description"];
+		$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_service->data["name_service"];
+
+
+		// fetch the form data
+		if (error_check())
+		{
+			$this->obj_form->load_data_error();
+		}
+	
+
 	}
 
 

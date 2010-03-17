@@ -1,6 +1,6 @@
 <?php
 /*
-	services.php
+	customers/services.php
 	
 	access: "customers_view"	(read-only)
 		"customers_write"
@@ -8,6 +8,10 @@
 	Displays all the services currently assigned to the user's account, and allows the customer
 	to have new services added/removed.
 */
+
+
+require("include/services/inc_services.php");
+
 
 
 class page_output
@@ -71,34 +75,47 @@ class page_output
 		$this->obj_table = New table;
 
 		$this->obj_table->language		= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= "service_list";
+		$this->obj_table->tablename		= "service_list";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "name_service", "services.name_service");
-		$this->obj_table->add_column("bool_tick", "active", "services_customers.active");
-		$this->obj_table->add_column("standard", "typeid", "service_types.name");
-		$this->obj_table->add_column("standard", "billing_cycles", "billing_cycles.name");
-		$this->obj_table->add_column("date", "date_period_first", "");
-		$this->obj_table->add_column("date", "date_period_next", "");
-		$this->obj_table->add_column("standard", "description", "services_customers.description");
+		$this->obj_table->add_column("standard", "name_service", "NONE");
+		$this->obj_table->add_column("bool_tick", "active", "active");
+		$this->obj_table->add_column("standard", "typeid", "NONE");
+		$this->obj_table->add_column("standard", "billing_cycles", "NONE");
+		$this->obj_table->add_column("date", "date_period_first", "date_period_first");
+		$this->obj_table->add_column("date", "date_period_next", "date_period_next");
+		$this->obj_table->add_column("standard", "description", "NONE");
 
 		// defaults
-		$this->obj_table->columns		= array("name_service", "active", "typeid", "date_period_next", "description");
-		$this->obj_table->columns_order		= array("name_service");
+		$this->obj_table->columns = array("name_service", "active", "typeid", "date_period_next", "description");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services_customers");
-		
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN services ON services.id = services_customers.serviceid");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
-		
-		$this->obj_table->sql_obj->prepare_sql_addfield("id", "services_customers.id");
-		$this->obj_table->sql_obj->prepare_sql_addwhere("services_customers.customerid = '". $this->id ."'");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id_service_customer", "id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id_service", "serviceid");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("customerid = '". $this->id ."'");
 
 		// run SQL query
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
+
+		// load service item data and optiosn
+		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+		{
+			$obj_service			= New service;
+
+			$obj_service->option_type	= "customer";
+			$obj_service->option_type_id	= $this->obj_table->data[$i]["id_service_customer"];
+			$obj_service->id		= $this->obj_table->data[$i]["id_service"];
+
+			$obj_service->load_data();
+			$obj_service->load_data_options();
+
+			$this->obj_table->data[$i]["name_service"]		= $obj_service->data["name_service"];
+			$this->obj_table->data[$i]["typeid"]			= $obj_service->data["typeid_string"];
+			$this->obj_table->data[$i]["billing_cycles"]		= $obj_service->data["billing_cycle"];
+			$this->obj_table->data[$i]["description"]		= $obj_service->data["description"];
+		}
 
 	}
 
@@ -125,13 +142,13 @@ class page_output
 			// details link
 			$structure = NULL;
 			$structure["customerid"]["value"]	= $this->id;
-			$structure["serviceid"]["column"]	= "id";
+			$structure["serviceid"]["column"]	= "id_service_customer";
 			$this->obj_table->add_link("details", "customers/service-edit.php", $structure);
 
 			// periods link
 			$structure = NULL;
 			$structure["customerid"]["value"]	= $this->id;
-			$structure["serviceid"]["column"]	= "id";
+			$structure["serviceid"]["column"]	= "id_service_customer";
 			$this->obj_table->add_link("periods", "customers/service-history.php", $structure);
 			
 			
@@ -140,7 +157,7 @@ class page_output
 				// delete link
 				$structure = NULL;
 				$structure["customerid"]["value"]	= $this->id;
-				$structure["serviceid"]["column"]	= "id";
+				$structure["serviceid"]["column"]	= "id_service_customer";
 				$this->obj_table->add_link("delete", "customers/service-delete.php", $structure);
 			}
 

@@ -28,6 +28,12 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->obj_serviceform->serviceid ."");
 		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->obj_serviceform->serviceid ."");
+
+		if (sql_get_singlevalue("SELECT service_types.name as value FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->obj_serviceform->serviceid ."' LIMIT 1") == "bundle")
+		{
+			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->obj_serviceform->serviceid ."");
+		}
+
 		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->obj_serviceform->serviceid ."");
 		$this->obj_menu_nav->add_item("Delete Service", "page=services/delete.php&id=". $this->obj_serviceform->serviceid ."", TRUE);
 	}

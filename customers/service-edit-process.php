@@ -8,28 +8,31 @@
 */
 
 // includes
-include_once("../include/config.php");
-include_once("../include/amberphplib/main.php");
+require("../include/config.php");
+require("../include/amberphplib/main.php");
+
+require("../include/customers/inc_customers.php");
+require("../include/services/inc_services.php");
+
 
 
 if (user_permissions_get('customers_write'))
 {
-	/////////////////////////
+	/*
+		Load Data
+	*/
+	$obj_customer				= New customer_services;
+	$obj_customer->id			= @security_form_input_predefined("int", "customerid", 1, "");
+	$obj_customer->id_service_customer	= @security_form_input_predefined("int", "id_service_customer", 0, "");
 
-	$customerid			= @security_form_input_predefined("int", "customerid", 1, "");
-	$services_customers_id		= @security_form_input_predefined("int", "services_customers_id", 0, "");
-	
-	if ($services_customers_id)
+
+	if ($obj_customer->id_service_customer)
 	{
-		$mode = "edit";
-
 		// standard fields
-		$data["active"]			= @security_form_input_predefined("any", "active", 0, "");
+		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
 
-		if ($data["active"])
-			$data["active"]		= 1; // need to handle DB bool field
-		
-		// custom
+
+		// options
 		$data["quantity"]		= @security_form_input_predefined("int", "quantity", 0, "");
 
 		if (!$data["quantity"])
@@ -38,8 +41,6 @@ if (user_permissions_get('customers_write'))
 	}
 	else
 	{
-		$mode = "add";
-
 		// standard fields
 		$data["serviceid"]		= @security_form_input_predefined("any", "serviceid", 1, "");
 		$data["date_period_first"]	= @security_form_input_predefined("date", "date_period_first", 1, "");
@@ -53,209 +54,121 @@ if (user_permissions_get('customers_write'))
 
 
 
-	//// VERIFY PROJECT/PHASE IDS /////////////
-	
+	/*
+		Verify Data
+	*/
+
 
 	// check that the specified customer actually exists
-	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM `customers` WHERE id='$customerid'";
-	$sql_obj->execute();
-	
-	if (!$sql_obj->num_rows())
+	if (!$obj_customer->verify_id())
 	{
-		$_SESSION["error"]["message"][] = "The customer you have attempted to edit - $customerid - does not exist in this system.";
+		log_write("error", "process", "The customer you have attempted to edit - ". $obj_customer->id ." - does not exist in this system.");
 	}
 	else
 	{
-		if ($services_customers_id)
+		if ($obj_customer->id_service_customer)
 		{
 			// are we editing an existing service? make sure it exists and belongs to this customer
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT customerid, serviceid, active FROM `services_customers` WHERE id='$services_customers_id' LIMIT 1";
-			$sql_obj->execute();
-
-			if (!$sql_obj->num_rows())
+			if (!$obj_customer->verify_id_service_customer())
 			{
-				$_SESSION["error"]["message"][] = "The service you have attempted to edit - $services_customers_id - does not exist in this system.";
+				log_write("error", "process", "The service you have attempted to edit - ". $obj_customer->id_service_customer ." - does not exist in this system.");
 			}
 			else
 			{
-				$sql_obj->fetch_array();
-
-				// remember the service ID, we will use it further on
-				$data["serviceid"] = $sql_obj->data[0]["serviceid"];
-
-
-				// check the customer ID
-				if ($sql_obj->data[0]["customerid"] != $customerid)
-				{
-					$_SESSION["error"]["message"][] = "The requested service does not match the provided customer ID. Potential application bug?";
-				}
-
-
-				// check if the active status has been changed
-				if ($sql_obj->data[0]["active"] == 0 && $data["active"] == 1)
-				{
-					// enabled
-					$data["active_changed"] = "enabled";
-				}
-				elseif ($sql_obj->data[0]["active"] == 1 && $data["active"] == 0)
-				{
-					// disabled
-					$data["active_changed"] = "disabled";
-				}
-				
+				$obj_customer->load_data();
+				$obj_customer->load_data_service();
 			}
 		}
 	}
 
 
 
-		
-	//// ERROR CHECKING ///////////////////////
+	// verify the service ID is valid
+	if (!$obj_customer->id_service_customer)
+	{
+		$obj_customer->obj_service->id	= $data["serviceid"];
+
+		if (!$obj_customer->obj_service->verify_id())
+		{
+			log_write("error", "process", "Unable to find service ". $obj_customer->obj_service->id ."");
+		}
+		else
+		{
+			$obj_customer->obj_service->load_data();
+		}
+	}
 
 
-	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+
+	/*
+		Check for any errors
+	*/
+	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["service_view"] = "failed";
-		header("Location: ../index.php?page=customers/service-edit.php&customerid=$customerid&serviceid=$services_customers_id");
+		header("Location: ../index.php?page=customers/service-edit.php&customerid=". $obj_customer->id ."&serviceid=". $obj_customer->id_service_customer);
 		exit(0);
 	}
 	else
 	{
-		// fetch the name of the service, as we need this for some of the journal entries.
-		$data["name_service"]	= sql_get_singlevalue("SELECT name_service as value FROM services WHERE id='". $data["serviceid"] ."'");
-
-	
-		if ($mode == "add")
+		if (!$obj_customer->id_service_customer)
 		{
-			/*
-				Start Transaction
-			*/
-
-			$sql_obj = New sql_query;
-			$sql_obj->trans_begin();
-
-
 			/*
 				Add new service
 			*/
-			
-			$sql_obj->string	= "INSERT INTO `services_customers` (customerid, serviceid, date_period_first, date_period_next, description) VALUES ('$customerid', '". $data["serviceid"] ."', '". $data["date_period_first"] ."', '". $data["date_period_next"] ."', '". $data["description"] ."')";
-			$sql_obj->execute();
 
-			$services_customers_id = $sql_obj->fetch_insert_id();
+			// assign service to customer
+			$obj_customer->service_add($data["date_period_first"]);
 
+			// update service item option information
+			$obj_customer->obj_service->option_type			= "customer";
+			$obj_customer->obj_service->option_type_id		= $obj_customer->id_service_customer;
 
+			$obj_customer->obj_service->data = array();
+			$obj_customer->obj_service->load_data_options();
 
-			/*
-				Update the Journal
-			*/
+			$obj_customer->obj_service->data["description"]	= $data["description"];
 
-			journal_quickadd_event("customers", $customerid, "New service ". $data["name_service"] ." added to account with start date of ". $data["date_period_first"] ."");
+			$obj_customer->obj_service->action_update_options();
 
-
-			/*
-				Commit
-			*/
-
-			if (error_check())
-			{
-				$sql_obj->trans_rollback();
-
-				log_write("error", "process", "An error occured whilst attemping to create the new service. No changes have been made.");
-			}
-			else
-			{
-				$sql_obj->trans_commit();
-			
-				log_write("notification", "process", "New service added successfully. You now need to fill in any additional fields and activate the service.");
-
-				// flag the active field to make it clear to the user that they need to activate it.
-				$_SESSION["error"]["active-error"] = 1;	
-			}
-			
-			header("Location: ../index.php?page=customers/service-edit.php&customerid=$customerid&serviceid=$services_customers_id");
-			exit(0);
 		}
 		else
 		{
 			/*
-				Start Transaction
+				Adjust an existing service
 			*/
 
-			$sql_obj = New sql_query;
-			$sql_obj->trans_begin();
 
-
-
-			/*
-				Update service details
-			*/
-
-			$sql_obj->string	= "UPDATE `services_customers` SET "
-							."active='". $data["active"] ."', "
-							."quantity='". $data["quantity"] ."', "
-							."description='". $data["description"] ."' "
-							."WHERE id='$services_customers_id' LIMIT 1";
-
-			$sql_obj->execute();
-
-
-
-			/*
-				Update the journal
-			*/
-
-			// note the status change
-			if ($data["active_changed"] == "enabled")
+			// enable/disable service if needed
+			if ($obj_customer->service_status_get() != $data["active"])
 			{
-				journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been enabled.");
-			}
-			elseif ($data["active_changed"] == "disabled")
-			{
-				journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." has been disabled..");
-			}
-			
-			journal_quickadd_event("customers", $customerid, "Service ". $data["name_service"] ." configuration has been updated.");
-
-
-
-			/*
-				Commit
-			*/
-
-			if (error_check())
-			{
-				$sql_obj->trans_rollback();
-
-				log_write("error", "process", "An error occured whilst attempting to update service information. No changes have been made");
-			}
-			else
-			{
-				$sql_obj->trans_commit();
-
-				log_write("notification", "process", "Service changes completed successfully.");
-
-
-				// note the status change
-				if ($data["active_changed"] == "enabled")
+				if ($data["active"])
 				{
-					log_write("notification", "process", "Service changed to state enabled.");
+					// service has been enabled
+					$obj_customer->service_enable();
 				}
-				elseif ($data["active_changed"] == "disabled")
+				else
 				{
-					log_write("notification", "process", "Service changed to state disabled.");
+					// service has been disabled
+					$obj_customer->service_disable();
 				}
 			}
 
 
-			// return to services page
-			header("Location: ../index.php?page=customers/services.php&id=$customerid");
-			exit(0);
-			
+			// clear data so that we can update the options
+			$obj_customer->obj_service->data = array();
+			$obj_customer->obj_service->load_data_options();
+
+			$obj_customer->obj_service->data["description"]	= $data["description"];
+
+			$obj_customer->obj_service->action_update_options();
+
 		}
+
+		// return to services page
+		header("Location: ../index.php?page=customers/services.php&id=". $obj_customer->id );
+		exit(0);
+			
 	}
 
 	/////////////////////////

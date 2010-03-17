@@ -9,33 +9,43 @@
 */
 
 
+require("include/services/inc_services.php");
+require("include/customers/inc_customers.php");
+
+
 class page_output
 {
-	var $customerid;
-	var $serviceid;
-	var $services_customers_id;
+	var $obj_service;
+	var $obj_customer;
 	
 	var $obj_menu_nav;
 	var $obj_form;
+
 	
 
 	function page_output()
 	{
+		$this->obj_service			= New service;
+		$this->obj_customer			= New customer_services;
+		$this->obj_service->option_type		= "customer";
+
+
 		// fetch variables
-		$this->customerid		= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$this->services_customers_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		$this->obj_customer->id			= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		$this->obj_service->option_type_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->customerid ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."", TRUE);
 
 		if (user_permissions_get("customers_write"))
 		{
-			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->customerid ."");
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
 		}
 	}
 
@@ -51,45 +61,21 @@ class page_output
 	function check_requirements()
 	{
 		// verify that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->customerid ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->customerid .") does not exist - possibly the customer has been deleted.");
+			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
-		unset($sql_obj);
 
-
-		// verify that the customer_service mapping exists and belongs to the correct customer (if we are doing an edit)
-		if ($this->services_customers_id)
+		// verify that the service-customer entry exists
+		if ($this->obj_service->option_type_id)
 		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT customerid, serviceid FROM `services_customers` WHERE id='". $this->services_customers_id ."' LIMIT 1";
-			$sql_obj->execute();
-
-			if (!$sql_obj->num_rows())
+			if (!$this->obj_service->verify_id_options())
 			{
-				log_write("error", "page_output", "The requested service does not exist.");
+				log_write("error", "page_output", "The requested service (". $this->obj_service->id .") was not found and/or does not match the selected customer");
 				return 0;
 			}
-			else
-			{
-				$sql_obj->fetch_array();
-
-				$this->serviceid = $sql_obj->data[0]["serviceid"];
-
-				if ($sql_obj->data[0]["customerid"] != $this->customerid)
-				{
-					log_write("error", "page_output", "The requested service does not match the provided customer ID. Potential application bug?");
-					return 0;
-				}
-			}
-
-			unset($sql_obj);
 		}
 
 		return 1;
@@ -109,32 +95,30 @@ class page_output
 		$this->obj_form->action = "customers/service-edit-process.php";
 		$this->obj_form->method = "post";
 
-				
 	
 		// general
-		if ($this->services_customers_id)
+		if ($this->obj_service->option_type_id)
 		{
-			// fetch service details
-			$sql_service_obj		= New sql_query;
-			$sql_service_obj->string	= "SELECT name_service, typeid, billing_cycle FROM services WHERE id='". $this->serviceid ."' LIMIT 1";
-			$sql_service_obj->execute();
-			$sql_service_obj->fetch_array();
+			/*
+				An existing service is being adjusted
+			*/
 
-			// fetch service type
-			$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."' LIMIT 1");
+			// load service data
+			$this->obj_service->load_data();
+			$this->obj_service->load_data_options();
 
 
 			// general
 			$structure = NULL;
 			$structure["fieldname"]		= "serviceid";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= $sql_service_obj->data[0]["name_service"];
+			$structure["defaultvalue"]	= $this->obj_service->data["name_service"];
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"]		= "services_customers_id";
+			$structure["fieldname"]		= "id_service_customer";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= $this->services_customers_id;
+			$structure["defaultvalue"]	= $this->obj_service->option_type_id;
 			$this->obj_form->add_input($structure);
 
 
@@ -166,7 +150,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "billing_cycle";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $sql_service_obj->data[0]["billing_cycle"] ."' LIMIT 1");
+			$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->obj_service->data["billing_cycle"] ."' LIMIT 1");
 			$this->obj_form->add_input($structure);
 			
 			$structure = NULL;
@@ -181,6 +165,11 @@ class page_output
 		}
 		else
 		{
+			/*
+				A new service is being added
+			*/
+
+
 			$structure = form_helper_prepare_dropdownfromdb("serviceid", "SELECT id, name_service as label FROM services ORDER BY name_service");
 			$structure["options"]["req"] = "yes";
 			$this->obj_form->add_input($structure);
@@ -204,7 +193,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "customerid";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->customerid;
+		$structure["defaultvalue"]	= $this->obj_customer->id;
 		$this->obj_form->add_input($structure);
 		
 
@@ -213,7 +202,7 @@ class page_output
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
 
-		if ($this->services_customers_id)
+		if ($this->obj_service->option_type_id)
 		{
 			$structure["defaultvalue"]	= "Save Changes";
 		}
@@ -226,9 +215,9 @@ class page_output
 
 
 		// define subforms
-		if ($this->services_customers_id)
+		if ($this->obj_service->option_type_id)
 		{
-			$this->obj_form->subforms["service_edit"]	= array("serviceid", "services_customers_id", "active", "description");
+			$this->obj_form->subforms["service_edit"]	= array("serviceid", "id_service_customer", "active", "description");
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
 
 
@@ -245,6 +234,7 @@ class page_output
 		
 		$this->obj_form->subforms["hidden"] = array("customerid");
 
+
 		if (user_permissions_get("customers_write"))
 		{
 			$this->obj_form->subforms["submit"] = array("submit");
@@ -256,12 +246,18 @@ class page_output
 
 
 		// fetch the form data if editing
-		if ($this->services_customers_id)
+		if ($this->obj_service->option_type_id)
 		{
-			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity, description FROM `services_customers` WHERE id='". $this->services_customers_id ."' LIMIT 1";
+			// fetch DB data
+			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_service->option_type_id."' LIMIT 1";
 			$this->obj_form->load_data();
+
+			// fetch service item data
+			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_service->data["description"];
 		}
-		else
+		
+			
+		if (error_check())
 		{
 			// load any data returned due to errors
 			$this->obj_form->load_data_error();
@@ -273,7 +269,7 @@ class page_output
 	function render_html()
 	{
 		// title/summary
-		if ($this->services_customers_id)
+		if ($this->obj_service->id_service_customer)
 		{
 			print "<h3>EDIT SERVICE</h3><br>";
 			print "<p>This page allows you to modifiy a customer service.</p>";

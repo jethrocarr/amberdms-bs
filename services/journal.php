@@ -26,6 +26,12 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->id ."");
+
+		if (sql_get_singlevalue("SELECT service_types.name as value FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->id ."' LIMIT 1") == "bundle")
+		{
+			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->id ."");
+		}
+
 		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->id ."", TRUE);
 
 		if (user_permissions_get("services_write"))
