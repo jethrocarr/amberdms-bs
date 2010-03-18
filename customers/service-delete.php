@@ -17,33 +17,33 @@ class page_output
 	var $obj_customer;
 	var $obj_service;
 
+	var $locked;
+
 	var $obj_menu_nav;
 	var $obj_form;
 	
 
 	function page_output()
 	{
-		$this->obj_customer		= New customer;
-		$this->obj_service		= New service;
+		$this->obj_customer		= New customer_services;
 
 
 		// fetch variables
-		$this->obj_customer->id			= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$this->obj_service->option_type		= "customer";
-		$this->obj_service->option_type_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
 
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->customerid ."");
-		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->customerid ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."", TRUE);
 
 		if (user_permissions_get("customers_write"))
 		{
-			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->customerid ."");
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
 		}
 	}
 
@@ -67,15 +67,19 @@ class page_output
 
 
 		// verify that the service-customer entry exists
-		if ($this->obj_service->option_type_id)
+		if (!$this->obj_customer->verify_id_service_customer())
 		{
-			if (!$this->obj_service->verify_id_options())
-			{
-				log_write("error", "page_output", "The requested service (". $this->obj_service->id .") was not found and/or does not match the selected customer");
-				return 0;
-			}
+			log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
+			return 0;
+		}
+		else
+		{
+			$this->obj_customer->load_data_service();
 		}
 
+
+		// check if the service-customer entry can be deleted
+		$this->locked = $this->obj_customer->service_check_delete_lock();
 
 		return 1;
 	}
@@ -139,7 +143,17 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["service_delete"]	= array("name_service", "description");
 		$this->obj_form->subforms["hidden"]		= array("customerid", "id_service_customer");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]	= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]	= array("delete_confirm", "submit");
+		}
+
 
 
 		// fetch DB data
@@ -147,11 +161,8 @@ class page_output
 		$this->obj_form->load_data();
 
 		// fetch service item data
-		$this->obj_service->load_data();
-		$this->obj_service->load_data_options();
-
-		$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_service->data["description"];
-		$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_service->data["name_service"];
+		$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_customer->obj_service->data["description"];
+		$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_customer->obj_service->data["name_service"];
 
 
 		// fetch the form data
@@ -172,6 +183,13 @@ class page_output
 	
 		// display the form
 		$this->obj_form->render_form();
+
+	
+		if ($this->locked)
+		{
+			format_msgbox("locked", "<p>This service can not be deleted as it is part of a bundle - if you do not want the service active, you can disable it, otherwise you have to delete the bundle.</p>");
+		}
+
 	}
 	
 } // end of page_output

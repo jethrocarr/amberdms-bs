@@ -140,7 +140,7 @@ if (user_permissions_get('customers_write'))
 
 
 			// enable/disable service if needed
-			if ($obj_customer->service_status_get() != $data["active"])
+			if ($obj_customer->service_get_status() != $data["active"])
 			{
 				if ($data["active"])
 				{

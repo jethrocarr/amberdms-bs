@@ -25,14 +25,12 @@ class page_output
 
 	function page_output()
 	{
-		$this->obj_service			= New service;
-		$this->obj_customer			= New customer_services;
-		$this->obj_service->option_type		= "customer";
+		$this->obj_customer				= New customer_services;
 
 
 		// fetch variables
-		$this->obj_customer->id			= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$this->obj_service->option_type_id	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
 
 
 		// define the navigiation menu
@@ -69,13 +67,10 @@ class page_output
 
 
 		// verify that the service-customer entry exists
-		if ($this->obj_service->option_type_id)
+		if (!$this->obj_customer->verify_id_service_customer())
 		{
-			if (!$this->obj_service->verify_id_options())
-			{
-				log_write("error", "page_output", "The requested service (". $this->obj_service->id .") was not found and/or does not match the selected customer");
-				return 0;
-			}
+			log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
+			return 0;
 		}
 
 		return 1;
@@ -97,60 +92,54 @@ class page_output
 
 	
 		// general
-		if ($this->obj_service->option_type_id)
+		if ($this->obj_customer->id_service_customer)
 		{
 			/*
 				An existing service is being adjusted
 			*/
 
 			// load service data
-			$this->obj_service->load_data();
-			$this->obj_service->load_data_options();
+			$this->obj_customer->load_data_service();
 
 
 			// general
 			$structure = NULL;
-			$structure["fieldname"]		= "serviceid";
+			$structure["fieldname"]		= "id_service_customer";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= $this->obj_service->data["name_service"];
+			$structure["defaultvalue"]	= $this->obj_customer->id_service_customer;
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
-			$structure["fieldname"]		= "id_service_customer";
-			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= $this->obj_service->option_type_id;
+			$structure["fieldname"]		= "name_service";
+			$structure["type"]		= "input";
+			$structure["options"]["req"]	= "yes";
+			$this->obj_form->add_input($structure);
+	
+			$structure = NULL;
+			$structure["fieldname"] 	= "description";
+			$structure["type"]		= "textarea";
 			$this->obj_form->add_input($structure);
 
+			$this->obj_form->subforms["service_edit"]	= array("id_service_customer", "name_service", "description");
 
+
+
+			// service controls
 			$structure = NULL;
 			$structure["fieldname"] 	= "active";
 			$structure["type"]		= "checkbox";
 			$structure["options"]["label"]	= "Service is enabled";
 			$this->obj_form->add_input($structure);
-	
 
-			// quantity field - licenses only
-			if ($service_type == "licenses")
-			{
-				$structure = NULL;
-				$structure["fieldname"] 	= "quantity_msg";
-				$structure["type"]		= "message";
-				$structure["defaultvalue"]	= "<i>Because this is a license service, you need to specifiy how many license in the box below. Note that this will only affect billing from the next invoice. If you wish to charge for usage between now and the next invoice, you will need to generate a manual invoice.</i>";
-				$this->obj_form->add_input($structure);
-				
-				$structure = NULL;
-				$structure["fieldname"] 	= "quantity";
-				$structure["type"]		= "input";
-				$structure["options"]["req"]	= "yes";
-				$this->obj_form->add_input($structure);
-			}
+			$this->obj_form->subforms["service_controls"]	= array("active");
 
-			
+
+
 			// billing
 			$structure = NULL;
 			$structure["fieldname"]		= "billing_cycle";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->obj_service->data["billing_cycle"] ."' LIMIT 1");
+			$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->obj_customer->obj_service->data["billing_cycle"] ."' LIMIT 1");
 			$this->obj_form->add_input($structure);
 			
 			$structure = NULL;
@@ -162,6 +151,146 @@ class page_output
 			$structure["fieldname"] 	= "date_period_next";
 			$structure["type"]		= "text";
 			$this->obj_form->add_input($structure);
+
+
+			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
+
+
+
+			// service-type specific sections
+			switch ($this->obj_customer->obj_service->data["typeid_string"])
+			{
+				case "bundle":
+					/*
+						Bundle Service
+
+						Display a hyperlinked list of all the component services belonging to
+						the bundle.
+					*/
+					
+					$structure = NULL;
+					$structure["fieldname"]		= "bundle_msg";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<p>This service is a bundle, containing a number of other services. Note that enabling/disabling or deleting this bundle service will affect all the component services below.</p>";
+					$this->obj_form->add_input($structure);
+
+
+					// fetch all the items for the bundle that have been setup for this customer and
+					// display some details in a table inside of a form field. (kinda ugly rendering hack, but works OK)
+
+					$structure = NULL;
+					$structure["fieldname"]		= "bundle_components";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<table class=\"table_highlight\">";
+
+
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT id, serviceid as id_service FROM services_customers WHERE bundleid='". $this->obj_customer->id_service_customer ."'";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+
+						foreach ($sql_obj->data as $data_component)
+						{
+							$obj_component			= New service;
+							$obj_component->id		= $data_component["id_service"];
+							$obj_component->option_type	= "customer";
+							$obj_component->option_type_id	= $data_component["id"];
+
+							$obj_component->load_data();
+							$obj_component->load_data_options();
+
+							if (sql_get_singlevalue("SELECT active as value FROM services_customers WHERE id='". $data_component["id"] ."' LIMIT 1"))
+							{
+								$obj_component->active_status_string	= "<td class=\"table_highlight_info\">active</td>";
+							}
+							else
+							{
+								$obj_component->active_status_string	= "<td class=\"table_highlight_important\">disabled</td>";
+							}
+
+							$structure["defaultvalue"]	.= "<tr>"
+											."<td>Bundle Component: <b>". $obj_component->data["name_service"] ."</b></td>"
+											. $obj_component->active_status_string
+											."<td>". $obj_component->data["description"] ."</td>"
+											."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->obj_customer->id ."&serviceid=". $obj_component->option_type_id ."\">View Service</a></td>"
+											."</tr>";
+						}
+					}
+
+					$structure["defaultvalue"] .= "</table>";
+					$this->obj_form->add_input($structure);
+
+
+					$this->obj_form->subforms["service_bundle"]	= array("bundle_msg", "bundle_components");		
+
+				break;
+
+
+				case "license":
+
+					$structure = NULL;
+					$structure["fieldname"] 	= "quantity_msg";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>Because this is a license service, you need to specifiy how many license in the box below. Note that this will only affect billing from the next invoice. If you wish to charge for usage between now and the next invoice, you will need to generate a manual invoice.</i>";
+					$this->obj_form->add_input($structure);
+				
+					$structure = NULL;
+					$structure["fieldname"] 	= "quantity";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_licenses"]	= array("quantity_msg", "quantity");
+				break;
+
+			}
+
+
+
+
+			/*
+				Check if item belongs to a bundle - if it does, display
+				additional information fields.
+			*/
+			if ($parentid = $this->obj_customer->service_get_is_bundle_item())
+			{
+				// info about bundle
+				$structure = NULL;
+				$structure["fieldname"]		= "bundle_item_msg";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<p>This service is a part of a bundle assigned to this customer - you can enable/disable this service independently, but the customer will still be billed the same base bundle plan fee.</p>";
+				$this->obj_form->add_input($structure);
+
+
+
+				// link to parent item
+				$obj_component			= New service;
+				$obj_component->option_type	= "customer";
+				$obj_component->option_type_id	= $parentid;
+
+				$obj_component->verify_id_options();
+				$obj_component->load_data();
+				$obj_component->load_data_options();
+
+				$structure = NULL;
+				$structure["fieldname"]		= "bundle_item_parent";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<table class=\"table_highlight\">"
+								."<tr>"
+								."<td>Bundle Parent: <b>". $obj_component->data["name_service"] ."</b></td>"
+								."<td>". $obj_component->data["description"] ."</td>"
+								."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->obj_customer->id ."&serviceid=". $obj_component->option_type_id ."\">View Service</a></td>"
+								."</tr>"
+								."</table>";
+				$this->obj_form->add_input($structure);
+
+
+				$this->obj_form->subforms["service_bundle_item"]	= array("bundle_item_msg", "bundle_item_parent");
+			}
+
 		}
 		else
 		{
@@ -180,14 +309,18 @@ class page_output
 			$structure["options"]["req"]	= "yes";
 			$structure["defaultvalue"]	= date("Y-m-d");
 			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] 	= "description";
+			$structure["type"]		= "textarea";
+			$this->obj_form->add_input($structure);
+
+
+
+			$this->obj_form->subforms["service_add"]	= array("serviceid", "date_period_first", "description");
 		}
 
 
-		$structure = NULL;
-		$structure["fieldname"] 	= "description";
-		$structure["type"]		= "textarea";
-		$this->obj_form->add_input($structure);
-		
 
 		// hidden values
 		$structure = NULL;
@@ -202,7 +335,7 @@ class page_output
 		$structure["fieldname"] 	= "submit";
 		$structure["type"]		= "submit";
 
-		if ($this->obj_service->option_type_id)
+		if ($this->obj_customer->id_service_customer)
 		{
 			$structure["defaultvalue"]	= "Save Changes";
 		}
@@ -214,24 +347,7 @@ class page_output
 
 
 
-		// define subforms
-		if ($this->obj_service->option_type_id)
-		{
-			$this->obj_form->subforms["service_edit"]	= array("serviceid", "id_service_customer", "active", "description");
-			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
-
-
-			if ($service_type == "licenses")
-			{
-				$this->obj_form->subforms["service_options_licenses"]	= array("quantity_msg", "quantity");
-			}
-		}
-		else
-		{
-			$this->obj_form->subforms["service_add"]	= array("serviceid", "date_period_first", "description");
-		}
-		
-		
+		// define base subforms	
 		$this->obj_form->subforms["hidden"] = array("customerid");
 
 
@@ -246,14 +362,15 @@ class page_output
 
 
 		// fetch the form data if editing
-		if ($this->obj_service->option_type_id)
+		if ($this->obj_customer->id_service_customer)
 		{
 			// fetch DB data
-			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_service->option_type_id."' LIMIT 1";
+			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
 			$this->obj_form->load_data();
 
 			// fetch service item data
-			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_service->data["description"];
+			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_customer->obj_service->data["description"];
+			$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_customer->obj_service->data["name_service"];
 		}
 		
 			
@@ -269,7 +386,7 @@ class page_output
 	function render_html()
 	{
 		// title/summary
-		if ($this->obj_service->id_service_customer)
+		if ($this->obj_customer->obj_service->option_type_id)
 		{
 			print "<h3>EDIT SERVICE</h3><br>";
 			print "<p>This page allows you to modifiy a customer service.</p>";
