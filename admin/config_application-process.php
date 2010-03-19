@@ -1,10 +1,10 @@
 <?php
 /*
-	admin/config-process.php
+	admin/config_application-process.php
 	
 	Access: admin only
 
-	Updates the system configuration.
+	Applies changes to the application configuration
 */
 
 
@@ -15,21 +15,10 @@ include_once("../include/amberphplib/main.php");
 
 if (user_permissions_get("admin"))
 {
-	////// INPUT PROCESSING ////////////////////////
+	/*
+		Load Data
+	*/
 
-
-	// fetch all the data
-	$data["COMPANY_NAME"]			= @security_form_input_predefined("any", "COMPANY_NAME", 1, "");
-	$data["COMPANY_CONTACT_EMAIL"]		= @security_form_input_predefined("email", "COMPANY_CONTACT_EMAIL", 1, "");
-	$data["COMPANY_CONTACT_PHONE"]		= @security_form_input_predefined("any", "COMPANY_CONTACT_PHONE", 1, "");
-	$data["COMPANY_CONTACT_FAX"]		= @security_form_input_predefined("any", "COMPANY_CONTACT_FAX", 0, "");
-	$data["COMPANY_ADDRESS1_STREET"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_STREET", 1, "");
-	$data["COMPANY_ADDRESS1_CITY"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS1_CITY", 1, "");
-	$data["COMPANY_ADDRESS1_STATE"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS1_STATE", 0, "");
-	$data["COMPANY_ADDRESS1_COUNTRY"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_COUNTRY", 1, "");
-	$data["COMPANY_ADDRESS1_ZIPCODE"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_ZIPCODE", 0, "");
-	$data["COMPANY_PAYMENT_DETAILS"]	= @security_form_input_predefined("any", "COMPANY_PAYMENT_DETAILS", 1, "");
-	
 	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AP_INVOICENUM", 1, "");
 	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AR_INVOICENUM", 1, "");
 	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input_predefined("int", "ACCOUNTS_GL_TRANSNUM", 1, "");
@@ -47,10 +36,6 @@ if (user_permissions_get("admin"))
 	
 	$data["TIMESHEET_BOOKTOFUTURE"]		= @security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
 	
-	$data["CURRENCY_DEFAULT_NAME"]			= @security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
-	$data["CURRENCY_DEFAULT_SYMBOL"]		= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
-	$data["CURRENCY_DEFAULT_SYMBOL_POSITION"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL_POSITION", 1, "");
-	
 	$data["ACCOUNTS_INVOICE_LOCK"]		= @security_form_input_predefined("int", "ACCOUNTS_INVOICE_LOCK", 0, "");
 	$data["ACCOUNTS_GL_LOCK"]		= @security_form_input_predefined("int", "ACCOUNTS_GL_LOCK", 0, "");
 	$data["JOURNAL_LOCK"]			= @security_form_input_predefined("int", "JOURNAL_LOCK", 0, "");
@@ -60,11 +45,10 @@ if (user_permissions_get("admin"))
 	$data["BLACKLIST_LIMIT"]		= @security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
 	
 	$data["UPLOAD_MAXBYTES"]		= @security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
-	$data["DATEFORMAT"]			= @security_form_input_predefined("any", "DATEFORMAT", 1, "");
-	$data["TIMEZONE_DEFAULT"]		= @security_form_input_predefined("any", "TIMEZONE_DEFAULT", 1, "");
-	$data["THEME_DEFAULT"]		= @security_form_input_predefined("any", "THEME_DEFAULT", 1, "");
+
 	$data["PHONE_HOME"]			= @security_form_input_predefined("any", "PHONE_HOME", 0, "");
 	
+
 	// only fetch dangerous options if support for it is enabled
 	if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 	{
@@ -137,29 +121,15 @@ if (user_permissions_get("admin"))
 	}
 
 
+
+
 	/*
-		Process company logo upload and verify content 
-		if any has been supplied. Enforce png only
+		Error Handling
 	*/
-	$file_obj				= New file_storage;
-	$file_obj->config["upload_maxbytes"]	= $data["UPLOAD_MAXBYTES"];	// set image upload to the new maximum limit (incase they changed it at the same time)
-
-	if ($_FILES["COMPANY_LOGO"]["size"] > 1)
+	if (error_check())
 	{
-		$file_obj->verify_upload_form("COMPANY_LOGO", array("png"));
-	}
-
-
-
-
-
-	//// PROCESS DATA ////////////////////////////
-
-
-	if ($_SESSION["error"]["message"])
-	{
-		$_SESSION["error"]["form"]["config"] = "failed";
-		header("Location: ../index.php?page=admin/config.php");
+		$_SESSION["error"]["form"]["config_application"] = "failed";
+		header("Location: ../index.php?page=admin/config_application.php");
 		exit(0);
 	}
 	else
@@ -187,37 +157,7 @@ if (user_permissions_get("admin"))
 		}
 
 
-		/*
-			Update the logo file if required
-		*/
 
-		if ($_FILES["COMPANY_LOGO"]["size"] > 1 && !$_SESSION["error"]["message"])
-		{
-			// set file variables	
-			$file_obj->data["type"]			= "COMPANY_LOGO";
-			$file_obj->data["customid"]		= "0";
-	
-			// see if a file already exists
-			if ($file_obj->load_data_bytype())
-			{
-				log_debug("process", "Old file exists, will overwrite.");
-			}
-			else
-			{
-				log_debug("process", "No previous file exists, performing clean upload.");
-			}
-
-			// force the filename
-			$file_obj->data["file_name"]	= "company_logo.png";
-			
-			// call the upload function
-			if (!$file_obj->action_update_form("COMPANY_LOGO"))
-			{
-				log_write("error", "process", "Unable to upload company logo");
-			}
-		}
-
-	
 		/*
 			Commit
 		*/
@@ -232,10 +172,10 @@ if (user_permissions_get("admin"))
 		{
 			$sql_obj->trans_commit();
 
-			log_write("notification", "process", "Configuration Updated Successfully");
+			log_write("notification", "process", "Application configuration updated successfully");
 		}
 
-		header("Location: ../index.php?page=admin/config.php");
+		header("Location: ../index.php?page=admin/config_application.php");
 		exit(0);
 
 
