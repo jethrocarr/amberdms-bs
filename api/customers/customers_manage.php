@@ -561,7 +561,7 @@ class customers_manage_soap
 
 		Returns
 		0	Unable to authentication
-		1	Successful authentication
+		#	Successful authentication, customer ID returned
 	*/
 
 	function customer_portal_auth($id_customer, $code_customer, $password_plaintext)
@@ -630,7 +630,7 @@ class customers_manage_soap
 
 			if ($obj_customer->auth_login($data["password_plaintext"]))
 			{
-				return 1;
+				return $obj_customer->id;
 			}
 			else
 			{
