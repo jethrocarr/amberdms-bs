@@ -6,7 +6,8 @@
 			customers_write
 
 
-	This service provides APIs for creating, updating and deleting customer accounts.
+	This service provides APIs for creating, updating and deleting customer
+	accounts along with functions for portal customer authentication.
 
 	Refer to the Developer API documentation for information on using this service
 	as well as sample code.
@@ -549,6 +550,101 @@ class customers_manage_soap
 		}
 
 	} // end of delete_customer
+
+
+
+	/*
+		customer_portal_auth
+
+		Authenticates a customer against their portal attributes using the supplied
+		password and either their code or ID.
+
+		Returns
+		0	Unable to authentication
+		1	Successful authentication
+	*/
+
+	function customer_portal_auth($id_customer, $code_customer, $password_plaintext)
+	{
+		log_debug("customers", "Executing customer_portal_auth($id_customer, $code_customer, *plaintextpassword*)");
+
+		if (user_permissions_get("customers_portal_auth"))
+		{
+			$obj_customer = New customer_portal;
+
+			/*
+				Load SOAP Data
+			*/
+			$data["id"]			= @security_script_input_predefined("int", $id_customer);
+			$data["code_customer"]		= @security_script_input_predefined("any", $code_customer);
+			$data["password_plaintext"]	= @security_script_input_predefined("any", $password_plaintext);
+
+			foreach (array_keys($data) as $key)
+			{
+				if ($data[$key] == "error" && $data[$key] != 0)
+				{
+					throw new SoapFault("Sender", "INVALID_INPUT ");
+				}
+			}
+
+
+
+			/*
+				Fetch & verify ID
+			*/
+
+			if (!$data["id"])
+			{
+				// verify the supplied customer code and fetch the ID from it
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT id FROM customers WHERE code_customer='". $data["code_customer"] ."' LIMIT 1";
+				$sql_obj->execute();
+
+				if ($sql_obj->num_rows())
+				{
+					$sql_obj->fetch_array();
+
+					$obj_customer->id = $sql_obj->data[0]["id"];
+				}
+				else
+				{
+					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+				}
+			}
+			else
+			{
+				// use supplied ID
+				$obj_customer->id = $data["id"];
+
+				// verify valid ID
+				if (!$obj_customer->verify_id())
+				{
+					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+				}
+			}
+
+
+			/*
+				Verify Password
+			*/
+
+			if ($obj_customer->auth_login($data["password_plaintext"]))
+			{
+				return 1;
+			}
+			else
+			{
+				throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+			}
+
+
+		}
+		else
+		{
+			throw new SoapFault("Sender", "ACCESS DENIED");
+		}
+
+	} // end of customer_portal_auth
 
 
 

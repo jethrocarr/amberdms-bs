@@ -130,6 +130,18 @@
 	</message>
 
 
+	<message name='customer_portal_auth_request'>
+		<part name='id' type='xsd:int'/>
+		<part name='code_customer' type='xsd:string'/>
+		<part name='password' type='xsd:string'/>
+	</message>
+
+	<message name='customer_portal_auth_response'>
+		<part name='returncode' type='xsd:int'/>
+	</message>
+
+
+
 
 	<portType name='customers_manage_porttype'>
 		<operation name='get_customer_id_from_code'>
@@ -161,6 +173,11 @@
 		<operation name='delete_customer'>
 			<input message='tns:delete_customer_request'/>
 			<output message='tns:delete_customer_response'/>
+		</operation>
+
+		<operation name='customer_portal_auth'>
+			<input message='tns:customer_portal_auth_request'/>
+			<output message='tns:customer_portal_auth_response'/>
 		</operation>
 	</portType>
 
@@ -222,9 +239,19 @@
 				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
-
 	
 		<operation name='delete_customer'>
+			<soap:operation soapAction='customers_manage'/>
+			<input>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</input>
+
+			<output>
+				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+			</output>
+		</operation>
+
+		<operation name='customer_portal_auth'>
 			<soap:operation soapAction='customers_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:customers_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
