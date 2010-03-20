@@ -45,7 +45,7 @@ class page_output
 		$structure["fieldname"]				= "MODULE_CUSTOMER_PORTAL";
 		$structure["type"]				= "checkbox";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
-		$structure["options"]["label"]			= "Enable/disable the customer portal intergration.";
+		$structure["options"]["label"]			= "Enable/disable the customer portal integration.";
 		$this->obj_form->add_input($structure);
 				
 

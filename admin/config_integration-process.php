@@ -22,6 +22,14 @@ if (user_permissions_get("admin"))
 	$data["MODULE_CUSTOMER_PORTAL"]			= @security_form_input_predefined("checkbox", "MODULE_CUSTOMER_PORTAL", 0, "");
 
 
+	if ($data["MODULE_CUSTOMER_PORTAL"])
+	{
+		$data["MODULE_CUSTOMER_PORTAL"]		= "enabled";
+	}
+	else
+	{
+		$data["MODULE_CUSTOMER_PORTAL"]		= "disabled";
+	}
 
 
 	/*
