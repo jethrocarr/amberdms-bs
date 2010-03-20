@@ -1296,4 +1296,125 @@ class customer_services extends customer
 
 
 
+
+/*
+	CLASS: customer_portal
+
+	Functions for handling portal authentications against customer records as well
+	as updating the customer's password.
+
+	TODO: In future this should be expanded to support different authentication backends
+		such as LDAP databases with customer information.
+*/
+
+class customer_portal extends customer
+{
+
+	/*
+		auth_login($password_plaintext)
+
+		Authenticates the customer using the supplied plaintext password by comparing the password
+		against the database and returning the result.
+
+		Note that this function does not provide any brute-force blacklisting defenses, these could
+		potentially be added in future if desired.
+
+		The other possibility is to extend the Amberphplib user_auth framework to handle authentication
+		from different databases and use a seporate DB to store the information and track failed logins.
+
+		Returns
+		0	Failure to Authentication // Invalid Password
+		1	Successful Authentication
+	*/
+	function auth_login($password_plaintext)
+	{
+		log_write("debug", "customer_portal", "Executing auth_login(*plaintextpassword*)");
+
+
+		// fetch the password & salt from DB
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT portal_salt, portal_password FROM customers WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+
+		// general encrypted PWD from DB salt and supplied password
+		$password_crypt = sha1( $sql_obj->data[0]["portal_salt"]  ."$password_plaintext");
+
+		// verify
+		if ($sql_obj->data[0]["portal_password"] == $password_crypt)
+		{
+			log_write("debug", "customer_portal", "Successful Authentication");
+
+			// update DB with session login information
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "UPDATE `customers` SET portal_login_time='". time() ."', portal_login_ipaddress='". $_SERVER["REMOTE_ADDR"] ."' WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			return 1;
+		}
+		else
+		{
+			log_write("debug", "customer_portal", "Authentication Failure");
+			return 0;
+		}
+	} // end of auth_login
+
+
+
+	/*
+		auth_changepwd
+
+		Updates the customer's portal password entry in the database with the provided plaintext
+		passpharase.
+
+		Returns
+		0	Unexpected failure
+		1	Success
+	*/
+	function auth_changepwd($password_plaintext)
+	{
+		log_write("debug", "customer_portal", "Executing auth_changepwd(*plaintextpassword*)");
+
+
+		// Here we generate a password salt. This is used, so that in the event of an attacker
+		// getting a copy of the users table, they can't brute force the passwords using pre-created
+		// hash dictionaries.
+		//
+		// The salt requires them to have to re-calculate each password possibility for any passowrd
+		// they wish to try and break.
+		//
+		$feed		= "0123456789abcdefghijklmnopqrstuvwxyz";
+		$password_salt	= null;
+
+		for ($i=0; $i < 20; $i++)
+		{
+			$password_salt .= substr($feed, rand(0, strlen($feed)-1), 1);
+		}				
+			
+		// encrypt password with salt
+		$password_crypt = sha1("$password_salt"."$password_plaintext");
+
+		// apply changes to DB.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE `customers` SET portal_password='". $password_crypt ."', portal_salt='". $password_salt ."' WHERE id='". $this->id ."' LIMIT 1";
+
+		if ($sql_obj->execute())
+		{
+			log_write("notification", "customer_portal", "Successfully updated customer's portal password");
+			return 1;
+		}
+		else
+		{
+			log_write("error", "customer_portal", "An unexpected failure occured whilst attempting to update the selected customer's portal password");
+			return 0;
+		}
+
+	} // end of auth_changepwd
+
+
+
+} // end of customer_portal
+
+
+
 ?>

@@ -1,6 +1,7 @@
 <?php
 /*
-	Configuration file for the Amberdms Billing System
+	Sample configuration file for the Amberdms Billing System. This should be installed
+	as config-settings.php
 
 	This file should be read-only by the httpd user. All other users should be denied.
 */
@@ -16,6 +17,7 @@
 	To support multiple instances, set to "hosted" to enable the hosted mode
 	and refer to the product documentation for further details.
 */
+
 $config["instance"]	= "single";
 
 
@@ -26,10 +28,12 @@ $config["instance"]	= "single";
 	Currently we only support MySQL databases but this may be expanded
 	to include other SQL databases in the future.
 */
+
 $config["db_host"] = "localhost";			// hostname of the MySQL server
 $config["db_name"] = "billing_system";			// database name
 $config["db_user"] = "root";				// MySQL user
 $config["db_pass"] = "";				// MySQL password (if any)
+
 
 
 /*
@@ -47,26 +51,9 @@ $config["dangerous_conf_options"] = "enabled";
 
 
 /*
-	Fixed options
-
-	Do not touch anything below this line
+	Force debugging on for all users + scripts
+	(note: debugging can be enabled on a per-user basis by an admin via the web interface)
 */
-
-// Initate session variables
-if (isset($_SERVER['SERVER_NAME']))
-{
-	// proper session variables
-	session_start();
-}
-else
-{
-	// trick to make logging and error system work correctly for scripts.
-	$GLOBALS["_SESSION"]	= array();
-	$_SESSION["mode"]	= "cli";
-}
-
-// force debugging on for all users + scripts
-// (note: debugging can be enabled on a per-user basis by an admin via the web interface)
 // $_SESSION["user"]["debug"] = "on";
 
 

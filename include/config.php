@@ -1,8 +1,15 @@
 <?php
 /*
-	This configration file is a place holder.
+	ABS MASTER CONFIGURATION FILE
 
-	Your real configuration file is in config-settings.php
+	This file contains key application configuration options and values for
+	developers rather than users/admins.
+
+	DO NOT MAKE ANY CHANGES TO THIS FILE, INSTEAD PLEASE MAKE ANY ADJUSTMENTS
+	TO "config-settings.php" TO ENSURE CORRECT APPLICATION OPERATION.
+
+	If config-settings.php does not exist, then you need to copy sample_config.php
+	into it's place.
 */
 
 $GLOBALS["config"] = array();
@@ -32,9 +39,38 @@ ini_set('memory_limit', '32M');			// note that ABS doesn't need much RAM apart f
 
 
 /*
-	Inherit User Configuration & Database Connectivity
+	Inherit User Configuration
 */
 include("config-settings.php");
+
+
+
+/*
+	Session Management
+*/
+
+// Initate session variables
+if (isset($_SERVER['SERVER_NAME']))
+{
+	// proper session variables
+	session_name("amberdms_billing_system");
+	session_start();
+}
+else
+{
+	// trick to make logging and error system work correctly for scripts.
+	$GLOBALS["_SESSION"]		= array();
+	$_SESSION["mode"]		= "cli";
+	$_SESSION["user"]["debug"]	= "on";
+}
+
+
+
+
+/*
+	Connect to Databases
+*/
 include("database.php");
+
 
 ?>
