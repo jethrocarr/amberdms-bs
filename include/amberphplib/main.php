@@ -107,6 +107,7 @@ require("inc_language.php");
 
 // DB SQL processing and execution
 require("inc_sql.php");
+require("inc_ldap.php");
 
 // User + Security Functions
 require("inc_user.php");

@@ -49,6 +49,7 @@ class table
 	var $data_num_rows;			// number of rows
 
 	var $sql_obj;				// object used for SQL string, queries and data
+	var $obj_ldap;				// object used for LDAP queries
 	
 
 	var $render_columns;			// human readable column names
@@ -282,8 +283,6 @@ class table
 
 
 
-	
-
 	/*
 		load_data_sql()
 		
@@ -341,6 +340,116 @@ class table
 			return $this->data_num_rows;
 		}
 	}
+
+
+	/*
+		init_data_ldap
+
+		Initalise the LDAP connection
+
+		Returns
+		0		Failure
+		1		Success
+	*/
+
+	function init_data_ldap()
+	{
+		log_write("debug", "inc_tables", "Executing init_data_ldap()");
+
+		$this->obj_ldap = New ldap_query;
+
+		return 1;
+	}
+
+	/*
+		load_data_ldap
+
+		Query from a LDAP database.
+
+		Values
+		filter
+		base_dn		(optional) DN to use or leave blank for default
+
+		Returns
+		0		Failure
+		1		Success
+	*/
+	function load_data_ldap($filter, $base_dn = NULL)
+	{
+		log_write("debug", "inc_tables", "Executing load_data_ldap($filter, $base_dn)");
+
+		$attributes = array();
+
+		// run through all the columns, and add their fields to the LDAP attribute query unless
+		// the dbname is equal to NONE, in which case ignore.
+		foreach ($this->columns as $column)
+		{
+			if ($this->structure[$column]["dbname"] != "NONE")
+			{
+				$attributes[] = $this->structure[$column]["dbname"];
+			}
+		}
+
+
+		// connect to LDAP server
+		$this->obj_ldap->connect();
+
+
+		// set DN
+		if ($base_dn)
+		{
+			$this->obj_ldap->srvcfg["base_dn"] = $base_dn;
+		}
+
+
+		// run query and process results
+		if ($this->obj_ldap->search($filter, $attributes))
+		{
+			// run through returned records
+			$this->data_num_rows	= $this->obj_ldap->data_num_rows;
+
+			for ($i=0; $i < $this->data_num_rows; $i++)
+			{
+				$tmparray = array();
+
+				// fetch values for each column
+				foreach ($this->columns as $column)
+				{
+					if ($this->structure[$column]["dbname"] != "NONE")
+					{
+						if ($this->obj_ldap->data[$i][  $this->structure[$column]["dbname"]  ]["count"] > 1)
+						{
+							// convert array of values to comma-deliminated string
+							$values = array();
+
+							for ($j = 0; $j < $this->obj_ldap->data[$i][  $this->structure[$column]["dbname"]  ]["count"]; $j++)
+							{
+								$values[] = $this->obj_ldap->data[$i][  $this->structure[$column]["dbname"]  ][$j];
+							}
+
+							$tmparray[$column] = format_arraytocommastring( $values );
+						}
+						else
+						{
+							// single standard value
+							$tmparray[$column] = $this->obj_ldap->data[$i][  $this->structure[$column]["dbname"]  ][0];
+						}
+					}
+				}
+
+				// save data to final results
+				$this->data[]	= $tmparray;
+			}
+		}
+		else
+		{
+			// query failure or no rows returned
+			$this->data_num_rows	= 0;
+
+			return 0;
+		}
+	}
+	
 
 
 	/*

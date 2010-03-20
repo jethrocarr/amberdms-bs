@@ -60,16 +60,34 @@ class menu_main
 
 		if (user_online())
 		{
-			// fetch all permissions belonging to the user
-			$sql_obj 		= New sql_query;
-			$sql_obj->string	= "SELECT permid FROM `users_permissions` WHERE userid='". $_SESSION["user"]["id"] ."'";
+			// it's probably the first time we're checking for permissions
+			// we should pre-load them all if needed
+			if (!isset($GLOBALS["cache"]["user"]["perms"]))
+			{
+				$obj_user_auth = New user_auth;
+				$obj_user_auth->permissions_init();
+			}
 
+			// fetch ID of all permissions
+			$sql_obj 		= New sql_query;
+			$sql_obj->string	= "SELECT id, value FROM permissions";
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 				
-			foreach ($sql_obj->data as $data)
+
+			// build array of all permissions IDs for the groups the user belongs to.
+			foreach (array_keys($GLOBALS["cache"]["user"]["perms"]) as $type)
 			{
-				$user_permissions[] = $data["permid"];
+				if ($GLOBALS["cache"]["user"]["perms"][$type] == 1)
+				{
+					foreach ($sql_obj->data as $data_permids)
+					{
+						if ($data_permids["value"] == $type)
+						{
+							$user_permissions[] = $data_permids["id"];
+						}
+					}
+				}
 			}
 
 			// (legacy) For system without a public permissions group, add the ID of 0
