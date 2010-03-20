@@ -77,20 +77,23 @@ else
 	}
 }
 
+
 /*
 	Check if a custom theme has been selected and set the path variable accordingly. 
 */
 
-//check for custom theme and set folder name if one exists
-if (isset($_SESSION["user"]["theme"])){
-	$folder = sql_get_singlevalue("SELECT theme_name AS value FROM themes WHERE id = ".$_SESSION["user"]["theme"]);
-//otherwise, set folder name to the default
-} else {
-	$folder = sql_get_singlevalue("SELECT t.theme_name AS value FROM themes t, config c WHERE c.name = \"THEME_DEFAULT\" AND c.value = t.id");
+if (isset($_SESSION["user"]["theme"]))
+{
+	$folder = sql_get_singlevalue("SELECT theme_name AS value FROM themes WHERE id = '". $_SESSION["user"]["theme"] ."'");
 }
-//create path
-$path = "themes/".$folder."/";
-define("THEME_PATH", $path);
+else
+{
+	$folder = sql_get_singlevalue("SELECT t.theme_name AS value FROM themes t, config c WHERE c.name = 'THEME_DEFAULT' AND c.value = t.id");
+}
+
+// create path
+$theme_path = "themes/".$folder."/";
+
 
 ?>
 
@@ -100,7 +103,7 @@ define("THEME_PATH", $path);
 	<title>Amberdms Billing System</title>
 	<meta name="copyright" content="(C)Copyright 2010 Amberdms Ltd.">
 
-	<?php print "<link href=\"".THEME_PATH."theme.css\" rel=\"stylesheet\" type=\"text/css\" />"; ?>
+	<?php print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />"; ?>
 	
 <script type="text/javascript">
 
@@ -130,7 +133,7 @@ function obj_show(obj)
 	<td id="header_td_outer">
 		<table id="header_table_inner">
 		<tr>
-			<?php print "<td id=\"header_logo\"><img src=\"".THEME_PATH."logo.png\" alt=\"Amberdms Billing System\"></td>"; ?>
+			<?php print "<td id=\"header_logo\"><img src=\"".$theme_path."logo.png\" alt=\"Amberdms Billing System\"></td>"; ?>
 			<td id="header_logout">
 			<?php
 
