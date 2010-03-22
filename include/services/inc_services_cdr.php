@@ -269,13 +269,52 @@ class cdr_rate_table
 	{
 		log_write("debug", "cdr_rate_table", "Executing action_create()");
 
-		$sql_obj		= New sql_query;
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Create CDR Rate Table
+		*/
 		$sql_obj->string	= "INSERT INTO `cdr_rate_tables` (rate_table_name) VALUES ('". $this->data["rate_table_name"]. "')";
 		$sql_obj->execute();
 
 		$this->id = $sql_obj->fetch_insert_id();
 
-		return $this->id;
+
+
+		/*
+			Create Default Rate Item
+		*/
+
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix) VALUES ('". $this->id ."', 'DEFAULT')";
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "cdr_rate_table", "An error occured when attemping to create a new rate table.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return $this->id;
+		}
+
 
 	} // end of action_create
 
@@ -366,6 +405,70 @@ class cdr_rate_table
 
 	} // end of action_update
 
+
+
+	/*
+		action_delete
+
+		Deletes the selected rate table.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function action_delete()
+	{
+		log_write("debug", "cdr_rate_table", "Executing action_delete()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			delete rate table
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `cdr_rate_tables` WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+
+		/*
+			delete rate table items
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `cdr_rate_tables_values` WHERE id_rate_table='". $this->id ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "cdr_rate_table", "An error occured when deleting the selected rate table, no changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "cdr_rate_table", "Rate table details successfully deleted.");
+
+			return 1;
+		}
+
+	} // end of action_delete
 
 
 
@@ -540,12 +643,10 @@ class cdr_rate_table_rates extends cdr_rate_table
 		{
 			$sql_obj->fetch_array();
 
-			{
-				$this->data_rate["rate_prefix"]		= $sql_obj->data[0]["rate_prefix"];
-				$this->data_rate["rate_description"]	= $sql_obj->data[0]["rate_description"];
-				$this->data_rate["rate_price_sale"]	= $sql_obj->data[0]["rate_price_sale"];
-				$this->data_rate["rate_price_cost"]	= $sql_obj->data[0]["rate_price_cost"];
-			}
+			$this->data_rate["rate_prefix"]		= $sql_obj->data[0]["rate_prefix"];
+			$this->data_rate["rate_description"]	= $sql_obj->data[0]["rate_description"];
+			$this->data_rate["rate_price_sale"]	= $sql_obj->data[0]["rate_price_sale"];
+			$this->data_rate["rate_price_cost"]	= $sql_obj->data[0]["rate_price_cost"];
 
 			return 1;
 		}
@@ -668,6 +769,43 @@ class cdr_rate_table_rates extends cdr_rate_table
 		}
 
 	} // end of action_rate_update
+
+
+
+	/*
+		action_rate_delete
+
+		Deletes the selected rate from it's rate table.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function action_rate_delete()
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing action_rate_delete()");
+
+		if ($this->data_rate["rate_prefix"] == "DEFAULT")
+		{
+			log_write("error", "cdr_rate_table_rates", "Unable to delete the DEFAULT prefix, this is required incase calls don't match any other prefix");
+			return 0;
+		}
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `cdr_rate_tables_values` WHERE id='". $this->id_rate ."' LIMIT 1";
+	
+		if ($sql_obj->execute())
+		{
+			log_write("notification", "cdr_rate_table_rates", "Requested rate item has been deleted.");
+			return 1;
+		}
+		else
+		{
+			log_write("error", "cdr_rate_table_rates", "An error occured whilst attempting to delete the requested rate item (". $this->id_rate .") for rate table (". $this->id .")");
+			return 0;
+		}
+
+	} // end of action_rate_delete
 
 
 

@@ -97,15 +97,19 @@ class page_output
 		}
 		else
 		{
-			// details link
+			// links
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("tbl_lnk_details", "services/cdr-rates-view.php", $structure);
 
-			// plan link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("tbl_lnk_items", "services/cdr-rates-items.php", $structure);
+
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("tbl_lnk_delete", "services/cdr-rates-delete.php", $structure);
+
 
 			// display the table
 			$this->obj_table->render_table_html();

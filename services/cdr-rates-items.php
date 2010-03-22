@@ -134,7 +134,8 @@ class page_output
 				$structure = NULL;
 				$structure["id"]["value"]	= $this->obj_rate_table->id;
 				$structure["id_rate"]["column"]	= "id";
-				$this->obj_table->add_link("tbl_lnk_item_delete", "services/cdr-rates-items-delete.php", $structure);
+				$structure["full_link"]		= "yes";
+				$this->obj_table->add_link("tbl_lnk_item_delete", "services/cdr-rates-items-delete-process.php", $structure);
 			}
 
 			// display the table
