@@ -8,7 +8,8 @@
 */
 
 //inclues
-include_once("include/amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
 
 
 if (user_permissions_get("accounts_import_statement"))
@@ -50,7 +51,7 @@ if (user_permissions_get("accounts_import_statement"))
 		fclose($handle);
 		$_SESSION["csv_array"] = $transactions;
 		
-		header("Location: index.php?page=accounts/import/bankstatement-csv.php");
+		header("Location: ../../index.php?page=accounts/import/bankstatement-csv.php");
 	    }
 	  
 	    //if file cannot be opened, create an error

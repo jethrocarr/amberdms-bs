@@ -300,6 +300,7 @@ a:active {
 
 .form_table {
 	border-spacing: 0px;
+	width:		100%;
 }
 	.form_table .header {
 		background-color: #2580a2;

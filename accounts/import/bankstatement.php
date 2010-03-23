@@ -34,7 +34,7 @@ class page_output
 		$this->obj_form 		= New form_input;
 		$this->obj_form->formname 	= "bankstatementimport";
 		$this->obj_form->language 	= $_SESSION["user"]["lang"];
-		$this->obj_form->action 	= "index.php?page=accounts/import/bankstatement-process.php";
+		$this->obj_form->action 	= "accounts/import/bankstatement-process.php";
 		$this->obj_form->method 	= "post";
 		
 		$structure 		= NULL;
@@ -47,6 +47,9 @@ class page_output
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Import";
 		$this->obj_form->add_input($structure);
+		
+		$this->obj_form->subforms["upload_bank_statement"]	= array("BANK_STATEMENT");
+		$this->obj_form->subforms["import"]			= array("submit");
 	} 
 
 
