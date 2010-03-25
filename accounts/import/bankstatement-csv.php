@@ -31,13 +31,9 @@ class page_output
 	function execute()
 	{
 		$this->num_col	= count($_SESSION["csv_array"][0]);
-		$values_array	= array("transaction type", "account", "particulars", "code", "reference", "amount", "date");
+		$values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "date");
 		
 		$this->obj_form			= New form_input;
-// 		$this->obj_form->formname	= "csv_config";
-// 		$this->obj_form->language	= $_SESSION["user"]["lang"];
-// 		$this->obj_form->action		= "accounts/import/bankstatement-csv-process.php";
-// 		$this->obj_form->method 	= "post";
 		
 		for ($i=1; $i<$this->num_col; $i++)
 		{
@@ -47,6 +43,10 @@ class page_output
 		    $structure["fieldname"]	= $name;
 		    $structure["type"]		= "dropdown";
 		    $structure["values"]	= $values_array;
+		    if (isset($_SESSION["col_array"]))
+		    {
+			$structure["defaultvalue"]	= $_SESSION["col_array"][$name];
+		    }
 		    $this->obj_form->add_input($structure);
 		}
 		
@@ -93,19 +93,28 @@ class page_output
 			print "<td><b>Example</b></td>";
 			print "<td><b>Field</b></td>";
 		    print "</tr>";
-		    
+		    print "<pre>"; print_r($_POST); print "</pre>";
 		    for($i=1; $i<$this->num_col; $i++)
 		    {
-			print "<tr id=\"column".$i."\">";
-			    print "<td>";
-				print "Column ".$i;
-			    print "</td>";
-			    print "<td>";
-				print $this->example_array[$i];
-			    print "</td>";
-			    print "<td>";
-				$this->obj_form->render_field("column".$i);
-			    print "</td>";
+			$name = "column".$i;
+			$name_error = $name."-error";
+			if (isset($_SESSION["error"][$name_error]))
+			{
+			    print "<tr class=\"form_error\">";
+			}
+			else
+			{
+			    print "<tr id=\"".$name."\">";
+			}
+			print "<td>";
+			    print "Column ".$i;
+			print "</td>";
+			print "<td>";
+			    print $this->example_array[$i];
+			print "</td>";
+			print "<td>";
+			    $this->obj_form->render_field($name);
+			print "</td>";
 			print "</tr>";
 		    }
 		    

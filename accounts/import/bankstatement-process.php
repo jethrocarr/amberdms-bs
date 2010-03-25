@@ -22,7 +22,7 @@ if (user_permissions_get("accounts_import_statement"))
     
     if (error_check())
     {
-	header("Location: index.php?page=accounts/import/bankstatement.php");
+	header("Location: ../../index.php?page=accounts/import/bankstatement.php");
     }
     else
     {
@@ -57,12 +57,18 @@ if (user_permissions_get("accounts_import_statement"))
 	    //if file cannot be opened, create an error
 	    else
 	    {
-		print "Error!";
+		log_write("error", "page_output", "This file was unable to be opened. Please try again, or try another file.");
 	    }
 	}
     }
 }
-
+else
+{
+	// user does not have permissions to access this page.
+	error_render_noperms();
+	header("Location: ../index.php?page=message.php");
+	exit(0);
+}
 
 
 ?>
