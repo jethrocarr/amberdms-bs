@@ -24,12 +24,12 @@ if (user_permissions_get("admin"))
 
 	// check that the returned ID belongs to the right template type
 	$obj_sql		= New sql_query;
-	$obj_sql->string	= "SELECT id FROM templates WHERE template_type='ar_invoice_tex' AND id='". $data["ar_invoice_tex"] ."'";
+	$obj_sql->string	= "SELECT id FROM templates WHERE template_type IN('ar_invoice_tex', 'ar_invoice_htmltopdf') AND id='". $data["ar_invoice_tex"] ."'";
 	$obj_sql->execute();
 
 	if (!$obj_sql->num_rows())
 	{
-		log_write("error", "process", "The provided ID (". $data["ar_invoice_tex"] .") does not match an ar_invoice_tex template type.");
+		log_write("error", "process", "The provided ID (". $data["ar_invoice_tex"] .") does not match an ar_invoice_tex or ar_invoice_htmltopdf template type.");
 	}
 
 

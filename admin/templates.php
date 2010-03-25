@@ -33,7 +33,7 @@ class page_output
 		*/
 
 		$this->obj_sql_ar_invoice		= New sql_query;
-		$this->obj_sql_ar_invoice->string	= "SELECT id, active, template_file, template_name, template_description FROM templates WHERE template_type='ar_invoice_tex' ORDER BY id";
+		$this->obj_sql_ar_invoice->string	= "SELECT id, active, template_file, template_name, template_description FROM templates WHERE template_type IN('ar_invoice_tex', 'ar_invoice_htmltopdf') ORDER BY id";
 		$this->obj_sql_ar_invoice->execute();
 		$this->obj_sql_ar_invoice->fetch_array();
 
