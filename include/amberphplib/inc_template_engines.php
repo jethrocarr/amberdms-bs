@@ -516,4 +516,181 @@ class template_engine_latex extends template_engine
 
 
 
+/*
+	CLASS TEMPLETE_ENGINE_HTMLTOPDF
+*/
+class template_engine_htmltopdf extends template_engine
+{
+
+	/*
+		prepare_load_template
+
+		Reads a template file into memory, overrides the parent method, html templates are directories, main file is index.php
+
+		Values
+		templatefile		Filename/path of the template file
+
+		Returns
+		0			failure to load
+		1			success
+	*/
+	function prepare_load_template($templatefile)
+	{
+		log_debug("template_engine", "Executing prepare_load_template($templatefile))");
+		
+		// load template data into memory.
+		//$this->template = file($templatefile.);
+
+		if (!$this->template)
+		{
+			log_write("error", "template_engine", "Unable to load template file $templatefile into memory");
+			return 0;
+		}
+
+		return 1;
+	}
+	
+	
+	/*
+		prepare_escape_fields()
+
+		Escapes bad characters for html using htmlentities
+		
+		Returns
+		0		failure
+		1		success
+	*/
+	function prepare_escape_fields()
+	{
+		log_debug("template_engine_htmltopdf", "Executing prepare_escape_fields()");
+
+		// escape single fields
+		if ($this->data)
+		{
+			foreach (array_keys($this->data) as $var)
+			{
+				$this->data[$var] = htmlentities($this->data[$var], ENT_QUOTES, "UTF-8");
+			}
+		}
+
+
+		// escape arrays
+		if ($this->data_array)
+		{
+			foreach (array_keys($this->data_array) as $fieldname)
+			{
+				for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
+				{
+					$line_tmp = $line;
+						
+					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
+					{
+						$this->data_array[$fieldname][$j][$var] = htmlentities($this->data_array[$fieldname][$j][$var], ENT_QUOTES, "UTF-8");
+					}
+				}
+			}
+		}
+		
+	} // end of prepare_escape_fields
+
+
+	/*
+		generate_pdf()
+
+		Generate a PDF file and stores it in $this->output.
+
+		Returns
+		0		failure
+		1		success
+	*/
+	
+	function generate_pdf()
+	{
+		log_debug("template_engine_htmltopdf", "Executing generate_pdf()");
+
+
+		// generate unique tmp filename
+		$tmp_filename = file_generate_name("/tmp/amberdms_billing_system");
+
+		// write out template data
+		if (!$handle = fopen("$tmp_filename.html", "w"))
+		{	
+			log_write("error", "template_engine_htmltopdf", "Failed to create temporary file ($tmp_filename.tex) with template data");
+			return 0;
+		}
+
+		foreach ($this->processed as $line)
+		{
+			if (fwrite($handle, $line) === FALSE)
+			{
+				log_write("error", "template_engine_htmltopdf", "Error occured whilst writing file ($tmp_filename.tex)");
+				return 0;
+			}
+		}
+
+		fclose($handle);
+
+
+                // create a "home directory" for texlive - some components of texlive
+		// require this dir to write files to, and if it doesn't exist the PDF
+		// will fail to build.
+		//
+		// Also note that we need to specify HOME=$tmp_filename_texlive so that
+		// texlive will use it, otherwise it will default to the home directory
+		// of whoever the last user to restart apache was
+		//
+		// (this is often root, but can sometimes be another admin who restarted
+		//  apache whilst sudoed)
+		//
+
+		mkdir($tmp_filename ."_texlive", 0700);
+																								
+
+		// process with pdflatex
+		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
+	
+		chdir("/tmp");
+		exec("HOME=/tmp/ $app_pdflatex $tmp_filename.tex", $output);
+		
+		foreach ($output as $line)
+		{
+			log_debug("template_engine_htmltopdf", "pdflatex: $line");
+		}
+
+
+		// check that a PDF was generated
+		if (file_exists("$tmp_filename.pdf"))
+		{
+			log_debug("template_engine_htmltopdf", "Temporary PDF $tmp_filename.pdf generated");
+			
+			// import file data into memory
+			$this->output = file_get_contents("$tmp_filename.pdf");
+
+			// remove temporary files from disk
+			unlink("$tmp_filename");
+			unlink("$tmp_filename.aux");
+			unlink("$tmp_filename.log");
+			unlink("$tmp_filename.tex");
+			unlink("$tmp_filename.pdf");
+
+			// cleanup texlive home directory
+			system("rm -rf ". $tmp_filename ."_texlive");
+
+			return 1;
+		}
+		else
+		{
+			log_write("error", "template_engine_htmltopdf", "Unable to use pdflatex ($app_pdflatex) to generate PDF file");
+			return 0;
+		}
+		
+	} // end of generate_pdf
+
+
+	
+
+	
+} // end of template_engine_latex class
+
+
 ?>
