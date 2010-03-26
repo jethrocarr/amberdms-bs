@@ -746,11 +746,36 @@ class invoice
 		// note: the & allows decontructors to operate
 		//       Unfortunatly this trick is now deprecated with PHP 5.3.x and creates unsilencable errors ~JC 20100110
 		//
-		$this->obj_pdf =& New template_engine_latex;
 
 		// get template filename based on currently selected options
-		$template_file = sql_get_singlevalue("SELECT template_file as value FROM templates WHERE template_type='". $this->type ."_invoice_tex' AND active='1'");
+		$template_data = sql_get_singlerow("SELECT `template_type`, `template_file` FROM templates WHERE template_type IN('". $this->type ."_invoice_tex', '". $this->type ."_invoice_htmltopdf') AND active='1' LIMIT 1");
 
+		switch($template_data['template_type']) 
+		{
+		
+			case 'ar_invoice_htmltopdf':
+				$this->obj_pdf =& New template_engine_htmltopdf;
+				$template_file = $template_data['template_file']."/index.html";
+				
+				if (is_dir("../../{$template_data['template_file']}"))
+				{
+					$this->obj_pdf->set_template_directory("../../{$template_data['template_file']}");
+				}
+				else
+				{
+					$this->obj_pdf->set_template_directory("../{$template_data['template_file']}");
+				}			
+			break;
+			
+			case 'ar_invoice_tex':
+			default:
+				$this->obj_pdf =& New template_engine_latex;
+				$template_file = $template_data['template_file'].".tex";
+			break;
+		
+		}
+		
+		
 		if (!$template_file)
 		{
 			// fall back to old version
@@ -762,13 +787,13 @@ class invoice
 		}
 
 		// load template
-		if (file_exists("../../$template_file.tex"))
+		if (file_exists("../../$template_file"))
 		{
-			$this->obj_pdf->prepare_load_template("../../$template_file.tex");
+			$this->obj_pdf->prepare_load_template("../../$template_file");
 		}
 		else
 		{
-			$this->obj_pdf->prepare_load_template("../$template_file.tex");
+			$this->obj_pdf->prepare_load_template("../$template_file");
 		}
 
 		
@@ -786,13 +811,13 @@ class invoice
 
 
 		// customer fields
-		$this->obj_pdf->prepare_add_field("code\_customer", $sql_customer_obj->data[0]["code_customer"]);
-		$this->obj_pdf->prepare_add_field("customer\_name", $sql_customer_obj->data[0]["name_customer"]);
-		$this->obj_pdf->prepare_add_field("customer\_contact", $sql_customer_obj->data[0]["name_contact"]);
-		$this->obj_pdf->prepare_add_field("customer\_address1\_street", $sql_customer_obj->data[0]["address1_street"]);
-		$this->obj_pdf->prepare_add_field("customer\_address1\_city", $sql_customer_obj->data[0]["address1_city"]);
-		$this->obj_pdf->prepare_add_field("customer\_address1\_state", $sql_customer_obj->data[0]["address1_state"]);
-		$this->obj_pdf->prepare_add_field("customer\_address1\_country", $sql_customer_obj->data[0]["address1_country"]);
+		$this->obj_pdf->prepare_add_field("code_customer", $sql_customer_obj->data[0]["code_customer"]);
+		$this->obj_pdf->prepare_add_field("customer_name", $sql_customer_obj->data[0]["name_customer"]);
+		$this->obj_pdf->prepare_add_field("customer_contact", $sql_customer_obj->data[0]["name_contact"]);
+		$this->obj_pdf->prepare_add_field("customer_address1_street", $sql_customer_obj->data[0]["address1_street"]);
+		$this->obj_pdf->prepare_add_field("customer_address1_city", $sql_customer_obj->data[0]["address1_city"]);
+		$this->obj_pdf->prepare_add_field("customer_address1_state", $sql_customer_obj->data[0]["address1_state"]);
+		$this->obj_pdf->prepare_add_field("customer_address1_country", $sql_customer_obj->data[0]["address1_country"]);
 
 		if ($sql_customer_obj->data[0]["address1_zipcode"] == 0)
 		{
@@ -822,21 +847,21 @@ class invoice
 		}
 
 		// company fields
-		$this->obj_pdf->prepare_add_field("company\_name", $data_company["company_name"]);
+		$this->obj_pdf->prepare_add_field("company_name", $data_company["company_name"]);
 		
-		$this->obj_pdf->prepare_add_field("company\_contact\_email", $data_company["company_contact_email"]);
-		$this->obj_pdf->prepare_add_field("company\_contact\_phone", $data_company["company_contact_phone"]);
-		$this->obj_pdf->prepare_add_field("company\_contact\_fax", $data_company["company_contact_fax"]);
+		$this->obj_pdf->prepare_add_field("company_contact_email", $data_company["company_contact_email"]);
+		$this->obj_pdf->prepare_add_field("company_contact_phone", $data_company["company_contact_phone"]);
+		$this->obj_pdf->prepare_add_field("company_contact_fax", $data_company["company_contact_fax"]);
 		
-		$this->obj_pdf->prepare_add_field("company\_address1\_street", $data_company["company_address1_street"]);
-		$this->obj_pdf->prepare_add_field("company\_address1\_city", $data_company["company_address1_city"]);
-		$this->obj_pdf->prepare_add_field("company\_address1\_state", $data_company["company_address1_state"]);
-		$this->obj_pdf->prepare_add_field("company\_address1\_country", $data_company["company_address1_country"]);
-		$this->obj_pdf->prepare_add_field("company\_address1\_zipcode", $data_company["company_address1_zipcode"]);
+		$this->obj_pdf->prepare_add_field("company_address1_street", $data_company["company_address1_street"]);
+		$this->obj_pdf->prepare_add_field("company_address1_city", $data_company["company_address1_city"]);
+		$this->obj_pdf->prepare_add_field("company_address1_state", $data_company["company_address1_state"]);
+		$this->obj_pdf->prepare_add_field("company_address1_country", $data_company["company_address1_country"]);
+		$this->obj_pdf->prepare_add_field("company_address1_zipcode", $data_company["company_address1_zipcode"]);
 		
 		if ($this->type == "ar")
 		{
-			$this->obj_pdf->prepare_add_field("company\_payment\_details", $data_company["company_payment_details"]);
+			$this->obj_pdf->prepare_add_field("company_payment_details", $data_company["company_payment_details"]);
 		}
 
 		
@@ -846,24 +871,24 @@ class invoice
 		*/
 		if ($this->type == "ar")
 		{
-			$this->obj_pdf->prepare_add_field("code\_invoice", $this->data["code_invoice"]);
-			$this->obj_pdf->prepare_add_field("code\_ordernumber", $this->data["code_ordernumber"]);
-			$this->obj_pdf->prepare_add_field("date\_due", time_format_humandate($this->data["date_due"]));
+			$this->obj_pdf->prepare_add_field("code_invoice", $this->data["code_invoice"]);
+			$this->obj_pdf->prepare_add_field("code_ordernumber", $this->data["code_ordernumber"]);
+			$this->obj_pdf->prepare_add_field("date_due", time_format_humandate($this->data["date_due"]));
 		}
 		else
 		{
-			$this->obj_pdf->prepare_add_field("code\_quote", $this->data["code_quote"]);
-			$this->obj_pdf->prepare_add_field("date\_validtill", time_format_humandate($this->data["date_validtill"]));
+			$this->obj_pdf->prepare_add_field("code_quote", $this->data["code_quote"]);
+			$this->obj_pdf->prepare_add_field("date_validtill", time_format_humandate($this->data["date_validtill"]));
 		}
 		
-		$this->obj_pdf->prepare_add_field("date\_trans", time_format_humandate($this->data["date_trans"]));
+		$this->obj_pdf->prepare_add_field("date_trans", time_format_humandate($this->data["date_trans"]));
 		$this->obj_pdf->prepare_add_field("amount", format_money($this->data["amount"]));
-		$this->obj_pdf->prepare_add_field("amount\_total", format_money($this->data["amount_total"] - $this->data["amount_paid"]));
-		$this->obj_pdf->prepare_add_field("amount\_currency", sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") );
+		$this->obj_pdf->prepare_add_field("amount_total", format_money($this->data["amount_total"] - $this->data["amount_paid"]));
+		$this->obj_pdf->prepare_add_field("amount_currency", sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") );
 
 		if ($this->data["amount_paid"] > 0)
 		{
-			$this->obj_pdf->prepare_add_field("amount\_paid", format_money($this->data["amount_paid"]));
+			$this->obj_pdf->prepare_add_field("amount_paid", format_money($this->data["amount_paid"]));
 		}
 
 
