@@ -126,7 +126,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "id_service_customer";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->obj_service->option_type_id;
+		$structure["defaultvalue"]	= $this->obj_customer->id_service_customer;
 		$this->obj_form->add_input($structure);
 		
 
