@@ -59,7 +59,7 @@ if (user_permissions_get("admin"))
 			Update the template selection
 		*/
 
-		$sql_obj->string = "UPDATE templates SET active='0' WHERE template_type='ar_invoice_tex'";
+		$sql_obj->string = "UPDATE templates SET active='0' WHERE template_type IN('ar_invoice_tex', 'ar_invoice_htmltopdf')";
 		$sql_obj->execute();
 
 		$sql_obj->string = "UPDATE templates SET active='1' WHERE id='". $data["ar_invoice_tex"] ."' LIMIT 1";
