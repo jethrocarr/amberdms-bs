@@ -386,9 +386,13 @@ class template_engine_latex extends template_engine
 		// escape single fields
 		if ($this->data)
 		{
-			foreach (array_keys($this->data) as $var)
+			foreach ($this->data as $fieldname => $data)
 			{
-				$this->data[$var] = preg_replace($target, $replace, $this->data[$var]);
+				$filtered_fieldname = preg_replace($target, $replace, $fieldname);
+				$filtered_data = preg_replace($target, $replace, $data);
+				// Unset the unfiltered value, it is no longer needed
+				unset($this->data[$fieldname]);
+				$this->data[$filtered_fieldname] = $filtered_data;
 			}
 		}
 
@@ -396,20 +400,26 @@ class template_engine_latex extends template_engine
 		// escape arrays
 		if ($this->data_array)
 		{
-			foreach (array_keys($this->data_array) as $fieldname)
+			foreach ($this->data_array as $fieldname => $data_array)
 			{
-				for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
-				{
-					$line_tmp = $line;
-						
-					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
+				$filtered_fieldname = preg_replace($target, $replace, $fieldname);
+				unset($this->data_array[$fieldname]);
+				$this->data_array[$filtered_fieldname] = $data_array;
+				
+				for ($j=0; $j < count($data_array); $j++)
+				{						
+					foreach ($this->data_array[$filtered_fieldname][$j] as $sub_fieldname => $data)
 					{
-						$this->data_array[$fieldname][$j][$var] = preg_replace($target, $replace, $this->data_array[$fieldname][$j][$var]);
+						$filtered_sub_fieldname = preg_replace($target, $replace, $sub_fieldname);
+						$filtered_data = preg_replace($target, $replace, $data);
+						
+						unset($this->data_array[$fieldname][$j][$sub_fieldname]);
+						$this->data_array[$filtered_fieldname][$j][$filtered_sub_fieldname] = $filtered_data;
 					}
 				}
 			}
 		}
-		
+			
 	} // end of prepare_escape_fields
 
 
@@ -521,7 +531,25 @@ class template_engine_latex extends template_engine
 */
 class template_engine_htmltopdf extends template_engine
 {
+	var $template_directory;
+	
+	/*
+		set_template_directory
 
+		Sets the template directory
+		
+		Values
+		template_dir		Filename/path of the template file
+
+		Returns
+		nothing
+	*/
+	function set_template_directory($template_dir)
+	{
+		$this->template_directory = $template_dir;
+	}
+	
+	
 	/*
 		prepare_load_template
 
@@ -539,7 +567,7 @@ class template_engine_htmltopdf extends template_engine
 		log_debug("template_engine", "Executing prepare_load_template($templatefile))");
 		
 		// load template data into memory.
-		//$this->template = file($templatefile.);
+		$this->template = file($templatefile);
 
 		if (!$this->template)
 		{
@@ -618,6 +646,11 @@ class template_engine_htmltopdf extends template_engine
 			log_write("error", "template_engine_htmltopdf", "Failed to create temporary file ($tmp_filename.tex) with template data");
 			return 0;
 		}
+		
+		foreach((array)$this->processed as $key => $processed_row)
+		{	
+			$this->processed[$key] = str_replace("(tmp_filename)", $tmp_filename, $processed_row);
+		}
 
 		foreach ($this->processed as $line)
 		{
@@ -642,19 +675,40 @@ class template_engine_htmltopdf extends template_engine
 		// (this is often root, but can sometimes be another admin who restarted
 		//  apache whilst sudoed)
 		//
-
-		mkdir($tmp_filename ."_texlive", 0700);
-																								
+		//ini_set('display_errors', true);
+		$tmp_data_directory = $tmp_filename ."_html_data";
+		
+		mkdir($tmp_filename ."_html_data", 0700);
+						
+		$data_directory_items = glob($this->template_directory."/html_data/*");
+		
+		foreach((array) $data_directory_items as $data_dir_file) {
+			$filename = basename($data_dir_file);
+			$new_file_path =  $tmp_data_directory."/".$filename;
+			//echo $new_file_path."<br />";
+			copy($data_dir_file, $new_file_path);
+		}
+		
+				
+		//print("<pre>".print_r($data_directory_items,true)."</pre>");
+		//exit("<pre>".print_r(glob($tmp_data_directory."/*"),true)."</pre>");
+		
+																				
 
 		// process with pdflatex
-		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
+		//$app_wkhtmltopdf = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
+		$app_wkhtmltopdf = "/opt/wkhtmltopdf-static -B 5mm -L 5mm -R 5mm -T 5mm"; 
+		
 	
 		chdir("/tmp");
-		exec("HOME=/tmp/ $app_pdflatex $tmp_filename.tex", $output);
+		exec("HOME=/tmp/ $app_wkhtmltopdf $tmp_filename.html $tmp_filename.pdf", $output);
+		
+		//exit("<pre>".print_r("HOME=/tmp/ $app_wkhtmltopdf $tmp_filename.html",true)."</pre>");
+		
 		
 		foreach ($output as $line)
 		{
-			log_debug("template_engine_htmltopdf", "pdflatex: $line");
+			log_debug("template_engine_htmltopdf", "wkhtmltopdf: $line");
 		}
 
 
@@ -664,17 +718,18 @@ class template_engine_htmltopdf extends template_engine
 			log_debug("template_engine_htmltopdf", "Temporary PDF $tmp_filename.pdf generated");
 			
 			// import file data into memory
+			
 			$this->output = file_get_contents("$tmp_filename.pdf");
 
 			// remove temporary files from disk
 			unlink("$tmp_filename");
 			unlink("$tmp_filename.aux");
 			unlink("$tmp_filename.log");
-			unlink("$tmp_filename.tex");
+			unlink("$tmp_filename.html");
 			unlink("$tmp_filename.pdf");
 
 			// cleanup texlive home directory
-			system("rm -rf ". $tmp_filename ."_texlive");
+			system("rm -rf ". $tmp_filename ."_html_data");
 
 			return 1;
 		}
