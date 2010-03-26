@@ -31,7 +31,7 @@ if (user_permissions_get('services_write'))
 	$obj_service->option_type	= "bundle";
 	$obj_service->option_type_id	= $id_component;
 
-	$obj_service->verify_id();
+	$obj_service->verify_id_options();
 	$obj_service->load_data_options();
 
 

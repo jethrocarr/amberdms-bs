@@ -73,10 +73,13 @@ class page_output
 
 
 		// verify that the service-customer entry exists
-		if (!$this->obj_customer->verify_id_service_customer())
+		if ($this->ob_customer->id_service_customer)
 		{
-			log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
-			return 0;
+			if (!$this->obj_customer->verify_id_service_customer())
+			{
+				log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
+				return 0;
+			}
 		}
 
 		return 1;

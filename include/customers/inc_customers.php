@@ -845,13 +845,15 @@ class customer_services extends customer
 				$sql_obj->string	= "INSERT INTO `services_customers` (customerid,
 												serviceid,
 												bundleid,
+												bundleid_component,
 												date_period_first,
 												date_period_next,
 												description) 
 											VALUES
 												('". $this->id ."',
-												'". $id_component ."',
+												'". $obj_component->id ."',
 												'". $this->id_service_customer ."',
+												'". $id_component ."',
 												'". $date_period_start ."',
 												'". $date_period_start ."',
 												'". $obj_component->data["description"] ."')";

@@ -49,6 +49,7 @@ if (user_permissions_get('customers_write'))
 
 
 	// general details		
+	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
 	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 
@@ -127,7 +128,7 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data = array();
 			$obj_customer->obj_service->load_data_options();
 
-			$obj_customer->obj_service->data["description"]	= $data["description"];
+			$obj_customer->obj_service->data["description"]		= $data["description"];
 
 			$obj_customer->obj_service->action_update_options();
 
@@ -159,7 +160,8 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data = array();
 			$obj_customer->obj_service->load_data_options();
 
-			$obj_customer->obj_service->data["description"]	= $data["description"];
+			$obj_customer->obj_service->data["description"]		= $data["description"];
+			$obj_customer->obj_service->data["name_service"]	= $data["name_service"];
 
 			$obj_customer->obj_service->action_update_options();
 

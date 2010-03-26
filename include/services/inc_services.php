@@ -208,6 +208,48 @@ class service
 	{
 		log_write("debug", "inc_services", "Executing load_data_options()");
 
+
+
+		/*
+			If this is a customer service and belongs to a bundle, we need to load bundle options
+			before we load the customer options, to ensure the service gets options from both.
+		*/
+		if ($this->option_type == "customer")
+		{
+			// check - is this a bundle service?
+			$obj_component_sql		= New sql_query;
+			$obj_component_sql->string	= "SELECT bundleid_component as id_bundle_component FROM `services_customers` WHERE id='". $this->option_type_id ."' LIMIT 1";
+			$obj_component_sql->execute();
+			$obj_component_sql->fetch_array();
+
+			if ($obj_component_sql->data[0]["id_bundle_component"])
+			{
+				// load options for the bundle item (if any)
+				$obj_sql		= New sql_query;
+				$obj_sql->string	= "SELECT option_name, option_value FROM `services_options` WHERE option_type='bundle' AND option_type_id='". $obj_component_sql->data[0]["id_bundle_component"] ."'";
+				$obj_sql->execute();
+
+				if ($obj_sql->num_rows())
+				{
+					$obj_sql->fetch_array();
+
+					foreach ($obj_sql->data as $data_options)
+					{
+						// add options to data array, overwriting values if they already exist
+						$this->data[ $data_options["option_name"] ] = $data_options["option_value"];
+					}
+				}
+
+			}
+			
+		}
+
+
+
+		/*
+			Load Options for the selected type of service
+		*/
+
 		$obj_sql		= New sql_query;
 		$obj_sql->string	= "SELECT option_name, option_value FROM `services_options` WHERE option_type='". $this->option_type ."' AND option_type_id='". $this->option_type_id ."'";
 		$obj_sql->execute();
@@ -263,13 +305,25 @@ class service
 
 
 		/*
-			Add the new options
+			Add the new options, IF they are different to the standard service values - ie we don't want to turn the normal values
+			into options.
 		*/
 
-		foreach (array_keys($this->data) as $data_option)
+		// fetch a copy of the base service and (if a customer bundle item) the bundle options data
+		$data_changed	= $this->data;
+		$this->data	= array();
+
+		$this->load_data();
+		$this->load_data_options();
+
+		// compare and change
+		foreach (array_keys($data_changed) as $data_option)
 		{
-			$sql_obj->string = "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('". $this->option_type ."', '". $this->option_type_id ."', '". $data_option ."', '". $this->data[ $data_option ] ."')";
-			$sql_obj->execute();
+			if ($this->data[$data_option] != $data_changed[$data_option])
+			{
+				$sql_obj->string = "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('". $this->option_type ."', '". $this->option_type_id ."', '". $data_option ."', '". $data_changed[ $data_option ] ."')";
+				$sql_obj->execute();
+			}
 		}
 
 
