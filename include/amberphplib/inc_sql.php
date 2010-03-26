@@ -741,6 +741,50 @@ function sql_get_singlevalue($string)
 }
 
 
+/*
+	sql_get_singlerow($string)
+
+	Fetches a single value from the database and returns it. This function has inbuilt caching
+	and will record all values returned in the $GLOBALS array.
+
+	This function is ideal for fetching a single row of a table.
+
+	Return codes:
+	0	failure
+	?	data desired
+*/
+function sql_get_singlerow($string)
+{
+	log_debug("sql", "Executing sql_get_singlerow(SQL query)");
+
+	// so many bugs are caused by forgetting to request fields from the DB as "value", so
+	// this function has been added.
+	if (isset($GLOBALS["cache"]["sql"][$string]))
+	{
+		log_write("sql", "sql_query", "Fetching results from cache");
+		return $GLOBALS["cache"]["sql"][$string];
+	}
+	else
+	{
+
+		// fetch and return data
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= $string;
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+			$GLOBALS["cache"]["sql"][$string] = $sql_obj->data[0];
+			return $sql_obj->data[0];
+		}
+	}
+}
+
 
 
 ?>
