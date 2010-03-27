@@ -90,7 +90,6 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "rate_description";
 		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

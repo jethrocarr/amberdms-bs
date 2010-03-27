@@ -990,7 +990,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 		log_write("debug", "cdr_rate_table_rates", "Executing action_rate_create_override()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_overrides` (option_type, option_type_id, rate_prefix) VALUES ('". $this->id ."', '". $this->option_type ."', '". $this->option_type_id ."', '". $this->data_rate["rate_prefix"]. "')";
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_overrides` (option_type, option_type_id, rate_prefix) VALUES ('". $this->option_type ."', '". $this->option_type_id ."', '". $this->data_rate["rate_prefix"]. "')";
 		$sql_obj->execute();
 
 		$this->id_rate = $sql_obj->fetch_insert_id();
@@ -1064,7 +1064,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "cdr_rate_table", "An error occured when updating rate item details.");
+			log_write("error", "cdr_rate_table", "An error occured when updating rate override details.");
 
 			return 0;
 		}
@@ -1074,11 +1074,11 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 			if ($mode == "update")
 			{
-				log_write("notification", "cdr_rate_table_rates", "Rate item successfully updated.");
+				log_write("notification", "cdr_rate_table_rates", "Rate override successfully updated.");
 			}
 			else
 			{
-				log_write("notification", "cdr_rate_table_rates", "Rate item successfully created.");
+				log_write("notification", "cdr_rate_table_rates", "Rate override successfully created.");
 			}
 			
 			return $this->id_rate;
@@ -1106,12 +1106,12 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 	
 		if ($sql_obj->execute())
 		{
-			log_write("notification", "cdr_rate_table_rates", "Requested rate item has been deleted.");
+			log_write("notification", "cdr_rate_table_rates", "Requested rate override has been deleted.");
 			return 1;
 		}
 		else
 		{
-			log_write("error", "cdr_rate_table_rates", "An error occured whilst attempting to delete the requested rate item (". $this->id_rate_override .").");
+			log_write("error", "cdr_rate_table_rates", "An error occured whilst attempting to delete the requested rate override (". $this->id_rate_override .").");
 			return 0;
 		}
 

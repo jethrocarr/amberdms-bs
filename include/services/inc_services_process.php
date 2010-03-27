@@ -571,6 +571,39 @@ function service_form_delete_process()
 
 
 		/*
+			Delete the service bundle components (if any)
+		*/
+		
+		$sql_bundle_obj		= New sql_query;
+		$sql_bundle_obj->string	= "SELECT id FROM services_bundles WHERE id_service='$id'";
+		$sql_bundle_obj->execute();
+
+		if ($sql_bundle_obj->num_rows())
+		{
+			$sql_bundle_obj->fetch_array();
+
+			foreach ($sql_bundle_obj->data as $data_bundle)
+			{
+				// delete any options for each bundle item
+				$sql_obj->string	= "DELETE FROM services_options WHERE option_type='service' AND option_type_id='". $data_bundle["id"] ."'";
+				$sql_obj->execute();
+			}
+		}
+
+		$sql_obj->string	= "DELETE FROM services_bundles WHERE id_service='$id'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Delete the service cdr rate overrides (if any)
+		*/
+
+		$sql_obj->string	= "DELETE FROM cdr_rate_tables_overrides WHERE option_type='service' AND option_type_id='$id'";
+		$sql_obj->execute();
+
+
+		/*
 			Delete service journal data
 		*/
 		journal_delete_entire("services", $id);

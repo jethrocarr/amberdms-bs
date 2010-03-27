@@ -191,20 +191,38 @@ class page_output
 
 		if (user_permissions_get("services_write"))
 		{
-			// details link
+			// override link
 			$structure = NULL;
-			$structure["logic_if"]["column"]	= "id_rate_override";
-			$structure["id"]["value"]		= $this->id;
-			$structure["prefix"]["column"]		= "rate_prefix";
-			$this->obj_table->add_link("tbl_lnk_details", "services/cdr-override-edit.php", $structure);
+			$structure["logic"]["if_not"]["column"]		= "id_rate_override";
+
+			$structure["id_service"]["value"]		= $this->id;
+			$structure["id_rate"]["column"]			= "id_rate";
+			$structure["id_rate_override"]["column"]	= "id_rate_override";
+
+			$this->obj_table->add_link("tbl_lnk_override", "services/cdr-override-edit.php", $structure);
+
+
+			// adjust link
+			$structure = NULL;
+			$structure["logic"]["if"]["column"]		= "id_rate_override";
+
+			$structure["id_service"]["value"]		= $this->id;
+			$structure["id_rate"]["column"]			= "id_rate";
+			$structure["id_rate_override"]["column"]	= "id_rate_override";
+
+			$this->obj_table->add_link("tbl_lnk_adjust_override", "services/cdr-override-edit.php", $structure);
+
 
 			// delete link
 			$structure = NULL;
-			$structure["logic_if"]["column"]	= "id_rate_override";
-			$structure["id"]["value"]		= $this->id;
-			$structure["prefix"]["column"]		= "rate_prefix";
-			$structure["full_link"]			= "yes";
-			$this->obj_table->add_link("tbl_lnk_delete", "services/cdr-override-delete-process.php", $structure);
+			$structure["logic"]["if"]["column"]		= "id_rate_override";
+			$structure["full_link"]				= "yes";
+
+			$structure["id_service"]["value"]		= $this->id;
+			$structure["id_rate"]["column"]			= "id_rate";
+			$structure["id_rate_override"]["column"]	= "id_rate_override";
+
+			$this->obj_table->add_link("tbl_lnk_delete_override", "services/cdr-override-delete-process.php", $structure);
 		}
 
 		// display the table
@@ -214,7 +232,7 @@ class page_output
 		// add link
 		if (user_permissions_get("services_write"))
 		{
-			print "<p><a class=\"button\" href=\"index.php?page=services/cdr-override-edit.php&id=". $this->id ."\">Add New Prefix Rate</a></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=services/cdr-override-edit.php&id_service=". $this->id ."\">Add Custom Prefix Rate</a></p>";
 		}
 
 	}	
