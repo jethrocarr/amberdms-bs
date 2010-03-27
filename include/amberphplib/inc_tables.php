@@ -1332,42 +1332,103 @@ class table
 				{
 					$link		= $this->links_columns[ $columns ];
 					$linkname	= language_translate_string($this->language, $link);
+					$link_valid	= 1;
 
-					// link to page
-					// There are two ways:
-					// 1. (default) Link to index.php
-					// 2. Set the ["options]["full_link"] value to yes to force a full link
+					
+					/*
+						check if there are any logic options we need to process
 
-					if (isset($this->links[$link]["options"]["full_link"]) && $this->links[$link]["options"]["full_link"] == "yes")
-					{
-						print "<a href=\"". $this->links[$link]["page"] ."?libfiller=n";
-					}
-					else
-					{
-						print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
-					}
+						This is used to provide the capabilities such as optional hyperlinks that
+						only appear for same table rows.
+					*/
 
-					// add each option
-					foreach (array_keys($this->links[$link]["options"]) as $getfield)
+					// if statements
+					if ($this->links[$link]["options"]["logic"]["if"])
 					{
-						/*
-							There are two methods for setting the value of the variable:
-							1. The value has been passed.
-							2. The name of a column to take the value from has been passed
-						*/
-						if ($this->links[$link]["options"][$getfield]["value"])
+						foreach (array_keys($this->links[$link]["options"]["logic"]["if"]) as $logic)
 						{
-							print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+							if ($this->links[$link]["options"]["logic"]["if"]["column"])
+							{
+								if ($this->data[$i][  $this->links[$link]["options"]["logic"]["if"]["column"] ])
+								{
+									$link_valid = 1;
+								}
+								else
+								{
+									// ensures that multiple if queries act as AND rather than OR
+									$link_valid = 0;
+								}
+							}
+						}
+					}
+
+					// if not statements
+					if ($this->links[$link]["options"]["logic"]["if_not"])
+					{
+						foreach (array_keys($this->links[$link]["options"]["logic"]["if_not"]) as $logic)
+						{
+							if ($this->links[$link]["options"]["logic"]["if_not"]["column"])
+							{
+								if (!$this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ])
+								{
+									$link_valid = 1;
+								}
+								else
+								{
+									// ensures that multiple if queries act as AND rather than OR
+									$link_valid = 0;
+								}
+							}
+						}
+					}
+
+
+
+
+					/*
+						If the link passed logic processing, display
+					*/
+
+					if ($link_valid)
+					{
+						// link to page
+						// There are two ways:
+						// 1. (default) Link to index.php
+						// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+						if (isset($this->links[$link]["options"]["full_link"]) && $this->links[$link]["options"]["full_link"] == "yes")
+						{
+							print "<a href=\"". $this->links[$link]["page"] ."?libfiller=n";
 						}
 						else
 						{
-							print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+							print "<a href=\"index.php?page=". $this->links[$link]["page"] ."";
 						}
-					}
 
-					// finish link
-					print "\">";
-				}
+						// add each option
+						foreach (array_keys($this->links[$link]["options"]) as $getfield)
+						{
+							/*
+								There are two methods for setting the value of the variable:
+								1. The value has been passed.
+								2. The name of a column to take the value from has been passed
+							*/
+							if ($this->links[$link]["options"][$getfield]["value"])
+							{
+								print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+							}
+							else
+							{
+								print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+							}
+						}
+
+						// finish link
+						print "\">";
+
+					} // end if link valid
+
+				} // end if hyperlink
 
 				// handle bool images
 				if ($this->structure[$columns]["type"] == "bool_tick")
@@ -1397,7 +1458,7 @@ class table
 
 
 				// end hyperlink
-				if (isset($this->links["columns"][ $columns ]))
+				if (isset($this->links["columns"][ $columns ]) && $link_valid)
 				{
 					print "</a>";
 				}
@@ -1439,42 +1500,102 @@ class table
 					{
 						$count++;
 						
-						$linkname = language_translate_string($this->language, $link);
+						$linkname	= language_translate_string($this->language, $link);
+						$link_valid	= 1;
 
-						// link to page
-						// There are two ways:
-						// 1. (default) Link to index.php
-						// 2. Set the ["options]["full_link"] value to yes to force a full link
+						
+						/*
+							check if there are any logic options we need to process
 
-						if (isset($this->links[$link]["options"]["full_link"]) && $this->links[$link]["options"]["full_link"] == "yes")
-						{
-							print "<a class=\"button_small\" href=\"". $this->links[$link]["page"] ."?libfiller=n";
-						}
-						else
-						{
-							print "<a class=\"button_small\" href=\"index.php?page=". $this->links[$link]["page"] ."";
-						}
+							This is used to provide the capabilities such as optional hyperlinks that
+							only appear for same table rows.
+						*/
 
-						// add each option
-						foreach (array_keys($this->links[$link]["options"]) as $getfield)
+						// if statements
+						if ($this->links[$link]["options"]["logic"]["if"])
 						{
-							/*
-								There are two methods for setting the value of the variable:
-								1. The value has been passed.
-								2. The name of a column to take the value from has been passed
-							*/
-							if (isset($this->links[$link]["options"][$getfield]["value"]))
+							foreach (array_keys($this->links[$link]["options"]["logic"]["if"]) as $logic)
 							{
-								print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+								if ($this->links[$link]["options"]["logic"]["if"]["column"])
+								{
+									if ($this->data[$i][  $this->links[$link]["options"]["logic"]["if"]["column"] ])
+									{
+										$link_valid = 1;
+									}
+									else
+									{
+										// ensures that multiple if queries act as AND rather than OR
+										$link_valid = 0;
+									}
+								}
+							}
+						}
+
+						// if not statements
+						if ($this->links[$link]["options"]["logic"]["if_not"])
+						{
+							foreach (array_keys($this->links[$link]["options"]["logic"]["if_not"]) as $logic)
+							{
+								if ($this->links[$link]["options"]["logic"]["if_not"]["column"])
+								{
+									if (!$this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ])
+									{
+										$link_valid = 1;
+									}
+									else
+									{
+										// ensures that multiple if queries act as AND rather than OR
+										$link_valid = 0;
+									}
+								}
+							}
+						}
+
+
+
+
+						/*
+							If the link passed logic processing, display
+						*/
+
+						if ($link_valid)
+						{
+							// link to page
+							// There are two ways:
+							// 1. (default) Link to index.php
+							// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+							if (isset($this->links[$link]["options"]["full_link"]) && $this->links[$link]["options"]["full_link"] == "yes")
+							{
+								print "<a class=\"button_small\" href=\"". $this->links[$link]["page"] ."?libfiller=n";
 							}
 							else
 							{
-								print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+								print "<a class=\"button_small\" href=\"index.php?page=". $this->links[$link]["page"] ."";
 							}
-						}
 
-						// finish link
-						print "\">$linkname</a>";
+							// add each option
+							foreach (array_keys($this->links[$link]["options"]) as $getfield)
+							{
+								/*
+									There are two methods for setting the value of the variable:
+									1. The value has been passed.
+									2. The name of a column to take the value from has been passed
+								*/
+								if (isset($this->links[$link]["options"][$getfield]["value"]))
+								{
+									print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
+								}
+								else
+								{
+									print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
+								}
+							}
+
+							// finish link
+							print "\">$linkname</a>";
+
+						} // end if link valid
 
 						// if required, add seporator
 						if ($count < $links_count)
