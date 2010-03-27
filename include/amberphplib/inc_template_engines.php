@@ -213,6 +213,7 @@ class template_engine
 		log_debug("template_engine", "Executing prepare_filltemplate()");
 
 		$fieldname	= "";
+		$fieldnames = array(0 => '');
 		$in_foreach	= 0;
 		$in_if		= 0;
 		
@@ -224,10 +225,26 @@ class template_engine
 			// if $in_foreach is set, then this line should be repeated for each row in the array
 			if ($in_foreach)
 			{
+				$current_fieldname = $fieldnames[$in_foreach];
+				echo "$fieldname $in_foreach<br />";
+				echo htmlentities($line, ENT_QUOTES). "<br />";
 				// check for loop end
-				if (preg_match("/^\S*\send/", $line))
+				if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
+				{
+					unset($fieldnames[$in_foreach]);
+					$in_foreach--;
+					$fieldname = $fieldnames[$in_foreach];
+				} 
+				else if (preg_match("/^\S*\send[\s->]*$/", $line))
 				{
 					$in_foreach = 0;
+				}
+				else if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
+				{
+					$fieldname = $matches[1];
+					$in_foreach++;
+					$fieldnames[$in_foreach] = $fieldname;
+				
 				}
 				else
 				{
@@ -306,6 +323,7 @@ class template_engine
 					log_debug("template_engine","Processing array field $fieldname");
 
 					$in_foreach = 1;
+					$fieldnames[$in_foreach] = $fieldname; 
 				}
 				elseif (preg_match("/^\S*\sif\s(\S*)/", $line, $matches))
 				{
@@ -651,7 +669,11 @@ class template_engine_htmltopdf extends template_engine
 		{	
 			$this->processed[$key] = str_replace("(tmp_filename)", $tmp_filename, $processed_row);
 		}
-
+		
+		
+		
+		//exit("<pre>".print_r($this->data_array,true)."</pre>");
+		exit("<pre>".htmlentities(implode("",$this->processed), ENT_QUOTES)."</pre>");
 		foreach ($this->processed as $line)
 		{
 			if (fwrite($handle, $line) === FALSE)
