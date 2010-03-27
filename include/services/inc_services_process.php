@@ -330,6 +330,10 @@ function service_form_plan_process()
 			$data["alert_100pc"]		= @security_form_input_predefined("any", "alert_100pc", 0, "");
 			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
+
+		case "phone_services":
+			$data["id_rate_table"]		= @security_form_input_predefined("int", "id_rate_table", 1, "");
+		break;
 	}
 
 
@@ -421,7 +425,20 @@ function service_form_plan_process()
 						."WHERE id='$id'";
 			break;
 			
+
+			case "phone_services":
+
+				$sql_obj->string = "UPDATE services SET "
+						."price='". $data["price"] ."', "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."', "
+						."id_rate_table='". $data["id_rate_table"] ."' "
+						."WHERE id='$id'";
+			break;
+
+
 			case "generic_no_usage":
+			case "bundle":
 			default:
 
 				$sql_obj->string = "UPDATE services SET "

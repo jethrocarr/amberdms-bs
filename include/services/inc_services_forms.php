@@ -56,8 +56,16 @@ class services_form_details
 		// the service type can only be set at creation time.
 		if ($this->mode == "add")
 		{
-			$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label FROM service_types ORDER BY name");
+			$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label, description as label1 FROM service_types ORDER BY name");
 			$structure["options"]["req"]	= "yes";
+
+			// replace all the -- joiners with <br> for clarity
+			for ($i = 0; $i < count($structure["values"]); $i++)
+			{
+				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+				$structure["translations"][ $structure["values"][$i] ] .= "</i><br>";
+			}
+
 			$this->obj_form->add_input($structure);
 		}
 		else
@@ -475,6 +483,72 @@ class services_form_plan
 			break;
 
 
+			case "bundle":
+				// do not offer any advance billing methods	
+
+				// general
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+				$structure["options"]["req"]		= "yes";
+				
+				// replace all the -- joiners with <br> for clarity
+				for ($i = 0; $i < count($structure["values"]); $i++)
+				{
+					$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+					$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+				}
+
+				$this->obj_form->add_input($structure);
+
+
+			
+				// subforms
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+			break;
+
+
+			case "phone_services":
+				/*
+					Phones services are plans that get call cost values from rate tables.
+				*/
+				
+
+				// general
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+				$structure["options"]["req"]		= "yes";
+				
+				// replace all the -- joiners with <br> for clarity
+				for ($i = 0; $i < count($structure["values"]); $i++)
+				{
+					$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+					$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+				}
+
+				$this->obj_form->add_input($structure);
+
+
+
+				// custom
+				$structure = NULL;
+				$structure["fieldname"]		= "plan_information";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<i>For phone services, call charges are defined in rate tables - you should setup general rate tables using the \"<a href=\"index.php?page=services/cdr-rates.php\">CDR Rate Tables</a>\" page. You can over-ride certain rates using the Rate Override page in the menu above.</i>";
+				$this->obj_form->add_input($structure);
+
+				$structure = form_helper_prepare_dropdownfromdb("id_rate_table", "SELECT id, rate_table_name as label FROM cdr_rate_tables");
+				$structure["options"]["req"]		= "yes";
+				$this->obj_form->add_input($structure);
+
+
+
+
+
+				// subforms
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "id_rate_table");
+		
+			break;
+
+			
 			case "generic_no_usage":
 			default:
 				// no extra fields to display
@@ -515,7 +589,8 @@ class services_form_plan
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->serviceid;
 		$this->obj_form->add_input($structure);
-		
+	
+
 		// define subforms
 		$this->obj_form->subforms["hidden"]		= array("id_service");
 		

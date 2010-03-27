@@ -18,9 +18,6 @@ class cdr_rate_table
 	var $id;		// rate table ID
 	var $data;		// rate table data
 
-	var $option_type;	// option type category ("customer" or "service")
-	var $option_type_id;	// option_type id
-
 
 
 	/*
@@ -53,105 +50,7 @@ class cdr_rate_table
 
 	} // end of verify_id
 
-
-
-	/*
-		verify_id_override
-
-		Verify the supplied options IDs in order to fetch the override
-		data.
-
-		Results
-		0	Failure to verify
-		1	Success
-	*/
-	function verify_id_options()
-	{
-		log_write("debug", "cdr_rate_table", "Executing verify_id_options()");
-
-
-
-		/*
-			Fetch service ID from DB to verify valid options information
-		*/
-
-		if ($this->option_type == "service")
-		{
-			$obj_sql		= New sql_query;
-			$obj_sql->string	= "SELECT id as id_service FROM services WHERE id='". $this->option_type_id ."' LIMIT 1";
-			$obj_sql->execute();
-
-			if ($obj_sql->num_rows())
-			{
-				$obj_sql->fetch_array();
-
-				$service_id = $obj_sql->data[0]["id_service"];
-
-			}
-			else
-			{
-				log_write("error", "cdr_rate_table", "Unable to find ID $option_type_id in services");
-				return 0;
-			}
-		}
-		elseif ($this->option_type == "customer")
-		{
-			$obj_sql		= New sql_query;
-			$obj_sql->string	= "SELECT serviceid as id_service FROM services_customers WHERE id='". $this->option_type_id ."' LIMIT 1";
-			$obj_sql->execute();
-
-			if ($obj_sql->num_rows())
-			{
-				$obj_sql->fetch_array();
-
-				$service_id = $obj_sql->data[0]["id_service"];
-
-			}
-			else
-			{
-				log_write("error", "cdr_rate_table", "Unable to find ID $option_type_id in services_customers");
-				return 0;
-			}
-		
-		}
-		else
-		{
-			log_write("warning", "cdr_rate_table", "No such option type $option_type");
-			return 0;
-		}
-
-
-
-		/*
-			Verify or select service ID
-		*/
-
-		if (!$this->id)
-		{
-			// no service selected, select the service that belongs to the option ID.
-			$this->id = $service_id;
-
-			return 1;
-		}
-		else
-		{
-			// verify the service ID against the currently selected service
-			if ($this->id != $service_id)
-			{
-				log_write("error", "cdr_rate_table", "Service options returned id_service of $service_id but currently selected service is ". $this->id ."");
-				return 0;
-			}
-			else
-			{
-				// valid match
-				return 1;
-			}
-			
-		}
-
-		return 0;
-	}
-
+	
 
 	/*
 		verify_rate_table_name
@@ -604,10 +503,12 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 			foreach ($sql_obj->data as $data_rates)
 			{
-				$this->data["rates"][ $data_rates["id"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
-				$this->data["rates"][ $data_rates["id"] ]["rate_description"]	= $data_rates["rate_description"];
-				$this->data["rates"][ $data_rates["id"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
-				$this->data["rates"][ $data_rates["id"] ]["rate_price_cost"]	= $data_rates["rate_price_cost"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate"]		= $data_rates["id"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]	= $data_rates["rate_description"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_cost"]	= $data_rates["rate_price_cost"];
+
 			}
 
 			return 1;
@@ -655,7 +556,6 @@ class cdr_rate_table_rates extends cdr_rate_table
 		return 0;
 
 	} // end of load_data_rates
-
 
 	
 
@@ -808,9 +708,423 @@ class cdr_rate_table_rates extends cdr_rate_table
 	} // end of action_rate_delete
 
 
-
-
 } // end of cdr_rate_table_rates
+
+
+
+
+
+/*
+	CLASS cdr_rate_table_rates_override
+
+	Functions for querying and retreving override for CDR rates.
+*/
+class cdr_rate_table_rates_override extends cdr_rate_table_rates
+{
+	var $option_type;	// option type category ("customer" or "service")
+	var $option_type_id;	// option_type id
+
+	var $id_rate_override;	// id of a particular rate to manipulate
+
+
+	/*
+		verify_id_override
+
+		Verify the supplied options IDs in order to fetch the override
+		data.
+
+		Results
+		0	Failure to verify
+		1	Success
+	*/
+	function verify_id_override()
+	{
+		log_write("debug", "cdr_rate_table", "Executing verify_id_options()");
+
+
+
+		/*
+			Fetch service ID from DB to verify valid options information
+		*/
+
+		if ($this->option_type == "service")
+		{
+			$obj_sql		= New sql_query;
+			$obj_sql->string	= "SELECT id, id_rate_table as id_service FROM services WHERE id='". $this->option_type_id ."' LIMIT 1";
+			$obj_sql->execute();
+
+			if ($obj_sql->num_rows())
+			{
+				$obj_sql->fetch_array();
+
+				$id_rate_table = $obj_sql->data[0]["id_rate_table"];
+
+			}
+			else
+			{
+				log_write("error", "cdr_rate_table", "Unable to find ID $option_type_id in services");
+				return 0;
+			}
+		}
+		elseif ($this->option_type == "customer")
+		{
+			// TODO: complete this stuff
+
+			$obj_sql		= New sql_query;
+			$obj_sql->string	= "SELECT serviceid as id_service FROM services_customers WHERE id='". $this->option_type_id ."' LIMIT 1";
+			$obj_sql->execute();
+
+			if ($obj_sql->num_rows())
+			{
+				$obj_sql->fetch_array();
+
+				$service_id = $obj_sql->data[0]["id_service"];
+
+			}
+			else
+			{
+				log_write("error", "cdr_rate_table", "Unable to find ID $option_type_id in services_customers");
+				return 0;
+			}
+		
+		}
+		else
+		{
+			log_write("warning", "cdr_rate_table", "No such option type $option_type");
+			return 0;
+		}
+
+
+
+		/*
+			Verify or select rate table ID
+		*/
+
+		if (!$this->id)
+		{
+			// no rate table selected, select the one that belongs to the service ID
+			$this->id = $id_rate_table;
+
+			return 1;
+		}
+		else
+		{
+			// verify the service ID against the currently selected rate_table
+			if ($this->id != $id_rate_table)
+			{
+				log_write("error", "cdr_rate_table", "Service options returned id_rate_table of $id_rate_table but currently selected rate table is ". $this->id ."");
+				return 0;
+			}
+			else
+			{
+				// valid match
+				return 1;
+			}
+			
+		}
+
+		return 0;
+	}
+
+
+
+	/*
+		verify_id_rate_override
+
+		Returns
+		0	Failure - ID not found
+		1	Success
+	*/
+
+	function verify_id_rate_override()
+	{
+		log_debug("cdr_rate_table_rates", "Executing verify_id_rate_override()");
+
+		if ($this->id_rate_override)
+		{
+			// TODO: verify option_type and option_type_id here?
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM `cdr_rate_tables_overrides` WHERE id='". $this->id_rate_override ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				return 1;
+
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id_rate_override
+
+
+
+	/*
+		verify_rate_prefix_override
+
+		Verify that the supplied rate prefix is not already in use in the override table
+		
+		Results
+		0	Failure - prefix in use
+		1	Success - prefix is available
+	*/
+
+	function verify_rate_prefix_override()
+	{
+		log_write("debug", "cdr_rate_table", "Executing verify_rate_prefix_override()");
+
+		$sql_obj			= New sql_query;
+		$sql_obj->string		= "SELECT id FROM `cdr_rate_tables_overrides` WHERE rate_prefix='". $this->data_rate["rate_prefix"] ."' ";
+
+		if ($this->id_rate_override)
+			$sql_obj->string	.= " AND id!='". $this->id_rate_override ."'";
+
+		$sql_obj->string		.= " LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 0;
+		}
+		
+		return 1;
+
+	} // end of verify_rate_prefix_override
+
+
+
+
+
+	/*
+		load_data_rate_all_override
+
+		Load the rate table into the $this->data["rates"] array. If you want to get the full rate table including the non-overridden values
+		then do a load_data_rate_all followed by load_data_rate_all_override
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function load_data_rate_all_override()
+	{
+		log_debug("cdr_rate_table", "Executing load_data_rate_all_overrride()");
+
+
+		// fetch rates
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='". $this->option_type ."' AND option_type_id='". $this->option_type_id ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_rates)
+			{
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate_override"]	= $data_rates["id"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]	= $data_rates["rate_description"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
+			}
+
+			return 1;
+		}
+
+		// failure
+		return 0;
+
+	} // end of load_data_rate_all_override
+
+
+
+	/*
+		load_data_rate_override
+
+		Load a single data rate value into $this->data_rate
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function load_data_rate_override()
+	{
+		log_debug("cdr_rate_table", "Executing load_data_rate_override()");
+
+
+		// fetch rates
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='". $this->option_type ."' AND option_type_id='". $this->option_type_id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			$this->data_rate["rate_prefix"]		= $sql_obj->data[0]["rate_prefix"];
+			$this->data_rate["rate_description"]	= $sql_obj->data[0]["rate_description"];
+			$this->data_rate["rate_price_sale"]	= $sql_obj->data[0]["rate_price_sale"];
+
+			return 1;
+		}
+
+		// failure
+		return 0;
+
+	} // end of load_data_rate_override
+
+	
+
+	/*
+		action_rate_create_override
+
+		Create a new data rate override
+
+		Results
+		0	Failure
+		#	Success - return ID
+	*/
+	function action_rate_create_override()
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing action_rate_create_override()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_overrides` (option_type, option_type_id, rate_prefix) VALUES ('". $this->id ."', '". $this->option_type ."', '". $this->option_type_id ."', '". $this->data_rate["rate_prefix"]. "')";
+		$sql_obj->execute();
+
+		$this->id_rate = $sql_obj->fetch_insert_id();
+
+		return $this->id_rate;
+
+	} // end of action_rate_create_override
+
+
+
+
+	/*
+		action_rate_update_override
+
+		Update the details for the selected rate based on the data in $this->data_rate. If no ID is provided,
+		it will first call the action_rate_create function to add a new rate.
+
+		Returns
+		0	failure
+		#	success - returns the ID
+	*/
+	function action_rate_update_override()
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing action_rate_update_override()");
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID supplied, create a new rate first
+		*/
+		if (!$this->id_rate)
+		{
+			$mode = "create";
+
+			if (!$this->action_rate_create_override())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			$mode = "update";
+		}
+
+
+
+		/*
+			Update Rate Details
+		*/
+
+		$sql_obj->string	= "UPDATE `cdr_rate_tables_overrides` SET "
+						."rate_prefix='". $this->data_rate["rate_prefix"] ."', "
+						."rate_description='". $this->data_rate["rate_description"] ."', "
+						."rate_price_sale='". $this->data_rate["rate_price_sale"] ."' "
+						."WHERE id='". $this->id_rate ."' LIMIT 1";
+		$sql_obj->execute();
+
+		
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "cdr_rate_table", "An error occured when updating rate item details.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "cdr_rate_table_rates", "Rate item successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "cdr_rate_table_rates", "Rate item successfully created.");
+			}
+			
+			return $this->id_rate;
+		}
+
+	} // end of action_rate_update_override
+
+
+
+	/*
+		action_rate_delete_override
+
+		Deletes the selected rate from it's rate table.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function action_rate_delete_override()
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing action_rate_delete_override()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `cdr_rate_tables_overrides` WHERE id='". $this->id_rate_override ."' LIMIT 1";
+	
+		if ($sql_obj->execute())
+		{
+			log_write("notification", "cdr_rate_table_rates", "Requested rate item has been deleted.");
+			return 1;
+		}
+		else
+		{
+			log_write("error", "cdr_rate_table_rates", "An error occured whilst attempting to delete the requested rate item (". $this->id_rate_override .").");
+			return 0;
+		}
+
+	} // end of action_rate_delete_override
+
+
+
+} // end of cdr_rate_table_rates_override
+
+
+
+
+
 
 
 

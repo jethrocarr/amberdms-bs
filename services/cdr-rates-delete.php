@@ -110,7 +110,15 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["rate_table_delete"]	= array("rate_table_name", "rate_table_description");
 		$this->obj_form->subforms["hidden"]		= array("id");
-		$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+
+		if ($this->locked)
+		{
+			$this->obj_form->subforms["submit"]		= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]		= array("delete_confirm", "submit");
+		}
 		
 
 		// load any data
