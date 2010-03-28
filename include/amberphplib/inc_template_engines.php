@@ -555,6 +555,11 @@ class template_engine_latex extends template_engine
 
 		// process with pdflatex
 		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
+
+		if (!is_executable($app_pdflatex))
+		{
+			log_write("error", "process", "You have selected a template that requires the pdflatex application, however $app_pdflatex does not exist or is not executable by your webserver process");
+		}
 	
 		chdir("/tmp");
 		exec("HOME=/tmp/ $app_pdflatex $tmp_filename.tex", $output);
@@ -816,24 +821,33 @@ class template_engine_htmltopdf extends template_engine
 		
 																				
 
-		// process with pdflatex
-		//$app_wkhtmltopdf = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
-		$app_wkhtmltopdf = "/opt/wkhtmltopdf-static -B 5mm -L 5mm -R 5mm -T 5mm"; 
-		
+		/*
+			Process with wkhtmltopdf
+
+			TODO: in future, this may be extended to support alternative HTML to PDF rendering engines
+		*/
+
+		$app_wkhtmltopdf = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_WKHTMLTOPDF' LIMIT 1");
+
+		if (!is_executable($app_wkhtmltopdf))
+		{
+			log_write("error", "process", "You have selected a template that requires the wkhtmltopdf engine, however $app_wkhtmltopdf does not exist or is not executable by your webserver process");
+			return 0;
+		}
 	
 		chdir("/tmp");
-		exec("HOME=/tmp/ $app_wkhtmltopdf $tmp_filename.html $tmp_filename.pdf", $output);
-		
-		//exit("<pre>".print_r("HOME=/tmp/ $app_wkhtmltopdf $tmp_filename.html",true)."</pre>");
-		
-		
+		exec("HOME=/tmp/ $app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf", $output);
+
 		foreach ($output as $line)
 		{
 			log_debug("template_engine_htmltopdf", "wkhtmltopdf: $line");
 		}
 
 
-		// check that a PDF was generated
+
+		/*
+			check that a PDF was generated
+		*/
 		if (file_exists("$tmp_filename.pdf"))
 		{
 			log_debug("template_engine_htmltopdf", "Temporary PDF $tmp_filename.pdf generated");
@@ -864,9 +878,7 @@ class template_engine_htmltopdf extends template_engine
 
 
 	
-
-	
-} // end of template_engine_latex class
+} // end of template_engine_htmltopdf class
 
 
 ?>
