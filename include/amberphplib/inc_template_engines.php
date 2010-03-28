@@ -2,11 +2,15 @@
 /*
 	inc_template_engines.php
 
-	Functions and classes for generating rendered output.
-	
-	This function is currently used for generging PS/PDF output by
-	using latex, but in future could be expanded to offer other
-	formats as well.
+	Functions and classes for generating rendered output from templates to different
+	formats such as HTML and PDF using a number of rendering engines include LaTeX
+	or WKHTMLTOPDF.
+
+	This code is mostly used for PDF generation.
+
+
+	TODO:	This file has fixed references to /tmp, this needs to be updated to use
+		the configurable temp location set in the config table.
 */
 
 
@@ -209,9 +213,7 @@ class template_engine
 
 	function fillter_template_data()
 	{
-	
-	
-	
+		// TODO: is this function here as a placeholder for a reason or just some legacy/code-tidying left over?
 	}
 
 
@@ -245,6 +247,7 @@ class template_engine
 			if ($in_foreach)
 			{
 				$current_fieldname = $fieldnames[$in_foreach];
+
 				// check for loop end
 				if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
 				{
@@ -288,8 +291,9 @@ class template_engine
 					*/
 					
 					
-					// if we are in greater than one depth of loop (although , this only works for two lefels, a third will break)
-					if($in_foreach > 1)
+					// if we are in greater than one depth of loop (although , this only works for two levels, a third will break)
+					// TODO: in future, expand this to handle indefiniate numbers of levels?
+					if ($in_foreach > 1)
 					{
 						$parent_fieldname = $fieldnames[1];
 						// first loop through the parent fields
@@ -342,7 +346,6 @@ class template_engine
 				}
 				else
 				{
-
 					// remove commenting from the front of the line
 					$line_tmp = preg_replace("/^\S*\s/", "", $line);
 				
@@ -373,8 +376,6 @@ class template_engine
 			if (!$in_if && !$in_foreach)
 			{
 				// NOT IN LOOP SECTIONS
-
-
 				if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
 				{
 					// check for foreach loop
@@ -441,6 +442,9 @@ class template_engine
 
 /*
 	CLASS TEMPLETE_ENGINE_LATEX
+
+	Functions for generating documents using LaTeX.
+
 */
 class template_engine_latex extends template_engine
 {
@@ -468,6 +472,7 @@ class template_engine_latex extends template_engine
 			{
 				$filtered_fieldname = preg_replace($target, $replace, $fieldname);
 				$filtered_data = preg_replace($target, $replace, $data);
+
 				// Unset the unfiltered value, it is no longer needed
 				unset($this->data[$fieldname]);
 				$this->data[$filtered_fieldname] = $filtered_data;
@@ -611,6 +616,11 @@ class template_engine_latex extends template_engine
 
 /*
 	CLASS TEMPLETE_ENGINE_HTMLTOPDF
+
+	Functions for generating documents using HTML to PDF conversion renders.
+
+	Currently this only consists of wkhtmltopdf, however it could potentially support other CSS 2.1 compliant
+	rendering engines in future with configurable options.
 */
 class template_engine_htmltopdf extends template_engine
 {
@@ -636,7 +646,7 @@ class template_engine_htmltopdf extends template_engine
 	/*
 		prepare_load_template
 
-		Reads a template file into memory, overrides the parent method, html templates are directories, main file is index.php
+		Reads a template file into memory, overrides the parent method, html templates are directories, main file is index.html
 
 		Values
 		templatefile		Filename/path of the template file
@@ -705,18 +715,23 @@ class template_engine_htmltopdf extends template_engine
 	} // end of prepare_escape_fields
 
 
+
 	/*
 		fillter_template_data()
 
 		Can be overridden in child classes to alter incoming data
 		
-		Used here to splid the invoice items up
+		Used here to split the invoice items up
 		
 		Returns
 		0		failure
 		1		success
+
+		// TODO: this function name is a typo, should be filter_template_data, needs a sed to correct source
+
+		// TODO: the function seems to contain ABS-specific references to invoice_items? This needs to be changed, since
+			 this function needs to be product-neutral as it is part of the Amberphplib framework.
 	*/
-	
 
 	function fillter_template_data()
 	{
@@ -726,6 +741,7 @@ class template_engine_htmltopdf extends template_engine
 			$this->data_array['invoice_pages'] = array();
 			$temp_data_array = array_chunk($this->data_array['invoice_items'],$page_row_count);
 			unset($this->data_array['invoice_items']);
+
 			// static page offset
 			$page_offset = 1;
 			$page_count = $page_offset + count($temp_data_array);
@@ -756,18 +772,21 @@ class template_engine_htmltopdf extends template_engine
 		log_debug("template_engine_htmltopdf", "Executing generate_pdf()");
 
 
+		/*
+			Generate temporary file for template
+		*/
+
 		// generate unique tmp filename
 		$tmp_filename = file_generate_name("/tmp/amberdms_billing_system");
 
 		// write out template data
 		if (!$handle = fopen("$tmp_filename.html", "w"))
 		{	
-			log_write("error", "template_engine_htmltopdf", "Failed to create temporary file ($tmp_filename.tex) with template data");
+			log_write("error", "template_engine_htmltopdf", "Failed to create temporary file ($tmp_filename.html) with template data");
 			return 0;
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/billing_system/htdocs/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
@@ -775,9 +794,9 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		
-		
 		//exit("<pre>".print_r($this->data_array,true)."</pre>");
 		//exit(implode("",$this->processed));
+
 		foreach ($this->processed as $line)
 		{
 			if (fwrite($handle, $line) === FALSE)
@@ -790,18 +809,11 @@ class template_engine_htmltopdf extends template_engine
 		fclose($handle);
 
 
-                // create a "home directory" for texlive - some components of texlive
-		// require this dir to write files to, and if it doesn't exist the PDF
-		// will fail to build.
-		//
-		// Also note that we need to specify HOME=$tmp_filename_texlive so that
-		// texlive will use it, otherwise it will default to the home directory
-		// of whoever the last user to restart apache was
-		//
-		// (this is often root, but can sometimes be another admin who restarted
-		//  apache whilst sudoed)
-		//
-		//ini_set('display_errors', true);
+
+		/*
+			Create Directory for HTML data files & copy them over
+		*/
+
 		$tmp_data_directory = $tmp_filename ."_html_data";
 		
 		mkdir($tmp_filename ."_html_data", 0700);
@@ -814,7 +826,6 @@ class template_engine_htmltopdf extends template_engine
 			//echo $new_file_path."<br />";
 			copy($data_dir_file, $new_file_path);
 		}
-		
 				
 		//print("<pre>".print_r($data_directory_items,true)."</pre>");
 		//exit("<pre>".print_r(glob($tmp_data_directory."/*"),true)."</pre>");
@@ -824,7 +835,7 @@ class template_engine_htmltopdf extends template_engine
 		/*
 			Process with wkhtmltopdf
 
-			TODO: in future, this may be extended to support alternative HTML to PDF rendering engines
+			Note: In future, this may be extended to support alternative HTML to PDF rendering engines
 		*/
 
 		$app_wkhtmltopdf = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_WKHTMLTOPDF' LIMIT 1");
@@ -836,7 +847,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 	
 		chdir("/tmp");
-		exec("HOME=/tmp/ $app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf", $output);
+		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf", $output);
 
 		foreach ($output as $line)
 		{
@@ -870,7 +881,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		else
 		{
-			log_write("error", "template_engine_htmltopdf", "Unable to use pdflatex ($app_pdflatex) to generate PDF file");
+			log_write("error", "template_engine_htmltopdf", "Unable to use wkhtmltopdf ($app_wkhtmltopdf) to generate PDF file");
 			return 0;
 		}
 		
