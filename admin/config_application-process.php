@@ -57,6 +57,7 @@ if (user_permissions_get("admin"))
 		$data["DATA_STORAGE_LOCATION"]	= @security_form_input_predefined("any", "DATA_STORAGE_LOCATION", 1, "");
 		$data["DATA_STORAGE_METHOD"]	= @security_form_input_predefined("any", "DATA_STORAGE_METHOD", 1, "");
 		$data["APP_PDFLATEX"]		= @security_form_input_predefined("any", "APP_PDFLATEX", 1, "");
+		$data["APP_WKHTMLTOPDF"]	= @security_form_input_predefined("any", "APP_WKHTMLTOPDF", 1, "");
 		$data["APP_MYSQL_DUMP"]		= @security_form_input_predefined("any", "APP_MYSQL_DUMP", 1, "");
 
 		if ($data["EMAIL_ENABLE"] == "on")

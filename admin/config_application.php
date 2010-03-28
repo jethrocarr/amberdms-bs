@@ -232,6 +232,12 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
+			$structure["fieldname"]				= "APP_WKHTMLTOPDF";
+			$structure["type"]				= "input";
+			$structure["options"]["no_translate_fieldname"]	= "yes";
+			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
 			$structure["fieldname"]				= "APP_MYSQL_DUMP";
 			$structure["type"]				= "input";
 			$structure["options"]["no_translate_fieldname"]	= "yes";
@@ -259,7 +265,7 @@ class page_output
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{
-			$this->obj_form->subforms["config_dangerous"]	= array("PATH_TMPDIR", "APP_PDFLATEX", "APP_MYSQL_DUMP", "EMAIL_ENABLE", "DATA_STORAGE_LOCATION", "DATA_STORAGE_METHOD");
+			$this->obj_form->subforms["config_dangerous"]	= array("PATH_TMPDIR", "APP_PDFLATEX", "APP_WKHTMLTOPDF", "APP_MYSQL_DUMP", "EMAIL_ENABLE", "DATA_STORAGE_LOCATION", "DATA_STORAGE_METHOD");
 		}
 		
 		$this->obj_form->subforms["submit"]			= array("submit");
