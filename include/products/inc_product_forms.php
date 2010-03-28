@@ -89,6 +89,7 @@ class products_form_details
 		$structure["type"]		= "date";
 		$this->obj_form->add_input($structure);
 
+		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
 
 		
 		// pricing			
@@ -110,6 +111,60 @@ class products_form_details
 		$structure["options"]["max_length"]	= "6";
 		$this->obj_form->add_input($structure);
 
+		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale", "discount");
+
+
+
+		/*
+			List all the taxes, so that the user can select the tax(es) that apply to the product
+		*/
+
+		$sql_tax_obj		= New sql_query;
+		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->execute();
+
+		if ($sql_tax_obj->num_rows())
+		{
+			// user note
+			$structure = NULL;
+			$structure["fieldname"] 		= "tax_message";
+			$structure["type"]			= "message";
+			$structure["defaultvalue"]		= "<p>Check all taxes that apply to this product below.</p>";
+			$this->obj_form->add_input($structure);
+		
+			$this->obj_form->subforms["product_tax"][] = "tax_message";
+
+
+			// run through all the taxes
+			$sql_tax_obj->fetch_array();
+
+			foreach ($sql_tax_obj->data as $data_tax)
+			{
+				// define tax checkbox
+				$structure = NULL;
+				$structure["fieldname"] 		= "tax_". $data_tax["id"];
+				$structure["type"]			= "checkbox";
+				$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+				$structure["options"]["no_fieldname"]	= "enable";
+
+				// see if this tax is currently enabled for this product
+				if ($this->productid)
+				{
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT id FROM products_taxes WHERE productid='". $this->productid ."' AND taxid='". $data_tax["id"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$structure["defaultvalue"] = "on";
+					}
+				}
+
+				// add to form
+				$this->obj_form->add_input($structure);
+				$this->obj_form->subforms["product_tax"][] = "tax_". $data_tax["id"];
+			}
+		}
 
 
 		// quantity
@@ -123,6 +178,8 @@ class products_form_details
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
 
+		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
+
 
 		// supplier details
 		$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors");
@@ -132,14 +189,11 @@ class products_form_details
 		$structure["fieldname"] 	= "code_product_vendor";
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
-			
 
-		// define subforms
-		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
-		$this->obj_form->subforms["product_pricing"]	= array("price_cost", "price_sale", "discount");
-		$this->obj_form->subforms["product_quantity"]	= array("quantity_instock", "quantity_vendor");
 		$this->obj_form->subforms["product_supplier"]	= array("vendorid", "code_product_vendor");
-		
+
+
+		// define remaining subforms	
 		if (user_permissions_get("products_write"))
 		{
 			$this->obj_form->subforms["submit"]		= array("submit");

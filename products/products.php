@@ -105,12 +105,8 @@ class page_output
 			// links
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "products/view.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_product_details", "products/view.php", $structure);
 			
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("taxes", "products/taxes.php", $structure);
-
 
 			// display the table
 			$this->obj_table->render_table_html();

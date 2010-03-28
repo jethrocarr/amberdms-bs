@@ -45,6 +45,24 @@ if (user_permissions_get('products_write'))
 	$obj_product->data["quantity_vendor"]		= @security_form_input_predefined("int", "quantity_vendor", 0, "");
 
 
+	// fetch information for all tax checkboxes from form
+	$sql_tax_obj		= new sql_query;
+	$sql_tax_obj->string	= "select id from account_taxes";
+	$sql_tax_obj->execute();
+
+	if ($sql_tax_obj->num_rows())
+	{
+		$sql_tax_obj->fetch_array();
+
+		foreach ($sql_tax_obj->data as $data_tax)
+		{
+			$obj_product->data["tax_". $data_tax["id"] ]	= @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+		}
+
+	} // end of loop through taxes
+
+
+
 	// only get vendor ID if vendors exist, otherwise will trigger an error
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= "SELECT id FROM vendors LIMIT 1";
@@ -114,6 +132,8 @@ if (user_permissions_get('products_write'))
 	*/
 
 	$obj_product->action_update();
+
+	$obj_product->action_update_taxes();
 
 	// display updated details
 	header("Location: ../index.php?page=products/view.php&id=". $obj_product->id);

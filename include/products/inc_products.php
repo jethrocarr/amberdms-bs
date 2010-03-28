@@ -185,7 +185,7 @@ class product
 		{
 			$sql_obj->fetch_array();
 
-			$this->data = $sql_obj->data[0];
+			$this->data = $sql_obj->data[0];	
 
 			return 1;
 		}
@@ -356,6 +356,68 @@ class product
 
 
 	/*
+		action_update_taxes
+
+		Update the taxes for this product.
+	*/
+	function action_update_taxes()
+	{
+		log_debug("inc_products", "Executing action_update_taxes()");
+
+		// start transaction
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+		// delete existing tax options
+		$sql_obj->string	= "DELETE FROM products_taxes WHERE productid='". $this->id ."'";
+		$sql_obj->execute();
+
+		// if the product has selected a default tax, make sure the default tax is enabled.
+		if ($this->data["tax_default"])
+		{
+			$this->data["tax_". $this->data["tax_default"] ] = "on";
+		}
+
+		// run through all the taxes and if the user has selected the tax to be enabled, enable it
+		$sql_taxes_obj		= New sql_query;
+		$sql_taxes_obj->string	= "SELECT id FROM account_taxes";
+		$sql_taxes_obj->execute();
+
+		if ($sql_taxes_obj->num_rows())
+		{
+			$sql_taxes_obj->fetch_array();
+
+			foreach ($sql_taxes_obj->data as $data_tax)
+			{
+				if ($this->data["tax_". $data_tax["id"]])
+				{
+					// enable tax for product
+					$sql_obj->string	= "INSERT INTO products_taxes (productid, taxid) VALUES ('". $this->id ."', '". $data_tax["id"] ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
+
+		// commit
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_products", "A fatal error occured whilst attempting to update product tax information.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
+	}
+
+
+
+	/*
 		action_delete
 
 		Deletes a product.
@@ -410,288 +472,6 @@ class product
 
 } // end of class:product
 
-
-
-
-
-/*
-	CLASS: product_tax
-
-	Provides functions for managing product tax items
-*/
-
-class product_tax
-{
-	var $id;		// holds product ID
-	var $itemid;		// holds ID of tax item (if any is selected)
-
-	var $data;		// holds values of record fields
-
-
-
-	/*
-		verify_product_id
-
-		Checks that the provided ID is a valid product
-
-		Results
-		0	Failure to find the ID
-		1	Success - product exists
-	*/
-
-	function verify_product_id()
-	{
-		log_debug("inc_products", "Executing verify_product_id()");
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM `products` WHERE id='". $this->id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			return 1;
-		}
-
-		return 0;
-
-	} // end of verify_id
-
-
-
-	/*
-		verify_item_id
-
-		Checks that the provided ID is a valid item
-
-		Results
-		0	Failure to find the ID
-		1	Success - tax item exists
-	*/
-
-	function verify_item_id()
-	{
-		log_debug("inc_products", "Executing verify_item_id()");
-
-		if ($this->itemid)
-		{
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM `products_taxes` WHERE id='". $this->itemid ."' LIMIT 1";
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				return 1;
-			}
-		}
-
-		return 0;
-
-	} // end of verify_item_id
-
-
-
-	/*
-		load_data
-
-		Load the tax item's information into the $this->data array.
-
-		Returns
-		0	failure
-		1	success
-	*/
-	function load_data()
-	{
-		log_debug("inc_products", "Executing load_data()");
-
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT * FROM products_taxes WHERE id='". $this->itemid ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if ($sql_obj->num_rows())
-		{
-			$sql_obj->fetch_array();
-
-			$this->data = $sql_obj->data[0];
-
-			return 1;
-		}
-
-		// failure
-		return 0;
-
-	} // end of load_data
-
-
-
-	/*
-		action_create
-
-		Create a new tax item based on the data in $this->data
-
-		Results
-		0	Failure
-		#	Success - return ID
-	*/
-	function action_create()
-	{
-		log_debug("inc_products", "Executing action_create()");
-
-		// create a new product
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `products_taxes` (taxid) VALUES ('". $this->data["taxid"]. "')";
-		$sql_obj->execute();
-
-		$this->itemid = $sql_obj->fetch_insert_id();
-
-		return $this->itemid;
-
-	} // end of action_create
-
-
-
-	/*
-		action_update
-
-		Update the details of the a tax item based on the data in $this->data. If no ID is provided,
-		it will first call the action_create function.
-
-		Returns
-		0	failure
-		#	success - returns the item ID
-	*/
-	function action_update()
-	{
-		log_debug("inc_products", "Executing action_update()");
-
-		/*
-			Start Transaction
-		*/
-		$sql_obj = New sql_query;
-		$sql_obj->trans_begin();
-
-
-		/*
-			If no ID exists, create a new tax item first
-		*/
-		if (!$this->itemid)
-		{
-			$mode = "create";
-
-			if (!$this->action_create())
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			$mode = "update";
-		}
-		
-		/*
-			Convert data inputs
-		*/
-		if ($this->data["manual_option"])
-		{
-			$this->data["manual_option"] = 1;
-		}
-
-
-		/*
-			Update tax item details
-		*/
-
-		$sql_obj->string	= "UPDATE `products_taxes` SET "
-						."taxid='". $this->data["taxid"] ."', "
-						."description='". $this->data["description"] ."', "
-						."manual_amount='". $this->data["manual_amount"] ."', "
-						."manual_option='". $this->data["manual_option"] ."', "
-						."productid='". $this->id ."' "
-						."WHERE id='". $this->itemid ."' LIMIT 1";
-
-		$sql_obj->execute();
-
-
-		/*
-			Update the Journal
-		*/
-		if ($mode == "update")
-		{
-			journal_quickadd_event("products", $this->id, "Tax item details updated.");
-		}
-		else
-		{
-			journal_quickadd_event("products", $this->id, "New tax item added.");
-		}
-
-
-
-		/*
-			Commit
-		*/
-		if (error_check())
-		{
-			$sql_obj->trans_rollback();
-
-			log_write("error", "process", "An error occured whilst updating product details. No changes were made.");
-
-			return 0;
-		}
-		else
-		{
-			$sql_obj->trans_commit();
-
-			if ($mode == "update")
-			{
-				log_write("notification", "inc_products", "Tax item successfully updated.");
-			}
-			else
-			{
-				log_write("notification", "inc_products", "Tax item successfully created.");
-			}
-
-
-			// success
-			return $this->itemid;
-		}
-
-
-
-	} // end of action_update
-
-
-
-	/*
-		action_delete
-
-		Deletes a tax item
-
-		Results
-		0	failure
-		1	success
-	*/
-	function action_delete()
-	{
-		log_debug("inc_products", "Executing action_delete()");
-
-
-		// delete the tax item
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "DELETE FROM products_taxes WHERE id='". $this->itemid ."' LIMIT 1";
-			
-		if (!$sql_obj->execute())
-		{
-			log_write("error", "inc_products", "A fatal error occured whilst trying to delete the product");
-			return 0;
-		}
-
-		// success
-		log_write("notification", "inc_products", "Tax item has been successfully deleted.");
-
-		return 1;
-	}
-
-
-} // end of class:product_tax
 
 
 
