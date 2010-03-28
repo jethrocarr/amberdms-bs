@@ -205,15 +205,11 @@ class template_engine
 
 		Can be overridden in child classes to alter incoming data
 		fields.
-		
-		Returns
-		0			failure
-		1			success
 	*/
 
 	function fillter_template_data()
 	{
-		// TODO: is this function here as a placeholder for a reason or just some legacy/code-tidying left over?
+		// this is purely a placeholder here to avoid missing function errors elsewhere in the application
 	}
 
 
