@@ -1,7 +1,7 @@
 Summary: Amberdms Billing System
 Name: amberdms-bs
-Version: 1.4.1
-Release: 1.%{?dist}
+Version: 2.0.0
+Release: 1.alpha.1%{?dist}
 License: AGPLv3
 URL: http://www.amberdms.com/billing
 Group: Applications/Internet
@@ -100,6 +100,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/amberdms
 
 %changelog
+* Sun Mar 28 2010 Jethro Carr <jethro.carr@amberdms.com> 2.0.0.alpha.1
+- Upgraded to release 2.0.1.alpha.1
 * Mon Mar 08 2010 Jethro Carr <jethro.carr@amberdms.com> 1.4.1
 - Upgraded to release 1.4.1
 * Sun Dec 06 2009 Jethro Carr <jethro.carr@amberdms.com> 1.4.0
