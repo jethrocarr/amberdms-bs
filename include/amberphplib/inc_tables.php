@@ -1827,14 +1827,14 @@ class table
 
 		
 		// table foreach loop
-		$output_tabledata[]		= '%% foreach table_data';
+		$output_tabledata[]		= '%% foreach table\_data';
 
 		$line	= "";
 		$line	.= '%% ';
 
 		for ($i=0; $i < $col_num; $i++)
 		{
-			$line .= '(column_'. $i .')';
+			$line .= '(column\_'. $i .')';
 
 			if ($i != ($col_num - 1))
 			{
@@ -1844,7 +1844,7 @@ class table
 
 		if ($this->total_rows)
 		{
-			$line .= ' & (column_total) ';
+			$line .= ' & (column\_total) ';
 		}
 
 		$line .= '\tabularnewline';
@@ -1930,7 +1930,7 @@ class table
 
 
 		// table name
-		$template_pdf->prepare_add_field("table\_name", language_translate_string($this->language, $this->tablename));
+		$template_pdf->prepare_add_field("table_name", language_translate_string($this->language, $this->tablename));
 
 
 		// table options
@@ -1975,8 +1975,6 @@ class table
 			$structure_main[] = $structure;
 		}
 
-
-
 		$template_pdf->prepare_add_array("table_options", $structure_main);
 
 
@@ -2016,22 +2014,23 @@ class table
 
 				if (in_array($column, $this->total_columns))
 				{
-					$template_pdf->prepare_add_field('column\_total\_'. $j, $this->data_render["total"][ $column ]);
+					$template_pdf->prepare_add_field('column_total_'. $j, $this->data_render["total"][ $column ]);
 				}
 				else
 				{
-					$template_pdf->prepare_add_field('column\_total\_'. $j, "");
+					$template_pdf->prepare_add_field('column_total_'. $j, "");
 				}
 			}
 
 			// optional: totals for rows
 			if ($this->total_rows)
 			{
-				$template_pdf->prepare_add_field('column\_total\_total', $this->data_render["total"]["total"]);
+				$template_pdf->prepare_add_field('column_total_total', $this->data_render["total"]["total"]);
 			}
 
 			print "\n";
 		}
+
 
 
 		/*
@@ -2049,6 +2048,7 @@ class table
 
 		// display PDF
 		print $template_pdf->output;
+//		print_r($template_pdf->template);
 //		print_r($template_pdf->processed);
 //		print_r($template_pdf->data_array);
 
