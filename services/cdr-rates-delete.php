@@ -140,8 +140,8 @@ class page_output
 	function render_html()
 	{
 		// title and summary
-		print "<h3>RATE TABLE DETAILS</h3><br>";
-		print "<p>View/Adjust the basic details of the selected rate table below, or use the nav menu above to select the items page to modify the prefixes and matching.</p>";
+		print "<h3>RATE TABLE DELETE</h3><br>";
+		print "<p>Use this page to delete an unused rate table.</p>";
 
 		// display the form
 		$this->obj_form->render_form();
