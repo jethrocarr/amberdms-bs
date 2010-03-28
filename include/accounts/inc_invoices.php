@@ -739,7 +739,7 @@ class invoice
 	*/
 	function generate_pdf()
 	{
-		log_debug("invoice", "Executing prepare_generate_pdf()");
+		log_debug("invoice", "Executing generate_pdf()");
 
 		// start the PDF object
 		//
@@ -824,7 +824,7 @@ class invoice
 			$sql_customer_obj->data[0]["address1_zipcode"] = "";
 		}
 		
-		$this->obj_pdf->prepare_add_field("customer\_address1\_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
+		$this->obj_pdf->prepare_add_field("customer_address1_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
 
 
 
@@ -1096,7 +1096,7 @@ class invoice
 		// fill template
 		$this->obj_pdf->prepare_filltemplate();
 
-		// Useful for debugging - shows the processed latex data before it is turned into a PDF.
+		// Useful for debugging - shows the processed template lines BEFORE it is fed to the render engine
 		//print "<pre>";
 		//print_r($this->obj_pdf->processed);
 		//print "</pre>";

@@ -267,14 +267,14 @@ class page_output
 		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
 
 		// dates
-		$template_pdf->prepare_add_field("date\_start", time_format_humandate($this->date_start));
-		$template_pdf->prepare_add_field("date\_end", time_format_humandate($this->date_end));
-		$template_pdf->prepare_add_field("date\_created", time_format_humandate());
+		$template_pdf->prepare_add_field("date_start", time_format_humandate($this->date_start));
+		$template_pdf->prepare_add_field("date_end", time_format_humandate($this->date_end));
+		$template_pdf->prepare_add_field("date_created", time_format_humandate());
 
 
 		// totals
-		$template_pdf->prepare_add_field("amount\_total\_credit", $this->obj_table->data_render["total"]["credit"]);
-		$template_pdf->prepare_add_field("amount\_total\_debit", $this->obj_table->data_render["total"]["debit"]);
+		$template_pdf->prepare_add_field("amount_total_credit", $this->obj_table->data_render["total"]["credit"]);
+		$template_pdf->prepare_add_field("amount_total_debit", $this->obj_table->data_render["total"]["debit"]);
 
 
 		// table rows

@@ -740,16 +740,16 @@ class page_output
 		$template_pdf->prepare_add_field("mode", $this->mode);
 		
 		// dates
-		$template_pdf->prepare_add_field("date\_end", time_format_humandate($this->date_end));
-		$template_pdf->prepare_add_field("date\_created", time_format_humandate());
+		$template_pdf->prepare_add_field("date_end", time_format_humandate($this->date_end));
+		$template_pdf->prepare_add_field("date_created", time_format_humandate());
 
 
 		// totals
-		$template_pdf->prepare_add_field("amount\_total\_current\_earnings", $this->data_totals["current_earnings"]);
-		$template_pdf->prepare_add_field("amount\_total\_assets", $this->data_totals["assets"]);
-		$template_pdf->prepare_add_field("amount\_total\_liabilities", $this->data_totals["liabilities"]);
-		$template_pdf->prepare_add_field("amount\_total\_equity", $this->data_totals["equity"]);
-		$template_pdf->prepare_add_field("amount\_total\_liabilities\_and\_equity", $this->data_totals["liabilities_and_equity"]);
+		$template_pdf->prepare_add_field("amount_total_current_earnings", $this->data_totals["current_earnings"]);
+		$template_pdf->prepare_add_field("amount_total_assets", $this->data_totals["assets"]);
+		$template_pdf->prepare_add_field("amount_total_liabilities", $this->data_totals["liabilities"]);
+		$template_pdf->prepare_add_field("amount_total_equity", $this->data_totals["equity"]);
+		$template_pdf->prepare_add_field("amount_total_liabilities_and_equity", $this->data_totals["liabilities_and_equity"]);
 
 
 		// asset data
@@ -816,6 +816,7 @@ class page_output
 
 		// display PDF
 		print $template_pdf->output;
+
 //		foreach ($template_pdf->processed as $line)
 //		{
 //			print $line;
