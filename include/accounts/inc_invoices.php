@@ -1090,6 +1090,9 @@ class invoice
 		// perform string escaping for latex
 		$this->obj_pdf->prepare_escape_fields();
 		
+		// fillter template data
+		$this->obj_pdf->fillter_template_data();
+		
 		// fill template
 		$this->obj_pdf->prepare_filltemplate();
 

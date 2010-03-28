@@ -195,7 +195,24 @@ class template_engine
 	}
 
 
+
+	/*
+		fillter_template_data
+
+		Can be overridden in child classes to alter incoming data
+		fields.
+		
+		Returns
+		0			failure
+		1			success
+	*/
+
+	function fillter_template_data()
+	{
 	
+	
+	
+	}
 
 
 	/*
@@ -214,9 +231,11 @@ class template_engine
 
 		$fieldname	= "";
 		$fieldnames = array(0 => '');
-		$in_foreach	= 0;
-		$in_if		= 0;
+		$repeated_processed_lines = array();
 		
+		
+		$in_foreach	= 0; 
+		$in_if		= 0;
 		for ($i=0; $i < count($this->template); $i++)
 		{
 			$line = $this->template[$i];
@@ -226,18 +245,30 @@ class template_engine
 			if ($in_foreach)
 			{
 				$current_fieldname = $fieldnames[$in_foreach];
-				echo "$fieldname $in_foreach<br />";
-				echo htmlentities($line, ENT_QUOTES). "<br />";
 				// check for loop end
 				if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
 				{
 					unset($fieldnames[$in_foreach]);
 					$in_foreach--;
 					$fieldname = $fieldnames[$in_foreach];
+					
+					if($in_foreach == 0) {
+						foreach((array)$repeated_processed_lines as $repeated_processed_line_set) {
+							$this->processed = array_merge($this->processed, (array)$repeated_processed_line_set);
+						}
+
+						$repeated_processed_lines = array();
+					}
 				} 
 				else if (preg_match("/^\S*\send[\s->]*$/", $line))
 				{
 					$in_foreach = 0;
+					foreach((array)$repeated_processed_lines as $repeated_processed_line_set) {
+						$this->processed = array_merge($this->processed, (array)$repeated_processed_line_set);
+					}
+					
+					$repeated_processed_lines = array();
+					$repeated_processed_lines = null;
 				}
 				else if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
 				{
@@ -255,19 +286,48 @@ class template_engine
 						For this line, run through all the rows and add a new, processed
 						row for every row required.
 					*/
-					for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
+					
+					
+					// if we are in greater than one depth of loop (although , this only works for two lefels, a third will break)
+					if($in_foreach > 1)
 					{
-						$line_tmp = $line;
-						
-						foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
-						{
-							$line_tmp = str_replace("($var)", $this->data_array[$fieldname][$j][$var], $line_tmp);
+						$parent_fieldname = $fieldnames[1];
+						// first loop through the parent fields
+						for ($j=0; $j < count($this->data_array[$parent_fieldname]); $j++)
+						{	
+							// next loop through the child fields
+							for ($k=0; $k < count($this->data_array[$parent_fieldname][$j][$fieldname]); $k++)
+							{
+								$line_tmp = $line;
+								foreach (array_keys($this->data_array[$parent_fieldname][$j][$fieldname][$k]) as $var)
+								{
+									$line_tmp = str_replace("($var)", $this->data_array[$parent_fieldname][$j][$fieldname][$k][$var], $line_tmp);
+											
+									//echo " $in_foreach $line_tmp <br />";
+									//echo htmlentities($line, ENT_QUOTES). "<br />";
+								}
+								// append the rows to the parent processed item array
+								$repeated_processed_lines[$j][] = $line_tmp;
+							}
+		
 						}
-
-						// save processed output
-						$this->processed[] = $line_tmp;
+					
 					}
-
+					else
+					{
+						for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
+						{
+							$line_tmp = $line;
+							foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
+							{
+								$line_tmp = str_replace("($var)", $this->data_array[$fieldname][$j][$var], $line_tmp);
+								
+							} 
+	
+							// append the rows to the processed item array
+							$repeated_processed_lines[$j][] = $line_tmp; 
+						}
+					}		
 				}
 				
 			}
@@ -641,6 +701,42 @@ class template_engine_htmltopdf extends template_engine
 
 
 	/*
+		fillter_template_data()
+
+		Can be overridden in child classes to alter incoming data
+		
+		Used here to splid the invoice items up
+		
+		Returns
+		0		failure
+		1		success
+	*/
+	
+
+	function fillter_template_data()
+	{
+		$page_row_count = 32;
+		if($this->data_array['invoice_items']) 
+		{
+			$this->data_array['invoice_pages'] = array();
+			$temp_data_array = array_chunk($this->data_array['invoice_items'],$page_row_count);
+			unset($this->data_array['invoice_items']);
+			// static page offset
+			$page_offset = 1;
+			$page_count = $page_offset + count($temp_data_array);
+			$i = $page_offset;
+			foreach((array)$temp_data_array as $temp_data)
+			{
+				$i++;	
+				
+				$this->data_array['invoice_pages'][] = array('invoice_items' => $temp_data, 'page_number' => $i, 'page_count' => $page_count);
+				
+			}
+		}
+	}
+	
+	
+	/*
 		generate_pdf()
 
 		Generate a PDF file and stores it in $this->output.
@@ -665,15 +761,18 @@ class template_engine_htmltopdf extends template_engine
 			return 0;
 		}
 		
+		$directory_prefix = $tmp_filename."_";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/billing_system/htdocs/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
+		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
-			$this->processed[$key] = str_replace("(tmp_filename)", $tmp_filename, $processed_row);
+			$this->processed[$key] = str_replace("(tmp_filename)", $directory_prefix, $processed_row);
 		}
 		
 		
 		
 		//exit("<pre>".print_r($this->data_array,true)."</pre>");
-		exit("<pre>".htmlentities(implode("",$this->processed), ENT_QUOTES)."</pre>");
+		//exit(implode("",$this->processed));
 		foreach ($this->processed as $line)
 		{
 			if (fwrite($handle, $line) === FALSE)
