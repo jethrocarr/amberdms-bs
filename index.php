@@ -117,7 +117,10 @@ function obj_show(obj)
 }
 
 </script>
-	
+
+<script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
+<script type="text/javascript" src="include/accounts/javascript/import.js"></script>
+
 </head>
 
 

@@ -93,7 +93,6 @@ class page_output
 			print "<td><b>Example</b></td>";
 			print "<td><b>Field</b></td>";
 		    print "</tr>";
-		    print "<pre>"; print_r($_POST); print "</pre>";
 		    for($i=1; $i<$this->num_col; $i++)
 		    {
 			$name = "column".$i;
