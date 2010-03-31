@@ -13,7 +13,6 @@ if (user_permissions_get("accounts_import_statement"))
 {
     $col_array = $_POST;
     $_SESSION["col_array"] = $col_array;
-    $error_dup = 0;
     for ($i=1; $i<count($col_array); $i++)
     {
  	$col = "column".$i;	
