@@ -25,15 +25,17 @@ class page_output
 	}
 
 
-	/*
-		Define fields and column examples
-	*/
 	function execute()
 	{
+		/*
+			Define fields and column examples
+		*/
+
 		$this->num_col	= count($_SESSION["csv_array"][0]);
 		$values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "date");
 		
 		$this->obj_form			= New form_input;
+		$this->obj_form->formname	= "bankstatement_csv";
 		
 		for ($i=1; $i<$this->num_col; $i++)
 		{
@@ -43,21 +45,32 @@ class page_output
 		    $structure["fieldname"]	= $name;
 		    $structure["type"]		= "dropdown";
 		    $structure["values"]	= $values_array;
-		    if (isset($_SESSION["col_array"]))
-		    {
-			$structure["defaultvalue"]	= $_SESSION["col_array"][$name];
-		    }
+
 		    $this->obj_form->add_input($structure);
 		}
-		
+
+
+		// hidden
+		$structure			= NULL;
+		$structure["fieldname"]		= "num_cols";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->num_col;
+		$this->obj_form->add_input($structure);
+
+		// submit
 		$structure 			= NULL;
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Apply";
 		$this->obj_form->add_input($structure);
-		
-		//populate an array of examples
-		//create one for each entry in the sub arrays
+	
+
+
+
+		/*
+			populate an array of examples
+			create one for each entry in the sub arrays
+		*/
 		for ($i=0; $i<($this->num_col)-1; $i++)
 		{
 		    //check for example in each array
@@ -70,6 +83,16 @@ class page_output
 			} 
 		    }
 		}
+
+
+
+		/*
+			Load error data (if any)
+		*/
+		if (error_check())
+		{
+			$this->obj_form->load_data_error();
+		}
 	} 
 
 
@@ -79,7 +102,7 @@ class page_output
 	*/
 	function render_html()
 	{
-		    // Title + Summary
+		// Title + Summary
 		print "<h3>CSV COLUMN CLARIFICATION</h3><br>";
 		print "<p>Please identify what each column in your CSV file represents. An example has been provided from each column- please note that these examples may not all be from the same transaction.</p>";
 	
@@ -123,6 +146,7 @@ class page_output
 		    
 		    print "<tr id=\"submit\">";
 			print "<td colspan=\"3\">";
+			$this->obj_form->render_field("num_cols");
 			$this->obj_form->render_field("submit");
 			print "</td>";
 		    print "</tr>";
@@ -131,4 +155,5 @@ class page_output
 	}	
 
 } // end class page_output
+
 ?>
