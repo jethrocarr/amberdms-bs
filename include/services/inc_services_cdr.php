@@ -459,8 +459,8 @@ class cdr_rate_table_rates extends cdr_rate_table
 		$sql_obj			= New sql_query;
 		$sql_obj->string		= "SELECT id FROM `cdr_rate_tables_values` WHERE rate_prefix='". $this->data_rate["rate_prefix"] ."' ";
 
-		if ($this->id)
-			$sql_obj->string	.= " AND id!='". $this->id ."'";
+		if ($this->id_rate)
+			$sql_obj->string	.= " AND id!='". $this->id_rate ."'";
 
 		$sql_obj->string		.= " LIMIT 1";
 		$sql_obj->execute();
