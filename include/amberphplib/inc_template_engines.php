@@ -299,13 +299,22 @@ class template_engine
 							for ($k=0; $k < count($this->data_array[$parent_fieldname][$j][$fieldname]); $k++)
 							{
 								$line_tmp = $line;
+
+								// run through loop items
 								foreach (array_keys($this->data_array[$parent_fieldname][$j][$fieldname][$k]) as $var)
 								{
 									$line_tmp = str_replace("($var)", $this->data_array[$parent_fieldname][$j][$fieldname][$k][$var], $line_tmp);
-											
-									//echo " $in_foreach $line_tmp <br />";
-									//echo htmlentities($line, ENT_QUOTES). "<br />";
 								}
+
+
+								// if there are any items left that didn't get matched by any of the loop items, we should
+								// then run through the global variables, as there may be a match there
+								foreach (array_keys($this->data) as $var)
+								{
+									$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+								}
+
+			
 								// append the rows to the parent processed item array
 								$repeated_processed_lines[$j][] = $line_tmp;
 							}
@@ -318,15 +327,26 @@ class template_engine
 						for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
 						{
 							$line_tmp = $line;
+
+							// run through the loop items
 							foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 							{
 								$line_tmp = str_replace("($var)", $this->data_array[$fieldname][$j][$var], $line_tmp);
-								
-							} 
+							}
+
+
+							// if there are any items left that didn't get matched by any of the loop items, we should
+							// then run through the global variables, as there may be a match there
+							foreach (array_keys($this->data) as $var)
+							{
+								$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+							}
+		
 	
 							// append the rows to the processed item array
 							$repeated_processed_lines[$j][] = $line_tmp; 
 						}
+
 					}		
 				}
 				
@@ -749,6 +769,9 @@ class template_engine_htmltopdf extends template_engine
 				$this->data_array['invoice_pages'][] = array('invoice_items' => $temp_data, 'page_number' => $i, 'page_count' => $page_count);
 				
 			}
+
+			// set page count for any special pages
+			$this->data["page_count"] = $page_count;
 		}
 	}
 	
