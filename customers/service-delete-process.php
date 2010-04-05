@@ -22,7 +22,7 @@ if (user_permissions_get('customers_write'))
 		Load Data
 	*/
 	$obj_customer				= New customer_services;
-	$obj_customer->id			= @security_form_input_predefined("int", "customerid", 1, "");
+	$obj_customer->id			= @security_form_input_predefined("int", "id_customer", 1, "");
 	$obj_customer->id_service_customer	= @security_form_input_predefined("int", "id_service_customer", 1, "");
 
 

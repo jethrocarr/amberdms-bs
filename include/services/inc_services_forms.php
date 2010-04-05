@@ -506,7 +506,9 @@ class services_form_plan
 			break;
 
 
-			case "phone_services":
+			case "phone_single":
+			case "phone_tollfree":
+			case "phone_trunk":
 				/*
 					Phones services are plans that get call cost values from rate tables.
 				*/

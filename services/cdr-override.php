@@ -48,7 +48,7 @@ class page_output
 			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->id ."");
 		}
 
-		if ($this->service_type == "phone_services")
+		if ($this->service_type == ("phone_single" || "phone_trunk" || "phone_tollfree"))
 		{
 			$this->obj_menu_nav->add_item("Call Rate Override", "page=services/cdr-override.php&id=". $this->id ."", TRUE);
 		}
@@ -105,8 +105,8 @@ class page_output
 		unset($sql_obj);
 
 
-		// verify that this is a phone_services service
-		if ($this->service_type != "phone_services")
+		// verify that this is a phone service
+		if ($this->service_type != ("phone_single" || "phone_trunk" || "phone_tollfree"))
 		{
 			log_write("error", "page_output", "The requested service is not a phone service.");
 			return 0;

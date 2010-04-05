@@ -29,27 +29,53 @@ class page_output
 
 
 		// fetch variables
-		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
 
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
-
-		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
-
-		if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled")
+	
+		if ($this->obj_customer->id_service_customer)
 		{
-			$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->obj_customer->id ."");
+			// load service data
+			$this->obj_customer->load_data_service();
+
+
+			// edit existing service
+			$this->obj_menu_nav->add_item("Return to Customer Services Page", "page=customers/services.php&id=". $this->obj_customer->id ."");
+			$this->obj_menu_nav->add_item("Service Details", "page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
+			$this->obj_menu_nav->add_item("Service History", "page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+
+			if ($this->obj_customer->obj_service->data["typeid_string"] == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+			{
+				$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+			}
+		
+			if (user_permissions_get("customers_write"))
+			{
+				$this->obj_menu_nav->add_item("Service Delete", "page=customers/service-delete.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+			}
 		}
-
-		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."", TRUE);
-
-		if (user_permissions_get("customers_write"))
+		else
 		{
-			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
+			// new service
+			$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
+
+			if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled")
+			{
+				$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->obj_customer->id ."");
+			}
+
+			$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
+			$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
+			$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."", TRUE);
+
+			if (user_permissions_get("customers_write"))
+			{
+				$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
+			}
+
 		}
 	}
 
@@ -106,10 +132,6 @@ class page_output
 			/*
 				An existing service is being adjusted
 			*/
-
-			// load service data
-			$this->obj_customer->load_data_service();
-
 
 			// general
 			$structure = NULL;

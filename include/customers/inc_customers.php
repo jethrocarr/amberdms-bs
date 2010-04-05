@@ -1196,7 +1196,15 @@ class customer_services extends customer
 
 					$sql_obj->string	= "DELETE FROM services_options WHERE option_type='customer' AND option_type_id='". $data_component["id"] ."'";
 					$sql_obj->execute();
-		
+
+
+					/*
+						Delete CDR service options (if any)
+					*/
+
+					$sql_obj->string	= "DELETE FROM cdr_rate_tables_overrides WHERE option_type='customer' AND option_type_id='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
 
 					/*
 						Delete service period history
@@ -1242,6 +1250,13 @@ class customer_services extends customer
 		$sql_obj->string	= "DELETE FROM services_options WHERE option_type='customer' AND option_type_id='". $this->id_service_customer ."'";
 		$sql_obj->execute();
 		
+
+		/*
+			Delete CDR service options (if any)
+		*/
+
+		$sql_obj->string	= "DELETE FROM cdr_rate_tables_overrides WHERE option_type='customer' AND option_type_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
 
 
 		/*

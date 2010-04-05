@@ -1,134 +1,147 @@
 <?php
 /*
-	services/cdr-override-edit.php
+	customers/services-cdr-override-edit.php
 
-	access: services_write
+	access: customers_view
+		customers_write
 
-	Form to add or edit CDR rate overrides.
+	allow a selected override to be adjusted or a new call rate override to be defined.
 */
 
 
+require("include/customers/inc_customers.php");
 require("include/services/inc_services.php");
 require("include/services/inc_services_cdr.php");
 
 
 class page_output
 {
-	var $id;			// service ID
-	var $service_type;		// service type (string)
-
-	var $obj_cdr_rate_table;	// CDR rates information
-	var $obj_service;		// service information
-
-	var $obj_table;
+	var $obj_customer;
+	var $obj_cdr_rate_table;
+	
 	var $obj_menu_nav;
+	var $obj_form;
 
+	
 
 	function page_output()
 	{
-		// init
-		$this->obj_cdr_rate_table	= New cdr_rate_table_rates_override;
-		$this->obj_service		= New service;
+		$this->obj_customer				= New customer_services;
+		$this->obj_cdr_rate_table			= New cdr_rate_table_rates_override;
 
 
-		// fetch key service details
-		$this->obj_service->id				= @security_script_input('/^[0-9]*$/', $_GET["id_service"]);
+		// fetch variables
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
+
 		$this->obj_cdr_rate_table->id_rate		= @security_script_input('/^[0-9]*$/', $_GET["id_rate"]);
 		$this->obj_cdr_rate_table->id_rate_override	= @security_script_input('/^[0-9]*$/', $_GET["id_rate_override"]);
 
-		$this->service_type				= sql_get_singlevalue("SELECT service_types.name as value FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->obj_service->id ."' LIMIT 1");
+
+		// load service data
+		$this->obj_customer->load_data_service();
+
+		// set CDR data
+		$this->obj_cdr_rate_table->option_type		= "customer";
+		$this->obj_cdr_rate_table->option_type_id	= $this->obj_customer->id_service_customer;
 
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
+		
+		$this->obj_menu_nav->add_item("Return to Customer Services Page", "page=customers/services.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Service Details", "page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+		$this->obj_menu_nav->add_item("Service History", "page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 
-		$this->obj_menu_nav->add_item("Service Details", "page=services/view.php&id=". $this->obj_service->id ."");
-		$this->obj_menu_nav->add_item("Service Plan", "page=services/plan.php&id=". $this->obj_service->id ."");
-
-		if ($this->service_type == "bundle")
+		if ($this->obj_customer->obj_service->data["typeid_string"] == ("phone_single" || "phone_tollfree" || "phone_trunk"))
 		{
-			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->obj_service->id ."");
+			$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 		}
-
-		if ($this->service_type == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+	
+		if (user_permissions_get("customers_write"))
 		{
-			$this->obj_menu_nav->add_item("Call Rate Override", "page=services/cdr-override.php&id=". $this->obj_service->id ."", TRUE);
-		}
-
-		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->obj_service->id ."");
-
-		if (user_permissions_get("services_write"))
-		{
-			$this->obj_menu_nav->add_item("Delete Service", "page=services/delete.php&id=". $this->obj_service->id ."");
+			$this->obj_menu_nav->add_item("Service Delete", "page=customers/service-delete.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		}
 	}
+
 
 
 	function check_permissions()
 	{
-		return user_permissions_get("services_write");
+		return user_permissions_get("customers_view");
 	}
+
 
 
 	function check_requirements()
 	{
-		// verify that the service exists
-		if ($this->obj_service->verify_id())
+		// verify that customer exists
+		if (!$this->obj_customer->verify_id())
 		{
-			$this->obj_service->load_data();
-
-			// verify the rate is valid
-			if ($this->obj_service->data["id_rate_table"])
-			{
-				$this->obj_cdr_rate_table->id	= $this->obj_service->data["id_rate_table"];
-
-				if (!$this->obj_cdr_rate_table->verify_id())
-				{
-					log_write("error", "page_output", "The requested CDR rate table is invalid, there may be some problems with the information in the database.");
-					return 0;
-				}
-			}
-			else
-			{
-				log_write("error", "page_output", "You have yet to set a CDR Rate Table for this service to use - please do so using the plan page before attempting to override the rates");
-				return 0;
-			}
-		}
-		else
-		{
-			log_write("error", "page_output", "The requested service (". $this->obj_service->id .") does not exist - possibly the service has been deleted.");
+			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
-		unset($sql_obj);
 
+		// verify that the service-customer entry exists
+		if ($this->ob_customer->id_service_customer)
+		{
+			if (!$this->obj_customer->verify_id_service_customer())
+			{
+				log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
+				return 0;
+			}
+		}
+
+
+		// verify the options IDs
+		if (!$this->obj_cdr_rate_table->verify_id_override())
+		{
+			log_write("error", "page_output", "The requested service does not have a valid CDR rate table");
+		}
+
+		// check if the option override rate id is valid (if supplied)
+		if (!$this->obj_cdr_rate_table->verify_id_rate_override())
+		{
+			$this->obj_cdr_rate_table->id_rate_override = 0;
+		}
 
 		// verify that this is a phone service
-		if ($this->service_type != ("phone_single" || "phone_tollfree" || "phone_trunk"))
+		if ($this->obj_customer->obj_service->data["typeid_string"] != ("phone_single" || "phone_trunk" || "phone_tollfree"))
 		{
 			log_write("error", "page_output", "The requested service is not a phone service.");
 			return 0;
 		}
-		
-
 
 		return 1;
 	}
 
 
+
+
+
 	function execute()
 	{
+		// load data
+		$this->obj_customer->load_data();
+
+
 		// define basic form details
 		$this->obj_form = New form_input;
 		$this->obj_form->formname = "cdr_override_edit";
 		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$this->obj_form->action = "services/cdr-override-edit-process.php";
+		$this->obj_form->action = "customers/service-cdr-override-edit-process.php";
 		$this->obj_form->method = "post";
 
 
 
 		// service details
+		$structure = NULL;
+		$structure["fieldname"] 	= "name_customer";
+		$structure["type"]		= "text";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"] 	= "service_name";
 		$structure["type"]		= "text";
@@ -180,10 +193,17 @@ class page_output
 
 		// hidden
 		$structure = NULL;
-		$structure["fieldname"] 	= "id_service";
+		$structure["fieldname"] 	= "id_customer";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->obj_service->id;
+		$structure["defaultvalue"]	= $this->obj_customer->id;
 		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "id_service_customer";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->obj_customer->id_service_customer;
+		$this->obj_form->add_input($structure);
+
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "id_rate_override";
@@ -200,10 +220,10 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["service_details"]	= array("service_name", "service_description");
+		$this->obj_form->subforms["service_details"]	= array("name_customer", "service_name", "service_description");
 		$this->obj_form->subforms["rate_table_details"]	= array("rate_table_name", "rate_table_description");
 		$this->obj_form->subforms["rate_table_items"]	= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost");
-		$this->obj_form->subforms["hidden"]		= array("id_service", "id_rate_override");
+		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer", "id_rate_override");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
 
@@ -215,9 +235,6 @@ class page_output
 		else
 		{
 			$this->obj_cdr_rate_table->load_data();
-
-			$this->obj_cdr_rate_table->option_type		= "service";
-			$this->obj_cdr_rate_table->option_type_id	= $this->obj_service->id;
 
 
 			// load rate values from standard item
@@ -234,8 +251,9 @@ class page_output
 
 			
 
-			$this->obj_form->structure["service_name"]["defaultvalue"]		= $this->obj_service->data["name_service"];
-			$this->obj_form->structure["service_description"]["defaultvalue"]	= $this->obj_service->data["description"];
+			$this->obj_form->structure["name_customer"]["defaultvalue"]		= $this->obj_customer->data["name_customer"];
+			$this->obj_form->structure["service_name"]["defaultvalue"]		= $this->obj_customer->obj_service->data["name_service"];
+			$this->obj_form->structure["service_description"]["defaultvalue"]	= $this->obj_customer->obj_service->data["description"];
 
 			$this->obj_form->structure["rate_table_name"]["defaultvalue"]		= $this->obj_cdr_rate_table->data["rate_table_name"];
 			$this->obj_form->structure["rate_table_description"]["defaultvalue"]	= $this->obj_cdr_rate_table->data["rate_table_description"];

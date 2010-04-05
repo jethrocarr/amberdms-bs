@@ -147,14 +147,14 @@ class page_output
 		{
 			// details link
 			$structure = NULL;
-			$structure["customerid"]["value"]	= $this->id;
-			$structure["serviceid"]["column"]	= "id_service_customer";
+			$structure["id_customer"]["value"]		= $this->id;
+			$structure["id_service_customer"]["column"]	= "id_service_customer";
 			$this->obj_table->add_link("details", "customers/service-edit.php", $structure);
 
 			// periods link
 			$structure = NULL;
-			$structure["customerid"]["value"]	= $this->id;
-			$structure["serviceid"]["column"]	= "id_service_customer";
+			$structure["id_customer"]["value"]		= $this->id;
+			$structure["id_service_customer"]["column"]	= "id_service_customer";
 			$this->obj_table->add_link("periods", "customers/service-history.php", $structure);
 			
 			
@@ -162,8 +162,8 @@ class page_output
 			{
 				// delete link
 				$structure = NULL;
-				$structure["customerid"]["value"]	= $this->id;
-				$structure["serviceid"]["column"]	= "id_service_customer";
+				$structure["id_customer"]["value"]		= $this->id;
+				$structure["id_service_customer"]["column"]	= "id_service_customer";
 				$this->obj_table->add_link("delete", "customers/service-delete.php", $structure);
 			}
 
@@ -174,7 +174,7 @@ class page_output
 
 			if (user_permissions_get("customers_write"))
 			{
-				print "<p><a class=\"button\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Add Service to Customer</a> <a class=\"button\" href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Generate any new invoices</a></p>";
+				print "<p><a class=\"button\" href=\"index.php?page=customers/service-edit.php&id_customer=". $this->id ."\">Add Service to Customer</a> <a class=\"button\" href=\"customers/services-invoicegen-process.php?customerid=". $this->id ."\">Generate any new invoices</a></p>";
 			}
 		}
 

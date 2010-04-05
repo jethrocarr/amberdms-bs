@@ -331,7 +331,9 @@ function service_form_plan_process()
 			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
 		break;
 
-		case "phone_services":
+		case "phone_single":
+		case "phone_tollfree":
+		case "phone_trunk":
 			$data["id_rate_table"]		= @security_form_input_predefined("int", "id_rate_table", 1, "");
 		break;
 	}
@@ -426,7 +428,9 @@ function service_form_plan_process()
 			break;
 			
 
-			case "phone_services":
+			case "phone_single":
+			case "phone_tollfree":
+			case "phone_trunk":
 
 				$sql_obj->string = "UPDATE services SET "
 						."price='". $data["price"] ."', "
