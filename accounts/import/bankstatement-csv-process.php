@@ -53,28 +53,32 @@ if (user_permissions_get("accounts_import_statement"))
 
 	// verify that the user has selected all of the REQUIRED columns, if they haven't selected one of the required
 	// columns, return errors.
-	$values_count	= 0;
-	$values_array	= array("transaction_type", "other_party", "amount", "date");
+	$values_count		= 0;
+	$values_required	= array("transaction_type", "other_party", "amount", "date");
+	$values_acceptable	= array("transaction_type", "other_party", "amount", "date", "code", "reference", "particulars");
 
 	for ($i=1; $i < $num_cols; $i++)
 	{
 		if (!empty($data["column$i"]))
 		{
-			if (in_array($data["column$i"], $values_array))
+			if (in_array($data["column$i"], $values_required))
 			{
 				$values_count++;
 			}
 			else
 			{
-				log_write("error", "page_output", "The option ". $data["column$i"] ." is not a valid column type");
-				error_flag_field("column$i");
+				if (!in_array($data["column$i"], $values_acceptable))
+				{
+					log_write("error", "page_output", "The option ". $data["column$i"] ." is not a valid column type");
+					error_flag_field("column$i");
+				}
 			}
 		}
 	}
 
-	if ($values_count != count($values_array))
+	if ($values_count != count($values_required))
 	{
-		log_write("error", "page_output", "Make sure you have selected all the required column types");
+		log_write("error", "page_output", "Make sure you have selected all the required column types (". format_arraytocommastring($values_required) .")");
 	}
 
 
