@@ -54,7 +54,7 @@ if (user_permissions_get("accounts_import_statement"))
 	// verify that the user has selected all of the REQUIRED columns, if they haven't selected one of the required
 	// columns, return errors.
 	$values_count	= 0;
-	$values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "date");
+	$values_array	= array("transaction_type", "other_party", "amount", "date");
 
 	for ($i=1; $i < $num_cols; $i++)
 	{
