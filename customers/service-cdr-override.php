@@ -164,12 +164,12 @@ class page_output
 
 			if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["option_type"] == "service")
 			{
-				$this->obj_table->data[$i]["rate_override"] = "<font class=\"table_highlight_important\">SERVICE OVERRIDE</font>";
+				$this->obj_table->data[$i]["rate_override"] = "<span class=\"table_highlight_important\">SERVICE OVERRIDE</span>";
 			}
 
 			if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["option_type"] == "customer")
 			{
-				$this->obj_table->data[$i]["rate_override"]		= "<font class=\"table_highlight_info\">CUSTOMER OVERRIDE</font>";
+				$this->obj_table->data[$i]["rate_override"]		= "<span class=\"table_highlight_info\">CUSTOMER OVERRIDE</span>";
 				$this->obj_table->data[$i]["rate_override_customer"]	= 1;
 			}
 

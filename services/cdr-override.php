@@ -174,7 +174,7 @@ class page_output
 
 			if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["id_rate_override"])
 			{
-				$this->obj_table->data[$i]["rate_override"] = "<font class=\"table_highlight_important\">SERVICE OVERRIDE</font>";
+				$this->obj_table->data[$i]["rate_override"] = "<span class=\"table_highlight_important\">SERVICE OVERRIDE</span>";
 			}
 
 			$i++;
