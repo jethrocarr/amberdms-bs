@@ -43,7 +43,7 @@ else
 			print "<p>Welcome to the Amberdms Billing System, a powerful, fully <a target=\"new\" href=\"http://www.amberdms.com/opensource\">open source</a> web-based application providing accounting, invoicing, service management and time management functions.</p>";
 
 
-			format_msgbox("gettingstarted", "<p>To get started, use the menu above or download the product manuals (including a detailed user guide) using the buttons below.</p>");
+			format_msgbox("open", "<p>To get started, use the menu above or download the product manuals (including a detailed user guide) using the buttons below.</p>");
 
 			print "<p>";
 				print "<a class=\"button\" target=\"new\" href=\"help/manual/amberdms_billing_system_userguide.pdf\">Download User Guide</a> ";
