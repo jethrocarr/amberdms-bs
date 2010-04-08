@@ -1250,11 +1250,11 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 	
 
 	// fetch from cache (if it exists)
-	if (isset($GLOBALS["cache"]["form_sql"][$string]))
+	if (isset($GLOBALS["cache"]["form_sql"][$sqlquery]))
 	{
 		log_write("debug", "form", "Fetching form DB results from cache");
 
-		return $GLOBALS["cache"]["form_sql"][$string];
+		return $GLOBALS["cache"]["form_sql"][$sqlquery];
 	}
 	else
 	{
@@ -1291,7 +1291,7 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 			}
 
 			// save structure to cache
-			$GLOBALS["cache"]["form_sql"][$string] = $structure;
+			$GLOBALS["cache"]["form_sql"][$sqlquery] = $structure;
 
 			// return the structure
 			return $structure;
