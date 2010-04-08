@@ -47,6 +47,10 @@ class services_form_details
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
 		$structure["type"]		= "textarea";
@@ -77,7 +81,7 @@ class services_form_details
 		}
 
 		// define service_details subform
-		$this->obj_form->subforms["service_details"]	= array("name_service", "chartid", "typeid", "description");
+		$this->obj_form->subforms["service_details"]	= array("name_service", "id_service_group", "chartid", "typeid", "description");
 
 
 
@@ -189,7 +193,15 @@ class services_form_details
 		else
 		{
 			// load details data
-			$this->obj_form->sql_query = "SELECT services.name_service, services.chartid, services.description, service_types.name as typeid FROM `services` LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->serviceid ."' LIMIT 1";
+			$this->obj_form->sql_query	= "SELECT 
+								services.name_service, 
+								services.chartid, 
+								services.id_service_group,
+								services.description, 
+								service_types.name as typeid
+							FROM `services`
+							LEFT JOIN service_types ON service_types.id = services.typeid
+							WHERE services.id='". $this->serviceid ."' LIMIT 1";
 			$this->obj_form->load_data();
 		}
 	}

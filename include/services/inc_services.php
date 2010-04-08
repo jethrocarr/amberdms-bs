@@ -587,7 +587,4 @@ class service_bundle extends service
 
 
 
-
-
-
 ?>

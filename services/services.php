@@ -41,6 +41,7 @@ class page_output
 		$this->obj_table->add_column("standard", "name_service", "");
 		$this->obj_table->add_column("standard", "chartid", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$this->obj_table->add_column("standard", "typeid", "service_types.name");
+		$this->obj_table->add_column("standard", "id_service_group", "service_groups.group_name");
 		$this->obj_table->add_column("standard", "units", "services.units");
 		$this->obj_table->add_column("standard", "included_units", "");
 		$this->obj_table->add_column("money", "price", "");
@@ -50,7 +51,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("name_service", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");
 		$this->obj_table->columns_order		= array("name_service");
-		$this->obj_table->columns_order_options	= array("name_service", "chartid", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");
+		$this->obj_table->columns_order_options	= array("name_service", "chartid", "typeid", "id_service_group", "units", "included_units", "price", "price_extraunits", "billing_cycle");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services");
@@ -58,6 +59,8 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = services.chartid");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN service_groups ON service_groups.id = services.id_service_group");
+
 
 		// acceptable filter options
 		$structure["fieldname"] = "searchbox";
@@ -68,6 +71,11 @@ class page_output
 		$structure		= form_helper_prepare_dropdownfromdb("service_type", "SELECT id, name as label FROM service_types ORDER BY name ASC");
 		$structure["sql"]	= "services.typeid='value'";
 		$this->obj_table->add_filter($structure);
+
+		$structure		= form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups ORDER BY group_name ASC");
+		$structure["sql"]	= "services.id_service_group='value'";
+		$this->obj_table->add_filter($structure);
+
 
 
 		// load options

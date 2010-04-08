@@ -42,6 +42,7 @@ function service_form_details_process()
 	// general details
 	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 1, "");
 	$data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "");
+	$data["id_service_group"]	= @security_form_input_predefined("int", "id_service_group", 1, "");
 	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 	// fetch information for all tax checkboxes from form
@@ -152,6 +153,7 @@ function service_form_details_process()
 			$sql_obj->string = "UPDATE services SET "
 						."name_service='". $data["name_service"] ."', "
 						."chartid='". $data["chartid"] ."', "
+						."id_service_group='". $data["id_service_group"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id' LIMIT 1";
 			
