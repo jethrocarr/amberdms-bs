@@ -152,6 +152,35 @@ class invoice_list_items
 					break;
 
 
+					case "service":
+						/*
+							Fetch service group
+						*/
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT service_groups.group_name as group_name FROM services LEFT JOIN service_groups ON service_groups.id = id_service_group WHERE services.id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
+						$sql_obj->execute();
+
+						$sql_obj->fetch_array();
+						
+						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["group_name"];
+
+
+						/*
+							Fetch discount (if any)
+						*/
+
+						$discount = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->obj_table_standard->data[$i]["id"] ."' AND option_name='DISCOUNT'");
+
+						if ($discount)
+						{
+							$this->obj_table_standard->data[$i]["discount"] = $discount ."%";
+						}
+
+						
+						unset($sql_obj);
+					break;
+
+
 					case "standard":
 						/*
 							Fetch account name and blank a few fields
@@ -1157,6 +1186,91 @@ class invoice_form_item
 			break;
 			
 
+			/*
+				SERVICE (AR only)
+
+				Service items can only be added via the automated invoicing capabilities, however we do
+				allow users to adjust the description, price and discount once an item has been created.
+			*/
+			case "service":
+
+				if ($this->type == "ar")
+				{
+					// service group name
+					$structure = NULL;
+					$structure["fieldname"] 		= "id_service";
+					$structure["type"]			= "text";
+					$form->add_input($structure);
+			
+					// price field
+					$structure = NULL;
+					$structure["fieldname"] 		= "price";
+					$structure["type"]			= "input";
+					$form->add_input($structure);
+
+					// quantity
+					$structure = NULL;
+					$structure["fieldname"] 		= "quantity";
+					$structure["type"]			= "input";
+					$structure["options"]["width"]		= 50;
+					$form->add_input($structure);
+
+					// description
+					$structure = NULL;
+					$structure["fieldname"] 		= "description";
+					$structure["type"]			= "textarea";
+					$structure["options"]["height"]		= "50";
+					$structure["options"]["width"]		= 500;
+					$form->add_input($structure);
+
+					// discount
+					$structure = NULL;
+					$structure["fieldname"] 		= "discount";
+					$structure["type"]			= "input";
+					$structure["options"]["width"]		= 50;
+					$structure["options"]["label"]		= " %";
+					$structure["options"]["max_length"]	= "2";
+					$form->add_input($structure);
+
+
+					// define form layout
+					$form->subforms[$this->type ."_invoice_item"]		= array("id_service", "price", "quantity", "description", "discount");
+
+					// SQL query
+					$form->sql_query = "SELECT price, description, customid as id_service, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+			
+
+/*
+					// fetch discount (if any) from customer/vendor
+					$discount_org = sql_get_singlevalue("SELECT discount as value FROM customers WHERE id='". $orgid ."' LIMIT 1");
+
+					// fetch discount (if any) from 
+					// $discount_product = sql_get_singlevalue("SELECT discount FROM products WHERE id='". $this->productid ."' LIMIT 1");
+
+
+					// choose the largest discount
+					if ($discount_org || $discount_product)
+					{
+						if ($discount_org > $discount_product)
+						{
+							$form->structure["discount"]["defaultvalue"] = $discount_org;
+						}
+						else
+						{
+							$form->structure["discount"]["defaultvalue"] = $discount_product;
+						}
+					}
+*/
+
+				
+				}
+				else
+				{
+					print "<p><i>Error: Service items are only avaliable for AR invoices.</i></p>";
+				}
+
+			break;
+	
 			case "payment":
 				/*
 					PAYMENT
@@ -1275,10 +1389,18 @@ class invoice_form_item
 
 				case "product":
 
-					// fetch discount (if any) from product
+					// fetch discount (if any) from item
 					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
 
 				break;
+
+				case "service":
+
+					// fetch discount (if any) from item
+					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+
+				break;
+
 			}
 		}
 
@@ -1534,6 +1656,24 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			
 		break;
 
+
+		case "service":
+			/*
+				SERVICE ITEMS
+			*/
+		
+			// fetch information from form
+			$data["price"]		= @security_form_input_predefined("money", "price", 0, "");
+			$data["quantity"]	= @security_form_input_predefined("float", "quantity", 1, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 1, "");
+			$data["discount"]	= @security_form_input_predefined("float", "discount", 0, "");
+			$data["units"]		= "";
+
+			// keep existing custom id
+			$data["customid"]	= sql_get_singlevalue("SELECT customid as value FROM account_items WHERE id='". $item->id_item ."' LIMIT 1");
+		break;
+
+
 		case "payment":
 			/*
 				PAYMENT ITEM
@@ -1561,7 +1701,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	*/
 	if (!$item->prepare_data($data))
 	{
-		$_SESSION["error"]["message"] = "An error was encountered whilst processing supplied data.";
+		log_write("error", "process", "An error was encountered whilst processing supplied data.");
 	}
 
 
