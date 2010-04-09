@@ -13,10 +13,7 @@ class page_output
 
 	function check_permissions()
 	{
-		if (user_permissions_get('accounts_import_statement'))
-		{
-			return 1;
-		}
+		return user_permissions_get('accounts_import_statement');
 	}
 
 	function check_requirements()
@@ -61,7 +58,7 @@ class page_output
 	{
 		    // Title + Summary
 		print "<h3>BANK STATEMENT IMPORT</h3><br>";
-		print "<p>This page allows you to import a bank statement (in CSV, QIF, or OFX format) and label the transactions appropriately.</p>";
+		print "<p>Select the CSV file you wish to import.</p>";
 	
 		// display the form
 		$this->obj_form->render_form();

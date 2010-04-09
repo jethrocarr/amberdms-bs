@@ -1,6 +1,5 @@
 $(document).ready(function()
 {
-	$("div[class^='toggle']").hide();
 	//on remove/add click
 	$(".include").click(function()
 	{
@@ -12,6 +11,12 @@ $(document).ready(function()
 	{
 		toggleSubMenus($(this));
 	});
+	
+	//on change of sub menu drop downs
+	$("div[class*='toggle']").children().change(function()
+	{
+		checkSubmenusComplete($(this));
+	});
 });
 
 // Toggle italics, opacity, image, tick mark, and drop down menus when a transaction is added or removed
@@ -21,9 +26,11 @@ function toggleIncludeTransaction(elem)
 	{
 		$(elem).siblings().css("font-style", "italic").fadeTo("fast", 0.5);
 		$(elem).siblings(".dropdown").children().attr("disabled", "disabled");
-		$(elem).children().attr("src", "images/icons/plus.gif");
+		$(elem).children("img").attr("src", "images/icons/plus.gif");
 		$(elem).removeClass("remove").addClass("add");
-		$(elem).siblings(".done").children().hide("fast");
+		$(elem).siblings(".done").children().fadeOut("fast");
+		$(elem).siblings(".dropdown").children("div:not('.assign')").fadeOut("fast");
+		$(elem).children("input").val("false");
 	}
 	else
 	{
@@ -31,7 +38,11 @@ function toggleIncludeTransaction(elem)
 		$(elem).siblings(".dropdown").children().removeAttr("disabled", "disabled");
 		$(elem).children().attr("src", "images/icons/minus.gif");
 		$(elem).removeClass("add").addClass("remove");
-		$(elem).siblings(".done").children().show("fast");
+		$(elem).children("input").val("true");
+		if ($(elem).siblings(".dropdown").children(".assign").children().val() != "")
+		{
+			toggleSubMenus($(elem).siblings(".dropdown").children(".assign").children());
+		}
 	}
 }
 
@@ -39,7 +50,65 @@ function toggleIncludeTransaction(elem)
 function toggleSubMenus(elem)
 {
 	assigndiv = $(elem).parent();
-	trans_type = $(elem).val();
-	$(assigndiv).siblings("div[class$='" + trans_type + "']").show();
-	$(assigndiv).siblings("div:not([class$='" + trans_type + "'])").hide();
+	
+	if ($(elem).val() == "")
+	{
+		$(assigndiv).siblings().fadeOut("fast");
+		$(assigndiv).parent().siblings(".done").children().fadeOut("fast");
+	}
+	else
+	{	
+		trans_type = $(elem).val();
+		submenu_div = $(assigndiv).siblings("div[class*='" + trans_type + "']");
+		
+		//show and hide divs
+		$(submenu_div).fadeIn("fast");
+		$(assigndiv).siblings("div:not([class*='" + trans_type + "'])").fadeOut("fast");
+		//check completeness of submenus
+		done = 1;
+		$(submenu_div).children("select").each(function()
+		{
+			if ($(this).val() == "")
+			{
+				done = 0;
+			}
+		});
+		
+		if (done)
+		{
+			$(assigndiv).parent().siblings(".done").children().fadeIn("fast");
+		}
+		else
+		{
+			$(assigndiv).parent().siblings(".done").children().fadeOut("fast");
+		}
+	}
+}
+
+function checkSubmenusComplete(elem)
+{
+	done = 1;
+	if($(elem).val() != "")
+	{
+		$(elem).siblings("select").each(function()
+		{
+			if($(this).val() == "")
+			{
+				done = 0;
+			}
+		});
+	}
+	else
+	{
+		done = 0;
+	}
+	
+	if (done)
+	{
+		$(elem).parent().parent().siblings(".done").children().fadeIn("fast");
+	}
+	else
+	{
+		$(elem).parent().parent().siblings(".done").children().fadeOut("fast");
+	}
 }

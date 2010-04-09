@@ -591,3 +591,29 @@ a.button_export
 	border:			1px dashed #374893;
 	padding:		3px;
 }
+
+/*for import page*/
+.hide_element
+{
+	display:	none;
+}
+
+.show_element
+{
+	display:	inline;
+}
+
+.dropdown
+{
+	width:		50%;
+}
+
+div[class*='toggle']
+{
+	text-align:	center;
+}
+
+.include
+{
+	text-align:	center;
+}

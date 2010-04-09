@@ -30,25 +30,23 @@ class page_output
 		/*
 			Define fields and column examples
 		*/
-
 		$this->num_col	= count($_SESSION["csv_array"][0]);
 		$values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "date");
 		
 		$this->obj_form			= New form_input;
 		$this->obj_form->formname	= "bankstatement_csv";
 		
-		for ($i=1; $i<$this->num_col; $i++)
+		//for each entry in the sub array, create a drop down menu
+		for ($i=1; $i<=$this->num_col; $i++)
 		{
-		    $name	= "column".$i;
-		    
-		    $structure 			= NULL;
-		    $structure["fieldname"]	= $name;
-		    $structure["type"]		= "dropdown";
-		    $structure["values"]	= $values_array;
+			$name	= "column".$i;
+			$structure 			= NULL;
+			$structure["fieldname"]		= $name;
+			$structure["type"]		= "dropdown";
+			$structure["values"]		= $values_array;
 
-		    $this->obj_form->add_input($structure);
+			$this->obj_form->add_input($structure);
 		}
-
 
 		// hidden
 		$structure			= NULL;
@@ -71,16 +69,19 @@ class page_output
 			populate an array of examples
 			create one for each entry in the sub arrays
 		*/
-		for ($i=0; $i<($this->num_col)-1; $i++)
-		{
+		for ($i=0; $i<$this->num_col; $i++)
+		{		
 		    //check for example in each array
-		    for ($j=0; $j<count($_SESSION["csv_array"]); $j++)
-		    {
+		    //start from the bottom to find examples- this ensures more accurate data
+		    //do not create an example if no data is present in any of the columns
+		    for ($j=count($_SESSION["csv_array"])-1; $j>0; $j--)
+		    {		    
 			if ($_SESSION["csv_array"][$j][$i] != "")
 			{
 			    $this->example_array[$i+1]	= $_SESSION["csv_array"][$j][$i];
 			    break;
-			} 
+			}
+			
 		    }
 		}
 
@@ -93,9 +94,10 @@ class page_output
 		{
 			$this->obj_form->load_data_error();
 		}
+		
 	} 
 
-
+		
 
 	/*
 		Output: HTML format
@@ -104,7 +106,7 @@ class page_output
 	{
 		// Title + Summary
 		print "<h3>CSV COLUMN CLARIFICATION</h3><br>";
-		print "<p>Please identify what each column in your CSV file represents. An example has been provided from each column- please note that these examples may not all be from the same transaction.</p>";
+		print "<p>As all banks arrange their CSV files in different order, please indicate, using the examples, what information each column stores. Please note examples may be from different transactions. Not all columns need be given a label, however, the Date, Transaction Type, Other Party, and Amount labels must be used. Two columns may not be given the same label.</p>";
 	
 		// display the form
 		print "<form class=\"form_standard\" action=\"accounts/import/bankstatement-csv-process.php\" method=\"post\" enctype=\"multipart/form-data\">";
@@ -116,28 +118,31 @@ class page_output
 			print "<td><b>Example</b></td>";
 			print "<td><b>Field</b></td>";
 		    print "</tr>";
-		    for($i=1; $i<$this->num_col; $i++)
+		    for($i=1; $i<=$this->num_col; $i++)
 		    {
-			$name = "column".$i;
-			$name_error = $name."-error";
-			if (isset($_SESSION["error"][$name_error]))
+			if (isset($this->example_array[$i]))
 			{
-			    print "<tr class=\"form_error\">";
+				$name = "column".$i;
+				$name_error = $name."-error";
+				if (isset($_SESSION["error"][$name_error]))
+				{
+				print "<tr class=\"form_error\">";
+				}
+				else
+				{
+				print "<tr id=\"".$name."\">";
+				}
+				print "<td>";
+				print "Column ".$i;
+				print "</td>";
+				print "<td>";
+				print $this->example_array[$i];
+				print "</td>";
+				print "<td>";
+				$this->obj_form->render_field($name);
+				print "</td>";
+				print "</tr>";
 			}
-			else
-			{
-			    print "<tr id=\"".$name."\">";
-			}
-			print "<td>";
-			    print "Column ".$i;
-			print "</td>";
-			print "<td>";
-			    print $this->example_array[$i];
-			print "</td>";
-			print "<td>";
-			    $this->obj_form->render_field($name);
-			print "</td>";
-			print "</tr>";
 		    }
 		    
 		    print "<tr class=\"header\">";

@@ -17,7 +17,7 @@ if (user_permissions_get("accounts_import_statement"))
 
 	$num_cols = @security_form_input_predefined("int", "num_cols", 1, "");
 
-	for ($i=1; $i < $num_cols; $i++)
+	for ($i=1; $i <= $num_cols; $i++)
 	{
 		$data["column$i"] = @security_form_input_predefined("any", "column$i", 0, "");
 	}
@@ -30,11 +30,11 @@ if (user_permissions_get("accounts_import_statement"))
 	*/
 
 	// verify that there is no duplicate configuration in the columns
-	for ($i=1; $i < $num_cols; $i++)
+	for ($i=1; $i <= $num_cols; $i++)
 	{
 		$col = "column".$i;	
 
-		for ($j = $i + 1; $j < $num_cols; $j++)
+		for ($j = $i + 1; $j <= $num_cols; $j++)
 		{
 			$col2 = "column".$j;
 
@@ -57,7 +57,7 @@ if (user_permissions_get("accounts_import_statement"))
 	$values_required	= array("transaction_type", "other_party", "amount", "date");
 	$values_acceptable	= array("transaction_type", "other_party", "amount", "date", "code", "reference", "particulars");
 
-	for ($i=1; $i < $num_cols; $i++)
+	for ($i=1; $i <= $num_cols; $i++)
 	{
 		if (!empty($data["column$i"]))
 		{
@@ -100,7 +100,7 @@ if (user_permissions_get("accounts_import_statement"))
 	
 		for ($i=0; $i < count($csv_array); $i++)
 		{
-		    for ($j=0; $j < (count($csv_array[0]) -1); $j++)
+		    for ($j=0; $j < count($csv_array[0]); $j++)
 		    {
 			$post_col_name = "column".($j+1);
 			if (isset($data[$post_col_name]))

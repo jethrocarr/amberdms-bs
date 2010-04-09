@@ -17,7 +17,7 @@ if (user_permissions_get("accounts_import_statement"))
 
     //process upload and verify content and file type
     $file_obj = New file_storage;
-    $file_obj->verify_upload_form("BANK_STATEMENT", array("csv", "ofx", "qif"));
+    $file_obj->verify_upload_form("BANK_STATEMENT", array("csv"));
    
     
     if (error_check())
@@ -31,6 +31,7 @@ if (user_permissions_get("accounts_import_statement"))
 	//set file type
 	$filetype = format_file_extension($_FILES["BANK_STATEMENT"]["name"]);
 	
+	//process CSV file
 	if ($filetype == "csv")
 	{
 	    //check that file can be opened
@@ -49,9 +50,12 @@ if (user_permissions_get("accounts_import_statement"))
 		    $i++;
 		}
 		fclose($handle);
+		
+		//assign to session variable
 		$_SESSION["csv_array"] = $transactions;
 		
 		header("Location: ../../index.php?page=accounts/import/bankstatement-csv.php");
+		exit(0);
 	    }
 	  
 	    //if file cannot be opened, create an error
@@ -59,6 +63,12 @@ if (user_permissions_get("accounts_import_statement"))
 	    {
 		log_write("error", "page_output", "This file was unable to be opened. Please try again, or try another file.");
 	    }
+	}
+	
+	//create error if file is not CSV file
+	else
+	{
+		log_write("error", "page_output", "Only CSV files may be uploaded, please upload a .CSV file.");
 	}
     }
 }
