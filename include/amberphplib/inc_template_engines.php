@@ -229,9 +229,32 @@ class template_engine
 			$current_level = $data[$j];
 			if($current_level[$fieldname] != null)
 			{	
-				foreach($current_level[$fieldname] as $current_level_part)
+				foreach($current_level[$fieldname] as $key => $current_level_part)
 				{
-					$line_tmp = $line;
+					
+				 	if (preg_match("/^\S*\sif\s(\S*)\sne\sprevious\s-->/", $line, $matches))
+				 	{
+				 		$line_tmp = '';
+				 		$match = $matches[1];
+				 		if($current_level_part[$match] != $current_level[$fieldname][($key-1)][$match])
+				 		{
+						 	$line_tmp = str_replace($matches[0], '', $line);
+						 	
+				 		}
+				 		else
+				 		{	// only print what is after the endif
+					 		$line_tmp = stristr($line, "<!-- endif -->");
+				 		}
+				 		$line_tmp = str_replace("<!-- endif -->", '', $line_tmp);
+						//echo "<pre>".htmlentities(print_r($line_tmp, true), ENT_QUOTES)."</pre>";
+				 	}
+				 	else
+				 	{
+					 	$line_tmp = $line;
+						$line_tmp = preg_replace("/^\S*\s/", "", $line);
+				 	} 	
+					
+					
 					foreach (array_keys($current_level_part) as $var)
 					{
 						$line_tmp = str_replace("($var)", $current_level_part[$var], $line_tmp);
@@ -243,9 +266,9 @@ class template_engine
 					{
 						$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
 					}
-					$line_array[] = $line_tmp;
+					$line_array[$j][] = $line_tmp;
 				}
-			//echo "<pre>".htmlentities(print_r($current_level, true), ENT_QUOTES)."</pre>";
+			//echo "<pre>".htmlentities(print_r($line_array, true), ENT_QUOTES)."</pre>";
 			}
 			else
 			{	
@@ -253,7 +276,7 @@ class template_engine
 				{
 					$inner_line_array = $this->process_template_loops($line, $current_level[$fieldnames[$level]], $fieldname, $fieldnames, $level+1);
 					//echo "<pre>".htmlentities(print_r($inner_line_array, true), ENT_QUOTES)."</pre>";
-					$line_array[] = implode("\n",$inner_line_array);
+					$line_array[$j][] = implode("\n",$inner_line_array);
 				}
 			}
 
@@ -314,8 +337,8 @@ class template_engine
 						$this->processed = array_merge($this->processed, (array)$repeated_processed_line_set);
 					}
 					
-					//$repeated_processed_lines = array();
-					//$repeated_processed_lines = null;
+					$repeated_processed_lines = array();
+					$repeated_processed_lines = null;
 				}
 				else if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
 				{
@@ -326,7 +349,7 @@ class template_engine
 				else
 				{
 					// remove commenting from the front of the line
-					$line = preg_replace("/^\S*\s/", "", $line);
+					//$line = preg_replace("/^\S*\s/", "", $line);
 					/*
 						For this line, run through all the rows and add a new, processed
 						row for every row required.
@@ -337,12 +360,12 @@ class template_engine
 					{
 						$parent_fieldname = $fieldnames[1];
 						// first loop through the parent fields
+						//echo "<pre>".htmlentities(print_r($line, true), ENT_QUOTES)."</pre>";
 						$repeated_processed_line_sections = $this->process_template_loops($line, $this->data_array[$parent_fieldname], $fieldname, $fieldnames, 2);
 						for ($j=0; $j < count($this->data_array[$parent_fieldname]); $j++)
 						{
-							$repeated_processed_lines[$j][] = $repeated_processed_line_sections[$j];
+							$repeated_processed_lines[$j] = array_merge($repeated_processed_lines[$j], $repeated_processed_line_sections[$j]);
 						}
-					//echo "<pre>".htmlentities(print_r($repeated_processed_lines, true), ENT_QUOTES)."</pre>";
 					
 					}
 					else
@@ -351,6 +374,7 @@ class template_engine
 						{
 							$line_tmp = $line;
 
+							$line_tmp = preg_replace("/^\S*\s/", "", $line);
 							// run through the loop items
 							foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 							{
@@ -776,44 +800,27 @@ class template_engine_htmltopdf extends template_engine
 	function fillter_template_data()
 	{
 		$page_row_count = 32;
-		//$page_row_count = 10;
-		
-		
-		if($this->data_array['invoice_items']) 
-		{
-			$this->data_array['invoice_sets'] = array();
-			$count = floor(count($this->data_array['invoice_items'])/2);
-			$temp_data_array = array_chunk($this->data_array['invoice_items'],$count);
-			unset($this->data_array['invoice_items']);
-			$i = 0;
-			foreach((array)$temp_data_array as $temp_data)
-			{
-				$i++;
-				$this->data_array['invoice_sets'][] = array('invoice_items' => $temp_data, 'set_name' => "Set $i");			
-			}
-		}
-		
 		
 		$i = 0;
 		$this->data_array['invoice_pages'] = array();
-		if($this->data_array['invoice_sets'])
+		if($this->data_array['invoice_items'])
 		{
 			$temp_data = array();
-			foreach($this->data_array['invoice_sets'] as $set_key => $invoice_set)
+			foreach($this->data_array['invoice_items'] as $set_key => $invoice_row)
 			{
-				$temp_data['invoice_sets'][$set_key]['set_name'] = $invoice_set['set_name'];
+				$temp_data['invoice_items'][$set_key] = $invoice_row;
 				$i++;
-				foreach($invoice_set['invoice_items'] as $row_key => $invoice_row)
-				{
-					$i++;
-					$temp_data['invoice_sets'][$set_key]['invoice_items'][] = $invoice_row;
-					if($i >= $page_row_count)
-					{
-						$this->data_array['invoice_pages'][] = $temp_data;
-						$temp_data = array();
-						$i = 0;
-					}
-				}
+//				foreach($invoice_set['invoice_items'] as $row_key => $invoice_row)
+//				{
+//					$i++;
+//					$temp_data['invoice_sets'][$set_key]['invoice_items'][] = $invoice_row;
+//					if($i >= $page_row_count)
+//					{
+//						$this->data_array['invoice_pages'][] = $temp_data;
+//						$temp_data = array();
+//						$i = 0;
+//					}
+//				}
 				if($i >= $page_row_count)
 				{
 					$this->data_array['invoice_pages'][] = $temp_data;
@@ -840,12 +847,12 @@ class template_engine_htmltopdf extends template_engine
 			// set page count for any special pages
 			$this->data["page_count"] = $page_count;
 			
-			unset($this->data_array['invoice_sets']);
+			unset($this->data_array['invoice_items']);
 			
 		}
 		
 		//print("<pre>".print_r($temp_data,true)."</pre>");
-		//exit("<pre>".print_r($this->data_array['invoice_pages'],true)."</pre>");
+		//exit("<pre>".print_r($this->data,true)."</pre>");
 	}
 	
 	
@@ -879,7 +886,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/billing_system/htdocs/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/billing_system/htdocs/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
@@ -888,7 +895,7 @@ class template_engine_htmltopdf extends template_engine
 		
 		
 		//exit("<pre>".print_r($this->data_array,true)."</pre>");
-		exit(implode("",$this->processed));
+		//exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)
 		{
