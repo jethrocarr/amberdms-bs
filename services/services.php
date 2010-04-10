@@ -47,6 +47,7 @@ class page_output
 		$this->obj_table->add_column("money", "price", "");
 		$this->obj_table->add_column("money", "price_extraunits", "");
 		$this->obj_table->add_column("standard", "billing_cycle", "billing_cycles.name");
+		$this->obj_table->add_column("bool_tick", "active", "");
 
 		// defaults
 		$this->obj_table->columns		= array("name_service", "typeid", "units", "included_units", "price", "price_extraunits", "billing_cycle");

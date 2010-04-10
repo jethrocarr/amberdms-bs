@@ -88,6 +88,9 @@ class page_output
 		print "<p>This page allows you to view and adjust the service. Note that any changes will only affect the next invoice for customers, it will not adjust any invoices that have already been created.</p>";
 
 
+		// sumary status
+		service_render_summarybox($this->obj_serviceform->serviceid);
+
 		// render form
 		return $this->obj_serviceform->render_html();
 	}

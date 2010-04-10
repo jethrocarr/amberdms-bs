@@ -334,9 +334,21 @@ function service_form_plan_process()
 		break;
 
 		case "phone_single":
-		case "phone_tollfree":
-		case "phone_trunk":
 			$data["id_rate_table"]		= @security_form_input_predefined("int", "id_rate_table", 1, "");
+		break;
+
+		case "phone_tollfree":
+			$data["id_rate_table"]			= @security_form_input_predefined("int", "id_rate_table", 1, "");
+			$data["phone_trunk_included_units"]	= @security_form_input_predefined("int", "phone_trunk_included_units", 1, "");
+			$data["phone_trunk_price_extra_units"]	= @security_form_input_predefined("money", "phone_trunk_price_extra_units", 0, "");
+		break;
+
+		case "phone_trunk":
+			$data["id_rate_table"]			= @security_form_input_predefined("int", "id_rate_table", 1, "");
+			$data["phone_ddi_included_units"]	= @security_form_input_predefined("int", "phone_ddi_included_units", 1, "");
+			$data["phone_ddi_price_extra_units"]	= @security_form_input_predefined("money", "phone_ddi_price_extra_units", 0, "");
+			$data["phone_trunk_included_units"]	= @security_form_input_predefined("int", "phone_trunk_included_units", 1, "");
+			$data["phone_trunk_price_extra_units"]	= @security_form_input_predefined("money", "phone_trunk_price_extra_units", 0, "");
 		break;
 	}
 
@@ -384,6 +396,7 @@ function service_form_plan_process()
 			case "data_traffic":
 
 				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
 						."price='". $data["price"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
@@ -395,13 +408,14 @@ function service_form_plan_process()
 						."alert_100pc='". $data["alert_100pc"] ."', "
 						."alert_extraunits='". $data["alert_extraunits"] ."' "
 						."WHERE id='$id'";
-	
+				$sql_obj->execute();
 				
 			break;
 			
 			case "generic_with_usage":
 
 				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
 						."price='". $data["price"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
@@ -413,6 +427,7 @@ function service_form_plan_process()
 						."alert_100pc='". $data["alert_100pc"] ."', "
 						."alert_extraunits='". $data["alert_extraunits"] ."' "
 						."WHERE id='$id'";
+				$sql_obj->execute();
 	
 			break;
 			
@@ -420,6 +435,7 @@ function service_form_plan_process()
 			case "licenses":
 			
 				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
 						."price='". $data["price"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
@@ -427,19 +443,93 @@ function service_form_plan_process()
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
+				$sql_obj->execute();
 			break;
 			
 
 			case "phone_single":
-			case "phone_tollfree":
-			case "phone_trunk":
 
 				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
 						."price='". $data["price"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
 						."id_rate_table='". $data["id_rate_table"] ."' "
 						."WHERE id='$id'";
+				$sql_obj->execute();
+			break;
+
+
+			case "phone_trunk":
+
+				// update basic details
+				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
+						."price='". $data["price"] ."', "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."', "
+						."id_rate_table='". $data["id_rate_table"] ."' "
+						."WHERE id='$id'";
+				$sql_obj->execute();
+
+
+				// delete old options (if any)
+				$sql_obj->string	= "DELETE FROM services_options
+								WHERE option_type='service' 
+								AND option_type_id='". $id ."' 
+								AND option_name IN ('phone_ddi_included_units',
+											'phone_ddi_price_extra_units',
+											'phone_trunk_included_units',
+											'phone_trunk_price_extra_units')";
+				$sql_obj->execute();
+
+
+				// apply new options
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_ddi_included_units', '". $data["phone_ddi_included_units"] ."')";
+				$sql_obj->execute();
+
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_ddi_price_extra_units', '". $data["phone_ddi_price_extra_units"] ."')";
+				$sql_obj->execute();
+
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_trunk_included_units', '". $data["phone_trunk_included_units"] ."')";
+				$sql_obj->execute();
+
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_trunk_price_extra_units', '". $data["phone_trunk_price_extra_units"] ."')";
+				$sql_obj->execute();
+
+			break;
+
+
+			case "phone_tollfree":
+
+				// update basic details
+				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
+						."price='". $data["price"] ."', "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."', "
+						."id_rate_table='". $data["id_rate_table"] ."' "
+						."WHERE id='$id'";
+				$sql_obj->execute();
+
+
+				// delete old options (if any)
+				$sql_obj->string	= "DELETE FROM services_options
+								WHERE option_type='service' 
+								AND option_type_id='". $id ."' 
+								AND option_name IN ('phone_trunk_included_units',
+											'phone_trunk_price_extra_units')";
+				$sql_obj->execute();
+
+
+				// apply new options
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_trunk_included_units', '". $data["phone_trunk_included_units"] ."')";
+				$sql_obj->execute();
+
+				$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('service', '". $id ."', 'phone_trunk_price_extra_units', '". $data["phone_trunk_price_extra_units"] ."')";
+				$sql_obj->execute();
+
+
 			break;
 
 
@@ -448,15 +538,16 @@ function service_form_plan_process()
 			default:
 
 				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
 						."price='". $data["price"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
+				$sql_obj->execute();
 
 			break;
 		}
 
-		$sql_obj->execute();
 
 
 
@@ -481,7 +572,7 @@ function service_form_plan_process()
 		{
 			$sql_obj->trans_commit();
 
-			log_write("notification", "process", "Service successfully update.");
+			log_write("notification", "process", "Service successfully updated.");
 		}
 
 		// display updated details

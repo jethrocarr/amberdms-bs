@@ -183,7 +183,26 @@ class service
 			$this->data = $sql_obj->data[0];
 
 			// fetch service type label
-			$this->data["typeid_string"]	= sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $this->data["typeid"] ."' LIMIT 1");
+			$this->data["typeid_string"]		= sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $this->data["typeid"] ."' LIMIT 1");
+
+			// fetch biling cycle label
+			$this->data["billing_cycle_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->data["billing_cycle"] ."' LIMIT 1");
+
+
+			// fetch additional service attributes stored in the options table
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT option_name, option_value FROM services_options WHERE option_type='service' AND option_type_id='". $this->id ."'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_options)
+				{
+					$this->data[ $data_options["option_name"] ] 	= $data_options["option_value"];
+				}
+			}
 
 			return 1;
 		}

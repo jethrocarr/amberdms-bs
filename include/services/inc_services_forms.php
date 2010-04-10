@@ -9,6 +9,96 @@
 require("include/accounts/inc_charts.php");
 
 
+
+/*
+	service_render_summarybox($id_service)
+
+	Displays a summary box of the service information and whether the service is enabled or disabled.
+
+	Values
+	id	id of the invoice
+	type	type - ar or ap
+
+	Return Codes
+	0	failure
+	1	sucess
+*/
+function service_render_summarybox($id_service)
+{
+	log_debug("inc_service", "service_render_summarybox($id_service)");
+
+
+	$sql_obj		= New sql_query;
+	$sql_obj->string	= "SELECT name_service,
+						active,
+						service_types.name as type_name,
+						service_groups.group_name as group_name,
+						price
+					FROM services
+					LEFT JOIN service_types ON service_types.id = services.typeid
+					LEFT JOIN service_groups ON service_groups.id = services.id_service_group
+					WHERE services.id='$id_service' LIMIT 1";
+	$sql_obj->execute();
+
+	if ($sql_obj->num_rows())
+	{
+		$sql_obj->fetch_array();
+
+		if ($sql_obj->data[0]["active"])
+		{
+			// service is enabled
+			print "<table width=\"100%\" class=\"table_highlight_open\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $sql_obj->data[0]["name_service"] ." is enabled.</b>";
+	
+				print "<table cellpadding=\"4\">";
+					
+					print "<tr>";
+						print "<td>Service Type:</td>";
+						print "<td>". $sql_obj->data[0]["type_name"] ."</td>";
+					print "</tr>";
+					
+					print "<tr>";
+						print "<td>Service Group:</td>";
+						print "<td>". $sql_obj->data[0]["group_name"] ."</td>";
+					print "</tr>";
+
+					print "<tr>";
+						print "<td>Base Plan Price:</td>";
+						print "<td>". format_money($sql_obj->data[0]["price"]) ."</td>";
+					print "</tr>";
+
+				print "</table>";
+
+				print "</td>";
+
+			print "</tr>";
+			print "</table>";
+		}
+		else
+		{
+			// service is not yet enabled
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $sql_obj->data[0]["name_service"] ." is inactive.</b>";
+				print "<p>This service is currently unconfigured, you need to setup the service plan before it will be activated.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+
+		print "<br>";
+	}
+}
+
+
+
+
+
+
 /*
 	class: services_form_details
 
@@ -541,9 +631,9 @@ class services_form_plan
 
 
 
-				// custom
+				// CDR info
 				$structure = NULL;
-				$structure["fieldname"]		= "plan_information";
+				$structure["fieldname"]		= "cdr_information";
 				$structure["type"]		= "message";
 				$structure["defaultvalue"]	= "<i>For phone services, call charges are defined in rate tables - you should setup general rate tables using the \"<a href=\"index.php?page=services/cdr-rates.php\">CDR Rate Tables</a>\" page. You can over-ride certain rates using the Rate Override page in the menu above.</i>";
 				$this->obj_form->add_input($structure);
@@ -553,12 +643,65 @@ class services_form_plan
 				$this->obj_form->add_input($structure);
 
 
+				// DDI options
+				if ($sql_plan_obj->data[0]["name"] == "phone_trunk")
+				{
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>Use these fields to define the number of DDIs included in the plan as well as the cost of each DDI that a customer may want in addition of what is included with the plan.</i>";
+					$this->obj_form->add_input($structure);
 
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_included_units";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["defaultvalue"]	= 1;
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_price_extra_units";
+					$structure["type"]		= "input";
+					$this->obj_form->add_input($structure);
+				}
+
+
+				// trunk options
+				if ($sql_plan_obj->data[0]["name"] == "phone_trunk" || $sql_plan_obj->data[0]["name"] == "phone_tollfree")
+				{
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>Define the number of trunks (concurrent calls) that are included in the service, as well as the cost of each additional trunk that a customer may have.</i>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_included_units";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["defaultvalue"]	= 1;
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_price_extra_units";
+					$structure["type"]		= "input";
+					$this->obj_form->add_input($structure);
+				}
 
 
 				// subforms
 				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
-				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "id_rate_table");
+				$this->obj_form->subforms["service_plan_cdr"]		= array("cdr_information", "id_rate_table");
+				
+				if ($sql_plan_obj->data[0]["name"] == "phone_trunk")
+				{
+					$this->obj_form->subforms["service_plan_ddi"]	= array("phone_ddi_info", "phone_ddi_included_units", "phone_ddi_price_extra_units");
+				}
+
+				if ($sql_plan_obj->data[0]["name"] == "phone_trunk" || $sql_plan_obj->data[0]["name"] == "phone_tollfree")
+				{
+					$this->obj_form->subforms["service_plan_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_price_extra_units");
+				}
 		
 			break;
 
@@ -621,8 +764,30 @@ class services_form_plan
 		/*
 			Load Data
 		*/
+
+		// load service details
 		$this->obj_form->sql_query = "SELECT * FROM `services` WHERE id='". $this->serviceid ."' LIMIT 1";
 		$this->obj_form->load_data();
+
+		// load options data
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT option_name, option_value FROM services_options WHERE option_type='service' AND option_type_id='". $this->serviceid ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_options)
+			{
+				if (isset($this->obj_form->structure[ $data_options["option_name"] ]))
+				{
+					$this->obj_form->structure[ $data_options["option_name"] ]["defaultvalue"] = $data_options["option_value"];
+				}
+			}
+		}
+
+
 	}
 
 

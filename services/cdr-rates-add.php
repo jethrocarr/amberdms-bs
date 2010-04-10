@@ -56,6 +56,11 @@ class page_output
 		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("id_usage_mode", "SELECT id, description as label FROM cdr_rate_usage_modes ORDER BY name");
+		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
+		$this->obj_form->add_input($structure);
+
 
 		// submit button
 		$structure = NULL;
@@ -66,7 +71,7 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["rate_table_add"]	= array("rate_table_name", "rate_table_description", "id_vendor");
+		$this->obj_form->subforms["rate_table_add"]	= array("rate_table_name", "rate_table_description", "id_vendor", "id_usage_mode");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
 		// load any data returned due to errors

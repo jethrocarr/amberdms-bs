@@ -87,6 +87,12 @@ class page_output
 		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("id_usage_mode", "SELECT id, description as label FROM cdr_rate_usage_modes ORDER BY name");
+		$structure["options"]["req"]	= "yes";
+		$structure["options"]["width"]	= "600";
+		$this->obj_form->add_input($structure);
+
+
 
 		// hidden fields
 		$structure = NULL;
@@ -105,7 +111,7 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["rate_table_view"]	= array("rate_table_name", "rate_table_description", "id_vendor");
+		$this->obj_form->subforms["rate_table_view"]	= array("rate_table_name", "rate_table_description", "id_vendor", "id_usage_mode");
 		$this->obj_form->subforms["hidden"]		= array("id");
 
 		if (user_permissions_get("services_write"))
@@ -130,6 +136,7 @@ class page_output
 			$this->obj_form->structure["rate_table_name"]["defaultvalue"]		= $this->obj_rate_table->data["rate_table_name"];
 			$this->obj_form->structure["rate_table_description"]["defaultvalue"]	= $this->obj_rate_table->data["rate_table_description"];
 			$this->obj_form->structure["id_vendor"]["defaultvalue"]			= $this->obj_rate_table->data["id_vendor"];
+			$this->obj_form->structure["id_usage_mode"]["defaultvalue"]		= $this->obj_rate_table->data["id_usage_mode"];
 		}
 	}
 

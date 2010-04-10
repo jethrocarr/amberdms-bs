@@ -8,23 +8,27 @@
 
 */
 
+require("include/services/inc_services.php");
+require("include/customers/inc_customers.php");
 
 class page_output
 {
-	var $customerid;
-	var $services_customers_id;
-	
+	var $obj_customer;	
 	var $obj_menu_nav;
 	var $obj_table;
 	
 
 	function page_output()
 	{
-		// fetch variables
-		$this->customerid		= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
-		$this->services_customers_id	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
+		$this->obj_customer				= New customer_services;
 
-		// TODO: upgrade to new OO codebase
+
+		// fetch variables
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
+
+		// load service data
+		$this->obj_customer->load_data_service();
 
 
 		// define the navigiation menu
@@ -34,7 +38,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Service Details", "page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		$this->obj_menu_nav->add_item("Service History", "page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 
-		if ($this->obj_customer->obj_service->data["typeid_string"] == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+		if (in_array($this->obj_customer->obj_service->data["typeid_string"], array("phone_single", "phone_tollfree", "phone_trunk")))
 		{
 			$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		}
@@ -57,41 +61,19 @@ class page_output
 	function check_requirements()
 	{
 		// verify that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->customerid ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		if (!$this->obj_customer->verify_id())
 		{
 			log_write("error", "page_output", "The requested customer (". $this->customerid .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
-		unset($sql_obj);
 
-
-		// verify that the customer_service mapping exists and belongs to the correct customer
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT customerid FROM `services_customers` WHERE id='". $this->services_customers_id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// verify that service-customer mapping is valid
+		if (!$this->obj_customer->verify_id_service_customer())
 		{
-			log_write("error", "page_output", "The requested service does not exist.");
+			log_write("error", "page_output", "The requested service (". $this->obj_customer->id_service_customer .") was not found and/or does not match the selected customer");
 			return 0;
 		}
-		else
-		{
-			$sql_obj->fetch_array();
-
-			if ($sql_obj->data[0]["customerid"] != $this->customerid)
-			{
-				log_write("error", "page_output", "The requested service does not match the provided customer ID. Potential application bug?");
-				return 0;
-			}
-		}
-
-		unset($sql_obj);
 
 		return 1;
 	}
@@ -128,7 +110,7 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "services_customers_periods.id");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_total", "account_ar.amount_total");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_paid", "account_ar.amount_paid");
-		$this->obj_table->sql_obj->prepare_sql_addwhere("services_customers_id = '". $this->services_customers_id ."'");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("services_customers_id = '". $this->obj_customer->id_service_customer ."'");
 
 		// run SQL query
 		$this->obj_table->generate_sql();
@@ -142,6 +124,9 @@ class page_output
 		// heading
 		print "<h3>CUSTOMER SERVICE HISTORY</h3>";
 		print "<p>This page displays all the periods of this service, showing when the service was active and when it has been billed.</p>";
+
+
+		$this->obj_customer->service_render_summarybox();
 
 	
 		if (!$this->obj_table->data_num_rows)

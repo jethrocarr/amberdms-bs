@@ -660,7 +660,7 @@ function service_invoices_generate($customerid = NULL)
 					$invoice_item->id_invoice		= $invoiceid;
 					
 					$invoice_item->type_invoice		= "ar";
-					$invoice_item->type_item		= "standard";
+					$invoice_item->type_item		= "service";
 					
 					$itemdata = array();
 
@@ -668,13 +668,30 @@ function service_invoices_generate($customerid = NULL)
 					// chart ID
 					$itemdata["chartid"]		= $sql_service_obj->data[0]["chartid"];
 
+					// service ID
+					$itemdata["customid"]		= $period_data["serviceid"];
+
 					// description
-					$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
-					$itemdata["description"]	.= "\n\n";
-					$itemdata["description"]	.= $period_data["description"];
+					switch ($service_type)
+					{
+						case "phone_single":
+
+							$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $sql_service_obj->data[0]["phone_ddi_single"] .")";
+							$itemdata["description"]	.= "\n\n";
+							$itemdata["description"]	.= $period_data["description"];
+						break;
+
+						default:
+							$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+							$itemdata["description"]	.= "\n\n";
+							$itemdata["description"]	.= $period_data["description"];
+						break;
+					}
 
 					// amount
-					$itemdata["amount"]		= $sql_service_obj->data[0]["price"];
+					$itemdata["price"]		= $sql_service_obj->data[0]["price"];
+					$itemdata["quantity"]		= 1;
+					$itemdata["amount"]		= $itemdata["price"];
 
 
 					// fetch all tax options for this service from the database
@@ -721,7 +738,7 @@ function service_invoices_generate($customerid = NULL)
 						$invoice_item->id_invoice		= $invoiceid;
 					
 						$invoice_item->type_invoice		= "ar";
-						$invoice_item->type_item		= "standard";
+						$invoice_item->type_item		= "service";
 					
 						$itemdata = array();
 
@@ -732,6 +749,8 @@ function service_invoices_generate($customerid = NULL)
 						// description
 						$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." usage from ". $period_data["date_start"] ." to ". $period_data["date_end"];
 
+						// service ID
+						$itemdata["customid"]		= $period_data["serviceid"];
 
 						
 						// calculate the amount to charge
@@ -799,7 +818,8 @@ function service_invoices_generate($customerid = NULL)
 								}
 
 							break;
-							
+		
+
 							case "licenses":
 								/*
 									LICENSES

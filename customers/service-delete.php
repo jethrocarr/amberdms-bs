@@ -122,7 +122,7 @@ class page_output
 
 		// hidden values
 		$structure = NULL;
-		$structure["fieldname"]		= "customerid";
+		$structure["fieldname"]		= "id_customer";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->obj_customer->id;
 		$this->obj_form->add_input($structure);
@@ -152,7 +152,7 @@ class page_output
 
 		// define subforms
 		$this->obj_form->subforms["service_delete"]	= array("name_service", "description");
-		$this->obj_form->subforms["hidden"]		= array("customerid", "id_service_customer");
+		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer");
 
 
 		if ($this->locked)

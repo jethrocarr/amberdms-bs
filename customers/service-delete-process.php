@@ -62,7 +62,7 @@ if (user_permissions_get('customers_write'))
 	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["service_delete"] = "failed";
-		header("Location: ../index.php?page=customers/service-delete.php&customerid=". $obj_customer->id ."&serviceid=". $obj_customer->id_service_customer);
+		header("Location: ../index.php?page=customers/service-delete.php&id_customer=". $obj_customer->id ."&id_service_customer=". $obj_customer->id_service_customer);
 		exit(0);
 	}
 	else
@@ -73,7 +73,7 @@ if (user_permissions_get('customers_write'))
 		$obj_customer->service_delete();
 
 		// return to services page
-		header("Location: ../index.php?page=customers/services.php&id=". $obj_customer->id );
+		header("Location: ../index.php?page=customers/services.php&id_customer=". $obj_customer->id );
 		exit(0);
 			
 	}

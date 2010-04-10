@@ -1,11 +1,11 @@
 <?php
 /*
-	customers/services-cdr-override.php
+	customers/services-ddi.php
 
 	access: customers_view
 		customers_write
 
-	Shows the call rates for the selected phone service and allows them to be overriden for the customer.
+	Shows the DDIs for the selected customer and allows them to be overridden.
 */
 
 
@@ -17,7 +17,7 @@ require("include/services/inc_services_cdr.php");
 class page_output
 {
 	var $obj_customer;
-	var $obj_cdr_rate_table;
+	var $obj_;
 	
 	var $obj_menu_nav;
 	var $obj_form;

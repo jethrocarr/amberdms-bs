@@ -47,7 +47,7 @@ class page_output
 			$this->obj_menu_nav->add_item("Service Details", "page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 			$this->obj_menu_nav->add_item("Service History", "page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 
-			if ($this->obj_customer->obj_service->data["typeid_string"] == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+			if (in_array($this->obj_customer->obj_service->data["typeid_string"], array("phone_single", "phone_tollfree", "phone_trunk")))
 			{
 				$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 			}
@@ -168,9 +168,8 @@ class page_output
 
 			// billing
 			$structure = NULL;
-			$structure["fieldname"]		= "billing_cycle";
+			$structure["fieldname"]		= "billing_cycle_string";
 			$structure["type"]		= "text";
-			$structure["defaultvalue"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->obj_customer->obj_service->data["billing_cycle"] ."' LIMIT 1");
 			$this->obj_form->add_input($structure);
 			
 			$structure = NULL;
@@ -184,7 +183,7 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 
-			$this->obj_form->subforms["service_billing"]	= array("billing_cycle", "date_period_first", "date_period_next");
+			$this->obj_form->subforms["service_billing"]	= array("billing_cycle_string", "date_period_first", "date_period_next");
 
 
 
@@ -277,6 +276,103 @@ class page_output
 					$this->obj_form->subforms["service_options_licenses"]	= array("quantity_msg", "quantity");
 				break;
 
+
+				case "phone_single":
+
+					// single DDI
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>You must set the DDI of the phone here for billing purposes</i>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_single";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info", "phone_ddi_single");
+
+				break;
+
+
+
+				case "phone_tollfree":
+
+					// single DDI
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>You must set the DDI of the tollfree number here for billing purposes.</i>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_single";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info", "phone_ddi_single");
+
+
+					// trunk options
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<i>Define the number of trunks (concurrent calls) that are included in the service, depending on the service plan, there may be additional charges concurred.</i>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_included_units";
+					$structure["type"]		= "text";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_quantity";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity");
+
+				break;
+
+
+
+				case "phone_trunk":
+
+					// DDI options
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/services-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
+					$this->obj_form->add_input($structure);
+
+					// trunk options
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_info";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<p>Define the number of trunks (concurrent calls) that are included in the service, depending on the service plan, there may be additional charges concurred.</p>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_included_units";
+					$structure["type"]		= "text";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_quantity";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info");
+					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity");
+
+				break;
+
+
 			}
 
 
@@ -330,7 +426,7 @@ class page_output
 			*/
 
 
-			$structure = form_helper_prepare_dropdownfromdb("serviceid", "SELECT id, name_service as label FROM services ORDER BY name_service");
+			$structure = form_helper_prepare_dropdownfromdb("serviceid", "SELECT id, name_service as label FROM services WHERE active='1' ORDER BY name_service");
 			$structure["options"]["req"] = "yes";
 			$this->obj_form->add_input($structure);
 		
@@ -355,7 +451,7 @@ class page_output
 
 		// hidden values
 		$structure = NULL;
-		$structure["fieldname"]		= "customerid";
+		$structure["fieldname"]		= "id_customer";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->obj_customer->id;
 		$this->obj_form->add_input($structure);
@@ -379,7 +475,7 @@ class page_output
 
 
 		// define base subforms	
-		$this->obj_form->subforms["hidden"] = array("customerid");
+		$this->obj_form->subforms["hidden"] = array("id_customer");
 
 
 		if (user_permissions_get("customers_write"))
@@ -395,13 +491,23 @@ class page_output
 		// fetch the form data if editing
 		if ($this->obj_customer->id_service_customer)
 		{
+			// fetch service data
+			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_customer->obj_service->data["description"];
+			$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_customer->obj_service->data["name_service"];
+
+			foreach (array_keys($this->obj_customer->obj_service->data) as $option_name)
+			{
+				if (isset($this->obj_form->structure[ $option_name ]))
+				{
+					$this->obj_form->structure[ $option_name ]["defaultvalue"] = $this->obj_customer->obj_service->data[ $option_name ];
+				}
+			}
+
 			// fetch DB data
 			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
 			$this->obj_form->load_data();
 
-			// fetch service item data
-			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_customer->obj_service->data["description"];
-			$this->obj_form->structure["name_service"]["defaultvalue"]	= $this->obj_customer->obj_service->data["name_service"];
+
 		}
 		
 			
@@ -421,12 +527,16 @@ class page_output
 		{
 			print "<h3>EDIT SERVICE</h3><br>";
 			print "<p>This page allows you to modifiy a customer service.</p>";
+		
+			// service summary
+			$this->obj_customer->service_render_summarybox();
 		}
 		else
 		{
 			print "<h3>ADD CUSTOMER TO SERVICE</h3><br>";
 			print "<p>This page allows you to subscribe a customer to a new service.</p>";
 		}
+
 
 		// display the form
 		$this->obj_form->render_form();

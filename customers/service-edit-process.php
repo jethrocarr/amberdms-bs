@@ -28,16 +28,54 @@ if (user_permissions_get('customers_write'))
 
 	if ($obj_customer->id_service_customer)
 	{
+		// load the service data
+		$obj_customer->load_data_service();
+
+
 		// standard fields
 		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
-
 
 		// options
 		$data["quantity"]		= @security_form_input_predefined("int", "quantity", 0, "");
 
 		if (!$data["quantity"])
 			$data["quantity"] = 1;	// all services must have at least 1
-	
+
+
+
+		/*
+			Fetch Service-Type Options
+		*/
+		switch ($obj_customer->obj_service->data["typeid_string"])
+		{
+			case "phone_single":
+				$data["phone_ddi_single"]		= @security_form_input_predefined("int", "phone_ddi_single", 1, "");
+			break;
+
+			case "phone_tollfree":
+				$data["phone_ddi_single"]		= @security_form_input_predefined("int", "phone_ddi_single", 1, "");
+
+				$data["phone_trunk_included_units"]	= @security_form_input_predefined("int", "phone_trunk_included_units", 0, "");		// only for error handling
+				$data["phone_trunk_quantity"]		= @security_form_input_predefined("int", "phone_trunk_quantity", 0, "");
+
+				if ($data["phone_trunk_quantity"] < $data["phone_trunk_included_units"])
+				{
+					$data["phone_trunk_quantity"] = $data["phone_trunk_included_units"];
+				}
+
+			break;
+
+			case "phone_trunk":
+				$data["phone_trunk_included_units"]	= @security_form_input_predefined("int", "phone_trunk_included_units", 0, "");		// only for error handling
+				$data["phone_trunk_quantity"]		= @security_form_input_predefined("int", "phone_trunk_quantity", 0, "");
+
+				if ($data["phone_trunk_quantity"] < $data["phone_trunk_included_units"])
+				{
+					$data["phone_trunk_quantity"] = $data["phone_trunk_included_units"];
+				}
+			break;
+		}
+
 	}
 	else
 	{
@@ -107,7 +145,7 @@ if (user_permissions_get('customers_write'))
 	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["service_view"] = "failed";
-		header("Location: ../index.php?page=customers/service-edit.php&customerid=". $obj_customer->id ."&serviceid=". $obj_customer->id_service_customer);
+		header("Location: ../index.php?page=customers/service-edit.php&id_customer=". $obj_customer->id ."&id_service_customer=". $obj_customer->id_service_customer);
 		exit(0);
 	}
 	else
@@ -160,15 +198,19 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data = array();
 			$obj_customer->obj_service->load_data_options();
 
-			$obj_customer->obj_service->data["description"]		= $data["description"];
-			$obj_customer->obj_service->data["name_service"]	= $data["name_service"];
+			$obj_customer->obj_service->data["description"]			= $data["description"];
+			$obj_customer->obj_service->data["name_service"]		= $data["name_service"];
+
+			$obj_customer->obj_service->data["phone_ddi_single"]		= $data["phone_ddi_single"];
+			$obj_customer->obj_service->data["phone_trunk_included_units"]	= $data["phone_trunk_included_units"];
+			$obj_customer->obj_service->data["phone_trunk_quantity"]	= $data["phone_trunk_quantity"];
 
 			$obj_customer->obj_service->action_update_options();
 
 		}
 
 		// return to services page
-		header("Location: ../index.php?page=customers/services.php&id_customer=". $obj_customer->id );
+		header("Location: ../index.php?page=customers/service-edit.php&id_customer=". $obj_customer->id ."&id_service_customer=". $obj_customer->id_service_customer ."");
 		exit(0);
 			
 	}

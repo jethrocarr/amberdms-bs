@@ -553,6 +553,7 @@ class customer_services extends customer
 	var $obj_service;
 
 
+
 	/*
 		Constructor
 	*/
@@ -1308,7 +1309,864 @@ class customer_services extends customer
 	}
 
 
+
+	/*
+		service_render_summarybox()
+
+		Displays a summary box of the service information and whether the service is enabled or disabled for the customer.
+
+		Return Codes
+		0	failure
+		1	sucess
+	*/
+	function service_render_summarybox()
+	{
+		log_debug("customer_services", "service_render_summarybox()");
+
+		if ($this->service_get_status())
+		{
+			// service is enabled
+			print "<table width=\"100%\" class=\"table_highlight_open\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $this->obj_service->data["name_service"] ." is enabled.</b>";
+		
+				print "<table cellpadding=\"4\">";
+						
+					print "<tr>";
+						print "<td>Service-Customer ID:</td>";
+						print "<td>". $this->id_service_customer ."</td>";
+					print "</tr>";
+
+					print "<tr>";
+						print "<td>Service Type:</td>";
+						print "<td>". $this->obj_service->data["typeid_string"] ."</td>";
+					print "</tr>";
+						
+					print "<tr>";
+						print "<td>Service Changes:</td>";
+						print "<td>". format_money($this->obj_service->data["price"]) ." (excluding usage charges and taxes)</td>";
+					print "</tr>";
+
+				print "</table>";
+
+				print "</td>";
+
+			print "</tr>";
+			print "</table>";
+		}
+		else
+		{
+			// service is not yet enabled
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $this->obj_service->data["name_service"] ."</b>";
+				print "<p>This service is currently disabled, no processing will take place and the customer will not recieve any invoices. Use the \"<a href=\"index.php?page=customers/service-edit.php&id_customer=". $this->id ."&id_service_customer=". $this->id_service_customer ."\">service details</a>\" page to enable the service if desired.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+
+
 } // end of class: customer_services
+
+
+
+
+
+
+
+
+/*
+	CLASS customer_services_ddi
+
+	Functions for adding/editing/removing DDI entries from a customer
+*/
+class customer_services_ddi extends customer_services
+{
+	var $id_service_ddi;		// ID of DDI value to manipulate
+
+
+
+	/*
+		verify_id_service_ddi
+
+		Verify that the supplied service DDI is valid and belongs to the selected customer. This function will also
+		fetch the id_service_customer ID if it hasn't been supplied.
+
+		Results
+		0	Failure to find the ID
+		1	Success
+	*/
+
+	function verify_id_service_ddi()
+	{
+		log_debug("customer_services_ddi", "Executing verify_id_service_ddi()");
+
+		if ($this->id_service_ddi)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id_service_customer, ddi_start, ddi_finish, description FROM `services_customers_ddi` WHERE id='". $this->id_service_customer ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				if ($this->id)
+				{
+					if ($sql_obj->data[0]["customerid"] == $this->id)
+					{
+						return 1;
+					}
+					else
+					{
+						log_write("error", "customers_services", "The seleced service-customer (". $this->id_service_customer .") does not match the selected customer (". $this->id .").");
+						return 0;
+					}
+				}
+				else
+				{
+					$this->id = $sql_obj->data[0]["customerid"];
+					return 1;
+				}
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id
+
+
+
+	/*
+		load_data_service
+
+		Loads the service object and it's associated data
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function load_data_service()
+	{
+		log_write("debug", "customer_services", "Executing load_data_service()");
+
+
+		$this->obj_service->option_type		= "customer";
+		$this->obj_service->option_type_id	= $this->id_service_customer;
+
+		if (!$this->obj_service->verify_id_options())
+		{
+			log_write("error", "customers_services", "Unable to verify service ID of ". $this->id_service_customer ." as being valid, no changes have been made to service configuration.");
+			return 0;
+		}
+		
+		$this->obj_service->load_data();
+		$this->obj_service->load_data_options();
+
+		return 1;
+	}
+	
+
+
+	/*
+		service_get_status
+
+		Fetches the current status of the service
+
+		Returns
+		0		Service is not active or an error occured
+		1		Service is active/enabled
+	*/
+
+	function service_get_status()
+	{
+		log_write("debug", "customers_services", "Executing service_get_status()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT active FROM services_customers WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->execute();
+
+		$sql_obj->fetch_array();
+
+		if ($sql_obj->data[0]["active"])
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}	
+	}
+
+	/*
+		service_check_delete_lock
+
+		Returns whether or not the selected service can be deleted/is locked.
+
+		Returns
+		0	Unlocked
+		1	Locked
+		2	Locked // Is part of a bundle
+	*/
+
+	function service_check_delete_lock()
+	{
+		log_write("debug", "customers_services", "Executing service_check_delete_lock()");
+
+		if ($this->service_get_is_bundle_item())
+		{
+			return 2;
+		}
+
+		return 0;
+	}
+
+
+	/*
+		service_get_is_bundle_item
+
+		Returns whether or not the selected service is a bundle item.
+
+		Returns
+		0		Service is not a bundle item
+		#		ID of the bundle item it belongs to.
+	*/
+
+	function service_get_is_bundle_item()
+	{
+		log_write("debug", "customers_services", "Executing service_get_is_bundle_item()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT bundleid FROM services_customers WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->execute();
+
+		$sql_obj->fetch_array();
+
+		if ($sql_obj->data[0]["bundleid"])
+		{
+			return $sql_obj->data[0]["bundleid"];
+		}
+		else
+		{
+			return 0;
+		}	
+	}
+
+
+
+
+	/*
+		service_add
+
+		Fields
+		date_period_start	date to activate the service from.
+
+		Returns
+		0	Failure
+		#	ID of service-bundle maping
+
+		Adds the requested service to a customer. If the service is a bundle, it will process this and
+		add all the child services to the customer.
+
+		The service to add is defined by $this->obj_service->id
+	*/
+	function service_add($date_period_start)
+	{
+		log_debug("debug", "inc_services", "Executing service_add($date_period_start)");
+
+
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Create service entry
+		*/
+
+		$sql_obj->string	= "INSERT INTO `services_customers` (customerid,
+										serviceid,
+										date_period_first,
+										date_period_next,
+										description)
+									VALUES
+										('". $this->id ."',
+										'". $this->obj_service->id ."',
+										'". $date_period_start ."',
+										'". $date_period_start ."',
+										'". $obj_service->data["description"] ."')";
+		$sql_obj->execute();
+
+		$this->id_service_customer = $sql_obj->fetch_insert_id();
+
+
+
+		/*
+			Process Bundle Items (if any)
+		*/
+		if ($this->obj_service->data["typeid_string"] == "bundle")
+		{
+			log_write("debug", "customer_services", "Service being added is a bundle service - processing components and adding them to customer as well.");
+
+			// fetch bundle component services
+			$components = $this->obj_service->bundle_service_list();
+
+			// add each component service
+			foreach ($components as $id_component)
+			{
+				$obj_component				= New service;
+				$obj_component->option_type		= "bundle";
+				$obj_component->option_type_id		= $id_component;
+
+				$obj_component->verify_id_options();
+				$obj_component->load_data();
+				$obj_component->load_data_options();
+
+				$sql_obj->string	= "INSERT INTO `services_customers` (customerid,
+												serviceid,
+												bundleid,
+												bundleid_component,
+												date_period_first,
+												date_period_next,
+												description) 
+											VALUES
+												('". $this->id ."',
+												'". $obj_component->id ."',
+												'". $this->id_service_customer ."',
+												'". $id_component ."',
+												'". $date_period_start ."',
+												'". $date_period_start ."',
+												'". $obj_component->data["description"] ."')";
+				$sql_obj->execute();
+
+				log_write("notification", "process", "Added new service ". $obj_component->data["name_service"] ." as part of the bundle service ". $this->obj_service->data["name_service"] ."");
+			}
+		}
+
+
+
+		/*
+			Update the Journal
+		*/
+		journal_quickadd_event("customers", $this->id, "New service ". $obj_service->data["name_service"] ." added to account with start date of ". $date_period_start ."");
+
+		
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attemping to create the new service. No changes have been made.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			log_write("notification", "process", "New service ". $obj_service->data["name_service"] ." added successfully.");
+
+			return $this->id_service_customer;
+		}
+
+
+	}
+
+
+
+
+	/*
+		service_enable
+
+		Enables the selected service for the customer.
+
+		Returns
+		0			Unable to enable service
+		1			Service enabled successfully.
+
+		TODO: Future provisioning hooks will need to go here.
+	*/
+
+	function service_enable()
+	{
+		log_write("debug", "customers_services", "Executing service_enable()");
+
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+
+		/*
+			Process Bundle Components
+		*/
+		if ($this->obj_service->data["typeid_string"] == "bundle")
+		{
+			log_write("debug", "customer_services", "Service is a bundle, activiting all service components");
+
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM services_customers WHERE bundleid='". $this->id_service_customer ."'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_component)
+				{
+					// load service information
+					$obj_component			= New service;
+					$obj_component->option_type	= "customer";
+					$obj_component->option_type_id	= $data_component["id"];
+
+					$obj_component->verify_id_options();
+					$obj_component->load_data();
+					$obj_component->load_data_options;
+
+
+					// activate service
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE services_customers SET active='1' WHERE id='". $data_component["id"] ."' LIMIT 1";
+		
+					if (!$sql_obj->execute())
+					{
+						log_write("error", "customers_services", "An error occured whilst attempting to enable the bundle component service ". $obj_component->data["name_service"] ."");
+					}
+					else
+					{
+						journal_quickadd_event("customers", $this->id, "Enabled service bundle item \"". $obj_component->data["name_service"] ."\"");
+
+						log_write("notification", "customer_services", "Enabled service bundle item \"". $obj_component->data["name_service"] ."\"");
+					}
+
+
+				} // end of loop through bundle components
+
+			}
+		} // end of if bundle
+
+
+
+		/*
+			Activate Service
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE services_customers SET active='1' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "customers_services", "An error occured whilst attempting to enable the selected service");
+		}
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "Unexpected errors occured whilst trying to activate services, no changes have been made as a result.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			journal_quickadd_event("customers", $this->id, "Enabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			log_write("notification", "customer_services", "Enabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+
+			return 1;
+		}
+
+	}
+
+
+
+	/*
+		service_disable
+
+		Disables the selected service for the customer.
+
+		Returns
+		0			Unable to disable service
+		1			Service enabled successfully
+		
+		TODO: Future provisioning hooks will need to go here.
+	*/
+
+	function service_disable()
+	{
+		log_write("debug", "customers_services", "Executing service_disable()");
+
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Process Bundle Components
+		*/
+		if ($this->obj_service->data["typeid_string"] == "bundle")
+		{
+			log_write("debug", "customer_services", "Service is a bundle, disabling all service components");
+
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM services_customers WHERE bundleid='". $this->id_service_customer ."'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_component)
+				{
+					// load service information
+					$obj_component			= New service;
+					$obj_component->option_type	= "customer";
+					$obj_component->option_type_id	= $data_component["id"];
+
+					$obj_component->verify_id_options();
+					$obj_component->load_data();
+					$obj_component->load_data_options;
+
+
+					// activate service
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE services_customers SET active='0' WHERE id='". $data_component["id"] ."' LIMIT 1";
+		
+					if (!$sql_obj->execute())
+					{
+						log_write("error", "customers_services", "An error occured whilst attempting to disable the bundle component service ". $obj_component->data["name_service"] ."");
+					}
+					else
+					{
+						journal_quickadd_event("customers", $this->id, "Disabled service bundle item \"". $obj_component->data["name_service"] ."\"");
+
+						log_write("notification", "customer_services", "Disabled service bundle item \"". $obj_component->data["name_service"] ."\"");
+					}
+
+
+				} // end of loop through bundle components
+
+			}
+		} // end of if bundle
+
+
+
+		/*
+			Activate Service
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE services_customers SET active='0' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "customers_services", "An error occured whilst attempting to disable the selected service");
+		}
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "Unexpected errors occured whilst trying to disable services, no changes have been made as a result.");
+			
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+		
+			journal_quickadd_event("customers", $this->id, "Disabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+			log_write("notification", "customer_services", "Disabled service \"". $this->obj_service->data["name_service"] ."\"");
+
+
+			return 1;
+		}
+	}
+
+
+
+	/*
+		service_delete
+
+		Deletes a service from the selected customer
+
+		Returns
+		0		Unexpected Failure
+		1		Success
+	*/
+	function service_delete()
+	{
+		log_write("debug", "customers_services", "Executing service_delete())");
+
+
+		/*
+			Begin Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+		
+			
+		/*
+			Process Bundle Components
+		*/
+		if ($this->obj_service->data["typeid_string"] == "bundle")
+		{
+			log_write("debug", "customer_services", "Service is a bundle, disabling all service components");
+
+
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM services_customers WHERE bundleid='". $this->id_service_customer ."'";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				foreach ($sql_obj->data as $data_component)
+				{
+					// load service information
+					$obj_component			= New service;
+					$obj_component->option_type	= "customer";
+					$obj_component->option_type_id	= $data_component["id"];
+
+					$obj_component->verify_id_options();
+					$obj_component->load_data();
+					$obj_component->load_data_options;
+
+
+					/*
+						Delete Service Customer Mapping
+					*/
+
+					$sql_obj->string	= "DELETE FROM services_customers WHERE id='". $data_component["id"] ."' LIMIT 1";
+					$sql_obj->execute();
+
+					$sql_obj->string	= "DELETE FROM services_options WHERE option_type='customer' AND option_type_id='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+
+					/*
+						Delete CDR service options (if any)
+					*/
+
+					$sql_obj->string	= "DELETE FROM cdr_rate_tables_overrides WHERE option_type='customer' AND option_type_id='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+
+					/*
+						Delete service period history
+					*/
+			
+					$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+
+					/*
+						Delete service usage records
+					*/
+			
+					$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+
+					/*
+						Update Journal
+					*/
+
+					journal_quickadd_event("customers", $this->id, "Service bundle component \"". $obj_component->data["name_service"] ."\" has been deleted from this customer's account.");
+
+					log_write("notification", "process", "Service bundle component \"". $obj_component->data["name_service"] ."\" has been removed from this customer's account.");
+
+
+				} // end of loop through bundle components
+
+			}
+		} // end of if bundle
+
+
+
+
+
+		/*
+			Delete service-customer entry
+		*/
+			
+		$sql_obj->string	= "DELETE FROM services_customers WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->execute();
+
+		$sql_obj->string	= "DELETE FROM services_options WHERE option_type='customer' AND option_type_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+		
+
+		/*
+			Delete CDR service options (if any)
+		*/
+
+		$sql_obj->string	= "DELETE FROM cdr_rate_tables_overrides WHERE option_type='customer' AND option_type_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+
+		/*
+			Delete service period history
+		*/
+			
+		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+
+		/*
+			Delete service usage records
+		*/
+			
+		$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Update Journal
+		*/
+		
+		journal_quickadd_event("customers", $this->id, "Service ". $this->obj_service->data["name_service"] ." has been deleted from this customer's account.");
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "process", "An error occured whilst attempting to delete the service from the customer's account. No changes were made.");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "process", "Service \"". $this->obj_service->data["name_service"] ."\" has been removed from this customer's account.");
+			return 0;
+		}
+		
+
+		return 0;
+	}
+
+
+
+	/*
+		service_render_summarybox()
+
+		Displays a summary box of the service information and whether the service is enabled or disabled for the customer.
+
+		Return Codes
+		0	failure
+		1	sucess
+	*/
+	function service_render_summarybox()
+	{
+		log_debug("customer_services", "service_render_summarybox()");
+
+		if ($this->service_get_status())
+		{
+			// service is enabled
+			print "<table width=\"100%\" class=\"table_highlight_open\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $this->obj_service->data["name_service"] ." is enabled.</b>";
+		
+				print "<table cellpadding=\"4\">";
+						
+					print "<tr>";
+						print "<td>Service-Customer ID:</td>";
+						print "<td>". $this->id_service_customer ."</td>";
+					print "</tr>";
+
+					print "<tr>";
+						print "<td>Service Type:</td>";
+						print "<td>". $this->obj_service->data["typeid_string"] ."</td>";
+					print "</tr>";
+						
+					print "<tr>";
+						print "<td>Service Changes:</td>";
+						print "<td>". format_money($this->obj_service->data["price"]) ." (excluding usage charges and taxes)</td>";
+					print "</tr>";
+
+				print "</table>";
+
+				print "</td>";
+
+			print "</tr>";
+			print "</table>";
+		}
+		else
+		{
+			// service is not yet enabled
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Service ". $this->obj_service->data["name_service"] ."</b>";
+				print "<p>This service is currently disabled, no processing will take place and the customer will not recieve any invoices. Use the \"<a href=\"index.php?page=customers/service-edit.php&id_customer=". $this->id ."&id_service_customer=". $this->id_service_customer ."\">service details</a>\" page to enable the service if desired.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+
+
+} // end of class: customer_services
+
+
 
 
 

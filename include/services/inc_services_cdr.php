@@ -133,7 +133,7 @@ class cdr_rate_table
 		log_debug("cdr_rate_table", "Executing load_data()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id_vendor, rate_table_name, rate_table_description FROM cdr_rate_tables WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id_vendor, id_usage_mode, rate_table_name, rate_table_description FROM cdr_rate_tables WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -142,6 +142,7 @@ class cdr_rate_table
 			$sql_obj->fetch_array();
 
 			$this->data["id_vendor"]		= $sql_obj->data[0]["id_vendor"];
+			$this->data["id_usage_mode"]		= $sql_obj->data[0]["id_usage_mode"];
 			$this->data["rate_table_name"]		= $sql_obj->data[0]["rate_table_name"];
 			$this->data["rate_table_description"]	= $sql_obj->data[0]["rate_table_description"];
 
@@ -267,6 +268,7 @@ class cdr_rate_table
 
 		$sql_obj->string	= "UPDATE `cdr_rate_tables` SET "
 						."id_vendor='". $this->data["id_vendor"] ."', "
+						."id_usage_mode='". $this->data["id_usage_mode"] ."', "
 						."rate_table_name='". $this->data["rate_table_name"] ."', "
 						."rate_table_description='". $this->data["rate_table_description"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";

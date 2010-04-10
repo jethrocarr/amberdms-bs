@@ -26,6 +26,12 @@ class page_output
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
+		// TODO temp compability hack
+		if (!$this->id)
+		{
+			$this->id = @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		}
+
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
@@ -140,7 +146,7 @@ class page_output
 
 			if (user_permissions_get("customers_write"))
 			{
-				print "<p><b><a class=\"button\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->id ."\">Add a new service to this customer</a></b></p>";
+				print "<p><b><a class=\"button\" href=\"index.php?page=customers/service-edit.php&id_customer=". $this->id ."\">Add a new service to this customer</a></b></p>";
 			}
 		}
 		else

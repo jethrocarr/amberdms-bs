@@ -26,6 +26,7 @@ if (user_permissions_get('services_write'))
 	$obj_rate_table->data["rate_table_name"]		= @security_form_input_predefined("any", "rate_table_name", 1, "");
 	$obj_rate_table->data["rate_table_description"]		= @security_form_input_predefined("any", "rate_table_description", 0, "");
 	$obj_rate_table->data["id_vendor"]			= @security_form_input_predefined("int", "id_vendor", 1, "");
+	$obj_rate_table->data["id_usage_mode"]			= @security_form_input_predefined("int", "id_usage_mode", 1, "");
 
 
 
