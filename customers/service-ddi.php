@@ -49,9 +49,14 @@ class page_output
 		$this->obj_menu_nav->add_item("Service Details", "page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		$this->obj_menu_nav->add_item("Service History", "page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 
-		if ($this->obj_customer->obj_service->data["typeid_string"] == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+		if (in_array($this->obj_customer->obj_service->data["typeid_string"], array("phone_single", "phone_tollfree", "phone_trunk")))
 		{
-			$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
+			$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+		}
+		
+		if ($this->obj_customer->obj_service->data["typeid_string"] == "phone_trunk")
+		{
+			$this->obj_menu_nav->add_item("DDI Configuration", "page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 		}
 	
 		if (user_permissions_get("customers_write"))
@@ -80,7 +85,7 @@ class page_output
 
 
 		// verify that the service-customer entry exists
-		if ($this->ob_customer->id_service_customer)
+		if ($this->obj_customer->id_service_customer)
 		{
 			if (!$this->obj_customer->verify_id_service_customer())
 			{
@@ -89,19 +94,13 @@ class page_output
 			}
 		}
 
-
-		// verify the options IDs
-		if (!$this->obj_cdr_rate_table->verify_id_override())
-		{
-			log_write("error", "page_output", "The requested service does not have a valid CDR rate table");
-		}
-
 		// verify that this is a phone service
-		if ($this->obj_customer->obj_service->data["typeid_string"] != ("phone_single" || "phone_trunk" || "phone_tollfree"))
+		if ($this->obj_customer->obj_service->data["typeid_string"] != "phone_trunk")
 		{
-			log_write("error", "page_output", "The requested service is not a phone service.");
+			log_write("error", "page_output", "The requested service is not a phone_trunk service.");
 			return 0;
 		}
+
 
 		return 1;
 	}
@@ -111,22 +110,7 @@ class page_output
 	function execute()
 	{
 		/*
-			Load CDR Data
-		*/
-
-		// get the rate table info for display purposes
-		$this->obj_cdr_rate_table->load_data();
-
-		// get the values
-		$this->obj_cdr_rate_table->load_data_rate_all();
-		$this->obj_cdr_rate_table->load_data_rate_all_override();
-
-		// get all the overrides in use
-
-
-
-		/*
-			Draw Display Table
+			Define DDI table
 		*/
 
 
@@ -134,55 +118,36 @@ class page_output
 		$this->obj_table = New table;
 
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= "service_cdr_override";
+		$this->obj_table->tablename	= "service_ddi";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "rate_prefix", "");
-		$this->obj_table->add_column("standard", "rate_description", "");
-		$this->obj_table->add_column("money", "rate_price_sale", "");
-		$this->obj_table->add_column("money", "rate_price_cost", "");
-		$this->obj_table->add_column("standard", "rate_override", "");
-
+		$this->obj_table->add_column("standard", "ddi_start", "");
+		$this->obj_table->add_column("standard", "ddi_finish", "");
+		$this->obj_table->add_column("standard", "description", "");
 
 		// defaults
-		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost", "rate_override");
+		$this->obj_table->columns		= array("ddi_start", "ddi_finish", "description");
 
-		// custom-load the service rate data
-		$this->obj_table->data_num_rows		= count(array_keys($this->obj_cdr_rate_table->data["rates"]));
+		// define SQL structure
+		$this->obj_table->sql_obj->prepare_sql_settable("services_customers_ddi");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
+		
 
+		// load settings from options form
+		$this->obj_table->load_options_form();
 
-		$i = 0;
-		foreach (array_keys($this->obj_cdr_rate_table->data["rates"]) as $rate_prefix)
-		{
-			$this->obj_table->data[$i]["id_rate"]		= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["id_rate"];
-			$this->obj_table->data[$i]["id_rate_override"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["id_rate_override"];
+		// fetch all the customer information
+		$this->obj_table->generate_sql();
+		$this->obj_table->load_data_sql();
 
-			$this->obj_table->data[$i]["rate_prefix"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_prefix"];
-			$this->obj_table->data[$i]["rate_description"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_description"];
-			$this->obj_table->data[$i]["rate_price_sale"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_price_sale"];
-			$this->obj_table->data[$i]["rate_price_cost"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_price_cost"];
-
-			if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["option_type"] == "service")
-			{
-				$this->obj_table->data[$i]["rate_override"] = "<span class=\"table_highlight_important\">SERVICE OVERRIDE</span>";
-			}
-
-			if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["option_type"] == "customer")
-			{
-				$this->obj_table->data[$i]["rate_override"]		= "<span class=\"table_highlight_info\">CUSTOMER OVERRIDE</span>";
-				$this->obj_table->data[$i]["rate_override_customer"]	= 1;
-			}
-
-			$i++;
-		}
 	}
 
 
 	function render_html()
 	{
 		// Title + Summary
-		print "<h3>CUSTOMER CDR RATE OVERRIDE</h3><br>";
-		print "<p>This page allows you to view the rates set for call costs for the selected customer as well as allowing them to be overridden with customised prices.</p>";
+		print "<h3>CUSTOMER SERVICE DDI ASSIGNMENT</h3><br>";
+		print "<p>This page allows you to assign DDIs to a trunk phone service.</p>";
 
 		// service status summary
 		$this->obj_customer->service_render_summarybox();
@@ -190,51 +155,39 @@ class page_output
 
 		if (user_permissions_get("customers_write"))
 		{
-			// override link
+			// details/edit link
 			$structure = NULL;
-			$structure["logic"]["if_not"]["column"]		= "rate_override_customer";
-
 			$structure["id_customer"]["value"]		= $this->obj_customer->id;
 			$structure["id_service_customer"]["value"]	= $this->obj_customer->id_service_customer;
-			$structure["id_rate"]["column"]			= "id_rate";
-			$structure["id_rate_override"]["column"]	= "id_rate_override";
+			$structure["id_ddi"]["column"]			= "id_ddi";
 
-			$this->obj_table->add_link("tbl_lnk_override", "customers/service-cdr-override-edit.php", $structure);
-
-
-			// adjust link
-			$structure = NULL;
-			$structure["logic"]["if"]["column"]		= "rate_override_customer";
-
-			$structure["id_customer"]["value"]		= $this->obj_customer->id;
-			$structure["id_service_customer"]["value"]	= $this->obj_customer->id_service_customer;
-			$structure["id_rate"]["column"]			= "id_rate";
-			$structure["id_rate_override"]["column"]	= "id_rate_override";
-
-			$this->obj_table->add_link("tbl_lnk_adjust_override", "customers/service-cdr-override-edit.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_details", "customers/service-ddi-edit.php", $structure);
 
 
 			// delete link
 			$structure = NULL;
-			$structure["logic"]["if"]["column"]		= "rate_override_customer";
-			$structure["full_link"]				= "yes";
-
 			$structure["id_customer"]["value"]		= $this->obj_customer->id;
 			$structure["id_service_customer"]["value"]	= $this->obj_customer->id_service_customer;
-			$structure["id_rate"]["column"]			= "id_rate";
-			$structure["id_rate_override"]["column"]	= "id_rate_override";
+			$structure["id_ddi"]["column"]			= "id_ddi";
 
-			$this->obj_table->add_link("tbl_lnk_delete_override", "customers/service-cdr-override-delete-process.php", $structure);
+			$this->obj_table->add_link("tbl_lnk_delete", "customers/service-ddi-delete-process.php", $structure);
 		}
 
 		// display the table
-		$this->obj_table->render_table_html();
+		if ($this->obj_table->data_num_rows)
+		{
+			$this->obj_table->render_table_html();
+		}
+		else
+		{
+			format_msgbox("important", "<p>There are no DDIs defined for this customer/service, use the button below to begin adding DDIs.");
+		}
 
 
 		// add link
 		if (user_permissions_get("customers_write"))
 		{
-			print "<p><a class=\"button\" href=\"index.php?page=customers/service-cdr-override-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Add Custom Prefix Rate</a></p>";
+			print "<p><a class=\"button\" href=\"index.php?page=customers/service-ddi-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Assign new DDI to customer</a></p>";
 		}
 
 	}	

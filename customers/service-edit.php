@@ -346,7 +346,7 @@ class page_output
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_ddi_info";
 					$structure["type"]		= "message";
-					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/services-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
+					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
 					$this->obj_form->add_input($structure);
 
 					// trunk options
