@@ -982,9 +982,6 @@ class invoice
 					/*
 						Fetch account name and blank a few fields
 					*/
-					/*
-						Fetch account name and blank a few fields
-					*/
 
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $itemdata["chartid"] ."' LIMIT 1";
@@ -1753,6 +1750,60 @@ class invoice_items
 			break;
 
 
+			case "service":
+				/*
+					SERVICE ITEMS
+				*/
+			
+				// a time item can only be added to an AR transactions
+				if ($this->type_invoice != "ar")
+				{
+					log_write("error", "inc_invoices", "You can only add time invoice items to AR invoices.");
+					return 0;
+				}
+
+
+				// save information
+				$this->data["price"]		= $data["price"];
+				$this->data["quantity"]		= $data["quantity"];
+				$this->data["units"]		= $data["units"];
+				$this->data["customid"]		= $data["customid"];
+				$this->data["description"]	= $data["description"];
+				$this->data["discount"]		= $data["discount"];
+
+				// calculate the total amount
+				$this->data["amount"]		= $data["price"] * $data["quantity"];
+
+				// apply any discounts
+				if ($this->data["discount"])
+				{
+					// convert percentage to float
+					$discount_calc = 1 - ($this->data["discount"] / 100);
+
+					// apply discount
+					$this->data["amount"]	= $this->data["amount"] * $discount_calc;
+				}
+
+				// get the chart for the service - this will be the account_sales
+				// for ar/quotes, or account_purchase for AP invoices
+
+				$sql_obj = New sql_query;
+				$sql_obj->string = "SELECT chartid as account FROM services WHERE id='". $this->data["customid"] ."' LIMIT 1";
+				$sql_obj->execute();
+
+				if ($sql_obj->num_rows())
+				{
+					$sql_obj->fetch_array();
+	
+					$this->data["chartid"] = $sql_obj->data[0]["account"];
+				}
+				else
+				{
+					log_write("error", "inc_invoice", "Unknown service, unable to add item.");
+				}
+			break;
+
+
 			case "payment":
 				/*
 					PAYMENT ITEM
@@ -1769,7 +1820,7 @@ class invoice_items
 
 
 			default:
-				$_SESSION["error"]["message"][] = "Unknown item type provided.";
+				log_write("error", "inc_invoice", "Unknown item type provided.");
 				return 0;
 			break;
 		}
@@ -2124,69 +2175,84 @@ class invoice_items
 
 			foreach ($sql_items_obj->data as $data)
 			{
-				if ($data["type"] == "time" || $data["type"] == "product")
+				switch ($data["type"])
 				{
-					/*
-						HANDLE TAXES FOR PRODUCT-BASED ITEMS
-					*/
+					case "product":
+					case "time":
+						/*
+							HANDLE TAXES FOR PRODUCT-BASED ITEMS
+						*/
 
 
-					// fetch the taxes for the selected product
-					$sql_product_tax_obj		= New sql_query;
-					$sql_product_tax_obj->string	= "SELECT taxid, manual_option, manual_amount FROM `products_taxes` WHERE productid='". $data["customid"] ."'";
-					$sql_product_tax_obj->execute();
+						// fetch the taxes for the selected product
+						$sql_product_tax_obj		= New sql_query;
+						$sql_product_tax_obj->string	= "SELECT taxid FROM `products_taxes` WHERE productid='". $data["customid"] ."'";
+						$sql_product_tax_obj->execute();
 
-					if ($sql_product_tax_obj->num_rows())
-					{
-						$sql_product_tax_obj->fetch_array();
-
-						foreach ($sql_product_tax_obj->data as $data_product_tax)
+						if ($sql_product_tax_obj->num_rows())
 						{
-							// add item amount, 
-							if ($data_product_tax["manual_option"])
-							{
-								// manual amount
-								// note: we multiple manual amount by the quantity of units to ensure valid tax amount
-								$tax_structure[ $data_product_tax["taxid"] ]["manual"]	+= $data_product_tax["manual_amount"] * $data["quantity"];
-							}
-							else
+							$sql_product_tax_obj->fetch_array();
+
+							foreach ($sql_product_tax_obj->data as $data_product_tax)
 							{
 								// automatic
 								// note: no need to multiple by quantity, since the item amount is already price * quantity
 								$tax_structure[ $data_product_tax["taxid"] ]["auto"]	+= $data["amount"];
 							}
 						}
-					}
-				} // end of if item == time || item == product
-				elseif ($data["type"] == "standard")
-				{
-					/*
-						HANDLE TAXES FOR STANDARD ITEMS
+					break;
 
-						All taxes for standard items are automatically generated, so we need to get the list of taxes
-						selected for the item from the account_items_options table and then add them to the structure
-					*/
+	
+					case "service":
+						/*
+							HANDLE TAXES FOR SERVICE ITEMS
+						*/
 
-					// fetch the taxes for the selected item
-					$sql_item_tax_obj		= New sql_query;
-					$sql_item_tax_obj->string	= "SELECT option_value as taxid FROM account_items_options WHERE itemid='". $data["id"] ."'";
-					$sql_item_tax_obj->execute();
 
-					if ($sql_item_tax_obj->num_rows())
-					{
-						$sql_item_tax_obj->fetch_array();
+						// fetch the taxes for the selected service
+						$sql_service_tax_obj		= New sql_query;
+						$sql_service_tax_obj->string	= "SELECT taxid FROM `services_taxes` WHERE serviceid='". $data["customid"] ."'";
+						$sql_service_tax_obj->execute();
 
-						foreach ($sql_item_tax_obj->data as $data_item_tax)
+						if ($sql_service_tax_obj->num_rows())
 						{
-							// automatic
-							// note: no need to multiple by quantity, since the item amount is already price * quantity
-							$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+							$sql_service_tax_obj->fetch_array();
+
+							foreach ($sql_service_tax_obj->data as $data_service_tax)
+							{
+								// automatic
+								// note: no need to multiple by quantity, since the item amount is already price * quantity
+								$tax_structure[ $data_service_tax["taxid"] ]["auto"]	+= $data["amount"];
+							}
 						}
-					}
+					break;
 
+					case "standard":
+						/*
+							HANDLE TAXES FOR STANDARD ITEMS
+
+							All taxes for standard items are automatically generated, so we need to get the list of taxes
+							selected for the item from the account_items_options table and then add them to the structure
+						*/
+
+						// fetch the taxes for the selected item
+						$sql_item_tax_obj		= New sql_query;
+						$sql_item_tax_obj->string	= "SELECT option_value as taxid FROM account_items_options WHERE itemid='". $data["id"] ."'";
+						$sql_item_tax_obj->execute();
+
+						if ($sql_item_tax_obj->num_rows())
+						{
+							$sql_item_tax_obj->fetch_array();
+
+							foreach ($sql_item_tax_obj->data as $data_item_tax)
+							{
+								// automatic
+								// note: no need to multiple by quantity, since the item amount is already price * quantity
+								$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+							}
+						}
+					break;
 				}
-
-
 
 			} // end of loop through items
 

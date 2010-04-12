@@ -1690,7 +1690,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 
 		default:
-			$_SESSION["error"]["message"][] = "Unknown item type passed to processing form.";
+			log_write("error", "inc_invoice","Unknown item type passed to processing form.");
 		break;
 	}
 	
