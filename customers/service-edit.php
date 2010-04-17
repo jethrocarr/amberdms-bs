@@ -198,6 +198,22 @@ class page_output
 
 
 			// price customisation
+			$structure = NULL;
+			$structure["fieldname"]		 	= "price";
+			$structure["type"]			= "input";
+			$structure["options"]["req"]		= "yes";
+			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
+			$structure["fieldname"] 		= "discount";
+			$structure["type"]			= "input";
+			$structure["options"]["width"]		= 50;
+			$structure["options"]["label"]		= " %";
+			$structure["options"]["max_length"]	= "6";
+			$this->obj_form->add_input($structure);
+
+			$this->obj_form->subforms["service_price"]	= array("price", "discount");
+
 
 
 			// service-type specific sections

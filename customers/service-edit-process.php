@@ -34,6 +34,10 @@ if (user_permissions_get('customers_write'))
 
 		// standard fields
 		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
+		$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
+		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
+		$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
+		$data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
 
 		// options
 		$data["quantity"]		= @security_form_input_predefined("int", "quantity", 0, "");
@@ -83,12 +87,9 @@ if (user_permissions_get('customers_write'))
 		$data["serviceid"]		= @security_form_input_predefined("any", "serviceid", 1, "");
 		$data["date_period_first"]	= @security_form_input_predefined("date", "date_period_first", 1, "");
 		$data["date_period_next"]	= $data["date_period_first"];
+		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 	}
 
-
-	// general details		
-	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
-	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 
 
@@ -200,6 +201,9 @@ if (user_permissions_get('customers_write'))
 
 			$obj_customer->obj_service->data["description"]			= $data["description"];
 			$obj_customer->obj_service->data["name_service"]		= $data["name_service"];
+
+			$obj_customer->obj_service->data["price"]			= $data["price"];
+			$obj_customer->obj_service->data["discount"]			= $data["discount"];
 
 			$obj_customer->obj_service->data["phone_ddi_single"]		= $data["phone_ddi_single"];
 			$obj_customer->obj_service->data["phone_trunk_included_units"]	= $data["phone_trunk_included_units"];

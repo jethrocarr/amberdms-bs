@@ -188,6 +188,9 @@ class service
 			// fetch biling cycle label
 			$this->data["billing_cycle_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->data["billing_cycle"] ."' LIMIT 1");
 
+			// fetch biling mode label
+			$this->data["billing_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $this->data["billing_mode"] ."' LIMIT 1");
+
 
 			// fetch additional service attributes stored in the options table
 			$sql_obj		= New sql_query;
