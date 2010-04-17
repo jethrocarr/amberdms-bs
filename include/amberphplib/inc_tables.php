@@ -724,6 +724,17 @@ class table
 				$result = format_text_display($this->data[$row][$column]);
 			break;
 
+			case "percentage":
+				if (!empty($this->data[$row][$column]))
+				{
+					$result = $this->data[$row][$column] ."%";
+				}
+				else
+				{
+					$result = "";
+				}
+			break;
+
 			case "standard":
 			default:
 				if (isset($this->data[$row][$column]))
