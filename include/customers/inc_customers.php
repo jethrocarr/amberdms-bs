@@ -1359,7 +1359,7 @@ class customer_services extends customer
 					{
 						print "<tr>";
 							print "<td>Service Charges:</td>";
-							print "<td>". format_money($sql_obj->data[0]["price"]) ." (excluding usage charges and taxes)</td>";
+							print "<td>". format_money($this->obj_service->data["price"]) ." (excluding usage charges and taxes)</td>";
 						print "</tr>";
 					}
 					
