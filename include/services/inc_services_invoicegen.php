@@ -677,14 +677,22 @@ function service_invoices_generate($customerid = NULL)
 						case "phone_single":
 
 							$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $sql_service_obj->data[0]["phone_ddi_single"] .")";
-							$itemdata["description"]	.= "\n\n";
-							$itemdata["description"]	.= $period_data["description"];
+							
+							if ($period_data["description"])
+							{
+								$itemdata["description"]	.= "\n\n";
+								$itemdata["description"]	.= $period_data["description"];
+							}
 						break;
 
 						default:
 							$itemdata["description"]	= $sql_service_obj->data[0]["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
-							$itemdata["description"]	.= "\n\n";
-							$itemdata["description"]	.= $period_data["description"];
+
+							if ($period_data["description"])
+							{
+								$itemdata["description"]	.= "\n\n";
+								$itemdata["description"]	.= $period_data["description"];
+							}
 						break;
 					}
 
@@ -803,7 +811,11 @@ function service_invoices_generate($customerid = NULL)
 									// there is excess usage that we can bill for.
 									$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
 
-									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
+									// set item attributes
+									$itemdata["price"]	= $sql_service_obj->data[0]["price_extraunits"];
+									$itemdata["quantity"]	= $usage_excess;
+									$itemdata["units"]	= $unitname;
+
 
 									// description example:		Used 120 ZZ out of 50 ZZ included in plan
 									//				Excess usage of 70 ZZ charged at $5.00 per ZZ
@@ -834,7 +846,13 @@ function service_invoices_generate($customerid = NULL)
 									// there is excess usage that we can bill for.
 									$licenses_excess = $period_data["quantity"] - $sql_service_obj->data[0]["included_units"];
 
-									$itemdata["amount"] += ($licenses_excess * $sql_service_obj->data[0]["price_extraunits"]);
+
+									// set item attributes
+									$itemdata["price"]	= $sql_service_obj->data[0]["price_extraunits"];
+									$itemdata["quantity"]	= $licenses_excess;
+									$itemdata["units"]	= $sql_service_obj->data[0]["units"];
+
+
 
 									// description example:		10 licences included
 									//				2 additional licenses charged at $24.00 each
@@ -900,7 +918,10 @@ function service_invoices_generate($customerid = NULL)
 									// there is excess usage that we can bill for.
 									$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
 
-									$itemdata["amount"] += ($usage_excess * $sql_service_obj->data[0]["price_extraunits"]);
+									// set item attributes
+									$itemdata["price"]	= $sql_service_obj->data[0]["price_extraunits"];
+									$itemdata["quantity"]	= $usage_excess;
+									$itemdata["units"]	= $unitname;
 
 									// description example:		Used 120 GB out of 50 GB included in plan
 									//				Excess usage of 70 GB charged at $5.00 per GB

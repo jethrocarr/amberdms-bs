@@ -755,6 +755,7 @@ class template_engine_htmltopdf extends template_engine
 			foreach (array_keys($this->data) as $var)
 			{
 				$this->data[$var] = htmlentities($this->data[$var], ENT_QUOTES, "UTF-8");
+				$this->data[$var] = nl2br($this->data[$var], true);
 			}
 		}
 
@@ -771,6 +772,7 @@ class template_engine_htmltopdf extends template_engine
 					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 					{
 						$this->data_array[$fieldname][$j][$var] = htmlentities($this->data_array[$fieldname][$j][$var], ENT_QUOTES, "UTF-8");
+						$this->data_array[$fieldname][$j][$var] = nl2br($this->data_array[$fieldname][$j][$var], true);
 					}
 				}
 			}

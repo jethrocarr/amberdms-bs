@@ -980,22 +980,47 @@ class invoice
 
 				case "service":
 					/*
-						Fetch account name and blank a few fields
+						Fetch Service Name
 					*/
 
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT CONCAT_WS(' -- ',code_chart,description) as name_account FROM account_charts WHERE id='". $itemdata["chartid"] ."' LIMIT 1";
+					$sql_obj->string	= "SELECT name_service FROM services WHERE id='". $itemdata["customid"] ."' LIMIT 1";
 					$sql_obj->execute();
 
 					$sql_obj->fetch_array();
 					
-					$structure["info"]	= $sql_obj->data[0]["name_account"];
+					$structure["info"]	= $sql_obj->data[0]["name_service"];
 					$structure["quantity"]	= " ";
-
-					$itemdata["price"]	= NULL;;
 
 					unset($sql_obj);
 
+
+
+					/*
+						Fetch discount (if any)
+					*/
+
+					$itemdata["discount"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='DISCOUNT'");
+
+
+
+					/*
+						Calculate Amount
+
+						(Amount field already has discount removed, but we can't use this for export, since we want the line item to be the full
+						 amount, with an additional line item for the discount)
+					*/
+
+					$itemdata["amount"] 	= $itemdata["price"] * $itemdata["quantity"];
+					$itemdata["price"]	= "";
+
+
+
+					/*
+						Set the service group
+
+						This is used for layout and titling purposes on the invoice
+					*/
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
 					$sql_obj->execute();
