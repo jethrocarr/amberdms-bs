@@ -197,6 +197,9 @@ class page_output
 
 
 
+			// price customisation
+
+
 			// service-type specific sections
 			switch ($this->obj_customer->obj_service->data["typeid_string"])
 			{

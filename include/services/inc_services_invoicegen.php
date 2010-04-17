@@ -691,7 +691,7 @@ function service_invoices_generate($customerid = NULL)
 					// amount
 					$itemdata["price"]		= $sql_service_obj->data[0]["price"];
 					$itemdata["quantity"]		= 1;
-					$itemdata["amount"]		= $itemdata["price"];
+					$itemdata["discount"]		= $sql_service_obj->data[0]["discount"];
 
 
 					// fetch all tax options for this service from the database

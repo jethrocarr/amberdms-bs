@@ -1343,10 +1343,26 @@ class customer_services extends customer
 						print "<td>". $this->obj_service->data["typeid_string"] ."</td>";
 					print "</tr>";
 						
-					print "<tr>";
-						print "<td>Service Changes:</td>";
-						print "<td>". format_money($this->obj_service->data["price"]) ." (excluding usage charges and taxes)</td>";
-					print "</tr>";
+					if ($this->obj_service->data["discount"])
+					{
+						// work out the price after discount
+						$discount_calc	= $this->obj_service->data["discount"] / 100;
+						$discount_calc	= $this->obj_service->data["price"] * $discount_calc;
+
+						print "<tr>";
+							print "<td>Service Charges:</td>";
+							print "<td>". format_money($this->obj_service->data["price"] - $discount_calc) ." (discount of ". format_money($discount_calc) ." included, excluding usage charges and taxes)</td>";
+						print "</tr>";
+
+					}
+					else
+					{
+						print "<tr>";
+							print "<td>Service Charges:</td>";
+							print "<td>". format_money($sql_obj->data[0]["price"]) ." (excluding usage charges and taxes)</td>";
+						print "</tr>";
+					}
+					
 
 				print "</table>";
 
