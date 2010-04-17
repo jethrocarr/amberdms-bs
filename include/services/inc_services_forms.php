@@ -16,8 +16,7 @@ require("include/accounts/inc_charts.php");
 	Displays a summary box of the service information and whether the service is enabled or disabled.
 
 	Values
-	id	id of the invoice
-	type	type - ar or ap
+	id_service	ID of the service
 
 	Return Codes
 	0	failure
@@ -33,7 +32,8 @@ function service_render_summarybox($id_service)
 						active,
 						service_types.name as type_name,
 						service_groups.group_name as group_name,
-						price
+						price,
+						discount
 					FROM services
 					LEFT JOIN service_types ON service_types.id = services.typeid
 					LEFT JOIN service_groups ON service_groups.id = services.id_service_group
@@ -64,11 +64,27 @@ function service_render_summarybox($id_service)
 						print "<td>". $sql_obj->data[0]["group_name"] ."</td>";
 					print "</tr>";
 
-					print "<tr>";
-						print "<td>Base Plan Price:</td>";
-						print "<td>". format_money($sql_obj->data[0]["price"]) ."</td>";
-					print "</tr>";
+					if ($sql_obj->data[0]["discount"])
+					{
+						// work out the price after discount
+						$discount_calc	= $sql_obj->data[0]["discount"] / 100;
+						$discount_calc	= $sql_obj->data[0]["price"] * $discount_calc;
 
+
+						print "<tr>";
+							print "<td>Base Plan Price:</td>";
+							print "<td>". format_money($sql_obj->data[0]["price"] - $discount_calc) ." (discount of ". format_money($discount_calc) ." included)</td>";
+						print "</tr>";
+
+					}
+					else
+					{
+						print "<tr>";
+							print "<td>Base Plan Price:</td>";
+							print "<td>". format_money($sql_obj->data[0]["price"]) ."</td>";
+						print "</tr>";
+					}
+					
 				print "</table>";
 
 				print "</td>";
@@ -368,6 +384,13 @@ class services_form_plan
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"] 		= "discount";
+		$structure["type"]			= "input";
+		$structure["options"]["width"]		= 50;
+		$structure["options"]["label"]		= " %";
+		$structure["options"]["max_length"]	= "6";
+		$this->obj_form->add_input($structure);
 
 
 		/*
@@ -453,7 +476,7 @@ class services_form_plan
 
 
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
 				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 		
@@ -506,7 +529,7 @@ class services_form_plan
 
 				
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
 			break;
 
@@ -578,7 +601,7 @@ class services_form_plan
 													
 				
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"] 	= array("plan_information", "units", "included_units", "price_extraunits");
 				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 
@@ -604,7 +627,7 @@ class services_form_plan
 
 			
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 			break;
 
 
@@ -690,7 +713,7 @@ class services_form_plan
 
 
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_cdr"]		= array("cdr_information", "id_rate_table");
 				
 				if ($sql_plan_obj->data[0]["name"] == "phone_trunk")
@@ -726,7 +749,7 @@ class services_form_plan
 
 			
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
 			break;
 		}
 

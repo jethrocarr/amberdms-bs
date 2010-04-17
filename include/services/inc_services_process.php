@@ -276,6 +276,7 @@ function service_form_plan_process()
 	
 	// general details
 	$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
+	$data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
 	$data["billing_cycle"]		= @security_form_input_predefined("int", "billing_cycle", 1, "");
 	$data["billing_mode"]		= @security_form_input_predefined("int", "billing_mode", 1, "");
 
@@ -398,6 +399,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
@@ -417,6 +419,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
@@ -437,6 +440,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."units='". $data["units"] ."', "
 						."price_extraunits='". $data["price_extraunits"] ."', "
 						."included_units='". $data["included_units"] ."', "
@@ -452,6 +456,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
 						."id_rate_table='". $data["id_rate_table"] ."' "
@@ -466,6 +471,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
 						."id_rate_table='". $data["id_rate_table"] ."' "
@@ -506,6 +512,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."', "
 						."id_rate_table='". $data["id_rate_table"] ."' "
@@ -540,6 +547,7 @@ function service_form_plan_process()
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
 						."price='". $data["price"] ."', "
+						."discount='". $data["discount"] ."', "
 						."billing_cycle='". $data["billing_cycle"] ."', "
 						."billing_mode='". $data["billing_mode"] ."' "
 						."WHERE id='$id'";
