@@ -62,6 +62,11 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("DDI Configuration", "page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		}
+
+		if ($this->obj_customer->obj_service->data["typeid_string"] == "data_traffic")
+		{
+			$this->obj_menu_nav->add_item("IPv4 Addresses", "page=customers/service-ipv4.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+		}
 	
 		if (user_permissions_get("customers_write"))
 		{

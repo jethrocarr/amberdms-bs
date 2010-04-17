@@ -1,23 +1,23 @@
 <?php
 /*
-	customers/services-ddi-edit.php
+	customers/service-ipv4-edit.php
 
 	access: customers_view
 		customers_write
-	
-	Allows the selected DDI to be updated or a new DDI to be added.
+
+	Allows the selected IPv4 address to be updated or a new IPv4 address to be added.
 */
 
 
 require("include/customers/inc_customers.php");
 require("include/services/inc_services.php");
-require("include/services/inc_services_cdr.php");
+require("include/services/inc_services_traffic.php");
 
 
 class page_output
 {
 	var $obj_customer;
-	var $obj_ddi;
+	var $obj_ipv4;
 
 	var $obj_menu_nav;
 	var $obj_form;
@@ -27,14 +27,14 @@ class page_output
 	function page_output()
 	{
 		$this->obj_customer				= New customer_services;
-		$this->obj_ddi					= New cdr_customer_service_ddi;
+		$this->obj_ipv4					= New traffic_customer_service_ipv4;
 
 
 
 		// fetch variables
 		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
 		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
-		$this->obj_ddi->id				= @security_script_input('/^[0-9]*$/', $_GET["id_ddi"]);
+		$this->obj_ipv4->id				= @security_script_input('/^[0-9]*$/', $_GET["id_ipv4"]);
 
 		// load service data
 		$this->obj_customer->load_data_service();
@@ -54,12 +54,12 @@ class page_output
 		
 		if ($this->obj_customer->obj_service->data["typeid_string"] == "phone_trunk")
 		{
-			$this->obj_menu_nav->add_item("DDI Configuration", "page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
+			$this->obj_menu_nav->add_item("DDI Configuration", "page=customers/service-ipv4.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 		}
-	
+
 		if ($this->obj_customer->obj_service->data["typeid_string"] == "data_traffic")
 		{
-			$this->obj_menu_nav->add_item("IPv4 Addresses", "page=customers/service-ipv4.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+			$this->obj_menu_nav->add_item("IPv4 Addresses", "page=customers/service-ipv4.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."", TRUE);
 		}
 
 		if (user_permissions_get("customers_write"))
@@ -98,20 +98,20 @@ class page_output
 		}
 
 
-		// verify that this is a phone trunk service
-		if ($this->obj_customer->obj_service->data["typeid_string"] != "phone_trunk")
+		// verify that this is a data_traffic service
+		if ($this->obj_customer->obj_service->data["typeid_string"] != "data_traffic")
 		{
-			log_write("error", "page_output", "The requested service is not a phone_trunk service.");
+			log_write("error", "page_output", "The requested service is not a data_traffic service.");
 			return 0;
 		}
 
 
-		// verify that the DDI value is correct (if one has been supplied)
-		if ($this->obj_ddi->id)
+		// verify that the selected IPv4 address is valid (if provided)
+		if ($this->obj_ipv4->id)
 		{
-			if (!$this->obj_ddi->verify_id())
+			if (!$this->obj_ipv4->verify_id())
 			{
-				log_write("error", "page_output", "The supplied DDI ID is not valid");
+				log_write("error", "page_output", "The supplied IPv4 address is not valid");
 				return 0;
 			}
 		}
@@ -132,10 +132,10 @@ class page_output
 
 		// define basic form details
 		$this->obj_form = New form_input;
-		$this->obj_form->formname = "service_ddi_edit";
+		$this->obj_form->formname = "service_ipv4_edit";
 		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$this->obj_form->action = "customers/service-ddi-edit-process.php";
+		$this->obj_form->action = "customers/service-ipv4-edit-process.php";
 		$this->obj_form->method = "post";
 
 
@@ -154,15 +154,18 @@ class page_output
 
 		// DDI Configuration
 		$structure = NULL;
-		$structure["fieldname"] 	= "ddi_start";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
+		$structure["fieldname"] 		= "ipv4_address";
+		$structure["type"]			= "input";
+		$structure["options"]["req"]		= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"]		= "ddi_finish";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
+		$structure["fieldname"]			= "ipv4_cidr";
+		$structure["type"]			= "input";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["max_length"]	= "2";
+		$structure["options"]["width"]		= "40";
+		$structure["defaultvalue"]		= "32";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -187,9 +190,9 @@ class page_output
 
 
 		$structure = NULL;
-		$structure["fieldname"] 	= "id_ddi";
+		$structure["fieldname"] 	= "id_ipv4";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->obj_ddi->id;
+		$structure["defaultvalue"]	= $this->obj_ipv4->id;
 		$this->obj_form->add_input($structure);
 
 		// submit button
@@ -202,8 +205,8 @@ class page_output
 
 		// define subforms
 		$this->obj_form->subforms["service_details"]	= array("name_customer", "service_name");
-		$this->obj_form->subforms["ddi_details"]	= array("ddi_start", "ddi_finish", "description");
-		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer", "id_ddi");
+		$this->obj_form->subforms["ipv4_details"]	= array("ipv4_address", "ipv4_cidr", "description");
+		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer", "id_ipv4");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
 
@@ -214,20 +217,20 @@ class page_output
 		}
 		else
 		{
-			// load DDI
-			if ($this->obj_ddi->id)
-			{
-				$this->obj_ddi->load_data();
-			}
-			
-
 			// set values
 			$this->obj_form->structure["name_customer"]["defaultvalue"]		= $this->obj_customer->data["name_customer"];
 			$this->obj_form->structure["service_name"]["defaultvalue"]		= $this->obj_customer->obj_service->data["name_service"];
 
-			$this->obj_form->structure["ddi_start"]["defaultvalue"]			= $this->obj_ddi->data["ddi_start"];
-			$this->obj_form->structure["ddi_finish"]["defaultvalue"]		= $this->obj_ddi->data["ddi_finish"];
-			$this->obj_form->structure["description"]["defaultvalue"]		= $this->obj_ddi->data["description"];
+
+			// load known values
+			if ($this->obj_ipv4->id)
+			{
+				$this->obj_ipv4->load_data();
+				
+				$this->obj_form->structure["ipv4_address"]["defaultvalue"]		= $this->obj_ipv4->data["ipv4_address"];
+				$this->obj_form->structure["ipv4_cidr"]["defaultvalue"]			= $this->obj_ipv4->data["ipv4_cidr"];
+				$this->obj_form->structure["description"]["defaultvalue"]		= $this->obj_ipv4->data["description"];
+			}
 		}
 	}
 
@@ -236,15 +239,15 @@ class page_output
 	function render_html()
 	{
 		// title and summary
-		if ($this->obj_ddi->id)
+		if ($this->obj_ipv4->id)
 		{
-			print "<h3>ADJUST DDI</h3><br>";
-			print "<p>Use the form below to adjust the DDI values.</p>";
+			print "<h3>ADJUST IPv4 ADDRESS</h3><br>";
+			print "<p>Use the form below to adjust the IPv4 address.</p>";
 		}
 		else
 		{
-			print "<h3>ADD NEW DDI</h3>";
-			print "<p>Use the form below to add a new DDI value to the customer's service.</p>";
+			print "<h3>ADD NEW IPv4 ADDRESS</h3>";
+			print "<p>Use the form below to assign a new IPv4 address to the customer.</p>";
 		}
 
 		// display the form
