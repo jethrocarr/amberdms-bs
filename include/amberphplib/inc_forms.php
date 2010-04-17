@@ -414,6 +414,7 @@ class form_input
 			$option_array["type"]			Type of form input
 
 				input		- standard input box
+				money		- standard input box with formating for money entry
 				password	- password input box
 				hidden		- hidden field
 				text		- text only display, with hidden field as well
@@ -493,6 +494,59 @@ class form_input
 				}
 
 			break;
+
+
+			case "money":
+				// set default size
+				if (!isset($this->structure[$fieldname]["options"]["width"]))
+				{
+					$this->structure[$fieldname]["options"]["width"] = 50;
+				}
+
+
+				// optional prefix label/description
+				if (isset($this->structure[$fieldname]["options"]["prelabel"]))
+				{
+					print $this->structure[$fieldname]["options"]["prelabel"];
+				}
+
+
+				// check where to set the currency symbol
+				$position = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL_POSITION'");
+
+				if ($position == "before")
+				{
+					print sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ." ";
+				}
+	
+		
+				// display
+				print "<input name=\"$fieldname\" ";
+				if (isset($this->structure[$fieldname]["defaultvalue"]))
+				{
+					print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
+				}
+
+				if (isset($this->structure[$fieldname]["options"]["max_length"]))
+					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
+				
+				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
+
+
+				if ($position == "after")
+				{
+					print " ". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+				}
+
+				print " ". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'");
+
+				// optional label/description
+				if (isset($this->structure[$fieldname]["options"]["label"]))
+				{
+					print $this->structure[$fieldname]["options"]["label"];
+				}
+			break;
+
 
 			case "password":
 				
