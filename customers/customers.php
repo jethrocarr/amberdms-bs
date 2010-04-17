@@ -132,6 +132,11 @@ class page_output
 			$structure["id"]["column"]	= "id";
 			$this->obj_table_list->add_link("invoices", "customers/invoices.php", $structure);
 
+			// credit
+			$structure = NULL;
+			$structure["id_customer"]["column"]	= "id";
+			$this->obj_table_list->add_link("tbl_lnk_credit", "customers/credit.php", $structure);
+
 			// services link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
