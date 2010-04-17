@@ -95,12 +95,12 @@ class products_form_details
 		// pricing			
 		$structure = NULL;
 		$structure["fieldname"]		= "price_cost";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"]		= "price_sale";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

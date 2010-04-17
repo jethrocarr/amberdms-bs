@@ -200,7 +200,7 @@ class page_output
 			// price customisation
 			$structure = NULL;
 			$structure["fieldname"]		 	= "price";
-			$structure["type"]			= "input";
+			$structure["type"]			= "money";
 			$structure["options"]["req"]		= "yes";
 			$this->obj_form->add_input($structure);
 

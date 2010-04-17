@@ -380,7 +380,7 @@ class services_form_plan
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "price";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
@@ -430,7 +430,7 @@ class services_form_plan
 				
 				$structure = NULL;
 				$structure["fieldname"] 	= "price_extraunits";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$structure["options"]["req"]	= "yes";
 				$this->obj_form->add_input($structure);
 
@@ -508,7 +508,7 @@ class services_form_plan
 				
 				$structure = NULL;
 				$structure["fieldname"] 	= "price_extraunits";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$structure["options"]["req"]	= "yes";
 				$this->obj_form->add_input($structure);
 
@@ -561,7 +561,7 @@ class services_form_plan
 				
 				$structure = NULL;
 				$structure["fieldname"] 	= "price_extraunits";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$structure["options"]["req"]	= "yes";
 				$this->obj_form->add_input($structure);
 				
@@ -684,7 +684,7 @@ class services_form_plan
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_ddi_price_extra_units";
-					$structure["type"]		= "input";
+					$structure["type"]		= "money";
 					$this->obj_form->add_input($structure);
 				}
 
@@ -707,7 +707,7 @@ class services_form_plan
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_price_extra_units";
-					$structure["type"]		= "input";
+					$structure["type"]		= "money";
 					$this->obj_form->add_input($structure);
 				}
 

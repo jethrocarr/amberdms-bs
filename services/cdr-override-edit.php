@@ -167,7 +167,7 @@ class page_output
 
 		$structure = NULL;
 		$structure["fieldname"]		= "rate_price_sale";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
@@ -243,7 +243,7 @@ class page_output
 			$this->obj_form->structure["rate_prefix"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_prefix"];
 			$this->obj_form->structure["rate_description"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_description"];
 			$this->obj_form->structure["rate_price_sale"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_price_sale"];
-			$this->obj_form->structure["rate_price_cost"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_price_cost"];
+			$this->obj_form->structure["rate_price_cost"]["defaultvalue"]		= format_money($this->obj_cdr_rate_table->data_rate["rate_price_cost"]);
 		}
 	}
 

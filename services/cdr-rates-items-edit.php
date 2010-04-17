@@ -94,13 +94,13 @@ class page_output
 
 		$structure = NULL;
 		$structure["fieldname"]		= "rate_price_sale";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"]		= "rate_price_cost";
-		$structure["type"]		= "input";
+		$structure["type"]		= "money";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 

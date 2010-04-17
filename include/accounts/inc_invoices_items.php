@@ -859,7 +859,7 @@ class invoice_form_item
 				// basic details
 				$structure = NULL;
 				$structure["fieldname"] 	= "amount";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$form->add_input($structure);
 
 				$structure = NULL;
@@ -979,7 +979,7 @@ class invoice_form_item
 				// basic details
 				$structure = NULL;
 				$structure["fieldname"] 	= "price";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$form->add_input($structure);
 
 				// quantity
@@ -1109,7 +1109,7 @@ class invoice_form_item
 					// price field
 					// TODO: this should auto-update from the product price
 					$structure = NULL;
-					$structure["fieldname"] 	= "price";
+					$structure["fieldname"] 	= "money";
 					$structure["type"]		= "input";
 					$form->add_input($structure);
 
@@ -1205,7 +1205,7 @@ class invoice_form_item
 					// price field
 					$structure = NULL;
 					$structure["fieldname"] 		= "price";
-					$structure["type"]			= "input";
+					$structure["type"]			= "money";
 					$form->add_input($structure);
 
 					// quantity
