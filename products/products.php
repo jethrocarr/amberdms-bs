@@ -42,6 +42,7 @@ class page_output
 		$this->obj_table->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
 		$this->obj_table->add_column("price", "price_cost", "");
 		$this->obj_table->add_column("price", "price_sale", "");
+		$this->obj_table->add_column("percentage", "discount", "");
 		$this->obj_table->add_column("date", "date_start", "");
 		$this->obj_table->add_column("date", "date_end", "");
 		$this->obj_table->add_column("date", "date_current", "");
