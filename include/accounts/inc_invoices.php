@@ -905,7 +905,9 @@ class invoice
 		$sql_items_obj->fetch_array();
 
 
-		$structure_invoiceitems = array();
+		$structure_invoiceitems		= array();
+		$structure_group_summary	= array();
+
 		foreach ($sql_items_obj->data as $itemdata)
 		{
 			$structure = array();
@@ -946,6 +948,9 @@ class invoice
 					$itemdata["amount"] = $itemdata["price"] * $itemdata["quantity"];
 
 
+
+					$structure["group"]	= lang_trans("group_products");
+
 				break;
 
 
@@ -973,7 +978,10 @@ class invoice
 						 amount, with an additional line item for the discount)
 					*/
 
-					$itemdata["amount"] = $itemdata["price"] * $itemdata["quantity"];
+					$itemdata["amount"]	= $itemdata["price"] * $itemdata["quantity"];
+
+
+					$structure["group"]	= lang_trans("group_time");
 
 				break;
 
@@ -990,7 +998,6 @@ class invoice
 					$sql_obj->fetch_array();
 					
 					$structure["info"]	= $sql_obj->data[0]["name_service"];
-					$structure["quantity"]	= " ";
 
 					unset($sql_obj);
 
@@ -1012,7 +1019,6 @@ class invoice
 					*/
 
 					$itemdata["amount"] 	= $itemdata["price"] * $itemdata["quantity"];
-					$itemdata["price"]	= "";
 
 
 
@@ -1047,13 +1053,19 @@ class invoice
 					$structure["info"]	= $sql_obj->data[0]["name_account"];
 					$structure["quantity"]	= " ";
 
-					$itemdata["price"]	= NULL;;
+					$itemdata["price"]	= NULL;
+
+					$structure["group"]	= lang_trans("group_other");
 
 					unset($sql_obj);
 				break;
 			}
 
+			// define group summary values
+			$structure_group_summary[ $structure["group"] ] += $itemdata["amount"];
 
+
+			// finalise item
 			$structure["description"]	= $itemdata["description"];
 			$structure["units"]		= $itemdata["units"];
 
@@ -1085,6 +1097,8 @@ class invoice
 
 				$structure["amount"]		= "-". format_money($discount_calc, 1);
 
+				// track for summary report
+				$structure_group_summary[ "group_discount" ] += $discount_calc;
 
 				// add extra line item
 				$structure_invoiceitems[] = $structure;
@@ -1134,6 +1148,75 @@ class invoice
 		}
 	
 		$this->obj_pdf->prepare_add_array("taxes", $structure_taxitems);
+
+
+
+		/*
+			Payment Items
+		*/
+
+		// fetch payment items
+		$sql_payment_obj			= New sql_query;
+		$sql_payment_obj->string		= "SELECT id, amount, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type='payment'";
+		$sql_payment_obj->execute();
+
+		if ($sql_payment_obj->num_rows())
+		{
+			$sql_payment_obj->fetch_array();
+
+			$structure_payments = array();
+			foreach ($sql_payment_obj->data as $itemdata)
+			{
+				$structure = array();
+			
+				$structure["description"]	= $itemdata["description"];
+				$structure["amount"]		= format_money($itemdata["amount"]);
+				$structure["date"]		= time_format_humandate( sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE option_name='DATE_TRANS' AND itemid='". $itemdata["id"] ."' LIMIT 1") );
+
+				$structure_payments[] = $structure;
+			}
+		}
+	
+		$this->obj_pdf->prepare_add_array("invoice_payments", $structure_payments);
+
+
+		
+		/*
+			Group Summaries
+
+			Some invoice templates have a summary header page with totals for each group type. Users can
+			then read through for full item listings and details.
+		*/
+		
+		$stucture_group_summary_final = array();
+
+
+		// add all non-discount groups
+		foreach (array_keys($structure_group_summary) as $group_name)
+		{
+			if ($group_name != 'group_discount')
+			{
+				$structure = array();
+	
+				$structure["group_name"]		= $group_name;
+				$structure["group_amount"]		= format_money($structure_group_summary[ $group_name ]);
+	
+				$structure_group_summary_final[]	= $structure;
+			}
+		}
+
+
+		// add discount group last
+		$structure = array();
+
+		$structure["group_name"]		= lang_trans('group_discount');
+		$structure["group_amount"]		= "-". format_money($structure_group_summary['group_discount']);
+
+		$structure_group_summary_final[]	= $structure;
+
+
+		$this->obj_pdf->prepare_add_array("summary_items", $structure_group_summary_final);
+
 
 
 
