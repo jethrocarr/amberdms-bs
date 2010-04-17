@@ -1291,7 +1291,7 @@ class cdr_customer_service_ddi
 				{
 					$this->id_customer = $sql_obj->data[0]["id_customer"];
 
-					log_write("error", "Setting id_customer to ". $this->id ."");
+					log_write("debug", "customers_services_ddi", "Setting id_customer to ". $this->id ."");
 					return 1;
 				}
 

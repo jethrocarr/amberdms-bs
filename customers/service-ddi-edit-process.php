@@ -39,9 +39,9 @@ if (user_permissions_get('customers_write'))
 	$obj_ddi->id_customer					= $obj_customer->id;
 	$obj_ddi->id_service_customer				= $obj_customer->id_service_customer;
 
-	$obj_ddi->data["ddi_start"]				= @security_form_input_predefined("any", "ddi_start", 1, "");
-	$obj_ddi->data["ddi_finish"]				= @security_form_input_predefined("any", "ddi_finish", 1, "");
-	$obj_ddi->data["description"]				= @security_form_input_predefined("money", "description", 0, "");
+	$obj_ddi->data["ddi_start"]				= @security_form_input_predefined("int", "ddi_start", 1, "");
+	$obj_ddi->data["ddi_finish"]				= @security_form_input_predefined("int", "ddi_finish", 1, "");
+	$obj_ddi->data["description"]				= @security_form_input_predefined("any", "description", 0, "");
 
 
 
@@ -108,12 +108,24 @@ if (user_permissions_get('customers_write'))
 
 
 
+	// ensure the DDI range is valid
+	if ($obj_ddi->data["ddi_start"] > $obj_ddi->data["ddi_finish"])
+	{
+		log_write("error", "process", "The supplied DDI range is invalid, the finish DDI must be the same or higher than the start DDI");
+
+		error_flag_field("ddi_start");
+		error_flag_field("ddi_finish");
+	}
+	
+
+
 	/*
 		Check for any errors
 	*/
 	if (error_check())
 	{	
-		$_SESSION["error"]["form"]["cdr_override_edit"] = "failed";
+		$_SESSION["error"]["form"]["service_ddi_edit"] = "failed";
+
 		header("Location: ../index.php?page=customers/service-ddi-edit.php&id_customer=". $obj_customer->id ."&id_service_customer=". $obj_customer->id_service_customer ."&id_ddi=". $obj_ddi->id);
 		exit(0);
 	}

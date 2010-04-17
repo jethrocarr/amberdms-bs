@@ -207,6 +207,7 @@ if (user_permissions_get('customers_write'))
 
 			$obj_customer->obj_service->action_update_options();
 
+
 		}
 
 		// return to services page

@@ -42,7 +42,12 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("CDR Override", "page=customers/service-cdr-override.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
 		}
-	
+
+		if ($this->obj_customer->obj_service->data["typeid_string"] == "phone_trunk")
+		{
+			$this->obj_menu_nav->add_item("DDI Configuration", "page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");
+		}
+		
 		if (user_permissions_get("customers_write"))
 		{
 			$this->obj_menu_nav->add_item("Service Delete", "page=customers/service-delete.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."");

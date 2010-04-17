@@ -130,7 +130,8 @@ class page_output
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services_customers_ddi");
-		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id_ddi", "id");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("id_service_customer='". $this->obj_customer->id_service_customer ."'");
 		
 
 		// load settings from options form
@@ -166,6 +167,8 @@ class page_output
 
 			// delete link
 			$structure = NULL;
+			$structure["full_link"]				= "yes";
+
 			$structure["id_customer"]["value"]		= $this->obj_customer->id;
 			$structure["id_service_customer"]["value"]	= $this->obj_customer->id_service_customer;
 			$structure["id_ddi"]["column"]			= "id_ddi";

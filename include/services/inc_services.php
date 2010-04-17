@@ -346,6 +346,29 @@ class service
 		}
 
 
+
+		/*
+			Process any special options
+
+			Some options require manipulations to additional databases
+		*/
+
+		// set a single DDI
+		if ($data_changed["phone_ddi_single"])
+		{
+			// delete existing value (if any)
+			$sql_obj->string	= "DELETE FROM services_customers_ddi WHERE id_service_customer='". $this->option_type_id ."'";
+			$sql_obj->execute();
+
+			// set new value
+			$sql_obj->string	= "INSERT INTO services_customers_ddi (id_service_customer, ddi_start, ddi_finish, description) VALUES ('". $this->option_type_id ."', '". $data_changed["phone_ddi_single"] ."', '". $data_changed["phone_ddi_single"] ."', 'Automatically Created')";
+			$sql_obj->execute();
+		}
+
+
+
+
+
 		/*
 			Commit
 		*/
