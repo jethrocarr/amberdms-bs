@@ -1,5 +1,5 @@
 --
--- AMBERDMS BILLING SYSTEM VERSION 2.0.0_alpha_1
+-- AMBERDMS BILLING SYSTEM VERSION 1.5.0_alpha_1
 --
 -- Inital database install SQL.
 --
@@ -1204,7 +1204,7 @@ INSERT INTO `language` (`id` , `language` , `label` ,`translation` ) VALUES (NUL
 
 
 --
--- Changes from 1.4.0 to 2.0.0_alpha_1
+-- Changes from 1.4.0 to 1.5.0_alpha_1
 --
 
 CREATE TABLE IF NOT EXISTS `themes` (
@@ -1367,7 +1367,7 @@ INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 
 
 
 --
--- Changes from 2.0.0_alpha_1 to 2.0.0_alpha_2
+-- Changes from 1.5.0_alpha_1 to 1.5.0_alpha_2
 --
 
 
@@ -1429,7 +1429,7 @@ CREATE TABLE `services_customers_ddi` (
 
 
 --
--- Changes from 2.0.0_alpha_2 to 2.0.0_alpha_3
+-- Changes from 1.5.0_alpha_2 to 1.5.0_alpha_3
 --
 
 

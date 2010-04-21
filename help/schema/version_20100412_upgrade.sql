@@ -1,5 +1,5 @@
 --
--- AMBERDMS BILLING SYSTEM 2.0.0 ALPHA UPGRADES
+-- AMBERDMS BILLING SYSTEM 1.5.0 ALPHA UPGRADES
 --
 
 
@@ -12,7 +12,7 @@ TRUNCATE TABLE `users_sessions`;
 
 
 --
--- Changes from 2.0.0_alpha_1 to 2.0.0_alpha_2
+-- Changes from 1.5.0_alpha_1 to 1.5.0_alpha_2
 --
 
 
