@@ -1207,16 +1207,17 @@ class invoice
 
 
 		// add discount group last
-		$structure = array();
+		if ($structure_group_summary["group_discount"] > 0)
+		{
+			$structure = array();
 
-		$structure["group_name"]		= lang_trans('group_discount');
-		$structure["group_amount"]		= "-". format_money($structure_group_summary['group_discount']);
+			$structure["group_name"]		= lang_trans('group_discount');
+			$structure["group_amount"]		= "-". format_money($structure_group_summary['group_discount']);
 
-		$structure_group_summary_final[]	= $structure;
-
+			$structure_group_summary_final[]	= $structure;
+		}
 
 		$this->obj_pdf->prepare_add_array("summary_items", $structure_group_summary_final);
-
 
 
 
