@@ -469,7 +469,207 @@ class page_output
 		// Week view header
 		
 		print "<h3>TIME REGISTRATION</h3><br><br>";
-			
+		
+		/*
+			Unbilled Time
+		*/
+		if (user_permissions_get("projects_timegroup"))
+		{
+			/*
+				Create an array of all unbilled time records. We need to do the following to create this list:
+				1. Exclude any internal_only projects.
+				2. Include time which belongs to a time_group, but ONLY if the time group has not been added to an invoice.
+			*/
+
+			$unbilled_ids = array();
+
+
+			// select non-internal projects
+			$sql_projects_obj		= New sql_query;
+			$sql_projects_obj->string	= "SELECT projects.id as projectid, project_phases.id as phaseid FROM project_phases LEFT JOIN projects ON projects.id = project_phases.projectid WHERE projects.internal_only='0'";
+			$sql_projects_obj->execute();
+
+			if ($sql_projects_obj->num_rows())
+			{
+				$sql_projects_obj->fetch_array();
+
+				foreach ($sql_projects_obj->data as $project_data)
+				{
+					// select non-group time records
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT id FROM timereg WHERE groupid='0' AND phaseid='". $project_data["phaseid"] ."'";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+
+						foreach ($sql_obj->data as $data_tmp)
+						{
+							// we store the ID inside an array key, since they are unique
+							// and this will prevent us needed to check for the existance of
+							// the ID already.
+							$unbilled_ids[ $data_tmp["id"] ] = "on";
+						}
+					}
+
+					unset($sql_obj);
+
+
+					// select unpaid group IDs
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT id FROM time_groups WHERE projectid='". $project_data["projectid"] ."' AND invoiceid='0'";
+					$sql_obj->execute();
+
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+
+						foreach ($sql_obj->data as $data_group)
+						{
+							// fetch all the time reg IDs belonging this group, but only select time entries marked as billable - we
+							// don't want to report a timegroup with unbillable time as being billed!
+							$sql_reg_obj		= New sql_query;
+							$sql_reg_obj->string	= "SELECT id FROM timereg WHERE groupid='". $data_group["id"] ."' AND billable='1'";
+							$sql_reg_obj->execute();
+
+							if ($sql_reg_obj->num_rows())
+							{
+								$sql_reg_obj->fetch_array();
+
+								foreach ($sql_reg_obj->data as $data_tmp)
+								{
+									// we store the ID inside an array key, since they are unique
+									// and this will prevent us needed to check for the existance of
+									// the ID already.
+									$unbilled_ids[ $data_tmp["id"] ] = "on";
+								}
+							}
+
+							unset($sql_reg_obj);
+						}
+					}
+
+					unset($sql_obj);
+				}
+			}
+			// fetch amount of unbilled time
+			$sql_obj = New sql_query;
+			$sql_obj->prepare_sql_settable("timereg");
+			$sql_obj->prepare_sql_addfield("timebooked", "SUM(timereg.time_booked)");
+		
+			if ($this->access_staff_ids)
+			{
+				$sql_obj->prepare_sql_addwhere("employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+			}
+
+			$sql_obj->prepare_sql_addjoin("LEFT JOIN time_groups ON timereg.groupid = time_groups.id");
+
+			// provide list of valid IDs
+			$unbilled_ids_keys	= array_keys($unbilled_ids);
+			$unbilled_ids_count	= count($unbilled_ids_keys);
+			$unbilled_ids_sql	= "";
+
+			if ($unbilled_ids_count)
+			{
+				$i = 0;
+				foreach ($unbilled_ids_keys as $id)
+				{
+					$i++;
+
+					if ($i == $unbilled_ids_count)
+					{
+						$unbilled_ids_sql .= "timereg.id='$id' ";
+					}
+					else
+					{
+						$unbilled_ids_sql .= "timereg.id='$id' OR ";
+					}
+				}
+						
+				$sql_obj->prepare_sql_addwhere("($unbilled_ids_sql)");
+				
+
+				$sql_obj->generate_sql();
+
+				$sql_obj->execute();
+				$sql_obj->fetch_array();
+
+				list($unbilled_time_hours, $unbilled_time_mins) = explode(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
+
+
+				if ($unbilled_time_hours > 0 && $unbilled_time_mins > 0)
+				{
+					$message = "There are currently $unbilled_time_hours hours and $unbilled_time_mins minutes of unbilled time to be processed. Click here to view.";
+				}
+				elseif ($unbilled_time_hours > 0)
+				{
+					$message = "There are currently $unbilled_time_hours hours of unbilled time to be processed. Click here to view.";
+				}
+				elseif ($unbilled_time_mins > 0)
+				{
+					$message = "There are currently $unbilled_time_mins minutes of unbilled time to be processed. Click here to view.";
+				}
+
+			}
+			else
+			{
+				$message = "There is no unbilled time to be processed.";
+			}
+
+			// display
+			print "<br>";
+			format_linkbox("default", "index.php?page=timekeeping/unbilled.php", "<p><b>UNBILLED TIME</b></p><p>$message</p>");
+		
+		}/*end unbilled time*/
+		
+
+		print "<br />";
+		
+				/*
+		Time booked
+		*/
+		
+		// fetch amount of time booked for today
+		$sql_obj = New sql_query;
+		$sql_obj->prepare_sql_settable("timereg");
+		$sql_obj->prepare_sql_addfield("timebooked", "SUM(timereg.time_booked)");
+		$sql_obj->prepare_sql_addwhere("date='". date("Y-m-d") ."'");
+
+		if ($this->access_staff_ids)
+		{
+			$sql_obj->prepare_sql_addwhere("employeeid IN (". format_arraytocommastring($this->access_staff_ids) .")");
+		}
+
+		$sql_obj->generate_sql();
+
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+
+
+		list($booked_time_hours, $booked_time_mins) = explode(":", time_format_hourmins($sql_obj->data[0]["timebooked"]));
+
+		if ($booked_time_hours > 0 && $booked_time_mins > 0)
+		{
+			$message = "<b>Time booked for today: $booked_time_hours hours and $booked_time_mins minutes.</b><br />Click here to add more time.";
+		}
+		elseif ($booked_time_hours > 0)
+		{
+			$message = "<b>Time booked for today: $booked_time_hours hours.</b><br />Click here to add more time.";
+		}
+		elseif ($booked_time_mins > 0)
+		{
+			$message = "<b>Time booked for today: $booked_time_mins minutes.</b><br />Click here to add more time.";
+		}
+		else
+		{
+			$message = "<b>No time has been booked for today</b><br />Click here to add time.</b>";
+		}
+		
+		format_linkbox("default", "index.php?page=timekeeping/timereg-day-edit.php","<p>$message</p>");
+		
+		print "<br />";
+		
 		print "<table class=\"table_highlight\" width=\"100%\"><tr>";
 		
 		// Week selection links
@@ -503,6 +703,7 @@ class page_output
 
 
 
+
 		// goto date form
 		print "<td width=\"30%\">";
 
@@ -523,7 +724,6 @@ class page_output
 		
 
 		print "</tr></table><br>";
-
 
 		// Employee selection form
 		//
@@ -549,6 +749,7 @@ class page_output
 		$this->obj_form_employee->render_field("submit");
 		
 		print "</form>";
+
 		print "</td></tr></table><br>";
 
 		
