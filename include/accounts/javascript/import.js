@@ -26,11 +26,10 @@ function toggleIncludeTransaction(elem)
 	{
 		$(elem).siblings().css("font-style", "italic").fadeTo("fast", 0.5);
 		$(elem).siblings(".dropdown").children().attr("disabled", "disabled");
-		$(elem).children("img").attr("src", "images/icons/plus.gif");
+		$(elem).children().attr("src", "images/icons/plus.gif");
 		$(elem).removeClass("remove").addClass("add");
 		$(elem).siblings(".done").children().fadeOut("fast");
 		$(elem).siblings(".dropdown").children("div:not('.assign')").fadeOut("fast");
-		$(elem).children("input").val("false");
 	}
 	else
 	{
@@ -38,7 +37,6 @@ function toggleIncludeTransaction(elem)
 		$(elem).siblings(".dropdown").children().removeAttr("disabled", "disabled");
 		$(elem).children().attr("src", "images/icons/minus.gif");
 		$(elem).removeClass("add").addClass("remove");
-		$(elem).children("input").val("true");
 		if ($(elem).siblings(".dropdown").children(".assign").children().val() != "")
 		{
 			toggleSubMenus($(elem).siblings(".dropdown").children(".assign").children());

@@ -139,12 +139,12 @@ class page_output
 			{
 				$sql_trans_obj->fetch_array();
 		
-				$this->num_trans = $sql_trans_obj->data_num_rows;
+				$this->num_trans = $sql_trans_obj->data_num_rows+1;
 			}
 		}
 		else
 		{
-			$this->num_trans = @security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"]);
+			$this->num_trans = @security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"])+1;
 		}
 
 		// increment the row counter by 1 so we always have a spare row and make
@@ -153,15 +153,10 @@ class page_output
 		// TODO: would be nice if we could do some javascript magic to allow the user to easily add
 		// more rows when they want
 		
-		if ($this->num_trans < 10)
+		if ($this->num_trans < 2)
 		{
-			$this->num_trans = 10;
+			$this->num_trans = 2;
 		}
-		else
-		{
-			$this->num_trans++;
-		}
-
 
 		// transaction rows
 		for ($i = 0; $i < $this->num_trans; $i++)
@@ -218,14 +213,19 @@ class page_output
 		// total fields
 		$structure = NULL;
 		$structure["fieldname"] 	= "total_debit";
-		$structure["type"]		= "text";
+		$structure["type"]		= "hidden";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "total_credit";
-		$structure["type"]		= "text";
+		$structure["type"]		= "hidden";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]		= "money_format";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= format_money(0);
+		$this->obj_form->add_input($structure);
 
 
 		// hidden
@@ -386,10 +386,16 @@ class page_output
 		// TODO: make totals javascript compatible so they auto-update
 		
 		// total debit
-		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_debit"]["defaultvalue"]) ."</b></td>";
+// 		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_debit"]["defaultvalue"]) ."</b></td>";
+		print "<td width=\"15%\">";
+		$this->obj_form->render_field("total_debit");
+		print "</td>";
 
 		// total credit
-		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_credit"]["defaultvalue"]) ."</b></td>";
+// 		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_credit"]["defaultvalue"]) ."</b></td>";
+		print "<td width=\"15%\">";
+		$this->obj_form->render_field("total_credit");
+		print "</td>";
 	
 		// joining/filler columns
 		print "<td width=\"15%\"></td>";
@@ -397,10 +403,10 @@ class page_output
 		
 		print "</tr>";
 
-
+		
 
 		print "</table>";
-
+		$this->obj_form->render_field("money_format");
 		print "</td>";
 		print "</tr>";
 
