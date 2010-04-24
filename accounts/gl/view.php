@@ -12,6 +12,8 @@
 
 class page_output
 {
+	var $requires;
+
 	var $id;
 	var $obj_menu_nav;
 	var $obj_form;
@@ -19,8 +21,13 @@ class page_output
 	var $locked;
 	var $num_trans;
 
+
 	function page_output()
 	{
+		// define page dependencies
+		$this->requires["javascript"][]		= "include/accounts/gl.js";
+
+
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
@@ -147,11 +154,10 @@ class page_output
 			$this->num_trans = @security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_trans"])+1;
 		}
 
-		// increment the row counter by 1 so we always have a spare row and make
-		// sure that there are at least 10 rows
+		
 
-		// TODO: would be nice if we could do some javascript magic to allow the user to easily add
-		// more rows when they want
+		// ensure there are always 2 rows at least, additional rows are added if required (ie viewing
+		// an existing transaction) or on the fly when needed by javascript UI.
 		
 		if ($this->num_trans < 2)
 		{
@@ -383,16 +389,12 @@ class page_output
 		print "<td width=\"20%\"></td>";
 	
 
-		// TODO: make totals javascript compatible so they auto-update
-		
 		// total debit
-// 		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_debit"]["defaultvalue"]) ."</b></td>";
 		print "<td width=\"15%\">";
 		$this->obj_form->render_field("total_debit");
 		print "</td>";
 
 		// total credit
-// 		print "<td width=\"15%\"><b>". format_money($this->obj_form->structure["total_credit"]["defaultvalue"]) ."</b></td>";
 		print "<td width=\"15%\">";
 		$this->obj_form->render_field("total_credit");
 		print "</td>";
@@ -406,13 +408,13 @@ class page_output
 		
 
 		print "</table>";
-		$this->obj_form->render_field("money_format");
 		print "</td>";
 		print "</tr>";
 
 		// hidden fields
 		$this->obj_form->render_field("id_transaction");
 		$this->obj_form->render_field("num_trans");
+		$this->obj_form->render_field("money_format");
 
 
 		// form submit

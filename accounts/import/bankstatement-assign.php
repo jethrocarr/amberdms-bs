@@ -1,17 +1,27 @@
 <?php
 /*
-	bankstatement-csv.php
-	
-	access: "accounts_import_statement" group members
+	accounts/import/bankstatement-import.php
 
-	Allows user to assign names to CSV columns so the transactions can be assigned
+	access:
+		accounts_import_statement
+
+	Takes the session data of an imported bank statement and allows the user to do assignments
+	to different transaction types.
 */
 
 class page_output
 {
+	var $requires;
+
 	var $statement_array;
 	var $obj_form;
 	
+
+	function page_output()
+	{
+		$this->requires["javascript"][]		= "include/accounts/javascript/import.js";
+	}
+
 	function check_permissions()
 	{
 		return user_permissions_get('accounts_import_statement');
@@ -268,7 +278,7 @@ class page_output
 				
 				print "</td>";
 			    
-			    //assign
+				//assign
 				print "<td class=\"dropdown\">";
 					//selector
 					print "<div class=\"assign\">";
@@ -318,7 +328,7 @@ class page_output
 					print "</div>";
 				print "</td>";
 			    
-			    //done
+				//done
 				print "<td class=\"done\">";
 					print "<img class=\"hide_element\" src=\"images/icons/check.gif\">";
 				print "</td>";
@@ -326,17 +336,19 @@ class page_output
 				print "</tr>";
 				$i++;
 			}
-		print "<tr><td colspan=\"8\"><br />&nbsp;<br /></td></tr>";
-		print "<tr class=\"header\">";
+
+			print "<tr><td colspan=\"8\"><br />&nbsp;<br /></td></tr>";
+			print "<tr class=\"header\">";
 			print "<td colspan=\"8\"><b>Apply</b></td>";
-		    print "</tr>";
+			print "</tr>";
 		    
-		    print "<tr id=\"submit\">";
+			print "<tr id=\"submit\">";
 			print "<td colspan=\"3\">";
 			$this->obj_form->render_field("submit");
 			$this->obj_form->render_field("num_trans");
 			print "</td>";
-		    print "</tr>";
+			print "</tr>";
+
 		print "</table>";
 		print "</form>";
 	}	
