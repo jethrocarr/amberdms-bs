@@ -73,7 +73,24 @@ else
 	}
 	else
         {
+		/*
+			Load the page
+		*/
+
+		log_debug("index", "Loading page $page");
+
+
+		// include PHP code
+		include($page);
+
+
+		// create new page object
+		$page_obj = New page_output;
+
+
+		// page is valid
 		$page_valid = 1;
+
 	}
 }
 
@@ -95,6 +112,12 @@ else
 $theme_path = "themes/".$folder."/";
 
 
+
+
+
+
+
+
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
@@ -103,7 +126,40 @@ $theme_path = "themes/".$folder."/";
 	<title>Amberdms Billing System</title>
 	<meta name="copyright" content="(C)Copyright 2010 Amberdms Ltd.">
 
-	<?php print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />"; ?>
+	<?php
+
+	// include theme's CSS files
+	print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
+
+	// include page-specific css files
+	if (isset($page_obj->requires["css"]))
+	{
+		foreach ($page_obj->requires["css"] as $includefile)
+		{
+			// we check if the file exists in the theme, if it does we use that, otherwise
+			// we fall back to default theme.
+			//
+			// this allows people to write themes changing most of the application, without
+			// going to levels as crazy as trying to tweaks ever single weird use case and special pages.
+
+			if (file_exists($theme_path . $includefile))
+			{
+				log_write("debug", "main", "Including additional CSS file $theme_path$includefile");
+
+				print "<link href=\"$includefile\" rel=\"stylesheet\" type=\"text/css\" />\n";
+			}
+			else
+			{
+				log_write("debug", "main", "Including additional CSS file from default theme themes/default/$includefile");
+
+				print "<link href=\"$includefile\" rel=\"stylesheet\" type=\"text/css\" />\n";
+			}
+		}
+	}
+
+	
+	
+	?>
 	
 <script type="text/javascript">
 
@@ -119,8 +175,20 @@ function obj_show(obj)
 </script>
 
 <script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
-<script type="text/javascript" src="include/accounts/javascript/gl.js"></script>
-<script type="text/javascript" src="include/accounts/javascript/import.js"></script>
+
+
+<?php
+
+// include page-specific javascript files
+if (isset($page_obj->requires["javascript"]))
+{
+	foreach ($page_obj->requires["javascript"] as $includefile)
+	{
+		print "<script type=\"text/javascript\" src=\"$includefile\"></script>\n";
+	}
+}
+
+?>
 
 
 </head>
@@ -185,21 +253,11 @@ if (user_online())
 
 
 /*
-	Load the page
+	Check permissions, requirements and execute page
 */
 
 if ($page_valid == 1)
 {
-	log_debug("index", "Loading page $page");
-
-
-	// include PHP code
-	include($page);
-
-
-	// create new page object
-	$page_obj = New page_output;
-
 	// check permissions
 	if ($page_obj->check_permissions())
 	{
