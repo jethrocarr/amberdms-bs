@@ -48,11 +48,7 @@ class page_output
 			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->id ."");
 		}
 
-		if ($this->service_type == ("phone_single" || "phone_trunk" || "phone_tollfree"))
-		{
-			$this->obj_menu_nav->add_item("Call Rate Override", "page=services/cdr-override.php&id=". $this->id ."", TRUE);
-		}
-
+		$this->obj_menu_nav->add_item("Call Rate Override", "page=services/cdr-override.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Service Journal", "page=services/journal.php&id=". $this->id ."");
 
 		if (user_permissions_get("services_write"))

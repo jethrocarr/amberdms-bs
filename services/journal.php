@@ -32,7 +32,7 @@ class page_output
 			$this->obj_menu_nav->add_item("Bundle Components", "page=services/bundles.php&id=". $this->id ."");
 		}
 
-		if (sql_get_singlevalue("SELECT service_types.name as value FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->id ."' LIMIT 1") == ("phone_single" || "phone_tollfree" || "phone_trunk"))
+		if (in_array(sql_get_singlevalue("SELECT service_types.name as value FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE services.id='". $this->id ."' LIMIT 1"), array("phone_single", "phone_tollfree", "phone_trunk")))
 		{
 			$this->obj_menu_nav->add_item("Call Rate Override", "page=services/cdr-override.php&id=". $this->id ."");
 		}
