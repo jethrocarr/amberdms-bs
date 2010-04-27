@@ -88,6 +88,15 @@ if (user_permissions_get('customers_write'))
 		$data["date_period_first"]	= @security_form_input_predefined("date", "date_period_first", 1, "");
 		$data["date_period_next"]	= $data["date_period_first"];
 		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
+
+		// special migration stuff
+		if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE'"))
+		{
+			// TODO: complete special migration features
+
+			$data["migration_previous_usage_month"]		= @security_form_input_predefined("any", "migration_previous_usage_month", 0, "");
+			
+		}
 	}
 
 

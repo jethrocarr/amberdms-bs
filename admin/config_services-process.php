@@ -19,7 +19,8 @@ if (user_permissions_get("admin"))
 		Load Data
 	*/
 
-//	$data["MODULE_CUSTOMER_PORTAL"]			= @security_form_input_predefined("checkbox", "MODULE_CUSTOMER_PORTAL", 0, "");
+	$data["SERVICE_PARTPERIOD_MODE"]			= @security_form_input_predefined("any", "SERVICE_PARTPERIOD_MODE", 1, "");
+	$data["SERVICE_MIGRATION_MODE"]				= @security_form_input_predefined("checkbox", "SERVICE_MIGRATION_MODE", 0, "");
 
 
 

@@ -455,6 +455,7 @@ class page_output
 			*/
 
 
+			// basic attributes
 			$structure = form_helper_prepare_dropdownfromdb("serviceid", "SELECT id, name_service as label FROM services WHERE active='1' ORDER BY name_service");
 			$structure["options"]["req"] = "yes";
 			$this->obj_form->add_input($structure);
@@ -471,9 +472,22 @@ class page_output
 			$structure["type"]		= "textarea";
 			$this->obj_form->add_input($structure);
 
-
-
 			$this->obj_form->subforms["service_add"]	= array("serviceid", "date_period_first", "description");
+
+
+			// migration mode options - these allow some nifty tricks like creating
+			// a service period in the previous month to be able to bill for past usage
+			if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE' LIMIT 1"))
+			{
+				$structure = NULL;
+				$structure["fieldname"] 		= "migration_previous_usage_month";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["label"]		= "If this is a usage service being migrated and there is usage information for the past month that you want billed, check this option";
+				$this->obj_form->add_input($structure);
+			}
+
+
+			$this->obj_form->subforms["service_migration"]	= array("migration_previous_usage_month");
 		}
 
 
@@ -562,8 +576,8 @@ class page_output
 		}
 		else
 		{
-			print "<h3>ADD CUSTOMER TO SERVICE</h3><br>";
-			print "<p>This page allows you to subscribe a customer to a new service.</p>";
+			print "<h3>ADD SERVICE TO CUSTOMER ACCOUNT</h3><br>";
+			print "<p>This page allows you to setup a new service for the selected customer.</p>";
 		}
 
 

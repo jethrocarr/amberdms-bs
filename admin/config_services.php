@@ -38,6 +38,28 @@ class page_output
 		$this->obj_form->method = "post";
 
 
+		// migration mode options
+		$structure = NULL;
+		$structure["fieldname"]				= "SERVICE_MIGRATION_MODE";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "When enabled, provides additional options to service creation to create a part usage period.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		
+		// misc
+		$structure = NULL;
+		$structure["fieldname"]				= "SERVICE_PARTPERIOD_MODE";
+		$structure["type"]				= "radio";
+		$structure["values"]				= array("seporate", "merge");
+
+		$structure["translations"]["seporate"]		= "Invoice a partial period (eg new customer signup) in a seporate invoice.";
+		$structure["translations"]["merge"]		= "Add the additional period to next month's invoice.";
+
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+
 
 		// submit section
 		$structure = NULL;
@@ -48,7 +70,8 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["config_services"]		= array("");
+		$this->obj_form->subforms["config_migration"]		= array("SERVICE_MIGRATION_MODE");
+		$this->obj_form->subforms["config_misc"]		= array("SERVICE_PARTPERIOD_MODE");
 		$this->obj_form->subforms["submit"]			= array("submit");
 
 		if (error_check())
