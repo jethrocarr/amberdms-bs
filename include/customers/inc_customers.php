@@ -1211,7 +1211,7 @@ class customer_services extends customer
 						Delete service period history
 					*/
 			
-					$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='". $data_component["id"] ."'";
+					$sql_obj->string	= "DELETE FROM services_customers_periods WHERE id_service_customer='". $data_component["id"] ."'";
 					$sql_obj->execute();
 
 
@@ -1219,7 +1219,7 @@ class customer_services extends customer
 						Delete service usage records
 					*/
 			
-					$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='". $data_component["id"] ."'";
+					$sql_obj->string	= "DELETE FROM service_usage_records WHERE id_service_customer='". $data_component["id"] ."'";
 					$sql_obj->execute();
 
 
@@ -1264,7 +1264,7 @@ class customer_services extends customer
 			Delete service period history
 		*/
 			
-		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->string	= "DELETE FROM services_customers_periods WHERE id_service_customer='". $this->id_service_customer ."'";
 		$sql_obj->execute();
 
 
@@ -1272,7 +1272,7 @@ class customer_services extends customer
 			Delete service usage records
 		*/
 			
-		$sql_obj->string	= "DELETE FROM service_usage_records WHERE services_customers_id='". $this->id_service_customer ."'";
+		$sql_obj->string	= "DELETE FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."'";
 		$sql_obj->execute();
 
 

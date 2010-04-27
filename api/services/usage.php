@@ -16,7 +16,7 @@ include("../../include/amberphplib/main.php");
 
 class services_usage
 {
-//	function get_services_customers_id()
+//	function get_id_service_customer()
 //	{
 //	}
 
@@ -31,13 +31,13 @@ class services_usage
 
 		Values
 		collector		Name of the collector device/app. Does not affect billing.
-		services_customers_id	ID of the service/customer
+		id_service_customer	ID of the service/customer
 		date			Date in YYYY-MM-DD format.
 		usage1			usage integer #1
 		usage2			usage integer #2 (optional)
 
 	*/
-	function set_usage_record($collector, $services_customers_id, $date, $usage1, $usage2 = NULL)
+	function set_usage_record($collector, $id_service_customer, $date, $usage1, $usage2 = NULL)
 	{
 		log_debug("services_usage", "Executing set_usage_record");
 
@@ -45,7 +45,7 @@ class services_usage
 		{
 			// sanitise input
 			$data["collector"]		= @security_script_input_predefined("any", $collector);
-			$data["services_customers_id"]	= @security_script_input_predefined("int", $services_customers_id);
+			$data["id_service_customer"]	= @security_script_input_predefined("int", $id_service_customer);
 			$data["date"]			= @security_script_input_predefined("date", $date);
 			$data["usage1"]			= @security_script_input_predefined("int", $usage1);
 			$data["usage2"]			= @security_script_input_predefined("int", $usage2);
@@ -61,7 +61,7 @@ class services_usage
 			
 
 			/*
-				Verify that services_customers_id exists - this may seem unnessacary, but should be done
+				Verify that id_service_customer exists - this may seem unnessacary, but should be done
 				to prevent data being inserted to IDs that don't yet belong - but may do in future.
 				
 				Would be nasty to have a lot of data sitting in the table waiting for a new customer to
@@ -72,7 +72,7 @@ class services_usage
 			*/
 
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM services_customers WHERE id='". $data["services_customers_id"] ."' LIMIT 1";
+			$sql_obj->string	= "SELECT id FROM services_customers WHERE id='". $data["id_service_customer"] ."' LIMIT 1";
 			$sql_obj->execute();
 
 			if (!$sql_obj->num_rows())
@@ -87,12 +87,12 @@ class services_usage
 			// add new row to DB
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "INSERT INTO service_usage_records ("
-							."services_customers_id, "
+							."id_service_customer, "
 							."date, "
 							."usage1, "
 							."usage2"
 							.") VALUES ("
-							."'". $data["services_customers_id"] ."', "
+							."'". $data["id_service_customer"] ."', "
 							."'". $data["date"] ."', "
 							."'". $data["usage1"] ."', "
 							."'". $data["usage2"] ."'"
