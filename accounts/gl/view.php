@@ -25,7 +25,7 @@ class page_output
 	function page_output()
 	{
 		// define page dependencies
-		$this->requires["javascript"][]		= "include/accounts/gl.js";
+		$this->requires["javascript"][]		= "include/accounts/javascript/gl.js";
 
 
 		// fetch variables
