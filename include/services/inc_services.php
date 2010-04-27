@@ -182,15 +182,16 @@ class service
 			$sql_obj->fetch_array();
 			$this->data = $sql_obj->data[0];
 
-			// fetch service type label
+			// fetch labels of various attributes
+			//
+			// It's probably better to use these multiple queries rather than a join, since when quering a number of services in one load, these queries
+			// will be cached automatically for performance.
+			//
 			$this->data["typeid_string"]		= sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $this->data["typeid"] ."' LIMIT 1");
-
-			// fetch biling cycle label
 			$this->data["billing_cycle_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->data["billing_cycle"] ."' LIMIT 1");
-
-			// fetch biling mode label
 			$this->data["billing_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $this->data["billing_mode"] ."' LIMIT 1");
-
+			$this->data["usage_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM service_usage_modes WHERE id='". $this->data["usage_mode"] ."' LIMIT 1");
+		
 
 			// fetch additional service attributes stored in the options table
 			$sql_obj		= New sql_query;
@@ -629,6 +630,75 @@ class service_bundle extends service
 
 
 } // end of class: service_bundle
+
+
+
+
+
+/*
+	CLASS: service_usage
+
+	Base class providing general functions for fetching service usage information.
+
+	This class is not used directly, but is rather extended by other usage calculating functions
+	to avoid repeating the design of the same basic information each time.
+*/
+
+class service_usage
+{
+	var $id_service_customer;			// ID of the service-customer mapping
+
+	var $obj_service;				// holds service data
+
+	var $date_start;				// start of usage period
+	var $date_end;					// end of usage period
+
+	var $data;					// usage information is saved here.
+
+
+	/*
+		Constructor
+	*/
+	function service_usage()
+	{
+		log_write("debug", "service_usage", "Executing service_usage()");
+
+		$this->obj_service = New service;
+	}
+
+
+
+	/*
+		load_data_service
+
+		Loads the service object and it's associated data
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function load_data_service()
+	{
+		log_write("debug", "service_usage", "Executing load_data_service()");
+
+
+		$this->obj_service->option_type		= "customer";
+		$this->obj_service->option_type_id	= $this->id_service_customer;
+
+		if (!$this->obj_service->verify_id_options())
+		{
+			log_write("error", "service_usage", "Unable to verify service ID of ". $this->id_service_customer ." as being valid, no changes have been made to service configuration.");
+			return 0;
+		}
+		
+		$this->obj_service->load_data();
+		$this->obj_service->load_data_options();
+
+		return 1;
+	}
+	
+
+} // end of class: service_usage
 
 
 

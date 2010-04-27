@@ -1182,29 +1182,105 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 
 /*
-	CLASS: cdr_usage
+	CLASS: service_usage_cdr
 
 	Functions for querying and calculating call costs for service invoicing.
 */
-class cdr_usage
+class service_usage_cdr extends service_usage
 {
-	/*
-		load_service_information
 
-		Load the provided server information and overrides to fetch the pricing for all the call services.
+	/*
+		load_data_ddi
+
+		Fetches an array of all the customer's DDIs into the $this->data value and returns the number of DDIs assigned.
+
+		Returns
+		0		No DDIs / An error occured
+		#		Number of DDIs belonging to the customer.
+	*/
+
+	function load_data_ddi()
+	{
+		log_write("debug", "service_usage_cdr", "Executing load_data_ddi()");
+
+
+		// fetch all the DDIs for this service-customer
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT ddi_start, ddi_finish FROM services_customers_ddi WHERE id_service_customer='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			$this->data	= array();
+
+
+			// work out DDI ranges where nessacary.
+			foreach ($sql_obj->data as $data)
+			{
+				if ($data["ddi_start"] == $data["ddi_finish"])
+				{
+					// single DDI, very easy
+					$this->data[]	= $data["ddi_start"];
+				}
+				else
+				{
+					// multiple DDIs, go and generate all the DDIs inbetween
+					for ($i=$data["ddi_start"]; $i < $data["ddi_finish"]; $i++)
+					{
+						$this->data[]	= $i;
+					}
+				}
+			}
+
+
+			// return the total number of DDIs
+			$total	= count($this->data);
+
+			log_write("debug", "service_usage_cdr", "Customer has ". $total ." DDIs on their service");
+
+			return $total;
+
+		}
+		else
+		{
+			log_write("warning", "service_usage_cdr", "There are no DDIs assigned to id_service_customer ". $this->id_service_customer ."");
+			return 0;
+		}
+	} // end of load_data_ddi
+
+
+
+	/*
+		load_data_trunks
+
+		Returns
+		0		No trunks / An error occured
+		#		Number of trunks belonging to the customer
 	*/
 
 
 
-
 	/*
-		fetch_usage_data
+		fetch_usage_calls
 
 		Return an array of call items along with their calculated prices from the CDR records
 		table for the selected service and period.
 	*/
 
-} // end of class cdr_usage
+
+	/*
+		fetch_usage_trunks
+	*/
+
+
+	/*
+		fetch_usage_calls
+	*/
+
+
+} // end of class: service_usage_cdr
 
 
 

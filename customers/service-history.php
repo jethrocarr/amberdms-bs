@@ -121,7 +121,7 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "services_customers_periods.id");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_total", "account_ar.amount_total");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_paid", "account_ar.amount_paid");
-		$this->obj_table->sql_obj->prepare_sql_addwhere("services_customers_id = '". $this->obj_customer->id_service_customer ."'");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("id_service_customer = '". $this->obj_customer->id_service_customer ."'");
 
 		// run SQL query
 		$this->obj_table->generate_sql();
@@ -174,7 +174,7 @@ class page_output
 					// if this is the most recent period, then add a check link next to the usage amount
 					if ($i == ($this->obj_table->data_num_rows - 1))
 					{
-						$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">(get latest)</a>";
+						$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">(get latest)</a>";
 					}
 
 				}
@@ -186,8 +186,8 @@ class page_output
 			$this->obj_table->render_table_html();
 			
 			// display CSV/PDF download link
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->services_customers_id ."\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">Export as PDF</a></p>";
 		}
 	}
 

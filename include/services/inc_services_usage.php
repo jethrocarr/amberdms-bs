@@ -2,84 +2,25 @@
 /*
 	include/services/inc_services_usages.php
 
-	Provides functions for managing usage of services, including functions to add usage
-	records and functions to fetch total amounts of usage to be used for billing/display
-	purposes, as well as functions for checking for customer usage alerts.
+	Functions and classes for managing service usage billing, such as quering
+	usage amounts and posting new usage to the database.
+
+	TODO: most of the functionality in this page is being ripped out into
+		service-type specific classes to better structure the code, such
+		as service_usage_cdr, service_usage_traffic, etc, etc
 */
+
 
 
 
 
 /*
-	CLASSES
+	CLASS: service_usage_generic
+
+	Functions to fetch the total amount of usage for a generic service.
 */
-
-class service_usage
+class service_usage_generic extends service_usage
 {
-	var $services_customers_id;			// ID of the service-customer mapping
-	var $serviceid;					// ID of the service
-	
-	var $date_start;				// start of usage period
-	var $date_end;					// end of usage period
-
-	var $sql_service_obj;				// service data is loaded in here.
-
-	var $data;					// usage information is saved here.
-
-
-	/*
-		Constructor
-	*/
-	function service_usage()
-	{
-		log_debug("service_usage", "Executing service_usage()");
-
-		// define service object
-		$this->sql_service_obj = New sql_query;
-	}
-
-
-
-	/*
-		prepare_load_servicedata
-		
-		Load service information by using the services_customers_id
-
-		Returns
-		0		failure
-		1		success
-	*/
-	function prepare_load_servicedata()
-	{
-		log_debug("service_usage", "Executing prepare_load_servicedata");
-
-		// fetch the serviceid
-		$this->serviceid = sql_get_singlevalue("SELECT serviceid as value FROM services_customers WHERE id='". $this->services_customers_id ."' LIMIT 1");
-
-		if (!$this->serviceid)
-		{
-			log_write("error", "service_usage", "Unable to fetch serviceid from services_customers");
-			return 0;
-		}
-
-		// fetch the service information we require
-		$this->sql_service_obj->string = "SELECT id, usage_mode, units, typeid FROM services WHERE id='". $this->serviceid ."'";
-		$this->sql_service_obj->execute();
-
-		if ($this->sql_service_obj->num_rows())
-		{
-			$this->sql_service_obj->fetch_array();
-			return 1;
-		}
-		else
-		{
-			log_write("error", "service_usage", "Unable to find service with ID of ". $this->serviceid . "");
-			return 0;
-		}
-		
-	} // end of prepare_load_servicedata
-
-
 
 	/*
 		fetch_usagedata
@@ -118,14 +59,13 @@ class service_usage
 	*/
 	function fetch_usagedata()
 	{
-		log_debug("service_usage", "Executing fetch_usagedata()");
+		log_write("debug", "service_usage_generic", "Executing fetch_usagedata()");
+
 
 		/*
-			Fetch usage mode
+			Verify Key Values
 		*/
-		$this->data["usage_mode"] = sql_get_singlevalue("SELECT name as value FROM service_usage_modes WHERE id='". $this->sql_service_obj->data[0]["usage_mode"] ."' LIMIT 1");
-
-		if (!$this->data["usage_mode"])
+		if (!$this->obj_service->data["usage_mode_string"])
 		{
 			log_debug("service_usage", "Error: Unable to determine usage mode of service");
 			return 0;
@@ -138,7 +78,7 @@ class service_usage
 
 			We need to fetch in different ways, depending on the usage mode.
 		*/
-		switch ($this->data["usage_mode"])
+		switch ($this->obj_service->data["usage_mode_string"])
 		{
 			case "incrementing":
 				/*
@@ -149,7 +89,7 @@ class service_usage
 				*/
 				
 				$sql_obj			= New sql_query;
-				$sql_obj->string		= "SELECT SUM(usage1) as usage1, SUM(usage2) as usage2 FROM service_usage_records WHERE services_customers_id='". $this->services_customers_id ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
+				$sql_obj->string		= "SELECT SUM(usage1) as usage1, SUM(usage2) as usage2 FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 
@@ -168,7 +108,7 @@ class service_usage
 				*/
 				
 				$sql_obj			= New sql_query;
-				$sql_obj->string		= "SELECT MAX(usage1) as usage1, MAX(usage2) as usage2 FROM service_usage_records WHERE services_customers_id='". $this->services_customers_id ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
+				$sql_obj->string		= "SELECT MAX(usage1) as usage1, MAX(usage2) as usage2 FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 
@@ -186,7 +126,7 @@ class service_usage
 				*/
 				
 				$sql_obj			= New sql_query;
-				$sql_obj->string		= "SELECT AVG(usage1) as usage1, AVG(usage2) as usage2 FROM service_usage_records WHERE services_customers_id='". $this->services_customers_id ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
+				$sql_obj->string		= "SELECT AVG(usage1) as usage1, AVG(usage2) as usage2 FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 
@@ -218,10 +158,10 @@ class service_usage
 
 			Not all services do this, but we can tell, if the units is just a number, that it is an ID to the service_units table for us to use.
 		*/
-		if (preg_match("/^[0-9]*$/", $this->sql_service_obj->data[0]["units"]))
+		if (preg_match("/^[0-9]*$/", $this->obj_service->data["units"]))
 		{
 			// fetch the number of raw units to unit ratio
-			$this->data["numrawunits"] = sql_get_singlevalue("SELECT numrawunits as value FROM service_units WHERE id='". $this->sql_service_obj->data[0]["units"] ."' LIMIT 1");
+			$this->data["numrawunits"] = sql_get_singlevalue("SELECT numrawunits as value FROM service_units WHERE id='". $this->obj_service->data["units"] ."' LIMIT 1");
 
 			if (!$this->data["numrawunits"])
 			{
@@ -245,14 +185,16 @@ class service_usage
 	} // end of fetch_usagedata
 
 
+} // end of class: service_usage_generic
 
-} // END OF SERVICE_USAGE CLASS
 
 
 
 
 /*
 	FUNCTIONS
+
+	TODO: move all these standalone giant functions into a more modular OO form.
 */
 
 
@@ -349,7 +291,7 @@ function service_usage_alerts_generate($customerid = NULL)
 									."usage_summary "
 									."FROM services_customers_periods "
 									."WHERE "
-									."services_customers_id='". $customer_data["id"] ."' "
+									."id_service_customer='". $customer_data["id"] ."' "
 									."AND invoiceid = '0' "
 									."AND date_end >= '". date("Y-m-d")."' LIMIT 1";
 				$sql_periods_obj->execute();
@@ -424,7 +366,7 @@ function service_usage_alerts_generate($customerid = NULL)
 					*/
 			
 					$usage_obj					= New service_usage;
-					$usage_obj->services_customers_id		= $customer_data["id"];
+					$usage_obj->id_service_customer		= $customer_data["id"];
 					$usage_obj->date_start				= $period_data["date_start"];
 					$usage_obj->date_end				= $period_data["date_end"];
 					

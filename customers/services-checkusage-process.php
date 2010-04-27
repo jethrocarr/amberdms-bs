@@ -22,7 +22,7 @@ if (user_permissions_get('customers_write'))
 	/////////////////////////
 
 	$id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-	$services_customers_id		= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+	$id_service_customer		= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
 	
 	
 	// make sure the customer actually exists
@@ -43,7 +43,7 @@ if (user_permissions_get('customers_write'))
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
-		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&serviceid=$services_customers_id");
+		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&serviceid=$id_service_customer");
 		exit(0);
 	}
 	else
@@ -57,7 +57,7 @@ if (user_permissions_get('customers_write'))
 
 	
 		// display updated details
-		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&serviceid=$services_customers_id");
+		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&serviceid=$id_service_customer");
 		exit(0);
 	}
 
