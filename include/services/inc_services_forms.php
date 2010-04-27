@@ -514,7 +514,7 @@ class services_form_plan
 
 				
 				// general
-				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes");
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%telco%'");
 				$structure["options"]["req"]		= "yes";
 				
 				// replace all the -- joiners with <br> for clarity
@@ -734,7 +734,7 @@ class services_form_plan
 				// no extra fields to display
 
 				// general
-				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes");
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%telco%'");
 				$structure["options"]["req"]		= "yes";
 				
 				// replace all the -- joiners with <br> for clarity

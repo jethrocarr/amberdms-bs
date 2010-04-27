@@ -120,6 +120,7 @@ function service_periods_generate($customerid = NULL)
 					}
 				break;
 
+
 				case "periodadvance":
 				case "monthadvance":
 					/*
@@ -183,6 +184,56 @@ function service_periods_generate($customerid = NULL)
 				
 				break;
 
+
+				case "monthtelco":
+				case "periodtelco":
+					/*
+						MONTHTELCO OR PERIODTELCO
+
+						Create a new period on the date set in services_customers.date_period_next.
+
+						Both periodend and monthend are treated the same way, the only difference is that when the new period
+						is created, the date with either be +1 month (periodend), or the last day in the following month (monthend)
+					*/
+
+					log_debug("inc_services_invoicegen", "Processing monthtelco/periodtelco service type");
+
+					// usually we only need to generate a single period, however it is possible for a service to be
+					// created with a historical date and in this situation we want to generate all the periods in the past
+					// so that the customer gets a single invoice.
+					//
+					// therefore we keep looping, until there are no outstanding periods.
+					$complete = 0;
+					while ($complete == 0)
+					{
+						// fetch the period next date
+						$sql_service_obj		= New sql_query;
+						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->execute();
+						$sql_service_obj->fetch_array();
+
+						// check if we need to generate a new period
+						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
+						{
+							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of ". $sql_service_obj->data[0]["date_period_next"]);
+
+							// the latest billing period has finished, we need to generate a new time period.
+							if (!service_periods_add($data["id"], $billing_mode))
+							{
+								$_SESSION["error"]["message"][] = "Fatal error whilst trying to create new time period";
+								return 0;
+							}
+						}
+						else
+						{
+							unset($sql_service_obj);
+
+							$complete = 1;
+						}
+					}
+				break;
+
+
 				default:
 					$_SESSION["error"]["message"][] = "Unknown billing mode ". $data["billing_mode"] ." provided.";
 					return 0;
@@ -241,8 +292,8 @@ function service_periods_add($services_customers_id, $billing_mode)
 
 		If the service has not been billed before, the date_period_first value will have been set, but not the date_period_next value.
 
-		For periodend and periodadvance billing modes, we just want to start from this date. However, for the monthend and monthadvance modes
-		we need to bill from the first till the end of the month. Our current solution is to treat these services the same as periodend/periodadvance which
+		For periodend, periodadvance, periodtelco billing modes, we just want to start from this date. However, for the monthend, monthadvance & monthtelco modes
+		we need to bill from the first till the end of the month. Our current solution is to treat these services the same as periodend/periodadvance/periodtelco which
 		causes the first invoice to include a full month + a partial month.
 
 		A possible enhancement would be to either generate a seporate invoice for an inital partial month or not, depending on when in the month the service starts.
@@ -298,7 +349,8 @@ function service_periods_add($services_customers_id, $billing_mode)
 	{
 		case "periodend":
 		case "periodadvance":
-			// PERIODEND / PERIODADVANCE
+		case "periodtelco":
+			// PERIODEND / PERIODADVANCE / PERIODTELCO
 			//
 			// Periods start of any date of the month and end on date -1 of the next month
 	
@@ -310,7 +362,8 @@ function service_periods_add($services_customers_id, $billing_mode)
 			
 		case "monthend":
 		case "monthadvance":
-			// MONTHEND
+		case "monthtelco":
+			// MONTHEND / MONTHADVANCE / MONTHTELCO
 			//
 			// Periods start on the 1st and end on the last day of the month.
 
@@ -369,6 +422,15 @@ function service_periods_add($services_customers_id, $billing_mode)
 			$date_period_billing = date("Y-m-d");
 		break;
 
+		case "periodtelco":
+		case "monthtelco":
+			// PERIODTELCO / MONTHTELCO
+			//
+			// With Telco periods, we need to bill on the first day of the new period.
+
+			$date_period_billing = $data_period_start;
+
+		break;
 			
 		case "periodend":
 		case "monthend":
@@ -605,7 +667,7 @@ function service_invoices_generate($customerid = NULL)
 					$obj_service->load_data_options();
 
 
-					if ($obj_service->data["billing_mode_string"] == "monthend" || $obj_service->data["billing_mode_string"] == "monthadvance")
+					if ($obj_service->data["billing_mode_string"] == "monthend" || $obj_service->data["billing_mode_string"] == "monthadvance" || $obj_service->data["billing_mode_string"] == "monthtelco")
 					{
 						log_debug("services_invoicegen", "Invoice bills by month date");
 
@@ -707,7 +769,7 @@ function service_invoices_generate($customerid = NULL)
 
 					// fetch all tax options for this service from the database
 					//
-					// note: if any options aren't suitable for the customer, the invoices
+					// note: if any options aren't suitable for the customer, the invoicing
 					// code will handle this for us and unselect them.
 					//
 					$sql_tax_obj		= New sql_query;
@@ -740,246 +802,328 @@ function service_invoices_generate($customerid = NULL)
 						Create another item on the invoice for any usage, provided that the service type is a usage service)
 					*/
 
-					if ($obj_service->data["typeid_string"] == "generic_with_usage" || $obj_service->data["typeid_string"] == "licenses" || $obj_service->data["typeid_string"] == "time" || $obj_service->data["typeid_string"] == "data_traffic")
+					$period_usage_data	= array();
+
+
+
+					/*
+						Depending on the service type, we need to handle the usage period in one of two ways:
+						1. Invoice usage for the current period that has just ended (periodend/monthend)
+						2. Invoice usage for the period BEFORE the current period. (periodtelco/monthtelco)
+					*/
+
+					if ($obj_service->data["billing_mode_string"] == "periodtelco" || $obj_service->data["billing_mode_string"] == "monthtelco")
 					{
-	
-						// start the item
-						$invoice_item				= New invoice_items;
-					
-						$invoice_item->id_invoice		= $invoiceid;
-					
-						$invoice_item->type_invoice		= "ar";
-						$invoice_item->type_item		= "service";
-					
-						$itemdata = array();
+						log_write("debug", "service_invoicegen", "Determining previous period for telco-style usage billing");
+
+						// fetch previous period (if any) - we can determine the previous by subtracting one day from the current period start date.
+						// TODO: here
 
 
-						// chart ID
-						$itemdata["chartid"]		= $obj_service->data["chartid"];
+						// generate period end date
+						$tmp_date			= explode("-", $period_data["date_start"]);
 
-						// description
-						$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+						$period_usage_data["date_end"]	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] - 1), $tmp_date[0]));
 
-						// service ID
-						$itemdata["customid"]		= $obj_service->id;
 
-						
-						// calculate the amount to charge
-						switch ($obj_service->data["typeid_string"])
+						// fetch period data
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT id, date_start, date_end FROM services_customers_periods WHERE services_customers_id='". $period_data["services_customers_id"] ."' AND date_end='". $period_usage_data["date_end"] ."' LIMIT 1";
+						$sql_obj->execute();
+
+						if ($sql_obj->num_rows())
 						{
-							case "generic_with_usage":
-								/*
-									GENERIC_WITH_USAGE
+							log_write("debug", "service_invoicegen", "Billing for seporate past usage period (". $period_data["date_start"] ." to ". $period_data["date_end"] ."");
 
-									This service is to be used for any non-traffic, non-time accounting service that needs to track usage. Examples of this
-									could be counting the number of API requests, size of disk usage on a vhost, etc.
-								*/
-
-										
-
-								/*
-									Fetch usage amount
-								*/
-								
-								$usage_obj					= New service_usage;
-								$usage_obj->services_customers_id		= $period_data["services_customers_id"];
-								$usage_obj->date_start				= $period_data["date_start"];
-								$usage_obj->date_end				= $period_data["date_end"];
-								
-								if ($usage_obj->prepare_load_servicedata())
-								{
-									$usage_obj->fetch_usagedata();
-
-									if ($usage_obj->data["total_byunits"])
-									{
-										$usage = $usage_obj->data["total_byunits"];
-									}
-									else
-									{
-										$usage = $usage_obj->data["total"];
-									}
-								}
-
-								unset($usage_obj);
+							// there is a valid usage period
+							$period_usage_data["active"]		= "yes";
 
 
-								/*
-									Charge for the usage in units
-								*/
+							// fetch dates
+							$sql_obj->fetch_array();
 
-								$unitname = $obj_service->data["units"];
+							$period_usage_data["services_customers_id"]	= $period_data["services_customers_id"];
+							$period_usage_data["id"]			= $sql_obj->data[0]["id"];
 
-								if ($usage > $obj_service->data["included_units"])
-								{
-									// there is excess usage that we can bill for.
-									$usage_excess = $usage - $obj_service->data["included_units"];
+							$period_usage_data["date_start"]		= $sql_obj->data[0]["date_start"];
+							$period_usage_data["date_end"]			= $sql_obj->data[0]["date_end"];
+						}
+						else
+						{
+							log_write("debug", "service_invoicegen", "Not billing for past usage, as this appears to be the first plan period so no usage can exist yet");
+						}
 
-									// set item attributes
-									$itemdata["price"]	= $obj_service->data["price_extraunits"];
-									$itemdata["quantity"]	= $usage_excess;
-									$itemdata["units"]	= $unitname;
+					}
+					else
+					{
+						log_write("debug", "service_invoicegen", "Using plan period as data usage period (". $period_data["date_start"] ." to ". $period_data["date_end"] ."");
 
 
-									// description example:		Used 120 ZZ out of 50 ZZ included in plan
-									//				Excess usage of 70 ZZ charged at $5.00 per ZZ
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
-								}
-								else
-								{
+						// use current period
+						$period_usage_data["active"]			= "yes";
 
-									// description example:		Used 120 ZZ out of 50 ZZ included in plan
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-								}
+						$period_usage_data["services_customers_id"]	= $period_data["services_customers_id"];
+						$period_usage_data["id"]			= $period_data["id"];
 
-							break;
+						$period_usage_data["date_start"]		= $period_data["date_start"];
+						$period_usage_data["date_end"]			= $period_data["date_end"];
+
+					}
+
+
+					/*
+						Create usage items if there is a valid usage period
+					*/
+					if ($period_usage_data["active"])
+					{
+						if ($obj_service->data["typeid_string"] == "generic_with_usage"
+							|| $obj_service->data["typeid_string"] == "phone_single"
+							|| $obj_service->data["typeid_string"] == "phone_tollfree"
+							|| $obj_service->data["typeid_string"] == "phone_trunk"
+							|| $obj_service->data["typeid_string"] == "licenses"
+							|| $obj_service->data["typeid_string"] == "time"
+							|| $obj_service->data["typeid_string"] == "data_traffic")
+						{
 		
-
-							case "licenses":
-								/*
-									LICENSES
-
-									No data usage, but there is a quantity field for the customer's account to specify the
-									quantity of licenses that they have.
-								*/
-
-								// charge for any extra licenses
-								if ($period_data["quantity"] > $obj_service->data["included_units"])
-								{
-									// there is excess usage that we can bill for.
-									$licenses_excess = $period_data["quantity"] - $obj_service->data["included_units"];
+							// start the item
+							$invoice_item				= New invoice_items;
+						
+							$invoice_item->id_invoice		= $invoiceid;
+						
+							$invoice_item->type_invoice		= "ar";
+							$invoice_item->type_item		= "service";
+						
+							$itemdata = array();
 
 
-									// set item attributes
-									$itemdata["price"]	= $obj_service->data["price_extraunits"];
-									$itemdata["quantity"]	= $licenses_excess;
-									$itemdata["units"]	= $obj_service->data["units"];
+							// chart ID
+							$itemdata["chartid"]		= $obj_service->data["chartid"];
 
+							// description
+							$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 
-									// description example:		10 licences included
-									//				2 additional licenses charged at $24.00 each
-									$itemdata["description"] .= "\n". $obj_service->data["included_units"] ." ". $obj_service->data["units"] ." included";
-									$itemdata["description"] .= "\n$licenses_excess additional ". $obj_service->data["units"] ." charged at ". $obj_service->data["price_extraunits"] ." each.";
-								}
-								else
-								{
-									// description example:		10 licenses
-									$itemdata["description"] .= "\n". $period_data["quantity"] ." ". $period_data["units"] .".";
-								}
-
-
-							break;
-
+							// service ID
+							$itemdata["customid"]		= $obj_service->id;
 
 							
-							case "time":
-							case "data_traffic":
-								/*
-									TIME or DATA_TRAFFIC
+							// calculate the amount to charge
+							switch ($obj_service->data["typeid_string"])
+							{
+								case "generic_with_usage":
+									/*
+										GENERIC_WITH_USAGE
 
-									Simular to the generic usage type, but instead of units being a text field, units
-									is an ID to the service_units table.
-								*/
+										This service is to be used for any non-traffic, non-time accounting service that needs to track usage. Examples of this
+										could be counting the number of API requests, size of disk usage on a vhost, etc.
+									*/
 
-								/*
-									Fetch usage amount
-								*/
-								
-								$usage_obj					= New service_usage;
-								$usage_obj->services_customers_id		= $period_data["services_customers_id"];
-								$usage_obj->date_start				= $period_data["date_start"];
-								$usage_obj->date_end				= $period_data["date_end"];
-								
-								if ($usage_obj->prepare_load_servicedata())
-								{
-									$usage_obj->fetch_usagedata();
+											
 
-									if ($usage_obj->data["total_byunits"])
+									/*
+										Fetch usage amount
+									*/
+									
+									$usage_obj					= New service_usage;
+									$usage_obj->services_customers_id		= $period_usage_data["services_customers_id"];
+									$usage_obj->date_start				= $period_usage_data["date_start"];
+									$usage_obj->date_end				= $period_usage_data["date_end"];
+									
+									if ($usage_obj->prepare_load_servicedata())
 									{
-										$usage = $usage_obj->data["total_byunits"];
+										$usage_obj->fetch_usagedata();
+
+										if ($usage_obj->data["total_byunits"])
+										{
+											$usage = $usage_obj->data["total_byunits"];
+										}
+										else
+										{
+											$usage = $usage_obj->data["total"];
+										}
+									}
+
+									unset($usage_obj);
+
+
+									/*
+										Charge for the usage in units
+									*/
+
+									$unitname = $obj_service->data["units"];
+
+									if ($usage > $obj_service->data["included_units"])
+									{
+										// there is excess usage that we can bill for.
+										$usage_excess = $usage - $obj_service->data["included_units"];
+
+										// set item attributes
+										$itemdata["price"]	= $obj_service->data["price_extraunits"];
+										$itemdata["quantity"]	= $usage_excess;
+										$itemdata["units"]	= $unitname;
+
+
+										// description example:		Used 120 ZZ out of 50 ZZ included in plan
+										//				Excess usage of 70 ZZ charged at $5.00 per ZZ
+										$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
+										$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
 									}
 									else
 									{
-										$usage = $usage_obj->data["total"];
+
+										// description example:		Used 120 ZZ out of 50 ZZ included in plan
+										$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
 									}
-								}
-								
-								unset($usage_obj);
+
+								break;
+			
+
+								case "licenses":
+									/*
+										LICENSES
+
+										No data usage, but there is a quantity field for the customer's account to specify the
+										quantity of licenses that they have.
+									*/
+
+									// charge for any extra licenses
+									if ($period_data["quantity"] > $obj_service->data["included_units"])
+									{
+										// there is excess usage that we can bill for.
+										$licenses_excess = $period_data["quantity"] - $obj_service->data["included_units"];
+
+
+										// set item attributes
+										$itemdata["price"]	= $obj_service->data["price_extraunits"];
+										$itemdata["quantity"]	= $licenses_excess;
+										$itemdata["units"]	= $obj_service->data["units"];
+
+
+										// description example:		10 licences included
+										//				2 additional licenses charged at $24.00 each
+										$itemdata["description"] .= "\n". $obj_service->data["included_units"] ." ". $obj_service->data["units"] ." included";
+										$itemdata["description"] .= "\n$licenses_excess additional ". $obj_service->data["units"] ." charged at ". $obj_service->data["price_extraunits"] ." each.";
+									}
+									else
+									{
+										// description example:		10 licenses
+										$itemdata["description"] .= "\n". $period_data["quantity"] ." ". $period_data["units"] .".";
+									}
+
+
+								break;
+
 
 								
-								
+								case "time":
+								case "data_traffic":
+									/*
+										TIME or DATA_TRAFFIC
+
+										Simular to the generic usage type, but instead of units being a text field, units
+										is an ID to the service_units table.
+									*/
+
+									/*
+										Fetch usage amount
+									*/
+									
+									$usage_obj					= New service_usage;
+									$usage_obj->services_customers_id		= $period_usage_data["services_customers_id"];
+									$usage_obj->date_start				= $period_usage_data["date_start"];
+									$usage_obj->date_end				= $period_usage_data["date_end"];
+									
+									if ($usage_obj->prepare_load_servicedata())
+									{
+										$usage_obj->fetch_usagedata();
+
+										if ($usage_obj->data["total_byunits"])
+										{
+											$usage = $usage_obj->data["total_byunits"];
+										}
+										else
+										{
+											$usage = $usage_obj->data["total"];
+										}
+									}
+									
+									unset($usage_obj);
+
+									
+									
+
+									/*
+										Charge for the usage in units
+									*/
+
+									$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
+
+									if ($usage > $obj_service->data["included_units"])
+									{
+										// there is excess usage that we can bill for.
+										$usage_excess = $usage - $obj_service->data["included_units"];
+
+										// set item attributes
+										$itemdata["price"]	= $obj_service->data["price_extraunits"];
+										$itemdata["quantity"]	= $usage_excess;
+										$itemdata["units"]	= $unitname;
+
+										// description example:		Used 120 GB out of 50 GB included in plan
+										//				Excess usage of 70 GB charged at $5.00 per GB
+										$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
+										$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
+									}
+									else
+									{
+										// description example:		Used 10 out of 50 included units
+										$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
+									}
+
+								break;
+
 
 								/*
-									Charge for the usage in units
+									Update usage value for period - this summary value is visable on the service
+									history page and saves having to query lots of records to generate period totals.
 								*/
-
-								$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
-
-								if ($usage > $obj_service->data["included_units"])
-								{
-									// there is excess usage that we can bill for.
-									$usage_excess = $usage - $obj_service->data["included_units"];
-
-									// set item attributes
-									$itemdata["price"]	= $obj_service->data["price_extraunits"];
-									$itemdata["quantity"]	= $usage_excess;
-									$itemdata["units"]	= $unitname;
-
-									// description example:		Used 120 GB out of 50 GB included in plan
-									//				Excess usage of 70 GB charged at $5.00 per GB
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
-								}
-								else
-								{
-									// description example:		Used 10 out of 50 included units
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-								}
-
-							break;
+								$sql_obj		= New sql_query;
+								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
+								$sql_obj->execute();
 
 
-							/*
-								Update usage value for period - this summary value is visable on the service
-								history page and saves having to query lots of records to generate period totals.
-							*/
-							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
-							$sql_obj->execute();
-
-
-						} // end of processing usage			
+							} // end of processing usage			
 
 
 
-						// fetch all tax options for this service from the database
-						//
-						// note: if any options aren't suitable for the customer, the invoices
-						// code will handle this for us and unselect them.
-						//
-						$sql_tax_obj		= New sql_query;
-						$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $period_data["serviceid"] ."'";
-						$sql_tax_obj->execute();
+							// fetch all tax options for this service from the database
+							//
+							// note: if any options aren't suitable for the customer, the invoices
+							// code will handle this for us and unselect them.
+							//
+							$sql_tax_obj		= New sql_query;
+							$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $period_data["serviceid"] ."'";
+							$sql_tax_obj->execute();
 
-						if ($sql_tax_obj->num_rows())
-						{
-							$sql_tax_obj->fetch_array();
-
-							foreach ($sql_tax_obj->data as $data_tax)
+							if ($sql_tax_obj->num_rows())
 							{
-								$itemdata["tax_". $data_tax["taxid"] ] = "on";
-							}
+								$sql_tax_obj->fetch_array();
 
-						} // end of loop through taxes
+								foreach ($sql_tax_obj->data as $data_tax)
+								{
+									$itemdata["tax_". $data_tax["taxid"] ] = "on";
+								}
+
+							} // end of loop through taxes
 
 
-						// create the item
-						$invoice_item->prepare_data($itemdata);
-						$invoice_item->action_update();
+							// create the item
+							$invoice_item->prepare_data($itemdata);
+							$invoice_item->action_update();
 
-						unset($invoice_item);
+							unset($invoice_item);
+
+						} // end if service is usage type
 						
-					} // end if service is usage type
+					} // end if service has a valid data period
 
 
 
@@ -987,10 +1131,20 @@ function service_invoices_generate($customerid = NULL)
 						Set invoice ID for period - this prevents the period from being added to
 						any other invoices and allows users to see which invoice it was billed under
 					*/
+
+					// set for plan period
 					$sql_obj		= New sql_query;
 					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "' LIMIT 1";
 					$sql_obj->execute();
 
+					// set for usage period, if it differs
+					if ($period_usage_data["id"] != $period_data["id"])
+					{
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "UPDATE services_customers_periods SET usage_invoiceid='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
+						$sql_obj->execute();
+					}
+				
 
 				} // end of processing periods
 
