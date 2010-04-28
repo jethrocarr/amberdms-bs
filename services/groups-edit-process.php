@@ -28,6 +28,8 @@ if (user_permissions_get('services_write'))
 	
 	$obj_service_group->data["group_name"]			= @security_form_input_predefined("any", "group_name", 1, "");
 	$obj_service_group->data["group_description"]		= @security_form_input_predefined("any", "group_description", 0, "");
+	$obj_service_group->data["id_parent"]		= @security_form_input_predefined("int", "id_parent", 0, "");
+	
 
 
 

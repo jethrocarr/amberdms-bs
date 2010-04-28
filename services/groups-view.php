@@ -91,6 +91,12 @@ class page_output
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]		= "id_parent";
+		$structure["type"]		= "input";
+		$structure = form_helper_prepare_dropdownfromdb("id_parent", "SELECT id, group_name as label, id_parent FROM service_groups");
+		//echo "<pre>".print_r($structure, true)."<pre>";
+		$this->obj_form->add_input($structure); 
 
 		// member services
 		$structure = NULL;
@@ -153,7 +159,7 @@ class page_output
 					
 		
 		// define subforms
-		$this->obj_form->subforms["service_group_view"]		= array("group_name", "group_description");
+		$this->obj_form->subforms["service_group_view"]		= array("group_name", "group_description", "id_parent");
 		$this->obj_form->subforms["service_group_members"]	= array("group_members");
 		$this->obj_form->subforms["hidden"]			= array("id_service_group");
 

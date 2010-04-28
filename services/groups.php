@@ -43,15 +43,27 @@ class page_output
 
 		// defaults
 		$this->obj_table->columns		= array("group_name", "group_description");
-		$this->obj_table->columns_order		= array("group_name");
+		$this->obj_table->columns_order		= array("id_parent", "group_name");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("service_groups");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id_parent", "");
 
 		// fetch all the service group information
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
+		
+		$sorted_data = array();
+		foreach($this->obj_table->data as & $data_row)
+		{
+			$sorted_data['pid_'.$data_row['id_parent']][] = $data_row;
+		}
+		
+		
+		//function
+		
+		echo "<pre>".print_r( $sorted_data, true )."</pre>";
 
 	}
 
