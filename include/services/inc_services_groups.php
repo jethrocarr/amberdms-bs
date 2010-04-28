@@ -228,7 +228,8 @@ class service_groups
 
 		$sql_obj->string	= "UPDATE `service_groups` SET "
 						."group_name='". $this->data["group_name"] ."', "
-						."group_description='". $this->data["group_description"] ."' "
+						."group_description='". $this->data["group_description"] ."', "
+						."id_parent='". $this->data["id_parent"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
