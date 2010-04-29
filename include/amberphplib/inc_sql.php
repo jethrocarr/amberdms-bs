@@ -9,7 +9,7 @@
 
 class sql_query
 {
-	var $structure;		// structure avaliable to be used to build SQL queries
+	var $structure;		// structure available to be used to build SQL queries
 
 	/*
 		Structure:
@@ -25,10 +25,216 @@ class sql_query
 	
 	var $string;		// SQL statement to use
 
-	var $query_result;	// query result
-	
 	var $data_num_rows;	// number of rows returned
 	var $data;		// associate array of data returned
+
+
+	var $db_type;		// (currently unused, in future this will hold the type of database)
+	var $db_link;		// database connection/session
+	var $db_resource;	// used to track DB calls, eg resource value between query and num rows
+
+
+
+	/*
+		Constructor
+	*/
+	function sql_query()
+	{
+		// fetch the default database session - this avoids having to carry one object around at all times
+		// yet still permits connecting to alternative databases
+
+		$this->db_link	= $GLOBALS["cache"]["database_default_link"];
+		$this->db_type	= $GLOBALS["cache"]["database_default_type"];
+	}
+
+
+
+
+	/*
+		DATABASE SESSION HANDLING
+	*/
+		
+
+
+	/*
+		session_init
+
+		Initates a connection to a SQL database - this is only needed for the first time a session
+
+		Fields
+		db_type		Type of database (currently only MySQL supported)
+		db_hostname	(optional) Hostname of the DB server to connect to, if unspecified assumes local socket.
+		db_name		Database to connect to
+		db_username	System Username
+		db_password	(optional) System Password
+
+		Returns
+		-1		Unsupported database type (either due to system or amberphplib)
+		0		Failure to connect, probably invalid auth details.
+		1		Successful connection.
+	*/
+
+	function session_init($db_type, $db_hostname, $db_name, $db_username, $db_password)
+	{
+		log_write("debug", "sql_query", "Executing session_init($db_type, $db_hostname, $db_name, $db_username, $db_password)");
+
+
+		// warn about replacing existing session
+		if ($this->db_link)
+		{
+			log_write("warning", "sql_query", "Replacing existing SQL session with new DB connection for object.");
+		}
+
+
+		// connect to database server
+		switch ($db_type)
+		{
+			case "mysql":
+
+				// authenticate
+				$this->db_link = mysql_connect($db_hostname, $db_username, $db_password, TRUE);
+
+				if (!$this->db_link)
+				{
+					log_write("error", "sql_query", "Failure to connect to SQL database $db_name on server $db_hostname. Verify correct authentication details.");
+					log_write("error", "sql_query", "SQL Database Error: ". mysql_error());
+
+					return 0;
+				}
+				else
+				{
+					log_write("debug", "sql_query", "Successful authentication against SQL database $db_name on server $db_hostname");
+				}
+		
+
+				// connect to database
+				if (!$this->session_select_db($db_name))
+				{
+					return 0;
+				}
+
+			break;
+
+			default:
+				log_write("error", "sql_query", "Sorry, the requested database type ". $db_type ." is not supported by Amberphplib");
+				return -1;
+			break;
+		}
+
+
+		// if there's no default session, make this it.
+		if (!isset($GLOBALS["cache"]["database_default_link"]))
+		{
+			log_write("debug", "sql_query", "Setting default database session for all queries to $db_name on $db_hostname");
+
+			$GLOBALS["cache"]["database_default_link"]	= $this->db_link;
+			$GLOBALS["cache"]["database_default_type"]	= $this->db_type;
+		}
+
+
+		log_write("debug", "sql_query", "New session ". $this->db_link ."");
+
+		// success
+		return 1;
+
+	} // end of session_init
+
+
+
+	/*
+		session_select_db
+
+		If a database session is active, you can change to alternate database on the same DB server
+		(provided that your user/permissions are the same) without having to re-authenticate).
+
+		(Note: this function may not be supported for all database types.)
+
+		Fields
+		db_name		Name of the database
+
+		Returns
+		0		Failure to connect
+		1		Success
+	*/
+	function session_select_db($db_name)
+	{
+		log_write("debug", "sql_query", "Executing session_select_db($db_name)");
+
+
+		// change database
+		switch ($this->db_type)
+		{
+			case "mysql":
+
+				$return = mysql_select_db($db_name, $this->db_link);
+
+			break;
+
+
+			default:
+				log_write("error", "sql_query", "The select database type ". $this->db_type ." does not support changing databases on an active session");
+
+				return 0;
+			break;
+		}
+
+
+		// confirm
+		if ($return)
+		{
+			log_write("debug", "sql_query", "Successfully connected to DB $db_name");
+
+			return 1;
+		}
+		else
+		{
+			log_write("error", "sql_query", "Unable to change to new database");
+
+			return 1;
+		}
+
+	} // end of session_select_db
+
+
+
+
+	/*
+		session_terminate
+
+		Disconnects from the active database connection.
+
+		Returns
+		0		Unexpected failure
+		1		Successful disconnect
+
+		TODO: can we make this into a deconstructor when we move to PHP v5?
+	*/
+	function session_terminate()
+	{
+		log_write("debug", "sql_query", "Executing session_terminate()");
+
+		if ($this->db_link)
+		{
+			switch ($this->db_type)
+			{
+				case "mysql":
+
+					return mysql_close($this->db_link);
+
+				break;
+			}
+
+		}
+		else
+		{
+			log_write("warning", "sql_query", "Unable to terminate connection to database as no active connection selected");
+		}
+
+		return 0;
+
+	} // end of session_terminate
+
+
 
 
 
@@ -65,7 +271,7 @@ class sql_query
 		// check query length for debug dispaly handling
 		if (strlen($this->string) < 1000)
 		{
-			log_write("sql", "sql_query", $trans . $this->string);
+			log_write("sql", "sql_query", $this->db_link ." ". $trans . $this->string);
 		}
 		else
 		{
@@ -75,9 +281,9 @@ class sql_query
 
 
 		// execute query
-		if (!$this->query_result = mysql_query($this->string))
+		if (!$this->db_resource = mysql_query($this->string, $this->db_link))
 		{
-			log_write("error", "sql_query", $trans . "Problem executing SQL query - ". mysql_error());
+			log_write("error", "sql_query", $trans . "Problem executing SQL query - ". mysql_error($this->db_link));
 			return 0;
 		}
 		else
@@ -100,7 +306,7 @@ class sql_query
 	{
 		log_debug("sql_query", "Executing fetch_insertid()");
 
-		$id = mysql_insert_id();
+		$id = mysql_insert_id($this->db_link);
 
 		if ($id)
 		{
@@ -128,9 +334,10 @@ class sql_query
 		else
 		{
 			// fetch the number of rows
-			if ($this->query_result)
+			if ($this->db_resource)
 			{
-				$this->data_num_rows = mysql_num_rows($this->query_result);
+				$this->data_num_rows = mysql_num_rows($this->db_resource);
+
 				return $this->data_num_rows;
 			}
 			else
@@ -150,14 +357,16 @@ class sql_query
 		Return codes:
 		0	failure
 		1	success
+
+		TODO: this function doesn't confirm to Amberphplib API standards, should be load_data() ?
 	*/
 	function fetch_array()
 	{
 		log_debug("sql_query", "Executing fetch_array()");
 		
-		if ($this->query_result)
+		if ($this->db_resource)
 		{
-			while ($mysql_data = mysql_fetch_array($this->query_result))
+			while ($mysql_data = mysql_fetch_array($this->db_resource))
 			{
 				$this->data[] = $mysql_data;
 			}
@@ -255,7 +464,7 @@ class sql_query
 		{
 			log_write("sql", "sql_query", "START TRANSACTION");
 
-			if (mysql_query("START TRANSACTION"))
+			if (mysql_query("START TRANSACTION", $this->db_link))
 			{
 				// success
 
@@ -293,7 +502,7 @@ class sql_query
 
 				log_write("sql", "sql_query", "COMMIT");
 
-				if (mysql_query("COMMIT"))
+				if (mysql_query("COMMIT", $this->db_link))
 				{
 					// success
 					return 1;
@@ -338,7 +547,7 @@ class sql_query
 
 				log_write("sql", "sql_query", "ROLLBACK");
 
-				if (mysql_query("ROLLBACK"))
+				if (mysql_query("ROLLBACK", $this->db_link))
 				{
 					// success
 					return 1;
