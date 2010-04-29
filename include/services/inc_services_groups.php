@@ -284,21 +284,31 @@ class service_groups
 		log_debug("service_groups", "Executing action_delete()");
 
 
+				
+		$id_parent = sql_get_singlevalue("SELECT id_parent AS value FROM service_groups WHERE id='{$this->id}' LIMIT 1");
+		$child_groups = sql_get_singlecol("SELECT id AS col FROM service_groups WHERE id_parent='{$this->id}'");
+		
+		
+		//exit("<pre>".print_r($child_groups,true)."</pre>");
 		/*
 			Start Transaction
 		*/
 
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
-
-
+		
 		/*
 			Delete service group
 		*/
 			
 		$sql_obj->string	= "DELETE FROM service_groups WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
-
+	
+		$child_count = count($child_groups);
+		if($child_count > 0) {
+			$sql_obj->string	= "UPDATE `service_groups` SET `id_parent` = '{$id_parent}' WHERE `id` IN('".implode("', '", $child_groups)."') LIMIT {$child_count};";
+			$sql_obj->execute();		
+		}
 
 
 		/*
@@ -314,7 +324,7 @@ class service_groups
 			return 0;
 		}
 		else
-		{
+		{			
 			$sql_obj->trans_commit();
 
 			log_write("notification", "service_groups", "Service group has been successfully deleted.");
