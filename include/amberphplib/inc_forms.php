@@ -314,6 +314,14 @@ class form_input
 		{
 			print "<tr class=\"form_error\">";
 		}
+		elseif ($this->structure[$fieldname]["options"]["css_row_class"])
+		{
+			print "<tr class=\"". $this->structure[$fieldname]["options"]["css_row_class"] ."\">";
+		}
+		elseif ($this->structure[$fieldname]["options"]["css_row_id"])
+		{
+			print "<tr id=\"". $this->structure[$fieldname]["options"]["css_row_id"] ."\">";
+		}
 		else
 		{
 			print "<tr id=\"$fieldname\">";
@@ -451,6 +459,9 @@ class form_input
 										^ - OBSOLETE: this option should be replaced by autoselect option		
 						["autoselect"]			Enabling this option will cause a radio or dropdown with just a single
 										entry to auto-select the single entry.
+						["css_row_class"]		Set the CSS class to a custom option for the rendered table row.
+						["css_row_id"]			Set the CSS id to a custom option for the rendered table row.
+											(note: by default, table rows have their ID set to the name of the fieldname)
 		
 			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();		Associate array used for labeling the values in radio or dropdown type fields
