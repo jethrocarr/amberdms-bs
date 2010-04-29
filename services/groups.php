@@ -54,16 +54,47 @@ class page_output
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
 		
+		// sort the data by parent ID and index by id, add a prefix to make it associative
 		$sorted_data = array();
-		foreach($this->obj_table->data as & $data_row)
-		{
-			$sorted_data['pid_'.$data_row['id_parent']][] = $data_row;
+		foreach($this->obj_table->data as $data_row)
+		{	
+			$data_row['level'] = 0;
+			$sorted_data['pid_'.$data_row['id_parent']]['id_'.$data_row['id']] = $data_row;
 		}
 		
+		$regenerated_list = array();
+		// add the items with no parent  and unset the parent group
+		$regenerated_list = $sorted_data['pid_0'];
+		unset($sorted_data['pid_0']);
 		
-		//function
-		
-		echo "<pre>".print_r( $sorted_data, true )."</pre>";
+		// loop while there is still sorted data remaining
+		while(count($sorted_data) > 0)
+		{
+			// loop through the sorted data
+			foreach($sorted_data as $sorted_key => $sorted_rows) 
+			{
+				// obtain the parent ID from the key
+				$parent_id = (int)str_replace("pid_", '', $sorted_key);
+				if(isset($regenerated_list['id_'.$parent_id])) 
+				{	
+					// generate the target parent key, increment the level and modify the name of the items
+					$parent_key = "id_$parent_id";
+					$parent_level = $regenerated_list['id_'.$parent_id]['level'];
+					$set_level = $parent_level + 1;
+					foreach($sorted_rows as $row_key => $row) 
+					{
+						$sorted_rows[$row_key]['level'] = $set_level;
+						$sorted_rows[$row_key]['group_name'] = str_repeat("-", $set_level)." ".$row['group_name'];
+					}
+					$regenerated_list = array_insert_after($regenerated_list, $parent_key, $sorted_rows);
+					// unset the sorted data after adding it to the new list.
+					unset($sorted_data[$sorted_key]);
+				}			
+			}
+		}
+		$this->obj_table->data = array_values($regenerated_list);
+		//echo "<pre>".print_r( $sorted_data, true ).//"</pre>";
+		//echo "<pre>".print_r( $regenerated_list, true )."</pre>";
 
 	}
 

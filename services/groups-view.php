@@ -90,12 +90,62 @@ class page_output
 		$structure["fieldname"]		= "group_description";
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
+		
+		
+		$sql_obj	= New sql_query;
+		$sql_obj->string	= "SELECT id, group_name as label, id_parent FROM service_groups";
+		$sql_obj->execute();		
+		$sql_obj->fetch_array();
+		
+		
+		$service_group_data = $sql_obj->data;
+		
+		$sorted_data = array();
+		$reindexed_data = array();
+		foreach($service_group_data as $data_row)
+		{	
+			$sorted_data['pid_'.$data_row['id_parent']]['id_'.$data_row['id']] = $data_row;
+			$reindexed_data['id_'.$data_row['id']] = $data_row;
+		}
+		
+		$target_ids = array($this->obj_service_group->id);
+		$at_endpoint = false;
+		// frankenloop, eliminates the selected item and all its children from the list.
+		while(count($target_ids) > 0)
+		{
+			$new_target_ids = array();
+			foreach($target_ids as $target_id)
+			{
+				unset($reindexed_data["id_$target_id"]);				
+				if(isset($sorted_data["pid_$target_id"]))
+				{
+					foreach($sorted_data["pid_$target_id"] as $sorted_data_set)
+					{
+						$new_target_ids[] = $sorted_data_set['id'];
+					}
+					unset($sorted_data["pid_$target_id"]);
+				}
+			}
+			$target_ids = $new_target_ids;
+		}
 
+		$keys_to_delete = array();
+		$value_array = array();
+
+		
+		
 		$structure = NULL;
+		$structure['values'] = array();
+		$structure['translations'] = array();
+		foreach($reindexed_data as $reindexed_row) 
+		{
+			$value_array[] = $reindexed_row['id'];
+			$structure['values'][] = $reindexed_row['id'];
+			$structure['translations'][$reindexed_row['id']] = $reindexed_row['label'];
+		}
+		
 		$structure["fieldname"]		= "id_parent";
-		$structure["type"]		= "input";
-		$structure = form_helper_prepare_dropdownfromdb("id_parent", "SELECT id, group_name as label, id_parent FROM service_groups");
-		//echo "<pre>".print_r($structure, true)."<pre>";
+		$structure["type"] = "dropdown";
 		$this->obj_form->add_input($structure); 
 
 		// member services
