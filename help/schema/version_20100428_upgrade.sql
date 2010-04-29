@@ -17,7 +17,7 @@ TRUNCATE TABLE `users_sessions`;
 
 UPDATE menu SET link='timekeeping/timereg.php' WHERE link='timekeeping/timekeeping.php' LIMIT 1;
 
-ALTER TABLE `services_customers_periods` ADD `usage_date_billed` DATE NOT NULL AFTER `usage_summary`,
+ALTER TABLE `services_customers_periods` ADD `usage_date_billed` DATE NOT NULL AFTER `usage_summary`;
 ALTER TABLE `services_customers_periods` ADD `usage_invoiceid` INT NOT NULL AFTER `usage_date_billed`;
 
 INSERT INTO `billing_modes` (`id`, `name`, `description`) VALUES (NULL, 'monthtelco', 'Telco-style billing - charge for a service at the start of the month and charge for the previous month''s usage.'), (NULL, 'periodtelco', 'Telco-style billing - charge for a service at the start of the period and charge for the previous period''s usage.');
