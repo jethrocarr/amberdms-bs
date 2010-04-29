@@ -211,6 +211,26 @@ class page_output
 			$this->obj_form->subforms["user_options"][]	= "option_debug";
 			$this->obj_form->subforms["user_options"][]	= "option_concurrent_logins";
 		}
+		
+		//translation options
+		if (user_permissions_get("translation_edit") || user_permissions_get("translation_add_new"))
+		{
+			$structure = NULL;
+			$structure["fieldname"]		= "option_translation";
+			$structure["type"]		= "radio";
+			$structure["defaultvalue"]	= $options["translation"];
+			if (user_permissions_get("translation_edit"))
+			{
+				$structure["values"] = array("off", "show_all_translatable_fields", "show_only_non-translated_fields");
+			}
+			else
+			{
+				$structure["values"] = array("off", "show_only_non-translated_fields");
+			}
+			$this->obj_form->add_input($structure);
+				
+			$this->obj_form->subforms["user_options"][]	= "option_translation";
+		}
 
 
 		// remaining subforms		

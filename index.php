@@ -213,6 +213,12 @@ if (isset($page_obj->requires["javascript"]))
 			if (user_online())
 			{
 				print "<p id=\"header_logout_text\">logged on as ". $_SESSION["user"]["name"] ." | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></p>";
+				
+				//if in translation mode, print short explanation and button to form
+				if (user_permissions_get("translation_edit") || user_permissions_get("translation_add_new"))
+				{
+					print "<p> <strong><a href=\"popup.php?page=translate.php\">Open translation form</a></strong> </p>";
+				}
 			}
 
 			?>

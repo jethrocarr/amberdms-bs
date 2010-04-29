@@ -33,6 +33,7 @@ if (user_online())
 	$data["option_theme"]			= @security_form_input_predefined("any", "option_theme", 0, "");
 	$data["option_debug"]			= @security_form_input_predefined("any", "option_debug", 0, "");
 	$data["option_concurrent_logins"]	= @security_form_input_predefined("any", "option_concurrent_logins", 0, "");
+	$data["option_translation"]		= @security_form_input_predefined("any", "option_translation", 0, "");
 
 
 
@@ -140,6 +141,13 @@ if (user_online())
 
 			// concurrent logins
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'concurrent_logins', '". $data["option_concurrent_logins"] ."')";
+			$sql_obj->execute();
+		}
+		
+		//translate options
+		if(user_permissions_get("translation_edit") || user_permissions_get("translation_add_new"))
+		{
+			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'translation', '". $data["option_translation"] ."')";
 			$sql_obj->execute();
 		}
 
