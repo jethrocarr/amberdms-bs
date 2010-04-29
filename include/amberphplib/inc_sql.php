@@ -190,7 +190,7 @@ class sql_query
 		{
 			log_write("error", "sql_query", "Unable to change to new database");
 
-			return 1;
+			return 0;
 		}
 
 	} // end of session_select_db
