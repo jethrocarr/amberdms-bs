@@ -99,7 +99,45 @@ function config_generate_uniqueid($config_name, $check_sql)
 
 
 
+/* ARRAY FUNCTIONS */
 
+
+/*;
+	array_insert_after
+	
+	Inserts an array into another array after a certain key
+	http://stackoverflow.com/questions/1783089/array-splice-for-associative-arrays/1783125#1783125
+	Values
+	input	array
+	key		key you want to splice 
+	array	Filename or path
+
+	Returns
+	array		file extension (lowercase)
+*/
+function array_insert_after($input, $key, $segment)
+{
+//	# Insert at offset 2
+	$offset = 0;
+	
+	foreach($input as $array_key => $values)
+	{
+		$offset++;
+		if($key == $array_key) 
+		{
+			break;
+		}
+	} 
+	log_debug("misc", "Inserting data into array after $key, offset $offset");
+	
+	
+	$output = array_slice($input, 0, $offset, true) +
+	$segment +
+	array_slice($input, $offset, NULL, true);
+	
+	
+	return $output;
+}
 
 
 /* FORMATTING/DISPLAY FUNCTIONS */
