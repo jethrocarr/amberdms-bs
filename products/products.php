@@ -40,6 +40,7 @@ class page_output
 		$this->obj_table->add_column("standard", "code_product", "");
 		$this->obj_table->add_column("standard", "name_product", "");
 		$this->obj_table->add_column("standard", "account_sales", "CONCAT_WS(' -- ',account_charts.code_chart,account_charts.description)");
+		$this->obj_table->add_column("standard", "id_product_group", "product_groups.group_name");
 		$this->obj_table->add_column("price", "price_cost", "");
 		$this->obj_table->add_column("price", "price_sale", "");
 		$this->obj_table->add_column("percentage", "discount", "");
@@ -58,6 +59,7 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_settable("products");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "products.id");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_charts ON account_charts.id = products.account_sales");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN product_groups ON product_groups.id = products.id_product_group");
 
 		// acceptable filter options
 		$structure = NULL;

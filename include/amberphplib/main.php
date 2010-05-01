@@ -141,6 +141,31 @@ log_debug("start", "Framework Load Complete.");
 
 
 /*
+	Load Application Configuration
+
+	Some configuration is done locally (such as DB auth details), however most configuration is stored
+	inside the database to provide easier management, display and validation of configuration.
+*/
+
+log_debug("start", "Loading configuration from database");
+
+$sql_config_obj			= New sql_query;
+$sql_config_obj->string		= "SELECT name, value FROM config ORDER BY name";
+$sql_config_obj->execute();
+$sql_config_obj->fetch_array();
+
+foreach ($sql_config_obj->data as $data_config)
+{
+	$GLOBALS["config"][ $data_config["name"] ] = $data_config["value"];
+}
+
+unset($sql_config_obj);
+
+
+
+
+
+/*
 	Configure Local Timezone
 
 	Decent timezone handling was only implemented with PHP 5.2.0, so the ability to select the user's localtime zone
