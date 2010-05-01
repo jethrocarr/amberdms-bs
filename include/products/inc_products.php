@@ -289,6 +289,7 @@ class product
 						."name_product='". $this->data["name_product"] ."', "
 						."units='". $this->data["units"] ."', "
 						."code_product='". $this->data["code_product"] ."', "
+						."id_product_group='". $this->data["id_product_group"] ."', "
 						."account_sales='". $this->data["account_sales"] ."', "
 						."account_purchase='". $this->data["account_purchase"] ."', "
 						."date_start='". $this->data["date_start"] ."', "

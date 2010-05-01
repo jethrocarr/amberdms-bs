@@ -49,6 +49,10 @@ class products_form_details
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("id_product_group", "SELECT id, group_name as label FROM product_groups");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"] 		= "units";
 		$structure["type"]			= "input";
@@ -89,7 +93,7 @@ class products_form_details
 		$structure["type"]		= "date";
 		$this->obj_form->add_input($structure);
 
-		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
+		$this->obj_form->subforms["product_view"]	= array("code_product", "name_product", "id_product_group", "units", "account_sales", "account_purchase", "date_start", "date_end", "date_current", "details");
 
 		
 		// pricing			
