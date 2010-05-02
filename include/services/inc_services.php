@@ -247,6 +247,10 @@ class service
 
 			if ($obj_component_sql->data[0]["id_bundle_component"])
 			{
+				// set bundle ID
+				$this->data["id_bundle_component"] = $obj_component_sql->data[0]["id_bundle_component"];
+
+
 				// load options for the bundle item (if any)
 				$obj_sql		= New sql_query;
 				$obj_sql->string	= "SELECT option_name, option_value FROM `services_options` WHERE option_type='bundle' AND option_type_id='". $obj_component_sql->data[0]["id_bundle_component"] ."'";
