@@ -1295,30 +1295,52 @@ function service_invoices_generate($customerid = NULL)
 								/*
 									Call Charges
 
-									TODO: Implement Call Charges
+									Use CDR usage billing module to handle call charges.
+
 								*/
-/*
-								$usage_obj					= New cdr_usage;
-								$usage_obj->id_service_customer		= $period_usage_data["id_service_customer"];
+
+								$usage_obj					= New service_usage_cdr;
+								$usage_obj->id_service_customer			= $period_usage_data["id_service_customer"];
 								$usage_obj->date_start				= $period_usage_data["date_start"];
 								$usage_obj->date_end				= $period_usage_data["date_end"];
 								
-								if ($usage_obj->prepare_load_servicedata())
+								if ($usage_obj->load_data_service())
 								{
-									$usage_obj->fetch_usagedata();
+									$usage_obj->fetch_usage_calls();
 
-									if ($usage_obj->data["total_byunits"])
+
+									foreach ($usage_obj->data_ddi as $ddi)
 									{
-										$usage = $usage_obj->data["total_byunits"];
+										// start service item
+										$invoice_item				= New invoice_items;
+									
+										$invoice_item->id_invoice		= $invoiceid;
+										
+										$invoice_item->type_invoice		= "ar";
+										$invoice_item->type_item		= "service";
+									
+										$itemdata = array();
+
+										$itemdata["chartid"]			= $obj_service->data["chartid"];
+										$itemdata["customid"]			= $obj_service->id;
+
+										// determine excess usage charges
+										$itemdata["price"]			= $usage_obj->data[ $ddi ]["charges"];
+										$itemdata["quantity"]			= "1";
+										$itemdata["units"]			= "";
+										$itemdata["description"]		= "Call charges for $ddi from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+
+
+										// add trunk usage item
+										$invoice_item->prepare_data($itemdata);
+										$invoice_item->action_update();
+
+										unset($invoice_item);
 									}
-									else
-									{
-										$usage = $usage_obj->data["total"];
-									}
+
 								}
 								
 								unset($usage_obj);
-*/
 
 							break;
 

@@ -92,10 +92,7 @@ if (user_permissions_get('customers_write'))
 		// special migration stuff
 		if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE'"))
 		{
-			// TODO: complete special migration features
-
 			$data["migration_previous_usage_month"]		= @security_form_input_predefined("any", "migration_previous_usage_month", 0, "");
-			
 		}
 	}
 
@@ -166,8 +163,17 @@ if (user_permissions_get('customers_write'))
 				Add new service
 			*/
 
+			// set migration flags (if any)
+			$migration_options = array();
+
+			if ($data["migration_previous_usage_month"])
+			{
+				$migration_options	= array("previous_usage_month");
+			}
+
+
 			// assign service to customer
-			$obj_customer->service_add($data["date_period_first"]);
+			$obj_customer->service_add($data["date_period_first"], $migration_options);
 
 			// update service item option information
 			$obj_customer->obj_service->option_type			= "customer";

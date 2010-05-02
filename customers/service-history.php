@@ -74,7 +74,7 @@ class page_output
 		// verify that customer exists
 		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->customerid .") does not exist - possibly the customer has been deleted.");
+			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
 
@@ -117,8 +117,12 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_settable("services_customers_periods");
 		
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_ar ON account_ar.id = services_customers_periods.invoiceid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN services_customers ON services_customers.id = services_customers_periods.id_service_customer");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN services ON services.id = services_customers.serviceid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN service_types ON service_types.id = services.typeid");
 		
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "services_customers_periods.id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("service_type", "service_types.name");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_total", "account_ar.amount_total");
 		$this->obj_table->sql_obj->prepare_sql_addfield("amount_paid", "account_ar.amount_paid");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("id_service_customer = '". $this->obj_customer->id_service_customer ."'");
@@ -164,20 +168,31 @@ class page_output
 					}
 				}
 
-				// if the usage is 0, just blank it, as it might not be a usage service
-				if ($this->obj_table->data[$i]["usage_summary"] == 0)
+				// provide service-type specific options for displaying and querying usage.
+				switch ($this->obj_table->data[$i]["service_type"])
 				{
-					$this->obj_table->data[$i]["usage_summary"] = "";
-				}
-				else
-				{
-					// if this is the most recent period, then add a check link next to the usage amount
-					if ($i == ($this->obj_table->data_num_rows - 1))
-					{
-						$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">(get latest)</a>";
-					}
+					case "phone_trunk":
+					case "phone_tollfree":
+					case "phone_single";
 
-				}
+						// display a "view call records" link which looks up the historical
+						// call data to fetch pricing
+
+						$this->obj_table->data[$i]["usage_summary"] = "<a href=\"index.php?page=customers/service-history-cdr.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."&id_service_period=". $this->obj_table->data[$i]["id"] ."\">View Call Records</a>";
+
+					break;
+
+
+					case "data_traffic":
+					case "generic_with_usage":
+
+						// if this is the most recent period, then add a check link next to the usage amount
+						if ($i == ($this->obj_table->data_num_rows - 1))
+						{
+							$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">(get latest)</a>";
+						}
+					break;
+				} // end of service type
 
 			}
 			
@@ -186,8 +201,8 @@ class page_output
 			$this->obj_table->render_table_html();
 			
 			// display CSV/PDF download link
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history.php&customerid=". $this->customerid ."&serviceid=". $this->id_service_customer ."\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Export as PDF</a></p>";
 		}
 	}
 

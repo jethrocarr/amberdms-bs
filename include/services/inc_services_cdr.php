@@ -146,6 +146,9 @@ class cdr_rate_table
 			$this->data["rate_table_name"]		= $sql_obj->data[0]["rate_table_name"];
 			$this->data["rate_table_description"]	= $sql_obj->data[0]["rate_table_description"];
 
+			// fetch strings
+			$this->data["id_usage_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM cdr_rate_usage_modes WHERE id='". $this->data["id_usage_mode"] ."' LIMIT 1");
+
 			return 1;
 		}
 
@@ -188,10 +191,13 @@ class cdr_rate_table
 
 
 		/*
-			Create Default Rate Item
+			Create DEFAULT & LOCAL rate items.
 		*/
 
 		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix) VALUES ('". $this->id ."', 'DEFAULT')";
+		$sql_obj->execute();
+
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix) VALUES ('". $this->id ."', 'LOCAL')";
 		$sql_obj->execute();
 
 
@@ -689,9 +695,16 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 		if ($this->data_rate["rate_prefix"] == "DEFAULT")
 		{
-			log_write("error", "cdr_rate_table_rates", "Unable to delete the DEFAULT prefix, this is required incase calls don't match any other prefix");
+			log_write("error", "cdr_rate_table_rates", "Unable to delete the DEFAULT prefix, this is required incase calls don't match any other prefix.");
 			return 0;
 		}
+
+		if ($this->data_rate["rate_prefix"] == "LOCAL")
+		{
+			log_write("error", "cdr_rate_table_rates", "Unable to delete the LOCAL prefix, this prefix is required in order to bill for local calling.");
+			return 0;
+		}
+
 
 		$sql_obj		= New sql_query;
 		$sql_obj->string	= "DELETE FROM `cdr_rate_tables_values` WHERE id='". $this->id_rate ."' LIMIT 1";
@@ -708,6 +721,168 @@ class cdr_rate_table_rates extends cdr_rate_table
 		}
 
 	} // end of action_rate_delete
+
+
+
+
+	/*
+		calculate_prefix
+
+		Use the rates loaded in $this->data to determine what the prefix of the supplied number is
+
+		Fields
+		num		Phone Number
+
+
+		Returns
+		-1		no prefix found
+		#		prefix
+	*/
+
+	function calculate_prefix( $num )
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing calculate_prefix($num)");
+
+
+		/*
+			Loop though knocking off one number at a time till we match a prefix value.
+		*/
+
+		while ( $num )
+		{
+			if ($this->data["rates"][ $num ]["id_rate"])
+			{
+				log_write("debug", "cdr_rate_table_rates", "Returning prefix $num");
+
+				return $num;
+			}
+
+			$num = substr($num, 0, -1);
+		}
+
+
+		log_write("debug", "cdr_rate_table_rates", "Unable to match to any known prefix, returning DEFAULT prefix");
+
+		return 'DEFAULT';
+
+
+	} // calculate_prefix
+
+
+
+	/*
+		calculate_charges
+
+		Uses the rates loaded in $this->data to determine the cost of a call.
+
+		Fields
+		seconds		Number of BILLALBE seconds
+		src		Source phone number
+		dst		Destination phone number
+
+		Returns
+		-1		Failure
+		#		Price (float, no formatting, tax-exclusive)
+	*/
+
+	function calculate_charges($seconds, $src, $dst)
+	{
+		log_write("debug", "cdr_rate_table_rates", "Executing calculate_charges($seconds, $src, $dst)");
+
+
+		/*
+			The logic here is very important, this function determines how much to charge calls for, any
+			mistakes could result in under or overcharges to customers.
+
+			First, determine the prefix to charge with:
+			* Use calculate_prefix to fetch the ID of the prefix that the src number belongs to
+			* Do the same for the dest number.
+			* Is it a local call (ie: same prefix?) If so, fetch LOCAL rate
+			* Unknown? Then fetch the DEFAULT rate.
+			* Otherwise, use the rate that was supplied
+			
+			To determine how much time to charge:
+			* Fetch the method of the rate time - is it 60 seconds + per second or something else?
+			* Based on that method, determine the time to charge for.
+
+			Finally:
+			* Apply the prefix rate agains the charge rate
+		*/
+
+
+		/*
+			Fetch prefix numbers
+		*/
+
+		$prefix_src	= $this->calculate_prefix($src);
+		$prefix_dst	= $this->calculate_prefix($dst);
+
+
+
+		/*
+			Determine charging rate
+		*/
+
+		if ($prefix_src == $prefix_dst)
+		{
+			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+		}
+		else
+		{
+			$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
+		}
+
+		$rate_second		= $rate_minute / 60;
+
+
+
+		/*
+			Determine charges
+		*/
+
+		switch ($this->data["id_usage_mode_string"])
+		{
+			case "per_minute":
+				//
+				// charge for whole minutes only
+				// round up to the nearest minute.
+				//
+				
+				$seconds	= ceil($seconds/60)*60; 
+
+				$charges	= $seconds * $rate_second;
+				
+			break;
+
+			case "per_second":
+				//
+				// charge for the number of seconds
+				//
+
+				$charges	= $seconds * $rate_second;
+			break;
+
+			case "first_min_then_per_second":
+			default:
+				//
+				// charge for a minimum of 1 minute and then
+				// per-second after that.
+				//
+
+				if ($seconds < 60)
+				{
+					$seconds = 60;
+				}
+			
+				$charges	= $seconds * $rate_second;
+			break;
+		}
+
+
+		log_write("debug", "cdr_rate_table_rates", "Call of $seconds seconds from $src to $dst cost $charges");
+
+		return $charges;
+	}
 
 
 } // end of cdr_rate_table_rates
@@ -1180,7 +1355,6 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 
 
-
 /*
 	CLASS: service_usage_cdr
 
@@ -1188,6 +1362,10 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 */
 class service_usage_cdr extends service_usage
 {
+
+	var $data_ddi;		// contains DDI information loaded by load_data_di
+
+
 
 	/*
 		load_data_ddi
@@ -1213,7 +1391,7 @@ class service_usage_cdr extends service_usage
 		{
 			$sql_obj->fetch_array();
 
-			$this->data	= array();
+			$this->data_ddi	= array();
 
 
 			// work out DDI ranges where nessacary.
@@ -1222,21 +1400,21 @@ class service_usage_cdr extends service_usage
 				if ($data["ddi_start"] == $data["ddi_finish"])
 				{
 					// single DDI, very easy
-					$this->data[]	= $data["ddi_start"];
+					$this->data_ddi[] = $data["ddi_start"];
 				}
 				else
 				{
 					// multiple DDIs, go and generate all the DDIs inbetween
 					for ($i=$data["ddi_start"]; $i < $data["ddi_finish"]; $i++)
 					{
-						$this->data[]	= $i;
+						$this->data_ddi[] = $i;
 					}
 				}
 			}
 
 
 			// return the total number of DDIs
-			$total	= count($this->data);
+			$total	= count($this->data_ddi);
 
 			log_write("debug", "service_usage_cdr", "Customer has ". $total ." DDIs on their service");
 
@@ -1248,7 +1426,9 @@ class service_usage_cdr extends service_usage
 			log_write("warning", "service_usage_cdr", "There are no DDIs assigned to id_service_customer ". $this->id_service_customer ."");
 			return 0;
 		}
+
 	} // end of load_data_ddi
+
 
 
 
@@ -1261,23 +1441,157 @@ class service_usage_cdr extends service_usage
 	*/
 
 
-
 	/*
-		fetch_usage_calls
+		fetch_usage_ddi
 
-		Return an array of call items along with their calculated prices from the CDR records
-		table for the selected service and period.
+		// TODO: move code out of invoicegen to here
+
 	*/
 
 
 	/*
 		fetch_usage_trunks
+
+		// TODO: move code out of invoicegen to here
 	*/
+
 
 
 	/*
 		fetch_usage_calls
+
+		Pulls call records from the CDR databases, prices and returns costs per DDI for the specified
+		time period.
+
+		Returns
+		0		failure
+		1		success
 	*/
+	function fetch_usage_calls()
+	{
+		log_write("debug", "service_usage_cdr", "Executing fetch_usage_calls()");
+
+
+		/* 
+			Load Call Pricing (including overrides for this customer)
+		*/
+
+		$obj_cdr_rate_table			= New cdr_rate_table_rates_override;
+
+		$obj_cdr_rate_table->option_type	= "customer";
+		$obj_cdr_rate_table->option_type_id	= $this->id_service_customer;
+
+		$obj_cdr_rate_table->verify_id_override();
+
+		$obj_cdr_rate_table->load_data();
+
+		$obj_cdr_rate_table->load_data_rate_all();
+		$obj_cdr_rate_table->load_data_rate_all_override();
+
+
+
+		/*
+			Query Call Records
+		*/
+
+		if ($GLOBALS["config"]["SERVICE_CDR_MODE"] == "internal")
+		{
+			log_write("error", "service_usage_cdr", "Internal CDR records not yet implemented.");
+		}
+		else
+		{
+			/*
+				Connect to External SQL database
+			*/
+
+			// fetch all calls for that DDI from the DB for the selected period
+			$obj_cdr_db_sql = New sql_query;
+
+			if (!$obj_cdr_db_sql->session_init("mysql", $GLOBALS["config"]["SERVICE_CDR_DB_HOST"], $GLOBALS["config"]["SERVICE_CDR_DB_NAME"], $GLOBALS["config"]["SERVICE_CDR_DB_USERNAME"], $GLOBALS["config"]["SERVICE_CDR_DB_PASSWORD"]))
+			{
+				return 0;
+			}
+
+
+			/*
+				We fetch the call records by looping through all the DDIs for this customer, fetching all the records
+				for those DDIs and then calculating the cost for each call
+			*/
+
+			if (!$this->data_ddi)
+			{
+				$this->load_data_ddi();
+			}
+
+			foreach ($this->data_ddi as $ddi)
+			{
+				// calculate end date to be the first date of the next period - failure to do so would mean we would
+				// miss the last day of the billing period in the query;
+
+				$date_start		= $this->date_start;
+
+				$tmp_date		= explode("-", $this->date_end);
+				$date_end		= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] +1), $tmp_date[0]));
+
+
+				/*
+					Fetch Data
+
+					Just a simple query here, however if this is a TOLLFREE service, then we need to reverse
+					the query to charge for inbound calls rather than outbound.
+
+				*/
+				log_write("debug", "service_usage_cdr", "Fetching usage records FOR $ddi FROM $date_start TO $date_end");
+
+				if ($this->obj_service->data["typeid_string"] == "phone_tollfree")
+				{
+					log_write("debug", "service_usage_cdr", "Billing for tollfree service on $ddi");
+
+					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, src, dst FROM cdr WHERE disposition='ANSWERED' AND dst='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
+					$obj_cdr_db_sql->execute();
+				}
+				else
+				{
+					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, src, dst FROM cdr WHERE disposition='ANSWERED' AND src='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
+					$obj_cdr_db_sql->execute();
+				}
+
+
+				/*
+					Calculate costs of calls
+				*/
+				if ($obj_cdr_db_sql->num_rows())
+				{
+					$obj_cdr_db_sql->fetch_array();
+
+					foreach ($obj_cdr_db_sql->data as $data_cdr)
+					{
+						// determine price
+						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+
+						// create local usage record for record keeping purposes
+						$sql_obj			= New sql_query;
+						$sql_obj->string		= "INSERT INTO service_usage_records (id_service_customer, date, price, usage1, usage2, usage3) VALUES ('". $this->id_service_customer ."', '". $data_cdr["calldate"] ."', '". $charges ."', '". $data_cdr["src"] ."', '". $data_cdr["dst"] ."', '". $data_cdr["billsec"] ."')";
+						$sql_obj->execute();
+
+						// add to structure
+						$this->data[ $ddi ]["charges"]	+= $charges;
+					}
+				}
+
+			} // end of DDI loop
+
+
+
+			/*
+				Disconnect from database
+			*/
+
+			$obj_cdr_db_sql->session_terminate();
+
+		} // end of external data source
+
+	} // end of fetch_usage_calls
 
 
 } // end of class: service_usage_cdr

@@ -139,11 +139,6 @@ if (user_permissions_get("services_write"))
 		}
 
 
-		print "<pre>";
-		print_r($import_array_raw);
-		print "</pre>";
-
-
 
 		/*
 			Import rates
@@ -274,7 +269,7 @@ if (user_permissions_get("services_write"))
 
 
 
-	//	header("Location: ../../index.php?page=accounts/import/bankstatement-assign.php");
+		header("Location: ../index.php?page=services/cdr-rates-items.php&id=". $obj_rate_table->id);
 		exit(0);
 	}
 }
