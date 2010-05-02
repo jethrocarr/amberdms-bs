@@ -37,6 +37,7 @@ class page_output
 
 		if (user_permissions_get("services_write"))
 		{
+			$this->obj_menu_nav->add_item("Import Rates", "page=services/cdr-rates-import.php&id=". $this->obj_rate_table->id ."");
 			$this->obj_menu_nav->add_item("Delete Rate Table", "page=services/cdr-rates-delete.php&id=". $this->obj_rate_table->id ."");
 		}
 	}

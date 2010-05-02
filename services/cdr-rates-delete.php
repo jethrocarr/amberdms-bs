@@ -33,6 +33,7 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Rate Table Details", "page=services/cdr-rates-view.php&id=". $this->obj_rate_table->id ."");
 		$this->obj_menu_nav->add_item("Rate Table Items", "page=services/cdr-rates-items.php&id=". $this->obj_rate_table->id ."");
+		$this->obj_menu_nav->add_item("Import Rates", "page=services/cdr-rates-import.php&id=". $this->obj_rate_table->id ."");
 		$this->obj_menu_nav->add_item("Delete Rate Table", "page=services/cdr-rates-delete.php&id=". $this->obj_rate_table->id ."", TRUE);
 	}
 
