@@ -922,7 +922,7 @@ function service_invoices_generate($customerid = NULL)
 								$invoice_item->id_invoice		= $invoiceid;
 							
 								$invoice_item->type_invoice		= "ar";
-								$invoice_item->type_item		= "service";
+								$invoice_item->type_item		= "service_usage";
 							
 								$itemdata = array();
 
@@ -1030,7 +1030,7 @@ function service_invoices_generate($customerid = NULL)
 								$invoice_item->id_invoice		= $invoiceid;
 							
 								$invoice_item->type_invoice		= "ar";
-								$invoice_item->type_item		= "service";
+								$invoice_item->type_item		= "service_usage";
 							
 								$itemdata = array();
 
@@ -1101,7 +1101,7 @@ function service_invoices_generate($customerid = NULL)
 								$invoice_item->id_invoice		= $invoiceid;
 							
 								$invoice_item->type_invoice		= "ar";
-								$invoice_item->type_item		= "service";
+								$invoice_item->type_item		= "service_usage";
 							
 								$itemdata = array();
 
@@ -1230,7 +1230,7 @@ function service_invoices_generate($customerid = NULL)
 									$invoice_item->id_invoice		= $invoiceid;
 									
 									$invoice_item->type_invoice		= "ar";
-									$invoice_item->type_item		= "service";
+									$invoice_item->type_item		= "service_usage";
 								
 									$itemdata = array();
 
@@ -1285,7 +1285,7 @@ function service_invoices_generate($customerid = NULL)
 									$invoice_item->id_invoice		= $invoiceid;
 									
 									$invoice_item->type_invoice		= "ar";
-									$invoice_item->type_item		= "service";
+									$invoice_item->type_item		= "service_usage";
 								
 									$itemdata = array();
 
@@ -1346,7 +1346,7 @@ function service_invoices_generate($customerid = NULL)
 										$invoice_item->id_invoice		= $invoiceid;
 										
 										$invoice_item->type_invoice		= "ar";
-										$invoice_item->type_item		= "service";
+										$invoice_item->type_item		= "service_usage";
 									
 										$itemdata = array();
 
@@ -1396,7 +1396,7 @@ function service_invoices_generate($customerid = NULL)
 					if ($period_usage_data["id"] != $period_data["id"])
 					{
 						$sql_obj		= New sql_query;
-						$sql_obj->string	= "UPDATE services_customers_periods SET usage_invoiceid='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
+						$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid_usage='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
 						$sql_obj->execute();
 					}
 				

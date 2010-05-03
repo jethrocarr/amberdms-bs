@@ -153,13 +153,24 @@ class invoice_list_items
 
 
 					case "service":
+					case "service_usage":
+
 						/*
 							Fetch service group
 						*/
-						$sql_obj		= New sql_query;
-						$sql_obj->string	= "SELECT service_groups.group_name as group_name FROM services LEFT JOIN service_groups ON service_groups.id = id_service_group WHERE services.id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
-						$sql_obj->execute();
 
+						$sql_obj		= New sql_query;
+					
+						if ($itemdata["type"] == "service_usage")
+						{
+							$sql_obj->string	= "SELECT service_groups.group_name as group_name FROM services LEFT JOIN service_groups ON service_groups.id = id_service_group_usage WHERE services.id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
+						}
+						else
+						{
+							$sql_obj->string	= "SELECT service_groups.group_name as group_name FROM services LEFT JOIN service_groups ON service_groups.id = id_service_group WHERE services.id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
+						}
+
+						$sql_obj->execute();
 						$sql_obj->fetch_array();
 						
 						$this->obj_table_standard->data[$i]["item_info"] = $sql_obj->data[0]["group_name"];
@@ -1193,6 +1204,7 @@ class invoice_form_item
 				allow users to adjust the description, price and discount once an item has been created.
 			*/
 			case "service":
+			case "service_usage":
 
 				if ($this->type == "ar")
 				{
@@ -1395,6 +1407,7 @@ class invoice_form_item
 				break;
 
 				case "service":
+				case "service_usage":
 
 					// fetch discount (if any) from item
 					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
@@ -1658,6 +1671,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 
 
 		case "service":
+		case "service_usage":
 			/*
 				SERVICE ITEMS
 			*/

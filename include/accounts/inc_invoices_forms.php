@@ -13,7 +13,7 @@ require("include/accounts/inc_charts.php");
 /*
 	class: invoice_form_details
 
-	Generates forms for processing service details - used to adjust existing invoices
+	Generates forms for processing invoice details - used to adjust existing invoices
 	or to add new ones.
 */
 class invoice_form_details

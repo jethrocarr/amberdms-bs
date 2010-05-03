@@ -987,6 +987,8 @@ class invoice
 
 
 				case "service":
+				case "service_usage":
+
 					/*
 						Fetch Service Name
 					*/
@@ -1027,10 +1029,18 @@ class invoice
 
 						This is used for layout and titling purposes on the invoice
 					*/
-					$sql_obj		= New sql_query;
-					$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
-					$sql_obj->execute();
+					$sql_obj			= New sql_query;
 
+					if ($itemdata["type"] == "service_usage")
+					{
+						$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group_usage WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
+					}
+					else
+					{
+						$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
+					}
+
+					$sql_obj->execute();
 					$sql_obj->fetch_array();
 					
 					$structure["group"]	= $sql_obj->data[0]["group_name"];
@@ -1860,14 +1870,15 @@ class invoice_items
 
 
 			case "service":
+			case "service_usage":
 				/*
 					SERVICE ITEMS
 				*/
 			
-				// a time item can only be added to an AR transactions
+				// a service item can only be added to an AR transactions
 				if ($this->type_invoice != "ar")
 				{
-					log_write("error", "inc_invoices", "You can only add time invoice items to AR invoices.");
+					log_write("error", "inc_invoices", "You can only add service invoice items to AR invoices.");
 					return 0;
 				}
 
@@ -2313,6 +2324,7 @@ class invoice_items
 
 	
 					case "service":
+					case "service_usage":
 						/*
 							HANDLE TAXES FOR SERVICE ITEMS
 						*/
