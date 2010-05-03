@@ -40,10 +40,12 @@ function service_form_details_process()
 	
 
 	// general details
-	$data["name_service"]		= @security_form_input_predefined("any", "name_service", 1, "");
-	$data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "");
-	$data["id_service_group"]	= @security_form_input_predefined("int", "id_service_group", 1, "");
-	$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
+	$data["name_service"]			= @security_form_input_predefined("any", "name_service", 1, "");
+	$data["chartid"]			= @security_form_input_predefined("int", "chartid", 1, "");
+	$data["id_service_group"]		= @security_form_input_predefined("int", "id_service_group", 1, "");
+	$data["description"]			= @security_form_input_predefined("any", "description", 0, "");
+
+
 
 	// fetch information for all tax checkboxes from form
 	$sql_tax_obj		= New sql_query;
@@ -70,12 +72,18 @@ function service_form_details_process()
 
 		// make sure that the service actually exists
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM services WHERE id='$id'";
+		$sql_obj->string	= "SELECT id, typeid FROM services WHERE id='$id'";
 		$sql_obj->execute();
 
 		if (!$sql_obj->num_rows())
 		{
 			$_SESSION["error"]["message"][] = "The service you have attempted to edit - $id - does not exist in this system.";
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			$data["typeid_string"]	= sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_obj->data[0]["typeid"] . "'");
 		}
 	}
 	else
@@ -83,8 +91,31 @@ function service_form_details_process()
 		$mode = "add";
 		
 		// only fetch the type ID when adding new services
-		$data["typeid"]	= @security_form_input_predefined("int", "typeid", 1, "");
+		$data["typeid"]			= @security_form_input_predefined("int", "typeid", 1, "");
+		$data["typeid_string"]		= sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $data["typeid"] ."' LIMIT 1");
 	}
+
+
+	// type-specific details
+	switch ($data["typeid_string"])
+	{
+		case "data_traffic":
+		case "generic_with_usage":
+		case "phone_single":
+		case "phone_trunk":
+		case "phone_tollfree":
+		case "time":
+			$data["id_service_group_usage"]		= @security_form_input_predefined("int", "id_service_group_usage", 1, "");
+		break;
+
+		case "bundle":
+		case "generic_no_usage":
+		case "licenses":
+			$data["id_service_group_usage"]		= 0;
+		break;
+	}
+
+
 
 
 	//// ERROR CHECKING ///////////////////////
@@ -112,7 +143,7 @@ function service_form_details_process()
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
-		$_SESSION["error"]["form"]["service_view"] = "failed";
+		$_SESSION["error"]["form"]["service_$mode"] = "failed";
 
 		if ($mode == "add")
 		{
@@ -154,6 +185,7 @@ function service_form_details_process()
 						."name_service='". $data["name_service"] ."', "
 						."chartid='". $data["chartid"] ."', "
 						."id_service_group='". $data["id_service_group"] ."', "
+						."id_service_group_usage='". $data["id_service_group_usage"] ."', "
 						."description='". $data["description"] ."' "
 						."WHERE id='$id' LIMIT 1";
 			

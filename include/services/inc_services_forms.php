@@ -151,11 +151,7 @@ class services_form_details
 
 		$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
 		$structure["options"]["req"]	= "yes";
-		$this->obj_form->add_input($structure);
-
-		$structure = form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups");
-		$structure["options"]["req"]	= "yes";
-		$this->obj_form->add_input($structure);
+		$this->obj_form->add_input($structure);	
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "description";
@@ -186,8 +182,54 @@ class services_form_details
 			$this->obj_form->add_input($structure);
 		}
 
+
+
+		// service grouping
+		$structure = form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = form_helper_prepare_dropdownfromdb("id_service_group_usage", "SELECT id, group_name as label FROM service_groups");
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+
+		// write service usage grouping javascript UI logic - we need to get all the options
+		// and write actions for each ID
+
+		$this->obj_form->add_action("typeid", "default", "id_service_group_usage", "hide");
+
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, name as label FROM service_types";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+
+		foreach ($sql_obj->data as $data_row)
+		{
+			switch ($data_row["label"])
+			{
+				case "data_traffic":
+				case "generic_with_usage":
+				case "phone_single":
+				case "phone_trunk":
+				case "phone_tollfree":
+				case "time":
+					$this->obj_form->add_action("typeid", $data_row["id"] , "id_service_group_usage", "show");		// for add mode
+					$this->obj_form->add_action("typeid", $data_row["label"] , "id_service_group_usage", "show");		// for view mode
+				break;
+
+				case "bundle":
+				case "generic_no_usage":
+				case "licenses":
+					$this->obj_form->add_action("typeid", $data_row["id"] , "id_service_group_usage", "hide");		// for add mode
+					$this->obj_form->add_action("typeid", $data_row["label"] , "id_service_group_usage", "hide");		// for view mode
+				break;
+			}
+		}
+
 		// define service_details subform
-		$this->obj_form->subforms["service_details"]	= array("name_service", "id_service_group", "chartid", "typeid", "description");
+		$this->obj_form->subforms["service_details"]	= array("name_service", "chartid", "typeid", "id_service_group", "id_service_group_usage", "description");
 
 
 
@@ -303,6 +345,7 @@ class services_form_details
 								services.name_service, 
 								services.chartid, 
 								services.id_service_group,
+								services.id_service_group_usage,
 								services.description, 
 								service_types.name as typeid
 							FROM `services`
