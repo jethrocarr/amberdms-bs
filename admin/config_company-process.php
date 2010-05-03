@@ -37,7 +37,6 @@ if (user_permissions_get("admin"))
 		if any has been supplied. Enforce png only
 	*/
 	$file_obj				= New file_storage;
-	$file_obj->config["upload_maxbytes"]	= $data["UPLOAD_MAXBYTES"];	// set image upload to the new maximum limit (incase they changed it at the same time)
 
 	if ($_FILES["COMPANY_LOGO"]["size"] > 1)
 	{
@@ -51,7 +50,7 @@ if (user_permissions_get("admin"))
 	*/
 	if (error_check())
 	{
-		$_SESSION["error"]["form"]["config_application"] = "failed";
+		$_SESSION["error"]["form"]["config_company"] = "failed";
 		header("Location: ../index.php?page=admin/config_company.php");
 		exit(0);
 	}
