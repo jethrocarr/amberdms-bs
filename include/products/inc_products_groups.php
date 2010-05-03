@@ -64,7 +64,7 @@ class product_groups
 		log_debug("product_groups", "Executing verify_name_customer()");
 
 		$sql_obj			= New sql_query;
-		$sql_obj->string		= "SELECT id FROM `product_groups` WHERE group_name='". $this->data["group_name"] ."' ";
+		$sql_obj->string		= "SELECT id FROM `product_groups` WHERE group_name='". $this->data["group_name"] ."' AND id_parent='". $this->data["id_parent"] ."'";
 
 		if ($this->id)
 			$sql_obj->string	.= " AND id!='". $this->id ."'";

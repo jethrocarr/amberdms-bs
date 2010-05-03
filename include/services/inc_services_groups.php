@@ -52,7 +52,7 @@ class service_groups
 	/*
 		verify_group_name
 
-		Check if the group name is in use by any other group.
+		Check if the group name is in use by any other group with the same parent ID
 
 		Results
 		0	Failure - name in use
@@ -64,7 +64,7 @@ class service_groups
 		log_debug("service_groups", "Executing verify_name_customer()");
 
 		$sql_obj			= New sql_query;
-		$sql_obj->string		= "SELECT id FROM `service_groups` WHERE group_name='". $this->data["group_name"] ."' ";
+		$sql_obj->string		= "SELECT id FROM `service_groups` WHERE group_name='". $this->data["group_name"] ."' AND id_parent='". $this->data["id_parent"] ."'";
 
 		if ($this->id)
 			$sql_obj->string	.= " AND id!='". $this->id ."'";
