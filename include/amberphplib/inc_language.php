@@ -44,7 +44,7 @@ function lang_trans($label)
 		//if user can edit translations, surround in {{}}
 		if ($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 		{
-			return "{{".$GLOBALS["cache"]["lang"][$label]."}}";
+			return "{{".$GLOBALS["cache"]["lang"][$label]."}} (".$label.")";
 		}
 		else
 		{
@@ -94,7 +94,7 @@ function lang_trans($label)
 				//if user can edit translations, surround in {{}}
 				if($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 				{
-					return "{{".$sql_obj->data[0]["translation"]."}}";
+					return "{{".$sql_obj->data[0]["translation"]."}} (".$label.")";
 				}
 				else
 				{
@@ -163,7 +163,7 @@ function language_translate($language, $label_array)
 			//if user can edit translations, surround in {{}}
 			if ($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 			{			
-				$result[$label] = "{{".$GLOBALS["cache"]["lang"][$label]."}}";
+				$result[$label] = "{{".$GLOBALS["cache"]["lang"][$label]."}} (".$label.")";
 			}
 			else
 			{
@@ -240,7 +240,7 @@ function language_translate($language, $label_array)
 				//if user can edit translations, surround in {{}}
 				if ($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 				{
-					$result[ $data["label"] ]		= "{{".$data["translation"]."}}";
+					$result[ $data["label"] ]		= "{{".$data["translation"]."}} (".$label.")";
 				}
 				else
 				{
@@ -302,7 +302,7 @@ function language_translate_string($language, $label)
 		//if user can edit translations, surround in {{}}
 		if ($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 		{
-			return "{{".$GLOBALS["cache"]["lang"][$label]."}}";
+			return "{{".$GLOBALS["cache"]["lang"][$label]."}} (".$label.")";
 		}
 		else
 		{
@@ -351,7 +351,7 @@ function language_translate_string($language, $label)
 				//if user can edit translations, surround in {{}}
 				if ($_SESSION["user"]["translation"]=="show_all_translatable_fields")
 				{
-					return "{{".$sql_obj->data[0]["translation"]."}}";
+					return "{{".$sql_obj->data[0]["translation"]."}} (".$label.")";
 				}
 				else
 				{

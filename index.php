@@ -161,20 +161,8 @@ $theme_path = "themes/".$folder."/";
 	
 	?>
 	
-<script type="text/javascript">
-
-function obj_hide(obj)
-{
-	document.getElementById(obj).style.display = 'none';
-}
-function obj_show(obj)
-{
-	document.getElementById(obj).style.display = '';
-}
-
-</script>
-
 <script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
+<script type="text/javascript" src="include/javascript/javascript.js"></script>
 
 
 <?php
@@ -215,9 +203,9 @@ if (isset($page_obj->requires["javascript"]))
 				print "<p id=\"header_logout_text\">logged on as ". $_SESSION["user"]["name"] ." | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></p>";
 				
 				//if in translation mode, print short explanation and button to form
-				if (user_permissions_get("translation_edit") || user_permissions_get("translation_add_new"))
+				if ($_SESSION["user"]["translation"]=="show_all_translatable_fields" || $_SESSION["user"]["translation"]=="show_only_non-translated_fields")
 				{
-					print "<p> <strong><a href=\"popup.php?page=translate.php\">Open translation form</a></strong> </p>";
+					print "<p> <strong><a href=\"javascript:openPopup('popup.php?page=popup/translation_form.php')\">Open translation form</a></strong> </p>";
 				}
 			}
 
