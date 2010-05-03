@@ -90,9 +90,14 @@ if (user_permissions_get('customers_write'))
 		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 
 		// special migration stuff
-		if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE'"))
+		if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE'") == 1)
 		{
-			$data["migration_previous_usage_month"]		= @security_form_input_predefined("any", "migration_previous_usage_month", 0, "");
+			$data["migration_date_period_usage_override"]		= @security_form_input_predefined("any", "migration_date_period_usage_override", 1, "");
+
+			if ($data["migration_date_period_usage_override"] == "migration_use_usage_date")
+			{
+				$data["migration_date_period_usage_first"]	= @security_form_input_predefined("date", "migration_date_period_usage_first", 1, "");
+			}
 		}
 	}
 
@@ -163,14 +168,6 @@ if (user_permissions_get('customers_write'))
 				Add new service
 			*/
 
-			// set migration flags (if any)
-			$migration_options = array();
-
-			if ($data["migration_previous_usage_month"])
-			{
-				$migration_options	= array("previous_usage_month");
-			}
-
 
 			// assign service to customer
 			$obj_customer->service_add($data["date_period_first"], $migration_options);
@@ -186,6 +183,30 @@ if (user_permissions_get('customers_write'))
 
 			$obj_customer->obj_service->action_update_options();
 
+
+
+			/*
+				Do special migration-specific actions
+			*/
+
+			if ($data["migration_date_period_usage_first"])
+			{
+				/*
+					We need to create a special period for usage records, since
+					we want the telcomode service to charge for usage but not period
+					for the first run.
+
+					We cheat slightly by simply defining the period as being the provided
+					date until the service start date.
+				*/
+
+				$tmp_date	= explode("-", $data["date_period_first"]);
+				$tmp_date 	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] -1), $tmp_date[0]));
+
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "INSERT INTO services_customers_periods (id_service_customer, date_start, date_end) VALUES ('". $obj_customer->id_service_customer ."', '". $data["migration_date_period_usage_first"] ."', '". $tmp_date  ."')";
+				$sql_obj->execute();
+			}
 		}
 		else
 		{

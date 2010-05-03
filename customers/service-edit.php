@@ -477,17 +477,26 @@ class page_output
 
 			// migration mode options - these allow some nifty tricks like creating
 			// a service period in the previous month to be able to bill for past usage
-			if (sql_get_singlevalue("SELECT value FROM config WHERE name='SERVICE_MIGRATION_MODE' LIMIT 1"))
+			if ($GLOBALS['config']['SERVICE_MIGRATION_MODE'] == 1)
 			{
 				$structure = NULL;
-				$structure["fieldname"] 		= "migration_previous_usage_month";
-				$structure["type"]			= "checkbox";
-				$structure["options"]["label"]		= "If this is a usage service being migrated and there is usage information for the past month that you want billed, check this option";
+				$structure["fieldname"] 		= "migration_date_period_usage_override";
+				$structure["type"]			= "radio";
+				$structure["values"]			= array("migration_use_period_date", "migration_use_usage_date");
+				$structure["defaultvalue"]		= "migration_use_period_date";
 				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "migration_date_period_usage_first";
+				$structure["type"]			= "date";
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->add_action("migration_date_period_usage_override", "default", "migration_date_period_usage_first", "hide");
+				$this->obj_form->add_action("migration_date_period_usage_override", "migration_use_usage_date", "migration_date_period_usage_first", "show");
+
+
+				$this->obj_form->subforms["service_migration"]	= array("migration_date_period_usage_override", "migration_date_period_usage_first");
 			}
-
-
-			$this->obj_form->subforms["service_migration"]	= array("migration_previous_usage_month");
 		}
 
 

@@ -544,6 +544,7 @@ function service_invoices_generate($customerid = NULL)
 								."services_customers_periods.invoiceid, "
 								."services_customers_periods.date_start, "
 								."services_customers_periods.date_end, "
+								."services_customers.date_period_first, "
 								."services_customers.id as id_service_customer, "
 								."services_customers.quantity, "
 								."services_customers.serviceid "
@@ -711,99 +712,111 @@ function service_invoices_generate($customerid = NULL)
 
 					/*
 						Service Base Plan Item
+
+						Note: There can be a suitation where we shouldn't charge for the base plan
+						fee, when the period end date is older than the service first start date.
+
+						This can happen due to the migration mode, which creates a usage-only period
+						before the actual plan starts properly.
 					*/
 					
-					
-					// start the item
-					$invoice_item				= New invoice_items;
-					
-					$invoice_item->id_invoice		= $invoiceid;
-					
-					$invoice_item->type_invoice		= "ar";
-					$invoice_item->type_item		= "service";
-					
-					$itemdata = array();
-
-
-					// chart ID
-					$itemdata["chartid"]		= $obj_service->data["chartid"];
-
-					// service ID
-					$itemdata["customid"]		= $obj_service->id;
-
-					// description
-					switch ($service_type)
+					if (time_date_to_timestamp($period_data["date_period_first"]) < time_date_to_timestamp($period_data["date_end"]))
 					{
-						case "phone_single":
+						// date of the period is newer than the start date
 
-							$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $obj_service->data["phone_ddi_single"] .")";
-							
-							if ($obj_service->data["description"])
-							{
-								$itemdata["description"]	.= "\n\n";
-								$itemdata["description"]	.= $obj_service->data["description"];
-							}
-						break;
-
-						default:
-							$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
-
-							if ($obj_service->data["description"])
-							{
-								$itemdata["description"]	.= "\n\n";
-								$itemdata["description"]	.= $obj_service->data["description"];
-							}
-						break;
-					}
-
-				
-					// is this service item part of a bundle? if it is, we shouldn't charge for the plan
-					if ($obj_service->data["id_bundle_component"])
-					{
-						// no charge for the base plan, since this is handled by
-						// the bundle item itself
-
-						$itemdata["price"]		= "0.00";
-						$itemdata["quantity"]		= 1;
-
-						// append description
-						$itemdata["description"]	.= " (part of bundle)";
-					}
-					else
-					{
-						// amount
-						$itemdata["price"]		= $obj_service->data["price"];
-						$itemdata["quantity"]		= 1;
-						$itemdata["discount"]		= $obj_service->data["discount"];
-					}
+						// start the item
+						$invoice_item				= New invoice_items;
+						
+						$invoice_item->id_invoice		= $invoiceid;
+						
+						$invoice_item->type_invoice		= "ar";
+						$invoice_item->type_item		= "service";
+						
+						$itemdata = array();
 
 
-					// fetch all tax options for this service from the database
-					//
-					// note: if any options aren't suitable for the customer, the invoicing
-					// code will handle this for us and unselect them.
-					//
-					$sql_tax_obj		= New sql_query;
-					$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $obj_service->id ."'";
-					$sql_tax_obj->execute();
+						// chart ID
+						$itemdata["chartid"]		= $obj_service->data["chartid"];
 
-					if ($sql_tax_obj->num_rows())
-					{
-						$sql_tax_obj->fetch_array();
+						// service ID
+						$itemdata["customid"]		= $obj_service->id;
 
-						foreach ($sql_tax_obj->data as $data_tax)
+						// description
+						switch ($service_type)
 						{
-							$itemdata["tax_". $data_tax["taxid"] ] = "on";
+							case "phone_single":
+
+								$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $obj_service->data["phone_ddi_single"] .")";
+								
+								if ($obj_service->data["description"])
+								{
+									$itemdata["description"]	.= "\n\n";
+									$itemdata["description"]	.= $obj_service->data["description"];
+								}
+							break;
+
+							default:
+								$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+
+								if ($obj_service->data["description"])
+								{
+									$itemdata["description"]	.= "\n\n";
+									$itemdata["description"]	.= $obj_service->data["description"];
+								}
+							break;
 						}
 
-					} // end of loop through taxes
+					
+						// is this service item part of a bundle? if it is, we shouldn't charge for the plan
+						if ($obj_service->data["id_bundle_component"])
+						{
+							// no charge for the base plan, since this is handled by
+							// the bundle item itself
+
+							$itemdata["price"]		= "0.00";
+							$itemdata["quantity"]		= 1;
+
+							// append description
+							$itemdata["description"]	.= " (part of bundle)";
+						}
+						else
+						{
+							// amount
+							$itemdata["price"]		= $obj_service->data["price"];
+							$itemdata["quantity"]		= 1;
+							$itemdata["discount"]		= $obj_service->data["discount"];
+						}
 
 
-					// create item
-					$invoice_item->prepare_data($itemdata);
-					$invoice_item->action_update();
+						// TODO: is this still needed? with the new service type logic?
 
-					unset($invoice_item);
+						// fetch all tax options for this service from the database
+						//
+						// note: if any options aren't suitable for the customer, the invoicing
+						// code will handle this for us and unselect them.
+						//
+						$sql_tax_obj		= New sql_query;
+						$sql_tax_obj->string	= "SELECT taxid FROM services_taxes WHERE serviceid='". $obj_service->id ."'";
+						$sql_tax_obj->execute();
+
+						if ($sql_tax_obj->num_rows())
+						{
+							$sql_tax_obj->fetch_array();
+
+							foreach ($sql_tax_obj->data as $data_tax)
+							{
+								$itemdata["tax_". $data_tax["taxid"] ] = "on";
+							}
+
+						} // end of loop through taxes
+
+
+						// create item
+						$invoice_item->prepare_data($itemdata);
+						$invoice_item->action_update();
+
+						unset($invoice_item);
+					}
 
 
 
