@@ -338,4 +338,221 @@ class traffic_customer_service_ipv4
 
 
 
+/*
+	CLASS: service_usage_traffic
+
+	Functions for querying traffic usage for billing purposes
+*/
+class service_usage_traffic extends service_usage
+{
+
+	var $data_ipv4;		// contains IPv4 address array loaded by load_data_ipv4
+
+
+	/*
+		load_data_ipv4
+
+		Fetches an array of all the customer's IPv4 addresses into the $this->data value and returns the number of DDIs assigned.
+
+		Returns
+		0		No DDIs / An error occured
+		#		Number of DDIs belonging to the customer.
+	*/
+
+	function load_data_ipv4()
+	{
+		log_write("debug", "service_usage_traffic", "Executing load_data_ddi()");
+
+
+		// fetch all the DDIs for this service-customer
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT ipv4_address, ipv4_cidr FROM services_customers_ipv4 WHERE id_service_customer='". $this->id_service_customer ."'";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			$this->data_ipv4	= array();
+
+			foreach ($sql_obj->data as $data_ipv4)
+			{
+				if ($data_ipv4["ipv4_cidr"] == "32")
+				{
+					// single IP
+					$this->data_ipv4[]		= $data_ipv4["ipv4_address"];
+				}
+				else
+				{
+					// subnet
+					foreach (ipv4_subnet_members($data_ipv4["ipv4_address"] ."/". $data_ipv4["ipv4_cidr"], TRUE) as $address)
+					{
+						$this->data_ipv4[]	= $address;
+					}
+				}
+			}
+
+			// return the total number of addresses
+			$total	= count($this->data_ipv4);
+
+			log_write("debug", "service_usage_traffic", "Customer has ". $total ." IPv4 addresses on their service");
+
+			return $total;
+		}
+		else
+		{
+			log_write("warning", "service_usage_traffic", "There are no ipv4 addresses assigned to id_service_customer ". $this->id_service_customer ."");
+			return 0;
+		}
+
+	} // end of load_data_ipv4
+
+
+	/*
+		load_data_ipv6
+		
+		// TODO: Implement IPv6 support
+	*/
+
+
+	/*
+		fetch_usage_ipv4
+
+		// TODO: potential place for IP address allocation charging
+
+	*/
+
+	/*
+		fetch_usage_ipv6
+
+		// TODO: potential place for IP address allocation charging? Is anyone even going to care about charging for IPv6 addresses?
+
+	*/
+
+
+
+	/*
+		fetch_usage_traffic
+
+		Fetching data traffic from database and returns total usage amount.
+
+		TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
+			allow different charging for certain networks, such as domestic or within the data center.
+
+		Returns
+		0		failure
+		1		success
+	*/
+	function fetch_usage_traffic()
+	{
+		log_write("debug", "service_usage_traffic", "Executing fetch_usage_traffic()");
+
+
+
+		/*
+			Query Call Records
+		*/
+
+		if ($GLOBALS["config"]["SERVICE_TRAFFIC_MODE"] == "internal")
+		{
+			log_write("error", "service_usage_traffic", "Internal traffic records not yet implemented.");
+		}
+		else
+		{
+			/*
+				Connect to External SQL database
+
+				Mode: mysql_netflow_daily
+
+				In this mode, there are netflow tables for each day which we need to read through and aggregate data from.
+			*/
+
+			$obj_traffic_db_sql = New sql_query;
+
+			if (!$obj_traffic_db_sql->session_init("mysql", $GLOBALS["config"]["SERVICE_TRAFFIC_DB_HOST"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_NAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_USERNAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_PASSWORD"]))
+			{
+				return 0;
+			}
+
+
+			/*
+				Workout the data range, since we need to query a different table for each day
+			*/
+
+			$date_tmp		= $this->date_start;
+			$date_range		= array();
+
+			$date_range[]		= $this->date_start;
+
+			while ($tmp_date != $this->date_end)
+			{
+				$tmp_date	= explode("-", $tmp_date);
+				$tmp_date 	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] +1), $tmp_date[0]));
+			}
+
+
+
+			/*
+				We work out the usage by fetching the totals for each IPv4 address belonging to this
+				service and aggregating the total.
+			*/
+
+			if (!$this->data_ipv4)
+			{
+				$this->load_data_ipv4();
+			}
+
+			foreach ($this->data_ipv4 as $ipv4)
+			{
+
+				/*
+					Fetch Data
+				*/
+				log_write("debug", "service_usage_traffic", "Fetching usage records FOR $ipv4 FROM $date_start TO $date_end");
+
+					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, src, dst FROM cdr WHERE disposition='ANSWERED' AND src='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
+					$obj_cdr_db_sql->execute();
+
+
+				/*
+					Calculate costs of calls
+				*/
+				if ($obj_cdr_db_sql->num_rows())
+				{
+					$obj_cdr_db_sql->fetch_array();
+
+					foreach ($obj_cdr_db_sql->data as $data_cdr)
+					{
+						// determine price
+						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+
+						// create local usage record for record keeping purposes
+						$sql_obj			= New sql_query;
+						$sql_obj->string		= "INSERT INTO service_usage_records (id_service_customer, date, price, usage1, usage2, usage3) VALUES ('". $this->id_service_customer ."', '". $data_cdr["calldate"] ."', '". $charges ."', '". $data_cdr["src"] ."', '". $data_cdr["dst"] ."', '". $data_cdr["billsec"] ."')";
+						$sql_obj->execute();
+
+						// add to structure
+						$this->data[ $ddi ]["charges"]	+= $charges;
+					}
+				}
+
+			} // end of DDI loop
+
+
+
+			/*
+				Disconnect from database
+			*/
+
+			$obj_cdr_db_sql->session_terminate();
+
+		} // end of external data source
+
+	} // end of fetch_usage_calls
+
+} // end of class: service_usage_cdr
+
+
+
+
 ?>
