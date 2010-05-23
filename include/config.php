@@ -39,13 +39,6 @@ ini_set('memory_limit', '32M');			// note that ABS doesn't need much RAM apart f
 
 
 /*
-	Inherit User Configuration
-*/
-include("config-settings.php");
-
-
-
-/*
 	Session Management
 */
 
@@ -64,6 +57,12 @@ else
 	$_SESSION["user"]["debug"]	= "on";
 }
 
+
+
+/*
+	Inherit User Configuration
+*/
+include("config-settings.php");
 
 
 
