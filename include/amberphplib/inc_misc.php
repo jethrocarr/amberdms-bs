@@ -98,7 +98,6 @@ function config_generate_uniqueid($config_name, $check_sql)
 }
 
 
-
 /* ARRAY FUNCTIONS */
 
 
@@ -107,17 +106,22 @@ function config_generate_uniqueid($config_name, $check_sql)
 	
 	Inserts an array into another array after a certain key
 	http://stackoverflow.com/questions/1783089/array-splice-for-associative-arrays/1783125#1783125
+
 	Values
-	input	array
+	input		array
 	key		key you want to splice 
-	array	Filename or path
+	array		Filename or path
 
 	Returns
-	array		file extension (lowercase)
+	array		results
 */
 function array_insert_after($input, $key, $segment)
 {
-//	# Insert at offset 2
+	log_debug("inc_misc", "Executing array_insert_after($input, $key, $segment)");
+
+
+	// TODO: what exactly does this comment mean? we are inserting at 0?
+	// Insert at offset 2
 	$offset = 0;
 	
 	foreach($input as $array_key => $values)
@@ -138,6 +142,37 @@ function array_insert_after($input, $key, $segment)
 	
 	return $output;
 }
+
+
+/*
+	derive_installation_url
+
+	Returns the URL of the root of the Amberphplib-based application, typically needed
+	for features such as RSS feeds.
+
+	Returns
+	string		Application root URL path
+*/
+
+function derive_installation_url()
+{
+	if($_SERVER['HTTPS'])
+	{
+		$protocol = "https://";
+	}
+	else
+	{
+		$protocol = "http://";
+	} 
+	
+	$server_name	= $_SERVER['SERVER_NAME'];
+	$script_dirname	= dirname($_SERVER['SCRIPT_NAME']);
+
+	return $protocol.$server_name.$script_dirname."/"; 
+
+}
+
+
 
 
 /* FORMATTING/DISPLAY FUNCTIONS */
@@ -495,7 +530,7 @@ function time_format_humandate($date = NULL)
 
 	if ($date)
 	{
-		if (is_int($date))
+		if (preg_match("/^[0-9]*$/", $date))
 		{
 			// already a timestamp, yay!
 			$timestamp = $date;
@@ -1161,6 +1196,8 @@ function dir_list_contents($directory='.')
 }
 
 
+
+
 /*
 	IPv4 Networking Functions
 */
@@ -1170,6 +1207,10 @@ function dir_list_contents($directory='.')
 	ipv4_subnet_members
 
 	Returns an array of all IP addresses in the provided subnet
+
+	TODO/IMPORTANT: This function has been found to sometimes do unexpected weirdness with
+			versions of PHP older than 5.3.0, this should be investigated in more detail
+			and a version check or version-specific workaround to be implemented.
 
 	Fields
 	address_with_cidr	IP and subnet in CIDR notation (eg: 192.168.0.0/24)
@@ -1225,6 +1266,7 @@ function ipv4_subnet_members($address_with_cidr, $include_network = FALSE)
 	return $return;
 
 } // end of ipv4_subnet_members
+
 
 
 

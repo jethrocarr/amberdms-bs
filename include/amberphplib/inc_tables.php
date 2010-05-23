@@ -79,6 +79,7 @@ class table
 				timestamp_date	- UNIX style timestamp field (converts to date only)
 				money		- displays a financial value correctly
 				price		- legacy use - just calls money
+				precentage	- does formatting for display percentages
 				hourmins	- input is a number of seconds, display as H:MM
 				bool_tick	- interperate a bool as an image (1 == tick, 0 == cross)
 				
@@ -389,6 +390,30 @@ class table
 				$attributes[] = $this->structure[$column]["dbname"];
 			}
 		}
+
+
+		// apply any LDAP filters that have been specified
+		if ($this->filter)
+		{
+			foreach (array_keys($this->filter) as $fieldname)
+			{
+				// ignore input from text fields, text fields
+				if ($this->filter[$fieldname]["type"] != "text")
+				{
+					// note: we only add the filter if a value has been saved to default value, otherwise
+					// we assume the filter could break.
+					if (!empty($this->filter[$fieldname]["defaultvalue"]))
+					{
+						// only apply ldap filters, ignore other types like SQL
+						if (!empty($this->filter[$fieldname]["ldap"]))
+						{
+							$filter = str_replace("value", $this->filter[$fieldname]["defaultvalue"], $this->filter[$fieldname]["ldap"]);
+						}
+					}
+				}
+			}
+		}
+
 
 
 		// connect to LDAP server

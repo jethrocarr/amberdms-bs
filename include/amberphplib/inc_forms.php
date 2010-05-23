@@ -459,10 +459,11 @@ class form_input
 										^ - OBSOLETE: this option should be replaced by autoselect option		
 						["autoselect"]			Enabling this option will cause a radio or dropdown with just a single
 										entry to auto-select the single entry.
-						["css_row_class"]		Set the CSS class to a custom option for the rendered table row.
-						["css_row_id"]			Set the CSS id to a custom option for the rendered table row.
+						["nohidden"]			Disables the hidden field on text fields
+ 						["css_row_class"]		Set the CSS class to a custom option for the rendered table row.
+ 						["css_row_id"]			Set the CSS id to a custom option for the rendered table row.
 											(note: by default, table rows have their ID set to the name of the fieldname)
-		
+
 			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();		Associate array used for labeling the values in radio or dropdown type fields
 		
@@ -598,7 +599,11 @@ class form_input
 				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
 
 				print "$translation";
-				print "<input type=\"hidden\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\">";
+
+				if (!isset($this->structure[$fieldname]["options"]["nohidden"]))
+				{
+					print "<input type=\"hidden\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\">";
+				}
 			break;
 
 			case "textarea":
