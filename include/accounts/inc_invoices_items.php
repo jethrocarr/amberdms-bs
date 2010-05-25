@@ -412,15 +412,15 @@ class invoice_list_items
 				if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 				{
 					print "<div class=\"invoice_button_area\">";
-						print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=standard\">
+						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=standard\">
 							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
 							<br />";
 						if ($this->type == "ar")
 						{
-							print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=time\">
+							print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=time\">
 								<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
 						}	
-						print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=product\">
+						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=product\">
 							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
 					print "</div>";
 				}
