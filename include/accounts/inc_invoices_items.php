@@ -398,15 +398,41 @@ class invoice_list_items
 
 				print "</tr>";
 			}
-
-
+			
+			/*
+			 * Add buttons
+			 */
+			//calculate number of rows buttons can cover
+			$footer_rows = $this->obj_table_taxes->data_num_rows + 2;
+			
+			print "<tr>";
+				
+				print "<td class=\"blank\" colspan=\"4\" rowspan=\"$footer_rows\">";
+				
+				if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+				{
+					print "<div class=\"invoice_button_area\">";
+						print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=standard\">
+							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
+							<br />";
+						if ($this->type == "ar")
+						{
+							print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=time\">
+								<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
+						}	
+						print "<a href=\"index.php?page=accounts/ar/invoice-items-edit.php&id=".$this->invoiceid."&type=product\">
+							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
+					print "</div>";
+				}
+				print "</td>";
+			
 			/*
 				Subtotal
 
 				Display total of all items without tax
 			*/
-			print "<tr>";
-				print "<td class=\"blank\" colspan=\"4\"></td>";
+//			print "<tr>";
+//				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Subtotal:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>". $this->obj_table_standard->data_render["total"]["amount"] ."</b></td>";
 				print "<td class=\"footer\">&nbsp;</td>";
@@ -429,7 +455,7 @@ class invoice_list_items
 				print "<tr>";
 
 				// padding
-				print "<td class=\"blank\" colspan=\"4\"></td>";
+//				print "<td class=\"blank\" colspan=\"4\"></td>";
 
 				// tax name
 				print "<td valign=\"center\" colspan=\"2\">". $this->obj_table_taxes->data_render[$i]["name_tax"] ."</td>";
@@ -515,7 +541,7 @@ class invoice_list_items
 			$invoice_total = format_money($invoice_total);
 
 			print "<tr>";
-				print "<td class=\"blank\" colspan=\"4\"></td>";
+//				print "<td class=\"blank\" colspan=\"4\"></td>";
 				print "<td class=\"footer\" valign=\"top\" colspan=\"2\"><b>Invoice Total:</b></td>";
 				print "<td class=\"footer\" valign=\"top\"><b>$invoice_total</b></td>";
 				print "<td class=\"footer\">&nbsp;</td>";

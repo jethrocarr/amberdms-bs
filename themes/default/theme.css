@@ -617,3 +617,30 @@ div[class*='toggle']
 {
 	text-align:	center;
 }
+
+/*invoice item buttons*/
+.invoice_button_area
+{
+	margin:		5px;
+}
+.invoice_button_area a
+{
+	text-decoration:	none;
+	font-size:		small;
+}
+
+.invoice_button_area a:hover
+{
+	opacity:	.5;
+	color:		black;
+}
+
+.invoice_button_area strong
+{
+	vertical-align:	6px;
+}
+
+.invoice_button_area img
+{
+	border:		none;
+}
