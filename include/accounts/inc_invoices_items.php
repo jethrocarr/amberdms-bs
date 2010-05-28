@@ -411,17 +411,18 @@ class invoice_list_items
 				
 				if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
 				{
+					print "<p><strong>Add new items to invoice:<strong></p>";
 					print "<div class=\"invoice_button_area\">";
 						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=standard\">
-							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
+							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
 							<br />";
 						if ($this->type == "ar")
 						{
 							print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=time\">
-								<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
+								<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
 						}	
 						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=product\">
-							<img src=\"images/icons/plus.gif\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
+							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
 					print "</div>";
 				}
 				print "</td>";
@@ -557,96 +558,96 @@ class invoice_list_items
 
 
 
-		if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
-		{
-			/*
-				Display the new item form
-			*/
-
-
-			$form = New form_input;
-			$form->formname		= $this->type ."_invoice_". $this->mode;
-			$form->language		= $_SESSION["user"]["lang"];
-	
-			$form->action		= str_replace("edit", "add-process", $this->page_view);
-			$form->method		= "POST";
-
-			// basic details
-			$structure = NULL;
-			$structure["fieldname"] 	= "id";
-			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $this->invoiceid;
-			$form->add_input($structure);
-
-
-			// item dropdown
-			$structure = NULL;
-			$structure["fieldname"] 	= "item";
-			$structure["type"]		= "dropdown";
-			$structure["options"]["width"]	= "600";
-
-			$structure["values"][]			= "standard";
-			$structure["translations"]["standard"]	= "Basic Transaction";
-			
-			if ($this->type == "ar")
-			{
-				$structure["values"][]			= "time";
-				$structure["translations"]["time"]	= "Time Item";
-			}
-
-			// fetch all the products for the drop down
-			$sql_products_obj		= New sql_query;
-			$sql_products_obj->string	= "SELECT id, code_product, name_product FROM products ORDER BY name_product";
-			$sql_products_obj->execute();
-			
-			if ($sql_products_obj->num_rows())
-			{
-				$sql_products_obj->fetch_array();
-
-				foreach ($sql_products_obj->data as $data)
-				{
-					$structure["values"][]				= $data["id"];
-					$structure["translations"][ $data["id"] ]	= $data["code_product"] ."--". $data["name_product"];
-				}
-			}
-
-
-			$form->add_input($structure);
-
-
-			// submit support
-			$structure = NULL;
-			$structure["fieldname"] 	= "submit";
-			$structure["type"]		= "submit";
-			$structure["defaultvalue"]	= "Add";
-			$form->add_input($structure);
-
-
-
-			// display the form
-			print "<br><table class=\"table_highlight_info\" width=\"100%\"><tr><td>";
-			print "<p>Add new items to invoice:</p>";
-
-			print "<form method=\"". $form->method ."\" action=\"". $form->action ."\">";
-			print "<table><tr>";
-
-				print "<td>";
-				$form->render_field("item");
-				print "</td>";
-
-				print "<td>";
-				$form->render_field("submit");
-				print "</td>";
-
-			print "</tr></table>";
-			
-			$form->render_field("id");
-
-			print "</form>";
-
-			print "</td></tr></table>";
-		
-		} // end if items
+//		if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+//		{
+//			/*
+//				Display the new item form
+//			*/
+//
+//
+//			$form = New form_input;
+//			$form->formname		= $this->type ."_invoice_". $this->mode;
+//			$form->language		= $_SESSION["user"]["lang"];
+//	
+//			$form->action		= str_replace("edit", "add-process", $this->page_view);
+//			$form->method		= "POST";
+//
+//			// basic details
+//			$structure = NULL;
+//			$structure["fieldname"] 	= "id";
+//			$structure["type"]		= "hidden";
+//			$structure["defaultvalue"]	= $this->invoiceid;
+//			$form->add_input($structure);
+//
+//
+//			// item dropdown
+//			$structure = NULL;
+//			$structure["fieldname"] 	= "item";
+//			$structure["type"]		= "dropdown";
+//			$structure["options"]["width"]	= "600";
+//
+//			$structure["values"][]			= "standard";
+//			$structure["translations"]["standard"]	= "Basic Transaction";
+//			
+//			if ($this->type == "ar")
+//			{
+//				$structure["values"][]			= "time";
+//				$structure["translations"]["time"]	= "Time Item";
+//			}
+//
+//			// fetch all the products for the drop down
+//			$sql_products_obj		= New sql_query;
+//			$sql_products_obj->string	= "SELECT id, code_product, name_product FROM products ORDER BY name_product";
+//			$sql_products_obj->execute();
+//			
+//			if ($sql_products_obj->num_rows())
+//			{
+//				$sql_products_obj->fetch_array();
+//
+//				foreach ($sql_products_obj->data as $data)
+//				{
+//					$structure["values"][]				= $data["id"];
+//					$structure["translations"][ $data["id"] ]	= $data["code_product"] ."--". $data["name_product"];
+//				}
+//			}
+//
+//
+//			$form->add_input($structure);
+//
+//
+//			// submit support
+//			$structure = NULL;
+//			$structure["fieldname"] 	= "submit";
+//			$structure["type"]		= "submit";
+//			$structure["defaultvalue"]	= "Add";
+//			$form->add_input($structure);
+//
+//
+//
+//			// display the form
+//			print "<br><table class=\"table_highlight_info\" width=\"100%\"><tr><td>";
+//			print "<p>Add new items to invoice:</p>";
+//
+//			print "<form method=\"". $form->method ."\" action=\"". $form->action ."\">";
+//			print "<table><tr>";
+//
+//				print "<td>";
+//				$form->render_field("item");
+//				print "</td>";
+//
+//				print "<td>";
+//				$form->render_field("submit");
+//				print "</td>";
+//
+//			print "</tr></table>";
+//			
+//			$form->render_field("id");
+//
+//			print "</form>";
+//
+//			print "</td></tr></table>";
+//		
+//		} // end if items
 
 		return 1;
 
@@ -876,9 +877,6 @@ class invoice_form_item
 		}
 					
 
-		
-
-
 		/*
 			Define form structure, depending on the type of the item
 		*/
@@ -943,6 +941,7 @@ class invoice_form_item
 					// user note
 					$structure = NULL;
 					$structure["fieldname"] 		= "tax_message";
+
 					$structure["type"]			= "message";
 					$structure["defaultvalue"]		= "<p>Check all taxes that apply to this transaction below. If you want more advanced tax control (eg: fixed amounts of tax) then define a product and add it to the invoice.</p>";
 					$form->add_input($structure);
@@ -1146,8 +1145,8 @@ class invoice_form_item
 					// price field
 					// TODO: this should auto-update from the product price
 					$structure = NULL;
-					$structure["fieldname"] 	= "money";
-					$structure["type"]		= "input";
+					$structure["fieldname"] 	= "price";
+					$structure["type"]		= "money";
 					$form->add_input($structure);
 
 					// product id

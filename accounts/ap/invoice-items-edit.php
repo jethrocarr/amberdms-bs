@@ -30,6 +30,9 @@ class page_output
 
 	function page_output()
 	{
+		//require javascript file
+		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-items-edit.js";
+		
 		// fetch vapiables
 		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$this->itemid		= @security_script_input('/^[0-9]*$/', $_GET["itemid"]);
