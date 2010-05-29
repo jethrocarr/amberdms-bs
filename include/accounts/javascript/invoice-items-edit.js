@@ -1,39 +1,71 @@
-$(document).ready(function(){
-	$("select[name='productid']").change(function(){
-		var type = $("input[name='item_type']").val();
-		var prod_id = $("select[name='productid'] option:selected").val();
-		//if time
-		if (type == 'time')
-		{
-			getTimeData(prod_id);
-		}
-		//if product
-		else if (type == 'product')
-		{
-			getProductData(prod_id);
-		}
+/*
+	include/accounts/javascript/invoice-items-edit.js
+	
+	Various functions for powering the invoice items UI and providing
+	AJAX functions for loading data.
+*/
+$(document).ready(function()
+{
+
+	$("select[name='productid']").change(function()
+	{
+		var id_product = $("select[name='productid'] option:selected").val();
+
+		getProductData(id_product);
 	});
+
+	$("select[name='timegroupid']").change(function()
+	{
+		var id_timegroup= $("select[name='timegroupid'] option:selected").val();
+
+		getTimeData(id_timegroup);
+	});
+
 });
 
-function getTimeData(prod_id)
+
+/*
+	getTimeData
+
+	Populates the form with time group data
+*/
+function getTimeData(id_timegroup)
 {
-	$.getJSON("../../../accounts/ajax/get_time_data.php", {id: prod_id}, 
+	$.getJSON("accounts/ajax/get_time_data.php", {id: id_timegroup}, 
 			function(json)
 			{
-				alert(json);
+				$("textarea[name='description']").text(json['description']);
 			}
 	);
 }
 
-function getProductData(prod_id)
+
+
+/*
+	getProductData
+
+	Populates a form with product data when an item is selected.
+*/
+function getProductData(id_product)
 {
-	$.getJSON("accounts/ajax/get_product_data.php", {id: prod_id}, 
+	$.getJSON("accounts/ajax/get_product_data.php", {id: id_product}, 
 			function(json)
 			{
-				$("input[name='price']").val(json['price_sale']);
-				$("input[name='units']").val(json['units']);
-				$("textarea[name='description']").text(json['details']);
-				$("input[name='discount']").val(json['discount']);
+				var type = $("input[name='item_type']").val();
+
+				if (type == 'time')
+				{
+					$("input[name='price']").val(json['price_sale']);
+					$("input[name='units']").val(json['units']);
+					$("input[name='discount']").val(json['discount']);
+				}
+				else
+				{
+					$("input[name='price']").val(json['price_sale']);
+					$("input[name='units']").val(json['units']);
+					$("textarea[name='description']").text(json['details']);
+					$("input[name='discount']").val(json['discount']);
+				}
 			}
 	);	
 }

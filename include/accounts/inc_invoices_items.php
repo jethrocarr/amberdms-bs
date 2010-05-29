@@ -295,7 +295,29 @@ class invoice_list_items
 
 		if (!$this->obj_table_standard->data_num_rows)
 		{
-			format_msgbox("info", "<p>There are no items in this invoice</p>");
+			print "<table class=\"table_highlight_info\" width=\"100%\">";
+			print "<tr><td width=\"100%\">";
+
+				print "<p>This invoice has no items and is currently empty.</p>";
+
+				print "<div class=\"invoice_button_area\">";
+					print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
+						<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
+						<br />";
+
+					if ($this->type == "ar")
+					{
+						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
+							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
+					}
+
+					print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
+						<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
+				print "</div>";
+
+			print "</td></tr>";
+			print "</table>";
+
 		}
 		else
 		{
@@ -402,6 +424,7 @@ class invoice_list_items
 			/*
 			 * Add buttons
 			 */
+
 			//calculate number of rows buttons can cover
 			$footer_rows = $this->obj_table_taxes->data_num_rows + 2;
 			
@@ -413,15 +436,17 @@ class invoice_list_items
 				{
 					print "<p><strong>Add new items to invoice:<strong></p>";
 					print "<div class=\"invoice_button_area\">";
-						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=standard\">
+						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
 							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
 							<br />";
+
 						if ($this->type == "ar")
 						{
-							print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=time\">
+							print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
 								<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
-						}	
-						print "<a href=\"index.php?page=accounts/". $this->type ."/invoice-items-edit.php&id=".$this->invoiceid."&type=product\">
+						}
+
+						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
 							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
 					print "</div>";
 				}
@@ -1138,7 +1163,7 @@ class invoice_form_item
 					// list of avaliable time groups
 					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
 					$structure["options"]["width"]		= "600";
-					$structure["options"]["autoselect"]	= "yes";
+					// $structure["options"]["autoselect"]	= "yes";	// TODO: disabled to enable javascript AJAX logic, we need a solution that fixes this
 					$form->add_input($structure);
 
 				
