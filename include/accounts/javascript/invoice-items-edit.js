@@ -13,7 +13,7 @@ $(document).ready(function()
 
 		getProductData(id_product);
 	});
-
+	
 	$("select[name='timegroupid']").change(function()
 	{
 		var id_timegroup= $("select[name='timegroupid'] option:selected").val();
@@ -21,6 +21,10 @@ $(document).ready(function()
 		getTimeData(id_timegroup);
 	});
 
+	if ($("select[name='timegroupid'] option:selected").val() != 0)
+	{
+		getTimeData($("select[name='timegroupid'] option:selected").val());
+	}
 });
 
 

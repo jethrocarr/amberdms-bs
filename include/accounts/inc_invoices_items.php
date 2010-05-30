@@ -1163,7 +1163,7 @@ class invoice_form_item
 					// list of avaliable time groups
 					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
 					$structure["options"]["width"]		= "600";
-					// $structure["options"]["autoselect"]	= "yes";	// TODO: disabled to enable javascript AJAX logic, we need a solution that fixes this
+					 $structure["options"]["autoselect"]	= "yes";	// TODO: disabled to enable javascript AJAX logic, we need a solution that fixes this
 					$form->add_input($structure);
 
 				
