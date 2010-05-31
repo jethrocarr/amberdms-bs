@@ -17,13 +17,14 @@ $(document).ready(function()
 	$("select[name='timegroupid']").change(function()
 	{
 		var id_timegroup= $("select[name='timegroupid'] option:selected").val();
-
 		getTimeData(id_timegroup);
 	});
 
-	if ($("select[name='timegroupid'] option:selected").val() != 0)
-	{
-		getTimeData($("select[name='timegroupid'] option:selected").val());
+	if ($("input[name='item_type']").val() == "time"){
+		if ($("select[name='timegroupid'] option:selected").val() != 0)
+		{
+			getTimeData($("select[name='timegroupid'] option:selected").val());
+		}
 	}
 });
 
