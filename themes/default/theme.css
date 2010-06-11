@@ -643,3 +643,10 @@ div[class*='toggle']
 {
 	border:		none;
 }
+
+/*templates*/
+.available_templates_row
+{
+	background-color:	#e7e7e7;
+}
+
