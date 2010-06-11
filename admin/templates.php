@@ -155,12 +155,12 @@ class page_output
 						{
 							$id = $array[$j][$i];
 							print "<td class=\"available_templates_cell\">";
-								print "<p><input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $this->obj_sql_ar_invoice->data[$id]["id"] ."\" ";
+								print "<p><input type=\"radio\" name=\"ar_invoice_tex\" id=\"".$this->obj_sql_ar_invoice->data[$id]["id"]."\" value=\"". $this->obj_sql_ar_invoice->data[$id]["id"] ."\" ";
 									if ($this->obj_sql_ar_invoice->data[$id]["active"])
 									{
 										print "checked ";
 									}
-									print "> ". lang_trans("use_this_template") ."</p>";
+									print "><label for=\"". $this->obj_sql_ar_invoice->data[$id]["id"]. "\"> ". lang_trans("use_this_template") ."</label></p>";
 							print "</td>";
 						}
 						else
@@ -179,181 +179,9 @@ class page_output
 					print "<br />&nbsp;";
 				print "</td>";
 			print "</tr>";
-//			for ($i=0; $i<count($this->obj_sql_ar_invoice->data); $i++)
-//			{
-//				print "<tr class=\"available_templates_row ar_invoices_templates\">";
-//					print "<td class=\"available_templates_cell\">";
-//						print "<table height=\"100%\">";
-//							print "<tr><td class=\"available_templates_image\">";
-//								print "<img  src=\"". $this->obj_sql_ar_invoice->data[$i]["template_file"] ."_icon.png\">";
-//							print "</td></tr>";
-//							print "<tr><td class=\"available_templates_details\">";
-//								print "<p><strong>". $this->obj_sql_ar_invoice->data[$i]["template_name"] ."</strong></p>";
-//								print "<p>" .$this->obj_sql_ar_invoice->data[$i]["template_description"] ."</p>";
-//							print "</td></tr>";
-//							print "<tr><td class=\"available_templates_select\">";
-//								print "<p><input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $this->obj_sql_ar_invoice->data[$i]["id"] ."\" ";
-//									if ($this->obj_sql_ar_invoice->data[$i]["active"])
-//									{
-//										print "checked ";
-//									}
-//									print "> ". lang_trans("use_this_template") ."</p>";
-//							print "</td></tr>";
-//						print "</table>";
-//					print "</td>";			
-//					
-//					$i++;
-//					if ($this->obj_sql_ar_invoice->data[$i])
-//					{
-//						print "<td class=\"available_templates_cell\">";
-//							print "<table height=\"100%\">";
-//								print "<tr><td class=\"available_templates_image\">";
-//									print "<img  src=\"". $this->obj_sql_ar_invoice->data[$i]["template_file"] ."_icon.png\">";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_details\">";
-//									print "<p><strong>". $this->obj_sql_ar_invoice->data[$i]["template_name"] ."</strong></p>";
-//									print "<p>" .$this->obj_sql_ar_invoice->data[$i]["template_description"] ."</p>";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_select\">";
-//									print "<p><input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $this->obj_sql_ar_invoice->data[$i]["id"] ."\" ";
-//										if ($this->obj_sql_ar_invoice->data[$i]["active"])
-//										{
-//											print "checked ";
-//										}
-//										print "> ". lang_trans("use_this_template") ."</p>";
-//								print "</td></tr>";
-//							print "</table>";
-//						print "</td>";
-//					}
-//					else
-//					{
-//						print "<td class=\"filler_cell\">";
-//						print "</td>";					
-//					}
-//					
-//					$i++;
-//					if ($this->obj_sql_ar_invoice->data[$i])
-//					{
-//						print "<td class=\"available_templates_cell\">";
-//							print "<table height=\"100%\">";
-//								print "<tr><td class=\"available_templates_image\">";
-//									print "<img  src=\"". $this->obj_sql_ar_invoice->data[$i]["template_file"] ."_icon.png\">";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_details\">";
-//									print "<p><strong>". $this->obj_sql_ar_invoice->data[$i]["template_name"] ."</strong></p>";
-//									print "<p>" .$this->obj_sql_ar_invoice->data[$i]["template_description"] ."</p>";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_select\">";
-//									print "<p><input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $this->obj_sql_ar_invoice->data[$i]["id"] ."\" ";
-//										if ($this->obj_sql_ar_invoice->data[$i]["active"])
-//										{
-//											print "checked ";
-//										}
-//										print "> ". lang_trans("use_this_template") ."</p>";
-//								print "</td></tr>";
-//							print "</table>";
-//						print "</td>";
-//					}
-//					else
-//					{
-//						print "<td class=\"filler_cell\">";
-//						print "</td>";					
-//					}
-//					
-//					$i++;
-//					if ($this->obj_sql_ar_invoice->data[$i])
-//					{
-//						print "<td class=\"available_templates_cell\">";
-//							print "<table height=\"100%\">";
-//								print "<tr><td class=\"available_templates_image\">";
-//									print "<img  src=\"". $this->obj_sql_ar_invoice->data[$i]["template_file"] ."_icon.png\">";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_details\">";
-//									print "<p><strong>". $this->obj_sql_ar_invoice->data[$i]["template_name"] ."</strong></p>";
-//									print "<p>" .$this->obj_sql_ar_invoice->data[$i]["template_description"] ."</p>";
-//								print "</td></tr>";
-//								print "<tr><td class=\"available_templates_select\">";
-//									print "<p><input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $this->obj_sql_ar_invoice->data[$i]["id"] ."\" ";
-//										if ($this->obj_sql_ar_invoice->data[$i]["active"])
-//										{
-//											print "checked ";
-//										}
-//										print "> ". lang_trans("use_this_template") ."</p>";
-//								print "</td></tr>";
-//							print "</table>";
-//						print "</td>";
-//					}
-//					else
-//					{
-//						print "<td class=\"filler_cell\">";
-//						print "</td>";					
-//					}
-//
-//				print "</tr>";
-//			}
-//			
-//			print "<tr class=\"available_templates_row ar_invoices_templates\">";
-//				print "<td class=\"available_templates_cell\" colspan=\"4\">";
-//					print "<input type=\"submit\" value=\"Save Changes\">";
-//				print "</td>";
-//			print "</tr>";
 		print "</table>";
 		print "</form>";
-		// display the form
-//		print "<form action=". $this->obj_form->action ." method=". $this->obj_form->method .">";
-//
-//
-//		/*
-//			AR INVOICES
-//		*/
-//		print "<br><br>";
-//		print "<h3>AR INVOICES</h3>";
-//
-//		print "<table width=\"100%\">";
-//		print "<tr>";
-//
-//
-//		foreach ($this->obj_sql_ar_invoice->data as $data_sql)
-//		{
-//			// screenshot/icon
-//			print "<td><img src=\"". $data_sql["template_file"] ."_icon.png\"</td>";
-//		}
-//
-//
-//		print "</tr><tr>";
-//
-//
-//		foreach ($this->obj_sql_ar_invoice->data as $data_sql)
-//		{
-//			print "<td>";
-//
-//			// details
-//			print "<p><b>". $data_sql["template_name"] ."</b></p>";
-//			print "<p>". $data_sql["template_description"] ."</p>";
-//
-//			// select
-//			print "<input type=\"radio\" name=\"ar_invoice_tex\" value=\"". $data_sql["id"] ."\" ";
-//
-//			if ($data_sql["active"])
-//			{
-//				print "checked ";
-//			}
-//
-//			print "> ". lang_trans("use_this_template") ."";
-//
-//			print "</td>";
-//
-//		}
-//
-//		
-//		print "</tr>";
-//		print "</table>";
-//
-//
-//		print "<br>";
-//		print "<input type=\"submit\" value=\"Save Changes\">";
-//
-//		print "</form>";
+
 	}
 
 	
