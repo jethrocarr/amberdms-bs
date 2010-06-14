@@ -1,0 +1,52 @@
+.current_template_cell
+{
+	width:			66%;
+	vertical-align: 	top;
+}
+
+.current_template_row
+{
+	margin-bottom:		25px;
+}
+
+
+.current_template_image
+{
+	height:			139px;
+	width:			109px;
+	float:			left;
+	padding-right:		10px;
+	padding-left:		25px;
+	padding-top:		10px;
+	padding-bottom:		25px;
+}
+
+.current_template_description
+{
+	text-align:		left;
+	padding-top:		15px;
+}
+
+.change_template
+{
+	float:			left;
+}
+
+.filler_cell
+{
+	width:			33%;
+}
+
+.available_templates_cell
+{
+	padding-left:		25px;
+	padding-top:		15px;
+}
+
+
+.available_templates_row
+{
+	display:		none;
+}
+
+
