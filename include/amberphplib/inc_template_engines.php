@@ -282,8 +282,9 @@ class template_engine
 	}
 
 	/*
-		prepare_filltemplate
+	 	Development  prepare_filltemplate_new function
 
+		This is currently not in use, but it is the start of the new code to parse template filkes
 		Runs through the template and performs replacements for all the defined
 		fields.
 		
@@ -955,7 +956,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
+		$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
@@ -964,7 +965,7 @@ class template_engine_htmltopdf extends template_engine
 		
 		
 		//exit("<pre>".print_r($this->data_array,true)."</pre>");
-		//exit(implode("",$this->processed));
+		exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)
 		{
