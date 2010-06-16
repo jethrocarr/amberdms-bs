@@ -41,7 +41,7 @@ class template_engine
 		
 		// make sure we call the destructor on shutdown to cleanup all the tmp files.
 		register_shutdown_function(array(&$this, 'destructor'));
-        }
+    }
 
 	function destructor()
 	{
@@ -220,9 +220,6 @@ class template_engine
 	function process_template_loops($line, $data, $fieldname, $fieldnames, $level) {
 		// first loop through the parent fields
 		$line_array = array();
-		//if($fieldname == 'invoice_items') {
-		//	echo "<pre>".htmlentities(print_r($data, true), ENT_QUOTES)."</pre>";
-		//}
 		
 		for ($j=0; $j < count($data); $j++)
 		{	
@@ -294,9 +291,79 @@ class template_engine
 		0			failure
 		1			success
 	*/
+	function prepare_filltemplate_new() {
+		log_debug("template_engine", "Executing prepare_filltemplate()");
+
+		
+
+		$fieldname	= "";
+		$fieldnames = array(0 => '');
+		$repeated_processed_lines = array();
+		
+		
+		$in_foreach	= 0; 
+		$in_if		= 0;
+		
+		 
+		echo "<div style='font-size: 8pt; font-family: sans-serif;'>";
+		for ($i = 0; $i < count($this->template); $i++)
+		{
+		
+			$line = $this->template[$i];
+			if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
+			{
+				$fieldname = $matches[1];
+				
+				
+				for ($j = $i; $j < count($this->template); $j++)
+				{
+					$end_line = $this->template[$j];
+					if (preg_match("/^\S*\send(\s$fieldname)*\s-->/", $end_line, $matches) )
+					{
+						echo $fieldname . " - " . htmlentities($end_line, ENT_QUOTES)."<br />";
+						break; 
+					} 
+				}
+				$rows = $j+ 1 - $i;
+				$section[$fieldname] = array_slice($this->template, $i, $rows);
+						
+			}
+			//	if (preg_match("/^\S*\sif\s(\S*)/", $line, $matches))
+			
+			//	if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
+			//	if (preg_match("/^\S*\send[\s->]*$/", $line))
+		
+			//echo "<div style='height: 14px; white-space: pre;' >";
+			//echo "<span style='display: block; float: left; clear: left; background: #9999FF; width: 3em; border-bottom: 1px solid #cccccc;'> ".$i."</span> ";
+			//echo htmlentities($line, ENT_QUOTES)."";
+			//echo "</div>";
+		}
+		
+		echo "</div>";
+		echo "<pre>".htmlentities(print_r($section,true), ENT_QUOTES)."</pre>";
+		$_SESSION["user"]["log_debug"] = array();
+		exit();
+		//$this->processed[] = $line_tmp;
+		
+	}
+	
+	
+	
+	/*
+		prepare_filltemplate
+
+		Runs through the template and performs replacements for all the defined
+		fields.
+		
+		Returns
+		0			failure
+		1			success
+	*/
 	function prepare_filltemplate()
 	{
 		log_debug("template_engine", "Executing prepare_filltemplate()");
+
+		
 
 		$fieldname	= "";
 		$fieldnames = array(0 => '');
@@ -888,7 +955,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/billing_system/htdocs/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcosolarix/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	

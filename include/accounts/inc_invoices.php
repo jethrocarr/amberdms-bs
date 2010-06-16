@@ -789,7 +789,7 @@ class invoice
 		// load template
 		if (file_exists("../../$template_file"))
 		{
-			$this->obj_pdf->prepare_load_template("../../$template_file");
+			$this->obj_pdf->prepare_load_template("../../$template_file"); 
 		}
 		else
 		{
@@ -805,7 +805,7 @@ class invoice
 
 		// fetch customer data
 		$sql_customer_obj		= New sql_query;
-		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
+		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, tax_number, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
 		$sql_customer_obj->execute();
 		$sql_customer_obj->fetch_array();
 
@@ -824,6 +824,7 @@ class invoice
 			$sql_customer_obj->data[0]["address1_zipcode"] = "";
 		}
 		
+		$this->obj_pdf->prepare_add_field("customer_tax_number", $sql_customer_obj->data[0]["tax_number"]);
 		$this->obj_pdf->prepare_add_field("customer_address1_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
 
 
