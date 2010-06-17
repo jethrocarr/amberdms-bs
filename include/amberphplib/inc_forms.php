@@ -463,6 +463,7 @@ class form_input
  						["css_row_class"]		Set the CSS class to a custom option for the rendered table row.
  						["css_row_id"]			Set the CSS id to a custom option for the rendered table row.
 											(note: by default, table rows have their ID set to the name of the fieldname)
+						["enable_filtering"]		Set to yes to idnclude a text box to allow search/ filtering of the drop down.
 
 			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();		Associate array used for labeling the values in radio or dropdown type fields
@@ -975,7 +976,12 @@ class form_input
 					$translations = language_translate($this->language, $this->structure[$fieldname]["values"]);
 				}
 
-
+				// input box for filtering
+				if ($this->structure[$fieldname]["options"]["enable_filtering"] == "yes")
+				{
+					$input_width = $this->structure[$fieldname]["options"]["width"]/2;
+					print "<input id=\"_" .$fieldname. "\" class=\"dropdown_filter\" style=\"width:". $input_width ."px\" />&nbsp;";
+				}
 				// start dropdown/select box
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"> ";
 

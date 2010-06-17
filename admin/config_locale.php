@@ -46,6 +46,7 @@ class page_output
 		// time options
 		$structure = form_helper_prepare_timezonedropdown("TIMEZONE_DEFAULT");
 		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["enable_filtering"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
