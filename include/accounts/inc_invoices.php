@@ -901,7 +901,16 @@ class invoice
 
 		// fetch invoice items
 		$sql_items_obj			= New sql_query;
-		$sql_items_obj->string		= "SELECT id, type, chartid, customid, quantity, units, amount, price, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type!='tax' AND type!='payment' ORDER BY type, customid, chartid, description";
+		$sql_items_obj->string		= "SELECT "
+							."id, type, chartid, customid, quantity, units, amount, price, description "
+							."FROM account_items "
+							."WHERE invoiceid='". $this->id ."' "
+							."AND invoicetype='". $this->type ."' "
+							."AND type!='tax' "
+							."AND type!='payment' "
+							."ORDER BY type, customid, chartid, description";
+		
+		
 		$sql_items_obj->execute();
 		$sql_items_obj->fetch_array();
 
@@ -948,10 +957,22 @@ class invoice
 
 					$itemdata["amount"] = $itemdata["price"] * $itemdata["quantity"];
 
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "SELECT product_groups.group_name "
+										." FROM products "
+										." LEFT JOIN product_groups "
+										." ON product_groups.id = products.id_product_group "
+										." WHERE products.id = '". $itemdata["customid"] ."' "
+										." LIMIT 1";
 
-
-					$structure["group"]	= lang_trans("group_products");
-
+					$sql_obj->execute();
+					$sql_obj->fetch_array();
+					
+					if($sql_obj->data[0]["group_name"] != null) {
+						$structure["group"]	= $sql_obj->data[0]["group_name"];
+					} else {
+						$structure["group"]	= lang_trans("group_products");
+					}
 				break;
 
 
@@ -1115,7 +1136,28 @@ class invoice
 				$structure_invoiceitems[] = $structure;
 			}
 		}
-	
+		
+		
+		
+		foreach($structure_invoiceitems as $invoice_item)
+		{
+			$invoice_items_by_group[$invoice_item['group']][] = $invoice_item;
+		}
+		
+		
+		ksort($invoice_items_by_group);
+		if(count($invoice_items_by_group) > 1)
+		{
+			$structure_invoiceitems = array();
+			foreach($invoice_items_by_group as $invoice_item_set)
+			{
+				$structure_invoiceitems = array_merge($structure_invoiceitems, $invoice_item_set);
+			}
+		
+		}
+		
+		//exit("<pre>".print_r($structure_invoiceitems,true)."</pre>");
+		
 		$this->obj_pdf->prepare_add_array("invoice_items", $structure_invoiceitems);
 
 		unset($sql_items_obj);
