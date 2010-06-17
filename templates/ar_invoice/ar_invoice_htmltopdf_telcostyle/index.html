@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head> 
+	    <title>Invoice (code_invoice)</title>
+		<link rel="stylesheet" href="(tmp_filename)html_data/style.css" type="text/css" charset="utf-8" />
+	</head>
+	<body>
+		<div class='page'>
+			<div class='header'>
+				<div class='description'>
+					<h3>TAX INVOICE <span>(code_invoice)</span></h3>
+					<p>
+<!-- foreach taxes -->
+						(name_tax): (taxnumber)<br />
+<!-- end -->
+
+						(company_name) (company_address1_street), (company_address1_zipcode), (company_address1_city)<br />
+						(company_address1_country)
+						<br />
+						<small>Email:(company_contact_email) Phone:(company_contact_phone) Fax:(company_contact_fax) </small>
+					</p>
+				
+				</div>
+			</div>
+			
+			<div class='content'>
+				<div class='right-column'>
+					<div class='sidebar-subsection'>
+						<h4>Account Number</h4>
+						<span class='value'>(code_customer)</span>
+					</div>
+					<div class='sidebar-subsection'>
+						<h4>Page Number</h4>
+						<span class='value'>1 of (page_count)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+						<h4>Statement Date</h4>
+						<span class='value'>(date_trans)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+						<h4>Payment Due Date</h4>
+						<span class='value'>(date_due)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+						<h4>Contact Us</h4>
+						<span class='value'>www.solarix.co.nz/accounts</span>	
+					</div>
+								
+				</div>
+				<div class='left-column'>
+					<div class='to-address'>
+						(customer_contact)<br />
+
+						(customer_name)<br />
+						
+						(customer_address1_street)<br />
+						
+						(customer_address1_city)<br />
+						
+						(customer_address1_state)<br />
+						
+						(customer_address1_country)<br />
+
+						(customer_address1_zipcode)<br />
+
+						
+					</div>
+
+
+
+					<div class='current-activity'>
+						<h4>Current Activity</h4>
+
+						<div class='invoice-section'>
+							<table>
+<!-- foreach summary_items -->
+								<tr> <td>(group_name)</td> <td class='values'>(group_amount)</td> </tr>
+<!-- end -->
+							</table>
+						</div>
+						
+						<div class='invoice-section total'>
+							<table>
+								<tr>
+									<td>Total</td>
+									<td></td>
+									<td class='values'>(amount)</td>
+								</tr>
+<!-- foreach taxes -->
+								<tr> <td>(name_tax)</td> <td></td> <td>(amount)</td> </tr>
+<!-- end -->
+<!-- foreach invoice_payments -->
+								<tr> <td>Payment on (date)</td> <td></td> <td>- (amount)</td> </tr>							 
+<!-- end -->
+								<tr>
+									<td><strong>Total Due by (date_due)</strong></td>
+									<td></td>
+									<td class='values'><strong>(amount_currency) (amount_total)</strong></td>
+								</tr>
+							</table>
+						</div>
+
+
+					</div>
+					
+					
+					<div class='total-amount-due'>
+						<h4>Total Amount Due</h4>
+						<div class='total-due-value'>(amount_currency) (amount_total)</div>
+					</div>
+					
+					
+					
+				</div>
+			</div>
+			<div class='footer payment-advice'>
+				<div class='left-col'>
+					<h3>Payment Advice <small>(code_invoice)</small></h3>
+						<div class='to-address'>
+						(customer_contact)<br />
+
+						(customer_name)<br />
+						
+						(customer_address1_street)<br />
+						
+						(customer_address1_city)<br />
+						
+						(customer_address1_state)<br />
+						
+						(customer_address1_country)<br />
+
+						(customer_address1_zipcode)<br />
+							<small>ACCOUNT NUMBER&nbsp;&nbsp;(code_customer)</small>
+						</div>
+				</div>
+				<div class='right-col'>
+					<h3>PLEASE DO NOT STAPLE</h3>
+					<table>
+						<tr>
+							<td>Current Amount</td> <td>(date_due)</td> <td>(amount_total)</td>
+						</tr>
+						<tr>
+							<td>Total Amount Due</td> <td></td> <td>(amount_total)</td>
+						</tr>
+					</table>
+					
+					(company_payment_details)
+
+				</div>
+			</div>
+		</div>
+		
+<!-- foreach invoice_pages -->
+		<div class='page'>
+			<div class='header'>
+			</div>
+			
+			<div class='content'>
+				<div class='right-column'>
+					<div class='sidebar-subsection'>
+						<h4>Account Number</h4>
+						<span class='value'>(code_customer)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+					<h4>Page Number</h4>
+					<span class='value'>(page_number) of (page_count)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+					<h4>Statement Date</h4>
+					<span class='value'>(date_trans)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+					<h4>Payment Due Date</h4>
+					<span class='value'>(date_due)</span>
+					</div>
+					
+					<div class='sidebar-subsection'>
+					<h4>Contact Us</h4>
+					<span class='value'>www.solarix.co.nz/accounts	</span>	
+					</div>
+								
+				</div>
+				<div class='left-column'>
+					<div class='current-activity invoice_items'>
+						<table>
+<!-- foreach invoice_items -->
+<!-- if group ne previous --><tr><th colspan='6'>(group)</th></tr> <!-- endif --> 	<tr> <td>(info)</td> <td>(description)</td> <td>(amount)</td> </tr>
+<!-- end invoice_items -->
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+<!-- end invoice_pages -->		
+		
+		
+	</body>
+</html>

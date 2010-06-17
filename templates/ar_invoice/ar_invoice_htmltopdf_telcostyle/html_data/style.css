@@ -1,0 +1,278 @@
+body {
+	font-family: "DejaVu Sans", sans-serif;
+	font-size: 10pt;
+	margin: 0px;
+	padding: 0px;
+}
+
+
+div.page {
+	display: block;
+	page-break-after: always;
+	width: 207mm;
+	height: 287mm;
+	margin: 0px;
+	padding: 0px;
+}
+
+div.header {
+	display: block;
+	background: #ffe28b;
+	width: 100%;
+	height: 30mm;
+	margin: 0px;
+	padding: 0px;
+	
+}
+
+div.description{
+	float: right;
+	width: 98mm;
+	height: 30mm;
+	font-size: 10pt;
+}
+
+div.description h3{
+	font-size: 14pt;
+	margin: 6mm 0mm 0mm 0mm;
+}
+div.description h3 span{
+	font-weight: normal;
+}
+
+div.description p{
+	font-size: 8pt;
+	margin: 0px;
+}
+
+
+div.content {
+	display: block;
+	width: 100%;
+	position: relative;
+	margin: 0px;
+	padding: 0px;
+}
+
+div.right-column {
+	display: block;
+	float: right;
+	height: 196mm;
+	width: 42mm;
+	background: #ffe9a4;
+	padding: 4mm 3mm 0mm 3mm;
+}
+
+
+div.sidebar-subsection {
+	margin-bottom: 3mm;
+	font-size: 8pt;
+	
+}
+
+div.sidebar-subsection h4 {
+	display: block;
+	text-transform: uppercase;
+	font-weight: normal;
+	font-size: inherit;
+	margin: 0px;
+}
+
+div.sidebar-subsection span.value {
+	color: #332a4d;
+}
+
+div.content table{
+	border-collapse: collapse;
+}
+
+div.left-column {
+	padding: 6mm 5mm 0px 9mm;
+	width:145mm;
+}
+
+div.left-column> div {
+	padding: 3mm 0mm 0mm 1mm;
+	font-size: 10pt;
+	border-top: 2px solid #666666;
+	margin: 0mm 0mm 4mm 0mm;
+	width: 100%;
+}
+
+div.left-column> div.invoice_items {
+	border-top: none;
+	font-size: 8pt;
+}
+
+div.left-column> div.invoice_items table tr th {
+	border-top: none;
+	text-align: left;
+	font-size: 10pt;
+}
+div.left-column> div.invoice_items table tr td {
+	padding: 0.3mm 0.2mm 0mm 0mm;
+	vertical-align: top;
+}
+
+div.left-column> div.invoice_items table tr td:first-child {
+	padding-left: 0.2mm;
+}
+
+div.left-column> div> div {
+	padding-left: 1mm;
+	padding-bottom: 1mm; 
+}
+
+div.left-column> div table {
+	width: 100%;
+	margin-left: 1.6mm;
+}
+
+div.left-column> div table td {
+	border: none;
+	text-align: right;
+	padding: 0.2mm 0mm 0.2mm 0mm;
+}
+
+div.left-column table td:first-child {
+	text-align: left;
+	white-space: nowrap;
+	padding-right: 4px;
+}
+
+div.left-column> div h4 {
+	font-size: inherit;
+	margin: 0.4mm 0mm 0mm 0mm;
+}
+div.left-column> div> h4 {
+	font-size: 12pt;
+	margin: 0mm 0mm 2mm 0mm;
+}
+
+
+div.left-column div.to-address {
+	border-top: none;
+}
+
+div.previous-activity {
+	width: 100%;
+	border-top: 2px solid #666666;
+	color: #5d97aa;
+}
+
+div.previous-activity td.previous_value_total {
+	border-top: 2px solid #5d97aa;
+}
+
+div.invoice-section.total{
+	margin-top: 5mm;
+	
+}
+
+div.invoice-section.total table {
+	margin-left: 0mm !important;
+}
+
+div.invoice-section.total tr td{
+	padding: 1.4mm 0mm !important;
+}
+
+div.invoice-section.total td.values, div.invoice-section.total td.descr{
+	border-top: 2px solid #666666;
+	width: 30%;
+}
+
+div.left-column div.total-amount-due {
+	width: 100%;
+	border-top: 2px solid #666666;
+	color: #5d97aa;
+	font-size: 12pt;
+}
+
+div.total-amount-due h4{
+	float: left;
+}
+
+div.total-due-value {
+	float: right;
+}
+
+table tbody td {
+	border: 1px solid #666666;	
+	border-collapse: collapse;
+	padding: 4px;
+}
+
+table thead tr.column-names td , table tfoot tr.column-names td {
+	background-color: #cccccc;
+	border: 1px solid #666666;	
+	border-collapse: collapse;
+}
+
+div.footer {
+	clear: both;
+	background-color: #e8eff9;
+	height: 51mm;	
+	padding: 3mm;
+	border-top: 2pt dashed #666666;
+}
+
+div.footer.payment-advice {
+	background: #ffe28b no-repeat;	
+}
+
+div.footer> div {
+	width: 50%;
+}
+
+div.footer h3{
+	margin: 0mm 0mm 3mm 0mm;	
+}
+
+div.footer div.left-col{
+	float: left;
+} 
+
+div.footer div.right-col{
+	float: right;
+	font-size: 9pt;
+} 
+
+div.footer div.right-col h3{
+	font-size: 12pt;
+	color: #5d97aa;
+}
+
+div.footer div.right-col table{
+	border-collapse: collapse;
+	width: 100%;
+}
+
+div.footer div.right-col table tr td{
+	border: none;
+	font-size: 9pt;
+	padding: 3mm 0mm;
+	font-weight: bold;
+}
+
+div.footer div.right-col table tr:first-child td{
+	border-bottom: 2px solid #666666;
+	font-weight: normal;
+}
+div.right-col div.footer-mail {
+}
+
+div.right-col div.footer-mail, div.right-col div.footer-www, div.footer div.footer-credit {
+	padding: 1mm 0mm 1mm 8mm;
+}	
+
+div.right-col div.footer-mail {
+	background: url(mail.png) no-repeat center left;
+}
+	
+div.right-col div.footer-www {
+	background: url(web.jpg) no-repeat center left;
+}
+	
+div.footer div.footer-credit {
+}
