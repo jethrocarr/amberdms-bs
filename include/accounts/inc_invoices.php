@@ -835,7 +835,7 @@ class invoice
 		
 		// company logo
 		$this->obj_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
-		
+
 		// fetch company data
 		$sql_company_obj		= New sql_query;
 		$sql_company_obj->string	= "SELECT name, value FROM config WHERE name LIKE '%COMPANY%'";

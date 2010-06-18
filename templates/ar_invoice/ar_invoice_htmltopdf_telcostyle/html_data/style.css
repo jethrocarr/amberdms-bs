@@ -17,7 +17,7 @@ div.page {
 
 div.header {
 	display: block;
-	background: #ffe28b;
+	background: #d1f3ff;
 	width: 100%;
 	height: 30mm;
 	margin: 0px;
@@ -25,23 +25,29 @@ div.header {
 	
 }
 
+div.header img {
+	margin: 2mm 0mm 0mm 2mm;
+	padding: 0mm;
+}
+	
 div.description{
 	float: right;
 	width: 98mm;
-	height: 30mm;
+/*	height: 30mm; */
 	font-size: 10pt;
+	padding: 2mm 0mm 0mm 0mm;
 }
 
 div.description h3{
 	font-size: 14pt;
-	margin: 6mm 0mm 0mm 0mm;
+	margin: 0mm 0mm 0mm 0mm;
 }
 div.description h3 span{
 	font-weight: normal;
 }
 
 div.description p{
-	font-size: 8pt;
+	font-size: 7pt;
 	margin: 0px;
 }
 
@@ -59,10 +65,13 @@ div.right-column {
 	float: right;
 	height: 196mm;
 	width: 42mm;
-	background: #ffe9a4;
+	background: #d1f3ff;
 	padding: 4mm 3mm 0mm 3mm;
 }
 
+div.invoice_list div.right-column {
+	height: 250mm;
+}
 
 div.sidebar-subsection {
 	margin-bottom: 3mm;
@@ -211,14 +220,13 @@ table thead tr.column-names td , table tfoot tr.column-names td {
 
 div.footer {
 	clear: both;
-	background-color: #e8eff9;
+	background-color: #d1f3ff;
 	height: 51mm;	
 	padding: 3mm;
 	border-top: 2pt dashed #666666;
 }
 
 div.footer.payment-advice {
-	background: #ffe28b no-repeat;	
 }
 
 div.footer> div {

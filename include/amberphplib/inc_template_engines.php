@@ -155,7 +155,7 @@ class template_engine
 		// we have to do this, since latex will not tolerate file extensions in the filename when
 		// the file is referenced in the tex data.
 		//
-		preg_match("/\S*\/(\S*).$file_extension$/", $tmp_filename, $matches);
+		preg_match("/\S*\/(\S*)$/", $tmp_filename, $matches);
 				
 		$tmp_filename_short = $matches[1];
 		
@@ -263,9 +263,17 @@ class template_engine
 					{
 						$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
 					}
+					
+				
+					// And we also need to match any files, as well.
+					foreach (array_keys($this->data_files) as $var)
+					{
+						$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+					}
+					
 					$line_array[$j][] = $line_tmp;
 				}
-			//echo "<pre>".htmlentities(print_r($line_array, true), ENT_QUOTES)."</pre>";
+			//echo "<pre>".htmlentities(print_r($this->data, true), ENT_QUOTES)."</pre>";
 			}
 			else
 			{	
@@ -455,6 +463,14 @@ class template_engine
 							{
 								$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
 							}
+						
+						
+							// And we also need to match any files, as well.
+							foreach (array_keys($this->data_files) as $var)
+							{
+								$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+							}
+							
 							
 							// append the rows to the processed item array
 							$repeated_processed_lines[$j][] = $line_tmp; 
@@ -637,6 +653,63 @@ class template_engine_latex extends template_engine
 			
 	} // end of prepare_escape_fields
 
+	/*
+		prepare_add_file
+
+		Add a new file to the template. Latex version, returns filename with no extension
+
+		Values
+		fieldname		name of the field to replace with the tmp filename
+		file_extension		extension of the file to create
+		
+		file_type		type of the file in the file_uploads table
+		file_id			ID of the file in the file_uploads table
+
+		Return
+		0			failure
+		1			success
+	*/
+	function prepare_add_file($fieldname, $file_extension, $file_type, $file_id)
+	{
+		log_debug("template_engine", "Executing prepare_add_file($fieldname, $file_extension, $file_type, $file_id)");
+		
+		
+		$tmp_filename = file_generate_name("/tmp/$fieldname", $file_extension);
+
+		
+		// output file data
+		$file_obj			= New file_storage;
+		$file_obj->data["type"]		= $file_type;
+		$file_obj->data["customid"]	= $file_id;
+
+		if (!$file_obj->load_data_bytype())
+		{
+			log_write("error", "template_engine", "Unable to find company logo image - use the administration config page to upload a company logo");
+			return 0;
+		}
+
+		$file_obj->filedata_write($tmp_filename);
+
+
+		// work out the filename without path or extension
+		//
+		// we have to do this, since latex will not tolerate file extensions in the filename when
+		// the file is referenced in the tex data.
+		//
+		preg_match("/\S*\/(\S*).$file_extension$/", $tmp_filename, $matches);
+				
+		$tmp_filename_short = $matches[1];
+		
+
+		// map fieldname to filename
+		$this->data_files[$fieldname]["filename"]	= $tmp_filename;
+		$this->data_files[$fieldname]["filename_short"]	= $tmp_filename_short;
+
+		log_debug("template_engine", "Wrote tempory file $tmp_filename with shortname of $tmp_filename_short");
+		
+		return 1;
+	}
+	
 
 	/*
 		generate_pdf()
