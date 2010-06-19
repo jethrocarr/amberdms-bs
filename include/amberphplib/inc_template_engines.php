@@ -1029,7 +1029,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
@@ -1038,7 +1038,7 @@ class template_engine_htmltopdf extends template_engine
 		
 		
 		//exit("<pre>".print_r($this->data_array,true)."</pre>");
-		exit(implode("",$this->processed));
+		//exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)
 		{
