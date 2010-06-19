@@ -1098,7 +1098,7 @@ class invoice
 
 
 			// finalise item
-			$structure["description"]	= $itemdata["description"];
+			$structure["description"]	= trim($itemdata["description"]);
 			$structure["units"]		= $itemdata["units"];
 
 			if ($itemdata["price"])
