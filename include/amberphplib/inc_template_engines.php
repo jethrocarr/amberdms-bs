@@ -440,7 +440,7 @@ class template_engine
 						$repeated_processed_line_sections = $this->process_template_loops($line, $this->data_array[$parent_fieldname], $fieldname, $fieldnames, 2);
 						for ($j=0; $j < count($this->data_array[$parent_fieldname]); $j++)
 						{
-							$repeated_processed_lines[$j] = array_merge($repeated_processed_lines[$j], $repeated_processed_line_sections[$j]);
+							$repeated_processed_lines[$j] = array_merge((array)$repeated_processed_lines[$j], (array)$repeated_processed_line_sections[$j]);
 						}
 					
 					}

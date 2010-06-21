@@ -29,25 +29,28 @@ div.header img {
 	margin: 2mm 0mm 0mm 2mm;
 	padding: 0mm;
 }
-	
-div.description{
+
+
+div.to-address {
+	float: left;
+}
+
+div.from-address{
 	float: right;
 	width: 98mm;
-/*	height: 30mm; */
 	font-size: 10pt;
 	padding: 2mm 0mm 0mm 0mm;
 }
 
-div.description h3{
+div.from-address h3{
 	font-size: 14pt;
 	margin: 0mm 0mm 0mm 0mm;
 }
-div.description h3 span{
+div.from-address h3 span{
 	font-weight: normal;
 }
 
-div.description p{
-	font-size: 7pt;
+div.from-address p, div.to-address p{
 	margin: 0px;
 }
 
@@ -91,24 +94,34 @@ div.main-content {
 	width:187mm;
 }
 
-div.main-content> div {
-	padding: 3mm 0mm 0mm 1mm;
-	font-size: 10pt;
-	border-top: 2px solid #666666;
-	margin: 0mm 0mm 4mm 0mm;
-	width: 100%;
+div.main-content> div.invoice_details {
+	border-top: none;
+	clear: both;
+}
+
+div.invoice_details table {
+	font-size: 8pt;
+	width: 36%;
+	margin-bottom: 3.2em;
+	margin-left: 1.6mm;
+}
+
+div.invoice_details table th, div.invoice_details table td {
+	text-align: left;
 }
 
 div.main-content> div.invoice_items {
 	border-top: none;
 	font-size: 8pt;
+	clear: both;
 }
 
 div.main-content> div.invoice_items table tr th {
 	border-top: none;
 	text-align: left;
-	font-size: 10pt;
+	padding: 0.3mm 0.6mm 0mm 0mm;
 }
+
 div.main-content> div.invoice_items table tr td {
 	padding: 0.3mm 0.2mm 0mm 0mm;
 	vertical-align: top;
@@ -123,14 +136,14 @@ div.main-content> div> div {
 	padding-bottom: 1mm; 
 }
 
-div.main-content> div table {
+div.invoice_items table {
 	width: 100%;
 	margin-left: 1.6mm;
 }
 
-div.main-content> div table td {
+td {
 	border: none;
-	text-align: right;
+	/* text-align: right; */
 	padding: 0.2mm 0mm 0.2mm 0mm;
 }
 
@@ -161,46 +174,29 @@ div.previous-activity {
 }
 
 div.previous-activity td.previous_value_total {
-	border-top: 2px solid #5d97aa;
+	border-top: 1px solid #333333;
 }
 
-div.invoice-section.total{
+div.invoice-section.total {
 	margin-top: 5mm;
 	
 }
 
-div.invoice-section.total table {
-	margin-left: 0mm !important;
+
+div.payment_details {
+	margin-top: 2em;
+	
+}
+div.payment_details p {
+	font-size: 8pt;
 }
 
-div.invoice-section.total tr td{
-	padding: 1.4mm 0mm !important;
-}
-
-div.invoice-section.total td.values, div.invoice-section.total td.descr{
-	border-top: 2px solid #666666;
-	width: 30%;
-}
-
-div.main-content div.total-amount-due {
-	width: 100%;
-	border-top: 2px solid #666666;
-	color: #5d97aa;
-	font-size: 12pt;
-}
-
-div.total-amount-due h4{
-	float: left;
-}
-
-div.total-due-value {
-	float: right;
+td.top_border, th.top_border {
+	border-top: 1px solid #333333;
 }
 
 table tbody td {
-	border: 1px solid #666666;	
 	border-collapse: collapse;
-	padding: 4px;
 }
 
 table thead tr.column-names td , table tfoot tr.column-names td {
