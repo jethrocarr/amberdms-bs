@@ -26,6 +26,9 @@ class page_output
 
 	function page_output()
 	{
+		//include required JS and CSS
+		$this->requires["javascript"][]		= "include/timekeeping/javascript/timereg-day-edit.js";
+		
 		// get time record ID to edit
 		$this->id	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		
@@ -223,14 +226,16 @@ class page_output
 
 
 		// project/phase dropdown
-		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT
-										projects.code_project as label,
-										projects.name_project as label1,
-										project_phases.id as id, 
-										project_phases.name_phase as label2
-										FROM `projects` 
-										LEFT JOIN project_phases ON project_phases.projectid = projects.id
-										ORDER BY projects.name_project, project_phases.name_phase");
+//		$structure = form_helper_prepare_dropdownfromdb("phaseid", "SELECT
+//										projects.code_project as label,
+//										projects.name_project as label1,
+//										project_phases.id as id, 
+//										project_phases.name_phase as label2
+//										FROM `projects` 
+//										LEFT JOIN project_phases ON project_phases.projectid = projects.id
+//										ORDER BY projects.name_project, project_phases.name_phase");
+		//project dropdown
+		$structure = form_helper_prepare_dropdownfromdb("projectid", "SELECT code_project AS label, name_project AS label1, id AS id FROM projects ORDER BY name_project");
 
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
@@ -243,6 +248,15 @@ class page_output
 
 		$this->obj_form->add_input($structure);
 		
+		
+		//phase dropdown
+		$structure = NULL;
+		$structure["fieldname"]		= "phaseid";
+		$structure["type"]		= "dropdown";
+		$structure["values"]		= array("");
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["disabled"] = "yes";
+		$this->obj_form->add_input($structure);
 						
 		// submit section
 		$structure = NULL;
@@ -253,7 +267,7 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["timereg_day"]	= array("employeeid", "phaseid", "date", "time_booked", "description");
+		$this->obj_form->subforms["timereg_day"]	= array("employeeid", "projectid", "phaseid", "date", "time_booked", "description");
 		$this->obj_form->subforms["hidden"]		= array("id_timereg");
 
 		if ($this->locked)
@@ -277,6 +291,17 @@ class page_output
 			// fetch the form data
 			$this->obj_form->sql_query = "SELECT * FROM `timereg` WHERE id='". $this->id ."' LIMIT 1";
 			$this->obj_form->load_data();
+			
+//			$sql_obj_2		= New sql_query;
+//			$sql_obj_2->string	= "SELECT project_phases.projectid AS value FROM timereg LEFT JOIN project_phases ON project_phases.id = timereg.phaseid WHERE timereg.id='". $this->id ."'";
+//			print "BLAH" .$sql_obj_2->get_single_value();
+
+//			print "BLAH" .sql_get_singlevalue("SELECT project_phases.projectid AS value FROM timereg LEFT JOIN project_phases ON project_phases.id = timereg.phaseid WHERE timereg.id='". $this->id ."'");
+//			print "<pre>";
+//			print_r($this->obj_form);
+//			print "</pre>";
+
+			$this->obj_form->structure['projectid']['defaultvalue'] = sql_get_singlevalue("SELECT project_phases.projectid AS value FROM timereg LEFT JOIN project_phases ON project_phases.id = timereg.phaseid WHERE timereg.id='". $this->id ."'");
 		}
 		else
 		{
