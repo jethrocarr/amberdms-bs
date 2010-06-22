@@ -163,6 +163,23 @@ unset($sql_config_obj);
 
 
 
+/*
+	Run Corrections
+
+	Legacy adjustments to work around limitations that should be fixed
+	in future but can't be done at once without potentially breaking applications
+*/
+
+
+// if user debugging is set to disabled, make NULL so reports as empty()
+if (isset($_SESSION["user"]["debug"]))
+{
+	if ($_SESSION["user"]["debug"] == "disabled")
+	{
+		$_SESSION["user"]["debug"] = NULL;
+	}
+}
+
 
 
 /*
