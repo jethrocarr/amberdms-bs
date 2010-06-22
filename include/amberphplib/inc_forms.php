@@ -307,25 +307,60 @@ class form_input
 	function render_row ($fieldname)
 	{
 		log_debug("form", "Executing render_row($fieldname)");
-	
-	
-		// if the fieldname has experienced an error, we want to highlight the field
-		if (isset($_SESSION["error"]["$fieldname-error"]))
+		
+		//create array of classes
+		$class_array = array();		
+		if (is_array($this->structure[$fieldname]["options"]["css_row_class"]))
 		{
-			print "<tr class=\"form_error\">";
-		}
-		elseif ($this->structure[$fieldname]["options"]["css_row_class"])
-		{
-			print "<tr class=\"". $this->structure[$fieldname]["options"]["css_row_class"] ."\">";
-		}
-		elseif ($this->structure[$fieldname]["options"]["css_row_id"])
-		{
-			print "<tr id=\"". $this->structure[$fieldname]["options"]["css_row_id"] ."\">";
+			array_merge($class_array, $this->structure[$fieldname]["options"]["css_row_class"]);
 		}
 		else
 		{
-			print "<tr id=\"$fieldname\">";
+			$class_array[] = $this->structure[$fieldname]["options"]["css_row_class"];
 		}
+		
+		if (isset($_SESSION["error"]["$fieldname-error"]))
+		{
+			$class_array[] = $_SESSION["error"]["$fieldname-error"];
+		}
+		
+		if ($this->structure[$fieldname]["options"]["css_row_id"])
+		{
+			print "<tr id=\"". $this->structure[$fieldname]["options"]["css_row_id"] ."\" ";
+		}
+		else
+		{
+			print "<tr id=\"$fieldname\" ";
+		}
+		
+		if (count($class_array) > 0)
+		{
+			print "class=\"";
+			foreach ($class_array as $class)
+			{
+				print $class ." ";
+			}
+			print "\"";
+		}
+		print ">";
+	
+		// if the fieldname has experienced an error, we want to highlight the field
+//		if (isset($_SESSION["error"]["$fieldname-error"]))
+//		{
+//			print "<tr class=\"form_error\">";
+//		}
+//		elseif ($this->structure[$fieldname]["options"]["css_row_class"])
+//		{
+//			print "<tr class=\"". $this->structure[$fieldname]["options"]["css_row_class"] ."\">";
+//		}
+//		elseif ($this->structure[$fieldname]["options"]["css_row_id"])
+//		{
+//			print "<tr id=\"". $this->structure[$fieldname]["options"]["css_row_id"] ."\">";
+//		}
+//		else
+//		{
+//			print "<tr id=\"$fieldname\">";
+//		}
 
 		switch ($this->structure[$fieldname]["type"])
 		{
@@ -363,12 +398,23 @@ class form_input
 			
 				if (isset($this->structure[$fieldname]["options"]["no_fieldname"]))
 				{
-					// display the form field, but do no display the column for the fieldname
-					print "<td colspan=\"2\" width=\"100%\">";
-
-					$this->render_field($fieldname);
-
-					print "</td>";
+					if (isset ($this->structure[$fieldname]["options"]["no_shift"]))
+					{
+						//leave left column blank
+						print "<td width=\"30%\" valign=\"top\">&nbsp;</td>";
+						print "<td width=\"70%\">";
+							$this->render_field($fieldname);
+						print "</td>";
+					}
+					else
+					{
+						// display the form field, but do no display the column for the fieldname
+						print "<td colspan=\"2\" width=\"100%\">";
+	
+						$this->render_field($fieldname);
+	
+						print "</td>";
+					}
 				}
 				else
 				{
@@ -447,6 +493,7 @@ class form_input
 			$option_array["options"]
 						["no_translate_fieldname"]	Set to "yes" to disable language translation for field names
 						["no_fieldname"]		Do not render a field name and shift the data left by 1 column
+						["no_shift"]			For use with no_fieldname option- keeps field in second column
 						["req"]				Set to "yes" to mark the field as being required
 						["max_length"]			Max length for input types
 						["wrap"]			Enable/disable wrapping for textarea boxes (set to either on or off)
@@ -582,11 +629,11 @@ class form_input
 					$this->structure[$fieldname]["options"]["width"] = 250;
 		
 				// display
-				print "<input type=\"password\" name=\"$fieldname\" value=\"";
+				print "<input type=\"password\" name=\"$fieldname\"";
 
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{
-					print $this->structure[$fieldname]["defaultvalue"]. "\"" ;
+					print " value=\"". $this->structure[$fieldname]["defaultvalue"]. "\" " ;
 				}
 				
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
