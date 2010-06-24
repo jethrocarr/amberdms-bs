@@ -42,11 +42,25 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->data["address1_country"]		= @security_form_input_predefined("any", "address1_country", 0, "");
 	$obj_customer->data["address1_zipcode"]		= @security_form_input_predefined("any", "address1_zipcode", 0, "");
 	
-	$obj_customer->data["address2_street"]		= @security_form_input_predefined("any", "address2_street", 0, "");
-	$obj_customer->data["address2_city"]		= @security_form_input_predefined("any", "address2_city", 0, "");
-	$obj_customer->data["address2_state"]		= @security_form_input_predefined("any", "address2_state", 0, "");
-	$obj_customer->data["address2_country"]		= @security_form_input_predefined("any", "address2_country", 0, "");
-	$obj_customer->data["address2_zipcode"]		= @security_form_input_predefined("any", "address2_zipcode", 0, "");
+	$obj_customer->data["address1_same_as_2"]		= @security_form_input_predefined("checkbox", "address1_same_as_2", 0, "");
+
+	// If the address 1 is set to be the same as address 2
+	if($obj_customer->data["address1_same_as_2"] == 1) {
+	
+		$obj_customer->data["address2_street"]		= $obj_customer->data["address1_street"];
+		$obj_customer->data["address2_city"]		= $obj_customer->data["address1_city"];
+		$obj_customer->data["address2_state"]		= $obj_customer->data["address1_state"];
+		$obj_customer->data["address2_country"]		= $obj_customer->data["address1_country"];
+		$obj_customer->data["address2_zipcode"]		= $obj_customer->data["address1_zipcode"];
+	}
+	else
+	{
+		$obj_customer->data["address2_street"]		= @security_form_input_predefined("any", "address2_street", 0, "");
+		$obj_customer->data["address2_city"]		= @security_form_input_predefined("any", "address2_city", 0, "");
+		$obj_customer->data["address2_state"]		= @security_form_input_predefined("any", "address2_state", 0, "");
+		$obj_customer->data["address2_country"]		= @security_form_input_predefined("any", "address2_country", 0, "");
+		$obj_customer->data["address2_zipcode"]		= @security_form_input_predefined("any", "address2_zipcode", 0, "");
+	}
 	
 	$obj_customer->data["tax_number"]		= @security_form_input_predefined("any", "tax_number", 0, "");
 	$obj_customer->data["discount"]			= @security_form_input_predefined("float", "discount", 0, "");
