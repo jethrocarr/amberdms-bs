@@ -35,22 +35,23 @@ div.to-address {
 	float: left;
 }
 
-div.from-address{
+div.from-address {
 	float: right;
 	width: 98mm;
 	font-size: 10pt;
 	padding: 2mm 0mm 0mm 0mm;
 }
 
-div.from-address h3{
+div.from-address h3 {
 	font-size: 14pt;
 	margin: 0mm 0mm 0mm 0mm;
 }
-div.from-address h3 span{
+
+div.from-address h3 span {
 	font-weight: normal;
 }
 
-div.from-address p, div.to-address p{
+div.from-address p, div.to-address p {
 	margin: 0px;
 }
 

@@ -37,7 +37,7 @@ function log_debug($category, $content)
 }
 
 function log_write($type, $category, $content)
-{
+{	
 	if (!empty($_SESSION["user"]["debug"]))
 	{
 		// write log record

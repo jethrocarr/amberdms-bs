@@ -47,8 +47,8 @@ function config_generate_uniqueid($config_name, $check_sql)
 	
 	$config_name = strtoupper($config_name);
 	
-	$returnvalue	= 0;
-	$uniqueid	= 0;
+	$returnvalue = 0;
+	$uniqueid = 0;
 	
 
 	// fetch the starting ID from the config DB
@@ -56,7 +56,20 @@ function config_generate_uniqueid($config_name, $check_sql)
 
 	if (!$uniqueid)
 		die("Unable to fetch $config_name value from config database");
+	
+	// first set the uniqueid prefix to an empty string, in case the following tests fail	
+	$uniqueid_prefix = '';
+	
+	if(!is_numeric($uniqueid))
+	{
+		preg_match("/([a-zA-Z]+)*(\d+){1}/", $uniqueid, $matches);
+		// Check to see if the second item is a number, if not, we have a slight problem 
 
+		$uniqueid_prefix = $matches[1];
+		$uniqueid = (int)$matches[2];
+
+	}
+		
 
 	if ($check_sql)
 	{
@@ -64,7 +77,7 @@ function config_generate_uniqueid($config_name, $check_sql)
 		while ($returnvalue == 0)
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= str_replace("VALUE", $uniqueid, $check_sql);
+			$sql_obj->string	= str_replace("VALUE", $uniqueid_prefix.$uniqueid, $check_sql);
 			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
@@ -78,11 +91,12 @@ function config_generate_uniqueid($config_name, $check_sql)
 				$returnvalue = $uniqueid;
 			}
 		}
+		$returnvalue = $uniqueid_prefix.$returnvalue;
 	}
 	else
 	{
 		// conducting no DB checks.
-		$returnvalue = $uniqueid;
+		$returnvalue = $uniqueid_prefix.$uniqueid;
 	}
 	
 
@@ -90,7 +104,7 @@ function config_generate_uniqueid($config_name, $check_sql)
 	$uniqueid++;
 				
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "UPDATE config SET value='$uniqueid' WHERE name='$config_name'";
+	$sql_obj->string	= "UPDATE config SET value='{$uniqueid_prefix}{$uniqueid}' WHERE name='$config_name'";
 	$sql_obj->execute();
 
 

@@ -19,8 +19,8 @@ if (user_permissions_get("admin"))
 		Load Data
 	*/
 
-	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AP_INVOICENUM", 1, "");
-	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input_predefined("int", "ACCOUNTS_AR_INVOICENUM", 1, "");
+	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input_predefined("any", "ACCOUNTS_AP_INVOICENUM", 1, "");
+	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input_predefined("any", "ACCOUNTS_AR_INVOICENUM", 1, "");
 	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input_predefined("int", "ACCOUNTS_GL_TRANSNUM", 1, "");
 	$data["ACCOUNTS_QUOTES_NUM"]		= @security_form_input_predefined("int", "ACCOUNTS_QUOTES_NUM", 1, "");
 	$data["CODE_ACCOUNT"]			= @security_form_input_predefined("int", "CODE_ACCOUNT", 1, "");
