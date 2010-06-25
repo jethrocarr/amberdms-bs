@@ -72,7 +72,7 @@ else
 		log_write("error", "index", "Sorry, the requested page could not be found - please check your URL.");
 	}
 	else
-        {
+	{
 		/*
 			Load the page
 		*/

@@ -40,6 +40,8 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
 		}
+		
+		$this->requires["javascript"][]		= "include/customers/javascript/addedit_customers.js";
 	}
 
 
@@ -258,7 +260,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "address1_same_as_2";
 		$structure["type"]	= "checkbox";
-		$structure["css_row_class"]	= "shipping_same_address";
+		$structure["options"]["css_row_class"]	= "shipping_same_address";
 		$this->obj_form->add_input($structure);
 		
 		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "address1_same_as_2");
@@ -268,26 +270,31 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "address2_street";
 		$structure["type"]	= "textarea";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_city";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_state";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_country";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "address2_zipcode";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 	
 		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
