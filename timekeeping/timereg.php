@@ -174,6 +174,7 @@ class page_output
 		$structure				= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
 		$structure["sql"]			= "timereg.employeeid='value'";
 		$structure["options"]["autoselect"]	= "on";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form_employee->add_input($structure);
 
 		// if there is currently no employee set, and there is only one

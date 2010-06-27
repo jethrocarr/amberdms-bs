@@ -222,7 +222,8 @@ class page_output
 											projects.name_project,
 											project_phases.name_phase");
 													
-		$structure["sql"]	= "project_phases.id='value'";
+		$structure["sql"]			= "project_phases.id='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 		$sql_obj = New sql_query;
@@ -238,8 +239,9 @@ class page_output
 
 		$sql_obj->generate_sql();
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
-		$structure["sql"]	= "timereg.employeeid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
+		$structure["sql"]			= "timereg.employeeid='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 

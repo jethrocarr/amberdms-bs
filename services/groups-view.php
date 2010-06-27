@@ -92,7 +92,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		
-		$sql_obj	= New sql_query;
+		$sql_obj		= New sql_query;
 		$sql_obj->string	= "SELECT id, group_name as label, id_parent FROM service_groups";
 		$sql_obj->execute();		
 		$sql_obj->fetch_array();
@@ -144,8 +144,9 @@ class page_output
 			$structure['translations'][$reindexed_row['id']] = $reindexed_row['label'];
 		}
 		
-		$structure["fieldname"]		= "id_parent";
-		$structure["type"] = "dropdown";
+		$structure["fieldname"]			= "id_parent";
+		$structure["type"]			= "dropdown";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure); 
 
 		// member services

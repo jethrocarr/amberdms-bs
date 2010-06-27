@@ -65,17 +65,19 @@ class page_output
 
 
 		// acceptable filter options
-		$structure["fieldname"] = "searchbox";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "(services.name_service LIKE '%value%' OR services.description LIKE '%value%')";
+		$structure["fieldname"] 		= "searchbox";
+		$structure["type"]			= "input";
+		$structure["sql"]			= "(services.name_service LIKE '%value%' OR services.description LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 	
-		$structure		= form_helper_prepare_dropdownfromdb("service_type", "SELECT id, name as label FROM service_types ORDER BY name ASC");
-		$structure["sql"]	= "services.typeid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("service_type", "SELECT id, name as label FROM service_types ORDER BY name ASC");
+		$structure["sql"]			= "services.typeid='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups ORDER BY group_name ASC");
-		$structure["sql"]	= "services.id_service_group='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups ORDER BY group_name ASC");
+		$structure["sql"]			= "services.id_service_group='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 

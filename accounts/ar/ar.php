@@ -76,12 +76,14 @@ class page_output
 		$structure["sql"]	= "date_trans <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
-		$structure["sql"]	= "account_ar.employeeid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+		$structure["sql"]			= "account_ar.employeeid='value'";
+		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
-		$structure["sql"]	= "account_ar.customerid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
+		$structure["sql"]			= "account_ar.customerid='value'";
+		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;

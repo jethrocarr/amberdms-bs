@@ -144,8 +144,9 @@ class page_output
 			$structure['translations'][$reindexed_row['id']] = $reindexed_row['label'];
 		}
 		
-		$structure["fieldname"]		= "id_parent";
-		$structure["type"] = "dropdown";
+		$structure["fieldname"]			= "id_parent";
+		$structure["type"]			= "dropdown";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure); 
 
 		// member products

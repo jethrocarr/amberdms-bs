@@ -50,7 +50,8 @@ class products_form_details
 		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("id_product_group", "SELECT id, group_name as label FROM product_groups");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -63,11 +64,13 @@ class products_form_details
 
 
 		$structure = charts_form_prepare_acccountdropdown("account_sales", "ar_income");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = charts_form_prepare_acccountdropdown("account_purchase", "ap_expense");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 
@@ -187,6 +190,7 @@ class products_form_details
 
 		// supplier details
 		$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors");
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;

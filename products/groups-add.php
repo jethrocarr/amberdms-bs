@@ -47,11 +47,8 @@ class page_output
 		$structure["type"]		= "input";
 		$this->obj_form->add_input($structure);
 
-		$structure = NULL;
-		$structure["fieldname"]		= "id_parent";
-		$structure["type"]		= "input";
 		$structure = form_helper_prepare_dropdownfromdb("id_parent", "SELECT id, group_name as label, id_parent FROM product_groups");
-		//echo "<pre>".print_r($structure, true)."<pre>";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure); 
 		
 		// submit button

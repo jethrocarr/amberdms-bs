@@ -85,8 +85,9 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("id_vendor", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
-		$structure["options"]["req"]	= "yes";
-		$structure["options"]["width"]	= "600";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("id_usage_mode", "SELECT id, description as label FROM cdr_rate_usage_modes ORDER BY name");

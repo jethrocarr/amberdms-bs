@@ -158,8 +158,10 @@ class page_output
 		$structure["defaultvalue"]	= $options["dateformat"];
 		$this->obj_form->add_input($structure);
 	
-		$structure 			= form_helper_prepare_timezonedropdown("option_timezone");
-		$structure["defaultvalue"]	= $options["timezone"];
+		$structure 				= form_helper_prepare_timezonedropdown("option_timezone");
+		$structure["defaultvalue"]		= $options["timezone"];
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
@@ -173,6 +175,7 @@ class page_output
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
 		$structure["defaultvalue"]		= $options["default_employeeid"];
+		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

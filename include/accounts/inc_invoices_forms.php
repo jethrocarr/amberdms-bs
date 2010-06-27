@@ -86,16 +86,18 @@ class invoice_form_details
 		if ($this->type == "ap")
 		{
 			$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
-			$structure["options"]["req"]	= "yes";
-			$structure["options"]["width"]	= "600";
+			$structure["options"]["req"]		= "yes";
+			$structure["options"]["width"]		= "600";
+			$structure["options"]["search_filter"]	= "enabled";
 			$this->obj_form->add_input($structure);
 		}
 		else
 		{
 			// load customer dropdown
 			$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
-			$structure["options"]["req"]	= "yes";
-			$structure["options"]["width"]	= "600";
+			$structure["options"]["req"]		= "yes";
+			$structure["options"]["width"]		= "600";
+			$structure["options"]["search_filter"]	= "enabled";
 			$this->obj_form->add_input($structure);
 		}
 			
@@ -103,6 +105,7 @@ class invoice_form_details
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "enabled";
 		$structure["defaultvalue"]		= @$_SESSION["user"]["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
@@ -161,6 +164,8 @@ class invoice_form_details
 			
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
+		$structure["options"]["search_filter"]	= "enabled";
+		$structure["options"]["width"]		= "600";
 		$this->obj_form->add_input($structure);
 
 

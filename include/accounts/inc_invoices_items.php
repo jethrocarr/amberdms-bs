@@ -932,6 +932,10 @@ class invoice_form_item
 				{
 					$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
 				}
+			
+				$structure["options"]["search_filter"]	= "enabled";
+				$structure["options"]["width"]		= "500";
+
 				$form->add_input($structure);
 					
 				$structure = NULL;
@@ -1062,8 +1066,9 @@ class invoice_form_item
 
 
 				// product id
-				$structure 			= form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products ORDER BY name_product");
-				$structure["options"]["width"]	= "600";
+				$structure 				= form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products ORDER BY name_product");
+				$structure["options"]["search_filter"]	= "enabled";
+				$structure["options"]["width"]		= "600";
 				$form->add_input($structure);
 
 
@@ -1163,7 +1168,8 @@ class invoice_form_item
 					// list of avaliable time groups
 					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
 					$structure["options"]["width"]		= "600";
-					 $structure["options"]["autoselect"]	= "yes";
+					$structure["options"]["autoselect"]	= "yes";
+					$structure["options"]["search_filter"]	= "enabled";
 					$form->add_input($structure);
 
 				
@@ -1176,7 +1182,8 @@ class invoice_form_item
 
 					// product id
 					$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
-					$structure["options"]["width"] = "600";
+					$structure["options"]["width"]		= "600";
+					$structure["options"]["search_filter"]	= "enabled";
 					$form->add_input($structure);
 
 
@@ -1348,7 +1355,7 @@ class invoice_form_item
 				
 				$structure = NULL;
 				$structure["fieldname"] 	= "amount";
-				$structure["type"]		= "input";
+				$structure["type"]		= "money";
 				$form->add_input($structure);
 
 				$structure = NULL;
@@ -1360,6 +1367,8 @@ class invoice_form_item
 				{
 					$structure = charts_form_prepare_acccountdropdown("chartid", "ar_payment");
 				}
+
+				$structure["options"]["search_filter"]	= "enabled";
 
 				$form->add_input($structure);
 
@@ -1379,8 +1388,17 @@ class invoice_form_item
 				// define form layout
 				$form->subforms[$this->type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
 
-				// SQL query
-				$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+				// load data
+				if ($this->itemid)
+				{
+					// SQL load
+					$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+				}
+				else
+				{
+					// set defaults
+					$form->structure["amount"]["defaultvalue"]	= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
+				}
 
 			break;
 

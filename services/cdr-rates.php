@@ -54,13 +54,14 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN vendors ON vendors.id = cdr_rate_tables.id_vendor");
 
 		// acceptable filter options
-		$structure["fieldname"] = "searchbox";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "(rate_table_name LIKE '%value%' OR rate_table_description LIKE '%value%')";
+		$structure["fieldname"] 		= "searchbox";
+		$structure["type"]			= "input";
+		$structure["sql"]			= "(rate_table_name LIKE '%value%' OR rate_table_description LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 	
-		$structure		= form_helper_prepare_dropdownfromdb("name_vendor", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor ASC");
-		$structure["sql"]	= "cdr_rate_tables.id_vendor='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("name_vendor", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor ASC");
+		$structure["sql"]			= "cdr_rate_tables.id_vendor='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 

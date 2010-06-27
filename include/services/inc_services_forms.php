@@ -150,7 +150,9 @@ class services_form_details
 		$this->obj_form->add_input($structure);
 
 		$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["search_filter"]	= "yes";
+		$structure["options"]["width"]		= "400";
+		$structure["options"]["req"]		= "yes";
 		$this->obj_form->add_input($structure);	
 
 		$structure = NULL;
@@ -186,11 +188,15 @@ class services_form_details
 
 		// service grouping
 		$structure = form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["search_filter"]	= "yes";
+		$structure["options"]["width"]		= "400";
 		$this->obj_form->add_input($structure);
 
 		$structure = form_helper_prepare_dropdownfromdb("id_service_group_usage", "SELECT id, group_name as label FROM service_groups");
-		$structure["options"]["req"]	= "yes";
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["search_filter"]	= "yes";
+		$structure["options"]["width"]		= "400";
 		$this->obj_form->add_input($structure);
 
 

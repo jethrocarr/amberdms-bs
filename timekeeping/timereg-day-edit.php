@@ -198,6 +198,7 @@ class page_output
 		
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "yes";
 		$structure["defaultvalue"]		= $this->employeeid;
 		$this->obj_form->add_input($structure);
 				
@@ -239,6 +240,7 @@ class page_output
 
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "yes";
 
 		if (count($structure["values"]) == 0)
 		{
@@ -251,11 +253,12 @@ class page_output
 		
 		//phase dropdown
 		$structure = NULL;
-		$structure["fieldname"]		= "phaseid";
-		$structure["type"]		= "dropdown";
-		$structure["values"]		= array("");
-		$structure["options"]["width"]	= "600";
-		$structure["options"]["disabled"] = "yes";
+		$structure["fieldname"]			= "phaseid";
+		$structure["type"]			= "dropdown";
+		$structure["values"]			= array("");
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["disabled"]	= "yes";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 						
 		// submit section

@@ -68,8 +68,9 @@ class page_output
 		$structure["sql"]		= "(name_product LIKE '%value%' OR code_product LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 
-		$structure		= form_helper_prepare_dropdownfromdb("id_product_group", "SELECT id, group_name as label FROM product_groups ORDER BY group_name ASC");
-		$structure["sql"]	= "products.id_product_group='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("id_product_group", "SELECT id, group_name as label FROM product_groups ORDER BY group_name ASC");
+		$structure["sql"]			= "products.id_product_group='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;

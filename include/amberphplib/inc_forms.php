@@ -321,7 +321,7 @@ class form_input
 		
 		if (isset($_SESSION["error"]["$fieldname-error"]))
 		{
-			$class_array[] = $_SESSION["error"]["$fieldname-error"];
+			$class_array[] = "form_error";
 		}
 		
 		if ($this->structure[$fieldname]["options"]["css_row_id"])
@@ -1045,12 +1045,20 @@ class form_input
 				// input box for filtering
 				if (isset($this->structure[$fieldname]["options"]["search_filter"]))
 				{
-					$input_width = $this->structure[$fieldname]["options"]["width"]/2;
-					print "<input id=\"_" .$fieldname. "\" class=\"dropdown_filter\" style=\"width:". $input_width ."px\"";
+					// subtact filter width from form element width
+					$width_filter	= 100;							// px
+					$width_element	= $this->structure[$fieldname]["options"]["width"];	// total
+
+					$this->structure[$fieldname]["options"]["width"] = $width_element - $width_filter;
+
+					// write filter field
+					print "<input id=\"_" .$fieldname. "\" class=\"dropdown_filter\" style=\"width:". $width_filter ."px\"";
+					
 					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 						print "disabled=\"disabled\" ";
 					print "/>&nbsp;";
 				}
+
 				// start dropdown/select box
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"";
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")

@@ -148,8 +148,9 @@ class page_output
 		$structure["sql"]	= "date <= 'value'";
 		$this->obj_table->add_filter($structure);
 		
-		$structure		= form_helper_prepare_dropdownfromdb("phaseid", "SELECT id, name_phase as label FROM project_phases WHERE projectid='". $this->id ."' ORDER BY name_phase ASC");
-		$structure["sql"]	= "project_phases.id='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("phaseid", "SELECT id, name_phase as label FROM project_phases WHERE projectid='". $this->id ."' ORDER BY name_phase ASC");
+		$structure["sql"]			= "project_phases.id='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 
@@ -166,8 +167,9 @@ class page_output
 
 		$sql_obj->generate_sql();
 
-		$structure		= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
-		$structure["sql"]	= "timereg.employeeid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("employeeid", $sql_obj->string);
+		$structure["sql"]			= "timereg.employeeid='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;

@@ -43,6 +43,9 @@ class page_output
 				$structure["defaultvalue"] = "No customers in database.";
 			}
 
+			$structure["options"]["search_filter"]	= "enabled";
+			$structure["options"]["width"]		= "350";
+
 			$this->obj_form_cust->add_input($structure);
 
 
@@ -74,6 +77,9 @@ class page_output
 			{
 				$structure["defaultvalue"] = "All AR invoices have been paid.";
 			}
+			
+			$structure["options"]["search_filter"] = "enabled";
+			$structure["options"]["width"]		= "350";
 
 			$this->obj_form_ar->add_input($structure);
 
@@ -134,6 +140,9 @@ class page_output
 			{
 				$structure["defaultvalue"] = "No vendors in database.";
 			}
+			
+			$structure["options"]["search_filter"] = "enabled";
+			$structure["options"]["width"]		= "350";
 
 			$this->obj_form_vend->add_input($structure);
 
@@ -167,6 +176,9 @@ class page_output
 				$structure["defaultvalue"] = "All AP invoices have been paid.";
 			}
 
+			$structure["options"]["search_filter"] = "enabled";
+			$structure["options"]["width"]		= "350";
+			
 			$this->obj_form_ap->add_input($structure);
 
 

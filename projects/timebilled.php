@@ -129,8 +129,9 @@ class page_output
 
 
 		// acceptable filter options
-		$structure		= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
-		$structure["sql"]	= "time_groups.customerid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
+		$structure["sql"]			= "time_groups.customerid='value'";
+		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
