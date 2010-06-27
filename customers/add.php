@@ -14,6 +14,7 @@ class page_output
 
 	function page_output()
 	{
+		// required pages
 		$this->requires["javascript"][]		= "include/customers/javascript/addedit_customers.js";
 	}
 	

@@ -40,7 +40,9 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
 		}
-		
+
+
+		// required pages
 		$this->requires["javascript"][]		= "include/customers/javascript/addedit_customers.js";
 	}
 

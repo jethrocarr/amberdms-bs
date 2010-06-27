@@ -33,6 +33,10 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->id ."");
 		}
+
+
+		// required pages
+		$this->requires["javascript"][]		= "include/vendors/javascript/addedit_vendors.js";
 	}
 
 
@@ -219,8 +223,6 @@ class page_output
 		$this->obj_form->subforms["vendor_purchase"] = array("discount");
 
 
-
-
 		// billing address
 		$structure = NULL;
 		$structure["fieldname"] = "address1_street";
@@ -246,38 +248,49 @@ class page_output
 		$structure["fieldname"] = "address1_zipcode";
 		$structure["type"]	= "input";
 		$this->obj_form->add_input($structure);
-		
-		$this->obj_form->subforms["address_billing"]		= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
 
+		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
 
 
 		// shipping address
 		$structure = NULL;
+		$structure["fieldname"]			= "address1_same_as_2";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["label"]		= " ". lang_trans("address1_same_as_2_help");
+		$structure["options"]["css_row_class"]	= "shipping_same_address";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
 		$structure["fieldname"] = "address2_street";
 		$structure["type"]	= "textarea";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_city";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_state";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "address2_country";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] = "address2_zipcode";
 		$structure["type"]	= "input";
+		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 	
-		$this->obj_form->subforms["address_shipping"]		= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+		$this->obj_form->subforms["address_shipping"]	= array("address1_same_as_2", "address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 
 
 

@@ -1,7 +1,7 @@
 /*
-	include/vendors/javascript/addedit_customers.js
+	include/vendors/javascript/addedit_vendors.js
 
-	Provides Javascript UI functions for the customer details forms.
+	Provides Javascript UI functions for the vendor details forms.
 */
 
 $(document).ready(function() {
