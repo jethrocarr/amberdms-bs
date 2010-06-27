@@ -257,16 +257,17 @@ class page_output
 		$structure["type"]	= "input";
 		$this->obj_form->add_input($structure);
 
-		$structure = NULL;
-		$structure["fieldname"] = "address1_same_as_2";
-		$structure["type"]	= "checkbox";
-		$structure["options"]["css_row_class"]	= "shipping_same_address";
-		$this->obj_form->add_input($structure);
-		
-		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode", "address1_same_as_2");
+		$this->obj_form->subforms["address_billing"]	= array("address1_street", "address1_city", "address1_state", "address1_country", "address1_zipcode");
 
 
 		// shipping address
+		$structure = NULL;
+		$structure["fieldname"]			= "address1_same_as_2";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["label"]		= " ". lang_trans("address1_same_as_2_help");
+		$structure["options"]["css_row_class"]	= "shipping_same_address";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"] = "address2_street";
 		$structure["type"]	= "textarea";
@@ -297,7 +298,7 @@ class page_output
 		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 	
-		$this->obj_form->subforms["address_shipping"]	= array("address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
+		$this->obj_form->subforms["address_shipping"]	= array("address1_same_as_2", "address2_street", "address2_city", "address2_state", "address2_country", "address2_zipcode");
 
 
 		// submit section

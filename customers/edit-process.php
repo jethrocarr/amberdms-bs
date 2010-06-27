@@ -42,11 +42,12 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->data["address1_country"]		= @security_form_input_predefined("any", "address1_country", 0, "");
 	$obj_customer->data["address1_zipcode"]		= @security_form_input_predefined("any", "address1_zipcode", 0, "");
 	
-	$obj_customer->data["address1_same_as_2"]		= @security_form_input_predefined("checkbox", "address1_same_as_2", 0, "");
+	$obj_customer->data["address1_same_as_2"]	= @security_form_input_predefined("checkbox", "address1_same_as_2", 0, "");
+
 
 	// If the address 1 is set to be the same as address 2
-	if($obj_customer->data["address1_same_as_2"] == 1) {
-	
+	if ($obj_customer->data["address1_same_as_2"])
+	{
 		$obj_customer->data["address2_street"]		= $obj_customer->data["address1_street"];
 		$obj_customer->data["address2_city"]		= $obj_customer->data["address1_city"];
 		$obj_customer->data["address2_state"]		= $obj_customer->data["address1_state"];
