@@ -1,70 +1,56 @@
-------------------------------
-Amberdms Billing System 1.4.1
-08 March 2010
+------------------------------------
+Amberdms Billing System 1.5.0_beta_1
+28 June 2001
 
 RELEASE NOTES
-------------------------------
+------------------------------------
+
+Amberdms Billing System 1.5.0 Beta 1 is an incomplete development release of the billing system to enable public developer testing and feedback regarding the application.
 
 
-Amberdms has issued a 1.4.1 maintenance release for the Amberdms Billing
-System to correct several bugs that have been reported as well as a
-couple minor security issues.
+NEW FEATURES
 
-We advise all users of older releases to upgrade.
+There are a vast number of changes in this version of the billing system, for details refer to the CHANGELOG file.
 
-
-
-SECURITY ISSUES
-
-Two bugs have been identified - one that prevents the brute force
-blacklisting from functioning correctly and another that could result in
-some data shared between instances on multi-instance ABS installations.
-
-The brute force bug prevented brute-force blocks from working correctly,
-allowing an attacker to try and guess passwords by repeated attempts.
+Of particular note:
+* New XHTML/CSS to PDF generator and templates using the webkit engine.
+* New VoIP billing features.
+* New service bundling features.
+* Numerious usability improvements
 
 
-The second bug only affects a very select number of users running
-multi-instance ABS installation. An issue was found where sometimes data
-could linger in the cache between nightly service usage processing.
+INCOMPLETE FEATURES
 
-This did not appear to cause exposure of information but is being
-treated as security issue information exposure could potentially occur.
+The following features exist to some extent but have large chunks of functionality still missing:
+* Bank Statement import - majority of UI complete, backend processing needs lots of work
+* Call records for VoIP billing can only be imported from an external database, there is no capability in the usage API for call records.
+* Credit notes have only just started to be implemented.
+* Upgrades to the installer/upgrader process
 
-Users of versions of ABS between 1.2.0 and 1.4.0 are affected and we
-recommend all users upgrade to 1.4.1.
-
-
-
-PHP 5.3
-
-Changes have been made to support PHP 5.3 by eliminating use of
-deprecated features.
-
-
-
-OTHER CHANGES
-
-Please refer to the changelog for the full list of changes.
-
-
+The following features are mostly done but do need more testing:
+* New VoIP billing capabilities
+* New service bundling capabilities
+* New telcoperiod and telcomonth billing modes
 
 
 INSTALLATION & UPGRADING
 
-To install, please download the appropriate installation manual from the
-Amberdms website and follow the instructions.
+As this is not a stable release, Amberdms does not build RPM packages but instead recommends that this version be installed and upgraded from SVN.
 
-The installation manuals contain a section on how to upgrade for both
-supported and non-supported platforms.
+Upgrades from previous versions SHOULD work correctly, however testing will not have been in depth, so take care when doing so and always remember to backup.
 
-http://www.amberdms.com/?cms=opensource_billing_download
-
+Instructions for doing so can be found on the Indefero tracker at:
+https://www.amberdms.com/projects/p/oss-amberdms-bs/page/Installing-SVN/
 
 
-HOSTED CUSTOMERS
+TESTING AND FEEDBACK
 
-All Amberdms Hosted Customers have been automatically upgraded to the
-latest release and do not need to do anything.
+Being a development release, we would love to hear back from you about your thoughts on this version and any contributions or bug fixes that you might make.
+
+The best place to submit is via emailing the developer mailing list:
+http://lists.amberdms.com/mailman/listinfo/amberdms-bs-devel
+
+If you have found a bug, check if it is in the tracker and if not you are welcome to open an issue for it:
+https://www.amberdms.com/projects/p/oss-amberdms-bs/issues/
 
 

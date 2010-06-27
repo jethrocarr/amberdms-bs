@@ -1,5 +1,95 @@
 CHANGELOG
 
+2010-06-28 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 1.5.0_beta_1
+
+	Invoicing Changes
+	* Implementation of new XHTML/CSS to PDF rendering code using the wkhtmltopdf application powered by webkit
+	* Implementation of service and product group support on some invoice templates.
+	* Implementation of new XHTML-based version of the basic english invoice.
+	* Implementation of new XHTML-based telco/provider style invoice.
+	* Improved template configuration/selection page.
+	* Improved template logic processing to provide multiple levels of foreach loops and if statements
+	* Improved new template loops to inherit global values inside loops when no loop value has been supplied.
+	* Improved various invoices to show customer tax field (issue 120)
+
+	New Product Capabilities
+	* Removed manual tax capabilities from products page due to breaking conformity with rest of application as well as being the cause of a lot of user confusion. It is not believed that this feature was useful to anyone.
+	* Implemented ability to display discount in product listing.
+
+	New Service Capabilities
+	* Implementation of new object-orientated code structure and functions for better development and expandability of service billing logic.
+	* Implemented new billing methods - telcoperiod and telecomonth for arrears billing of usage costs
+	* Implementation of service bundling, allowing different service types to be grouped and billed
+	* Implementation of new service groups feature, including service group nesting/levels.
+	* Implementation of new invoice itme type "service" to better handle service entries on invoices.
+	* Implementation of discounts on services.
+	* Implementation of capability to override price and discount on services on a per-customer basis
+	* Improved customer-service handling functions inside ABS.
+	* Improved a number of internal APIs and class structures.
+
+	New VoIP Service Capabilities
+	* Implemented new VoIP billing capabilities
+	* Implemented phone_trunk, phone_tollfree and phone_single service types.
+	* Implemented call rate table features for handling different region charges.
+	* Implemented ability to override call charges for a specific customer or service/plan.
+	* Implemented interface for setting DDIs assigned to a customer.
+	* Implemented interface for setting IPv4s assigned to a customer.
+	* Implemented CSV import function for call rates from VoIP providers
+	* Implemented CDR rate billing & call record history viewing for selected customers.
+
+	Timekeeping
+	* Removed unnecessary steps for accessing timekeeping page.
+	* Improved time entry by splitting project/phase dropdown into two AJAX dropdowns.
+
+	Customer Portal
+	* Implemented various new SOAP API calls for customer portal integration.
+	* Implemented new customer management tab for setting portal login details.
+
+	Usability Changes
+	* Added external JQuery library to provider greater javascript capabilities.
+	* Added Javascript logic for growing the GL entry form on demand as well as automatically calculating the totals.
+	* Added popup.php page for more options for user interaction.
+	* Added shipping/billing same address option to customers and vendors (issue 128)
+	* Added new search dropdown logic throughout most of application as per issue 94
+	* Added new AJAX logic and improved item entry for invoices and quotes.
+	* Added theming ability. New directory created: "themes" to store subdirectory of custom CSS and logos
+	* Improved use of CSS and HTML throughout the application.
+	* Improved radio and button items to use labels for better usability when clicking on items.
+	* Improved configuration page by splitting into multiple pages.
+	* Improved menu navigation by breaking products, services and projects into separate menu categories
+	* Improved forms by updating application to use new "money" field type that includes currency information.
+
+	Amberphplib Support Functions:
+	* Implemented function to allow selecting a single row from the database.
+	* Implemented features to allow if logic for table row links.
+	* Implemented SQL query catching for form elements to reduce repeat queries.
+	* Implemented new percentage field.
+	* Implemented new "money" form field for better usability.
+	* Implemented of new $this->requires structure for including CSS and Javascript files.
+	* Implemented translation functions.
+	* Implemented multisession capabilities for Amberphplib.
+	* Implemented ipv4 subnet query function.
+	* Implemented function for splicing arrays into other arrays by key.
+	* Implemented function to select a target column from the database.
+	* Merged LDAP authentication capabilities developed for ldapauthmanager project.
+
+	Other Capabilities
+	* Implemented migration options for adding services to customers
+	* Implemented initial version of bank statement importing
+	* Improved code fields to allow text prefixes as per issue 127, including invoice numbers.
+
+	Bug Fixes:
+	* Bug Fix: Fixed broken journal quick entry function.
+	* Bug Fix: Journal only posts notification to UI if a non-event journal entry is created to prevent unnessacary user notifications.
+	* Bug Fix: Service delete page for customer did not pass correct ID
+	* Bug Fix: Incorrect return code on database selection failure
+	* Bug Fix: Newly created ABS accounts would appear to have debugging enabled, despite it being turned off.
+	* Bug Fix: Corrected order of loading user configuration settings, previously session overrides for debugging were being ignored
+
+
+
 2010-03-08 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 1.4.1
