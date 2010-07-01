@@ -14,14 +14,24 @@ if (user_permissions_get('timekeeping'))
 {
 	$product_id 		= @security_script_input_predefined("int", $_GET['project_id']);
 	$timereg_id		= @security_script_input_predefined("int", $_GET['timereg_id']);
+	$selected		= @security_script_input_predefined("any", $_GET['selected']);
+	$edit			= @security_script_input_predefined("any", $_GET['edit']);
+	
 	$option_string		= "";
 	
 	$phase_id		= sql_get_singlevalue("SELECT phaseid AS value FROM timereg WHERE id='". $timereg_id ."'");
+	
+	if ($edit == "true")
+	{	
+		$option_string	.= "<option>".$edit."  ".$selected."  </option>";
+		$selected = $phase_id;
+	}
 		
 	$sql_obj		= New sql_query;
 	$sql_obj->string	= "SELECT id, name_phase FROM project_phases WHERE projectid =" .$product_id. " ORDER BY name_phase";
 	$sql_obj->execute();
 
+	
 	if ($sql_obj->num_rows())
 	{
 		$sql_obj->fetch_array();
@@ -29,7 +39,7 @@ if (user_permissions_get('timekeeping'))
 		foreach ($sql_obj->data as $data_row)
 		{
 			$option_string	.= "<option value=\"" .$data_row['id']. "\"";
-				if ($data_row['id'] == $phase_id)
+				if ($data_row['id'] == $selected)
 				{
 					$option_string	.= " selected=\"selected\"";
 				}
@@ -44,6 +54,7 @@ if (user_permissions_get('timekeeping'))
 	unset($sql_obj);
 
 	echo $option_string;
+//	echo $phase_id;
 	
 	exit(0);
 }

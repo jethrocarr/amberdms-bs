@@ -1,26 +1,5 @@
 var dropdown_array = [];
 
-function obj_hide(obj)
-{
-	document.getElementById(obj).style.display = 'none';
-}
-function obj_show(obj)
-{
-	document.getElementById(obj).style.display = '';
-}
-
-function openPopup(url)
-{
-	popup = window.open(url, 'popup', 'height=700, width=800, left=10, top=10, resizable=yes, scrollbars=yes, toolbar=no, menubar=no, location=no, directories=no');
-}
-
-// Creates a filter to do case insensitive content checks
-jQuery.expr[':'].icontains = function(a, i, m)
-{ 
-	return jQuery(a).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0; 
-};
-
-
 $(document).ready(function()
 {
 	//create array of filtered dropdowns on the page to enable roll backs.
@@ -29,17 +8,10 @@ $(document).ready(function()
 		filter_id = this.id;
 		dropdown_name = filter_id.substring(1);
 		dropdown_array[dropdown_name] = $("select[name='" + dropdown_name + "']").clone(true);
-		
-		//when user selects option from the drop down, display it in the filter text box
-		$("select[name='" + dropdown_name + "']").live("change", function()
-		{
-			text = $("select[name='" + dropdown_name + "'] option:selected").text();
-			$("#" + filter_id).val(text);
-		});
 	});
 
 	//create timer so function is not fired until user has stopped typing
-	//currently set to fire after 500ms pause, could be lowered
+	//currently set to fire after 250ms pause
 	$(".dropdown_filter").live("keyup", function()
 	{
 		var timer;
@@ -48,7 +20,7 @@ $(document).ready(function()
 		filter_string = $(this).val();
 		
 		clearTimeout(timer);
-		timer = setTimeout("filter_dropdown(dropdown_name, filter_string)", 500);
+		timer = setTimeout("filter_dropdown(dropdown_name, filter_string)", 250);
 	});
 	
 	//prevent form submission when user uses filter input box
@@ -64,10 +36,36 @@ $(document).ready(function()
 	//clear input when focus is on filtering box
 	$(".dropdown_filter").live("click select", function()
 	{
-		$(this).val("");
+		this.select();
 	})
 
 });
+
+function obj_hide(obj)
+{
+	document.getElementById(obj).style.display = 'none';
+}
+function obj_show(obj)
+{
+	document.getElementById(obj).style.display = '';
+}
+
+/*
+ * Creates popup window
+ */
+function openPopup(url)
+{
+	popup = window.open(url, 'popup', 'height=700, width=800, left=10, top=10, resizable=yes, scrollbars=yes, toolbar=no, menubar=no, location=no, directories=no');
+}
+
+/*
+ * Creates a filter to do case insensitive content checks
+ */
+jQuery.expr[':'].icontains = function(a, i, m)
+{ 
+	return jQuery(a).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0; 
+};
+
 
 //changes the dropdown to the stored version, removes options that do not match the filtered string, and disables the dropdown if there are no matches
 function filter_dropdown(dropdown_name, filter_string)

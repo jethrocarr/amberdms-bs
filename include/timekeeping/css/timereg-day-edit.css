@@ -1,0 +1,38 @@
+#toggle_add_project
+{
+	display:	none;
+}
+
+#toggle_add_phase
+{
+	display:	none;
+}
+
+a.add_link:hover
+{
+	opacity:	.5 !important; 
+	color:		black !important; 
+}
+
+a.cancel_link:hover
+{
+	opacity:	.5 !important; 
+	color:		black !important; 
+}
+
+.half_sized_break_line
+{
+	line-height: 50%;
+}
+
+
+.add_box_open
+{
+	background-color:	#e7e7e7;
+	width:			500px;
+	padding:		5px;
+	-moz-border-radius:	5px;
+	-webkit-border-radius:	5px;
+	border:			1px solid #2580A2;
+	padding:		5px;
+}
