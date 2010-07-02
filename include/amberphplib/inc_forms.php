@@ -542,6 +542,7 @@ class form_input
 				{
 					print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
 				}
+				
 
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";

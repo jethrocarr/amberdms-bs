@@ -9,9 +9,9 @@
 
 
 /*
-	CLASS: attributes
+	CLASS: attributes_keys
 
-	Provides functions for managing attributes
+	Provides functions for managing attribute keys
 */
 
 
@@ -53,7 +53,7 @@ class attributes_keys {
 	/*
 		verify_id
 
-		Checks that the provided ID is a valid attribute value
+		Checks that the provided ID is a valid attribute key
 
 		Results
 		0	Failure to find the ID
@@ -84,7 +84,7 @@ class attributes_keys {
 	/*
 		check_delete_lock
 
-		Returns whether the product can be safely deleted or not.
+		Returns whether the attribute key can be safely deleted or not.
 
 		Results
 		0	Unlocked
@@ -182,9 +182,9 @@ class attributes_keys {
 
 
 	/*
-		action_update_value
+		action_update_key
 
-		Update an attribute value's details based on the data in $this->data. If no ID is provided,
+		Update an attribute key's details based on the data in $this->data. If no ID is provided,
 		it will first call the action_create function.
 
 		Returns
@@ -203,7 +203,7 @@ class attributes_keys {
 
 
 		/*
-			If no ID exists, create a new attribute value first
+			If no ID exists, create a new attribute key first
 
 			(Note: if this function has been called by the action_update() wrapper function
 			this step will already have been performed and we can just ignore it)
@@ -327,6 +327,13 @@ class attributes_keys {
 }
 
 
+
+
+/*
+	CLASS: attributes_keys
+
+	Provides functions for managing attribute keys
+*/
 
 class attributes_values {
 

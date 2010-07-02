@@ -197,7 +197,7 @@ class journal_base
 				}
 
 			}
-			elseif (isset($_SESSION["form"][$this->journalname]["filters"]))
+			else if (isset($_SESSION["form"][$this->journalname]["filters"]))
 			{
 				log_debug("journal_base", "Loading options form from session data");
 			

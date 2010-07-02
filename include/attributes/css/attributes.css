@@ -1,0 +1,25 @@
+.add_attribute_box
+{
+	background-color:	#A3C8ED;
+	/* width:			500px; */	
+	padding:		8px;
+	-moz-border-radius:	8px;
+	-webkit-border-radius:	8px;
+	border:			1px solid #2580A2;
+	padding:		5px;
+}
+
+.add_attribute_box h4
+{
+	margin: 0px 0px 0px 5px;
+}
+
+.add_attribute_box label
+{
+	margin: 5px 0px 0px 5px;
+}
+
+.add_attribute_box input
+{
+	margin: 0px 0px 0px 3px;
+}

@@ -1,11 +1,11 @@
 <?php
 /*
-	customers/journal.php
+	customers/attributes.php
 	
 	access: customers_view (read-only)
 		customers_write (write access)
 
-	Standard journal for customer records and audit trail.
+	Customer Attributes list
 */
 
 
@@ -19,6 +19,8 @@ class page_output
 
 	function page_output()
 	{
+		$this->requires["css"][]		= "include/attributes/css/attributes.css";
+		
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
@@ -41,6 +43,9 @@ class page_output
 		{
 			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
 		}
+		
+		// init the form object
+		$this->form_obj = New form_input;
 	}
 
 
@@ -102,6 +107,7 @@ class page_output
 	}
 
 
+
 	function render_html()
 	{
 		// display header
@@ -111,7 +117,8 @@ class page_output
 		if (user_permissions_get("customers_write"))
 		{
 			print "<div class='add_attribute_box'>";
-			
+			print "<h4>Add Record</h4>"; 
+			$this->render_new_key_value_form();
 			print "</div>";
 			//print "<p><b><a class=\"button\" href=\"index.php?page=customers/journal-edit.php&type=text&id=". $this->id ."\">Add new journal entry</a> <a class=\"button\" href=\"index.php?page=customers/journal-edit.php&type=file&id=". $this->id ."\">Upload File</a></b></p>";
 		}
@@ -123,5 +130,65 @@ class page_output
 //		$this->obj_journal->render_journal();
 	}
 
+	
+	
+	/*
+		render_new_key_value_form()
+
+		Displays a form for creating a key/value pair
+		
+		If $this->structure["id"] has been defined, this form will be an edit form.
+
+		Return codes:
+		0	failure 
+		1	success
+	*/
+	
+	function render_new_key_value_form() {
+		/*
+			Define form structure
+		*/
+		$this->form_obj->formname = "new_key_value_pair";
+		$this->form_obj->action = "attributes-process.php";
+		$this->form_obj->method = "post";
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "key";
+		$structure["type"]		= "input";
+		$structure["options"]["prelabel"] = "<label>"."Key:";
+		$structure["options"]["label"] = "</label>";
+		$this->form_obj->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "value";
+		$structure["type"]		= "input";
+		$structure["options"]["prelabel"] = "<label>"."Value:";
+		$structure["options"]["label"] = "</label>";
+		$this->form_obj->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "key_id";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= "";
+		$this->form_obj->add_input($structure);	
+		
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save";
+		$this->form_obj->add_input($structure);
+	
+		print "<form enctype=\"multipart/form-data\" method=\"". $this->form_obj->method ."\" action=\"". $this->form_obj->action ."\" class=\"form_standard\">";
+		$this->form_obj->render_field('key');
+		$this->form_obj->render_field('value');
+		$this->form_obj->render_field('key_id');
+		$this->form_obj->render_field('submit');
+		print "</form>";
+		
+		
+	}
+	
+	
 } // end of page_output class
 ?>
