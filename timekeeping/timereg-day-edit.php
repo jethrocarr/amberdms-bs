@@ -1,8 +1,14 @@
 <?php
 /*
 	timekeeping/timereg-day-edit.php
-	
-	access: timereg_edit
+
+	access:
+		timekeeping + timereg_write/employee	FULL ACCESS (for specific employees)
+		timekeeping_all_write			FULL ACCESS
+
+	optional:
+		projects_write				Displays optional add project/phase form
+
 
 	Allows a time record to be added or adjusted.
 */
@@ -291,7 +297,15 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["timereg_day"]	= array("employeeid", "projectid", "phaseid", "add_project", "add_phase", "date", "time_booked", "description");
+		if (user_permissions_get("projects_write"))
+		{
+			$this->obj_form->subforms["timereg_day"]	= array("employeeid", "projectid", "phaseid", "add_project", "add_phase", "date", "time_booked", "description");
+		}
+		else
+		{
+			$this->obj_form->subforms["timereg_day"]	= array("employeeid", "projectid", "phaseid", "date", "time_booked", "description");
+		}
+
 		$this->obj_form->subforms["hidden"]		= array("id_timereg");
 
 		if ($this->locked)

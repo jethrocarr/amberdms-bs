@@ -1,9 +1,15 @@
 <?php 
+/*
+	projects/ajax/insert_new_project.php
 
-require("../../config.php");
-require("../../amberphplib/main.php");
+	Inserts a new project.
+*/
 
-if (user_permissions_get('timekeeping'))
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
+
+
+if (user_permissions_get('projects_write'))
 {
 	$name_project		= @security_script_input_predefined("any", $_GET['name_project']);
 	
@@ -13,9 +19,8 @@ if (user_permissions_get('timekeeping'))
 	$sql_obj->string	= "INSERT INTO projects (name_project, code_project) VALUES (\"" . $name_project ."\", \"" .$code_project. "\")";
 	$sql_obj->execute();
 
-	$projectid		= sql_get_singlevalue("SELECT id AS value FROM projects WHERE name_project='". $name_project ."'");
-	
-	unset($sql_obj);
+
+	$projectid = $sql_obj->fetch_insert_id();
 
 	echo $projectid;
 	

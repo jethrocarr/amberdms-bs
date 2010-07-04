@@ -1,13 +1,12 @@
 <?php 
+/*
+	timekeeping/ajax/populate_phases_dropdown.php
 
-/* 
- * populate_phases_dropdown.php
- * 
- * function called by timereg-day-edit.js to generate phases dropdown via ajax
- */
+	Function called by timereg-day-edit.js to generate phases dropdown via ajax
+*/
 
-require("../../config.php");
-require("../../amberphplib/main.php");
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
 
 
 if (user_permissions_get('timekeeping'))
@@ -19,7 +18,7 @@ if (user_permissions_get('timekeeping'))
 	
 	$option_string		= "";
 	
-	$phase_id		= sql_get_singlevalue("SELECT phaseid AS value FROM timereg WHERE id='". $timereg_id ."'");
+	$phase_id		= sql_get_singlevalue("SELECT phaseid AS value FROM timereg WHERE id='". $timereg_id ."' LIMIT 1");
 	
 	if ($edit == "true")
 	{	

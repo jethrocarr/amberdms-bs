@@ -119,12 +119,12 @@ function insert_new_project()
 	if ($("input[name=\"add_project\"]").val().length > 0)
 	{
 		name_project = $("input[name=\"add_project\"]").val();
-		$.get("include/timekeeping/ajax/insert_new_project.php", {name_project : name_project}, function(text)
+		$.get("projects/ajax/insert_new_project.php", {name_project : name_project}, function(text)
 		{
 			projectid = text;
 			
 			//create new projects dropdown
-			$.get("include/timekeeping/ajax/populate_projects_dropdown.php", {selected_project : projectid}, function(text)
+			$.get("timekeeping/ajax/populate_projects_dropdown.php", {selected_project : projectid}, function(text)
 			{
 				$("select[name='projectid']").html(text);
 			});
@@ -136,6 +136,10 @@ function insert_new_project()
 		//disable phase dropdown until new phases added to new project
 		$("select[name='phaseid']").html("<option value=\"\"> -- there are no phases associated with this project -- </option>").attr("disabled", "disabled");
 		$("#_phaseid").val("").attr("disabled", "disabled");
+
+		// enable the add_phase field if it has been disabled
+		$("input[name='add_phase']").val("").removeAttr("disabled");
+		$("#insert_phase").show();
 	}
 }
 
@@ -150,7 +154,7 @@ function insert_new_phase()
 		name_phase = $("input[name=\"add_phase\"]").val();
 		projectid = $("select[name='projectid']").val();
 		
-		$.get("include/timekeeping/ajax/insert_new_phase.php", {name_phase: name_phase, projectid: projectid}, function(text)
+		$.get("projects/ajax/insert_new_phase.php", {name_phase: name_phase, projectid: projectid}, function(text)
 		{
 			phaseid = text;
 			
@@ -194,7 +198,7 @@ function populate_phases_dropdown(projectid, phaseid, load)
 			selected = "";
 		}
 		
-		$.get("include/timekeeping/ajax/populate_phases_dropdown.php", {project_id: projectid, selected: selected, edit: edit, timereg_id: timereg_id}, 
+		$.get("timekeeping/ajax/populate_phases_dropdown.php", {project_id: projectid, selected: selected, edit: edit, timereg_id: timereg_id}, 
 				function(text)
 				{
 					//insert new options and enable dropdown

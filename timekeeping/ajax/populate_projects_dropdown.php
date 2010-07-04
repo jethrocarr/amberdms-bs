@@ -1,7 +1,12 @@
 <?php 
+/*
+	timekeeping/ajax/populate_projects_dropdown.php
 
-require("../../config.php");
-require("../../amberphplib/main.php");
+	Updates the projects dropdown - called after we AJAX add projects.
+*/
+
+require("../../include/config.php");
+require("../../include/amberphplib/main.php");
 
 
 if (user_permissions_get('timekeeping'))
