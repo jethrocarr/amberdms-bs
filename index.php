@@ -137,20 +137,20 @@ $theme_path = "themes/".$folder."/";
 		foreach ($page_obj->requires["css"] as $includefile)
 		{
 			// we check if the file exists in the theme, if it does we use that, otherwise
-			// we fall back to default theme.
+			// we fall back to default location.
 			//
 			// this allows people to write themes changing most of the application, without
 			// going to levels as crazy as trying to tweaks ever single weird use case and special pages.
 
 			if (file_exists($theme_path . $includefile))
 			{
-				log_write("debug", "main", "Including additional CSS file $theme_path$includefile");
+				log_write("debug", "main", "Including additional CSS file $theme_path$includefile instead of $includefile");
 
-				print "<link href=\"$includefile\" rel=\"stylesheet\" type=\"text/css\" />\n";
+				print "<link href=\"$theme_path$includefile\" rel=\"stylesheet\" type=\"text/css\" />\n";
 			}
 			else
 			{
-				log_write("debug", "main", "Including additional CSS file from default theme themes/default/$includefile");
+				log_write("debug", "main", "Including additional CSS file from $includefile");
 
 				print "<link href=\"$includefile\" rel=\"stylesheet\" type=\"text/css\" />\n";
 			}
