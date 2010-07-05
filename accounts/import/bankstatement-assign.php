@@ -20,6 +20,7 @@ class page_output
 	function page_output()
 	{
 		$this->requires["javascript"][]		= "include/accounts/javascript/import.js";
+		$this->requires["css"][]		= "include/accounts/css/bankstatement-assign.css";
 	}
 
 	function check_permissions()

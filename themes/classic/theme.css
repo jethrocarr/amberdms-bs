@@ -1,5 +1,5 @@
 /*
-Default theme with Amberdms branding
+Classic theme with Amberdms branding
 */
 
 body
@@ -20,7 +20,7 @@ a:link, a:visited
 	text-decoration: underline;
 }
 
-a:hover 
+a:hover
 {
 	color: #ac6500;
 	text-decoration: none;
@@ -38,15 +38,15 @@ a:active {
 	Used for all the tables drawn by the table class	
 */
 
-.table_content 
+.table_content
 {
 	border-bottom-style: solid; 
-	border-bottom-color: #2580a2;
+	border-bottom-color: #996674;
 }
 
 .table_content .header 
 {
-	background-color: #2580a2;
+	background-color: #996674;
 	color: #ffffff;
 }
 
@@ -79,7 +79,7 @@ a:active {
 
 .table_content tr:hover 
 {
-	background-color: #2580a2;
+	background-color: #D6C2C8;
 }
 
 .table_content .blank 
@@ -118,17 +118,17 @@ a:active {
 
 .table_highlight_important 
 {
-	background-color: #ff933c;
+	background-color: #FFBE8A;
 }
 
 .table_highlight_open 
 {
-	background-color: #92dd90;
+	background-color: #9EB894;
 }
 
 .table_highlight_info 
 {
-	background-color: #95c7d9;
+	background-color: #8BC1D5;
 }
 
 .table_highlight_locked 
@@ -150,7 +150,7 @@ a:active {
 
 .table_linkbox_default tr:hover 
 {
-	background-color: #95c7d9;
+	background-color: #CFE5ED;
 }
 
 
@@ -162,40 +162,40 @@ a:active {
 */
 #menu 
 {
-	background: #333333;
+	background: #667499;
 	list-style: none;
 }
 
 #menu a 
 {
-	background: #333333;
-	color: #cccccc;
+	background: #667499;
+	color: #E6E6E6;
 	text-decoration: none;
 }
 
 #menu a:hover 
 {
-	background: #2580a2;
+	background: #949EB8;
 	color: #ffffff;
 }
 
 
 #navmenu 
 {
-	background: #057b08;
+	background: #668d99;
 	list-style: none;
 }
 
 #navmenu a 
 {
-	background: #057b08;
-	color: #cccccc;
+	background: #668d99;
+	color: #E6E6E6;
 	text-decoration: none;
 }
 
 #navmenu a:hover 
 {
-	background: #2580a2;
+	background: #94B0B8;
 	color: #ffffff;
 }
 
@@ -204,17 +204,15 @@ a:active {
 */
 .form_standard input 
 {
-	border-color: #128300;
+	border-color: #5C688A;
 	border-style: solid;
 }
 
 .form_standard textarea 
 {
-	border-color: #128300;
+	border-color: #5C688A;
 	border-style: solid;
 }
-
-
 
 .form_error 
 {
@@ -223,7 +221,7 @@ a:active {
 
 .form_table .header 
 {
-	background-color: #2580a2;
+	background-color: #996674;
 	color: #ffffff;
 }
 
@@ -246,43 +244,43 @@ a:active {
 */
 .submit input:hover, input[type="button"]:hover, input[type="submit"]:hover, .button:hover, .button-secondary:hover
 {
-	background-color:	#74d465;
-	color:			#000000;
+	background-color:	#949EB8;
+	color:			#ffffff;
 }
 
 .submit input, input[type="button"], input[type="submit"], a.button
 {
-	background-color:	#128300;
+	background-color:	#667499;
 	text-decoration:	none;
-	color:			#ffffff;
+	color:			#ffffff;	
 	border-style:		solid;
 }
 
 
 .button_small:hover, .button_small:hover
 {
-	background-color:	#9ac8e5;
-	color:			#000000;
+	background-color:	#949EB8;
+	color:			#ffffff;
 }
 
 a.button_small
 {
-	background-color:	#2580a2;
+	background-color:	#667499;
 	text-decoration:	none;
-	color:			#ffffff;
+	color:			#ffffff;	
 	border-style:		solid;
 }
 
 
 .button_export:hover, .button_export:hover
 {
-	background-color:	#7e7e7e;
+	background-color:	#949EB8;
 	color:			#ffffff;
 }
 
 a.button_export
 {
-	background-color:	#333333;
+	background-color:	#667499;
 	text-decoration:	none;
 	color:			#ffffff;
 	border-style:		solid;
@@ -292,50 +290,50 @@ a.button_export
 /*main page structure and standard header, footer, and debugging area*/
 #header_td_outer
 {
-	background-color:	#ffbf00;
-	border-color: 		#747474; 
-	border-style: 		dashed;
+	background-color:	#ffdd77;
+	border-color: 		#ffdd77; 
+	border-style: 		solid;
 }
 
 #data_td_outer
 {
 	background-color:	#ffffff;
-	border-color:		#000000;
-	border-style:		dashed;
+	border-color:		#ffffff;
+	border-style:		solid;
 }
 
 #footer_td_outer
 {
-	background-color:	#ffbf00;
-	border-style:		dashed;
-	border-color:		#747474;
+	background-color:	#D9D9D9;
+	border-style:		solid;
+	border-color:		#D9D9D9;
 }
 
 #debug_td_outer
 {
 	background-color:	#ffffff;
-	border-style:		dashed;
-	border-color:		#000000;
+	border-style:		solid;
+	border-color:		#ffffff;	
 }
 
 .menu_table
 {
-	background-color:	#333333;
+	background-color:	#667499;
 }
 
 .menu_current
 {
-	background-color:	#7e7e7e!important;
+	background-color:	#949EB8!important;
 }
 
 .menu_nav_current
 {
-	background-color:	#60ae62!important;
+	background-color:	#94B0B8!important;
 }
 
 .menu_nav_table
 {
-	background-color:	#057b08;
+	background-color:	#668d99;
 }
 
 .error_table
@@ -346,26 +344,26 @@ a.button_export
 .error_td
 {
 	background-color:	#ffeda4;
-	border-style: 		dashed;
-	border-color:		#dc6d00;
+	border-style: 		solid;
+	border-color:		#ffeda4;
 }
 
 .notification_td
 {
 	background-color:	#c7e8ed;
-	border-style: 		dashed;
-	border-color:		#374893;
+	border-style: 		solid;
+	border-color:		#c7e8ed;
 }
 
-/*invoice item buttons*/
+/*invoice items button*/
 .invoice_button_area a:hover
 {
 	color:		black;
 }
+
 
 /*templates*/
 .available_templates_row
 {
 	background-color:	#e7e7e7;
 }
-

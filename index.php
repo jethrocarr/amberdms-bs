@@ -127,7 +127,10 @@ $theme_path = "themes/".$folder."/";
 	<meta name="copyright" content="(C)Copyright 2010 Amberdms Ltd.">
 
 	<?php
-
+	
+	//include standard CSS file
+	print "<link href=\"include/css/stylesheet.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
+	
 	// include theme's CSS files
 	print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
 
@@ -172,6 +175,8 @@ if (isset($page_obj->requires["javascript"]))
 {
 	foreach ($page_obj->requires["javascript"] as $includefile)
 	{
+		log_write("debug", "main", "Including additional javascript file from $includefile");
+	
 		print "<script type=\"text/javascript\" src=\"$includefile\"></script>\n";
 	}
 }

@@ -23,6 +23,7 @@ class page_output
 
 	function page_output()
 	{
+		$this->requires["css"][]	= "include/accounts/css/invoice-items-edit.css";
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 

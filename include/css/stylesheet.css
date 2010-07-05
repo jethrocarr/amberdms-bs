@@ -1,0 +1,422 @@
+/*
+Basic layout and display styling
+Colours are handled by theme.css files
+*/
+
+/* generic styles */
+body
+{
+	margin: 0px;
+	padding: 0px;
+	border: none;
+	font-style: normal;
+	font-weight: normal;
+	font-family: Lucida Grande,Arial,sans-serif;
+}
+
+h1, h2, h3, h4, h5
+{
+	font-family: sans-serif;
+	display: inline;
+}
+
+
+h2
+{
+	font-size: 18px;
+}
+
+h3
+{
+	font-size: 14px;
+}
+
+table, p
+{
+	font-size: 12px;
+}
+
+a:link, a:visited
+{
+	border: none;
+}
+
+a:hover 
+{
+	padding: 0px;
+}
+
+/*table content*/
+.table_content
+{
+	border-bottom-width: 1px;
+	font-size: 11px;
+}
+
+.table_content .header 
+{
+	padding: 8px;
+}
+
+.table_content td 
+{
+	border-spacing: 0px;
+	padding: 4px;	
+	border-bottom-width: 1px;
+}
+
+.table_content .blank 
+{
+	border-bottom: 0px;
+	padding: 4px;
+}
+
+/*table options dropdown*/
+.table_options_dropdown 
+{
+	border-width: 1px;
+	border-spacing: 4px;
+	font-size: 12px;
+}
+
+.table_options_dropdown td 
+{
+	padding: 8px;
+}
+
+.table_options_dropdown tr:hover 
+{
+	padding: 8px;
+}
+
+/*table highlight*/
+.table_highlight 
+{
+	padding: 4px;
+}
+
+.table_highlight_important 
+{
+	padding: 4px;
+}
+
+.table_highlight_open 
+{
+	padding: 4px;
+}
+
+.table_highlight_info 
+{
+	padding: 4px;
+}
+
+.table_highlight_locked 
+{
+	padding: 4px;
+}
+
+/*table linkbox*/
+
+.table_linkbox_default td 
+{
+	padding: 4px;
+}
+
+.table_linkbox_default tr:hover 
+{
+	padding: 4px;
+}
+
+/*menu*/
+#menu
+{
+	float: left;
+	margin: 0 0 -4px 0;
+	padding: 0;
+	width: 100%;
+	font:	
+}
+
+#menu li 
+{
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	float: left;
+	font-size: 10px;
+	margin: 0;
+	padding: 0;
+}
+
+#menu a 
+{
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 12px;		
+}
+
+#menu a:hover 
+{
+	padding-bottom: 8px;
+}
+
+#navmenu 
+{
+	float: left;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+
+#navmenu li 
+{
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	font-size: 10px;
+	margin: 0;
+	padding: 0;	
+}
+
+#navmenu a 
+{
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 12px;
+}
+
+#navmenu a:hover 
+{
+	padding-bottom: 8px;	
+}
+
+/*forms*/
+.form_standard input 
+{
+	border-width: 1px;
+	padding: 2px 2px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-khtml-box-sizing: content-box;
+	box-sizing: content-box;
+	
+}
+
+.form_standard textarea 
+{
+	border-width: 1px;
+}
+
+
+.form_table 
+{
+	border-spacing: 0px;
+	width: 100%;
+}
+
+.form_table .header 
+{
+	padding: 8px;	
+}
+
+.form_table td 
+{
+	padding: 4px;
+}
+
+/*buttons*/
+.submit input, input[type="button"], input[type="submit"], a.button
+{
+	font-size: 10px !important;
+	line-height: 12px;
+	padding: 5px 15px;
+	cursor:	pointer;
+	font-style: normal;
+	font-weight: bold;
+	border-width: 0px;
+	-moz-border-radius: 9px;
+	-khtml-border-radius: 9px;
+	-webkit-border-radius: 9px;
+	border-radius: 9px;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-khtml-box-sizing: content-box;
+	box-sizing: content-box;
+}
+
+a.button_small
+{
+	font-size: 10px !important;
+	line-height: 10px;
+	padding: 2px 10px;
+	cursor: pointer;
+	font-style: normal;
+	font-weight: normal;
+	border-width: 0px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-khtml-box-sizing: content-box;
+	box-sizing: content-box;
+}
+
+a.button_export
+{
+	font-size: 10px !important;
+	line-height: 12px;
+	padding: 5px 15px;
+	cursor:	pointer;
+	font-style: normal;
+	font-weight: normal;
+	border-width: 0px;
+	-moz-border-radius: 9px;
+	-khtml-border-radius: 9px;
+	-webkit-border-radius: 9px;
+	border-radius: 9px;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-khtml-box-sizing: content-box;
+	box-sizing: content-box;
+}
+
+/*main page headers and footers*/
+#table_main_struct
+{
+	width:			90%;
+	border-spacing:		5px;
+	padding:		0;
+	margin-left:		auto;
+	margin-right:		auto;
+}
+
+#header_td_outer
+{
+	border-width: 1px;
+}
+
+
+#header_table_inner
+{
+	width: 100%;
+}
+
+
+#header_logo
+{
+	width:			50%;
+	text-align:		left;
+}
+
+#header_logout
+{
+	width:			50%;
+	text-align:		right;
+	vertical-align:		top;
+}
+
+#header_logout_text
+{
+	font-size:		10px;
+	font-weight:		bold;
+}
+
+#data_td_outer
+{
+	padding: 5px;
+	border-width: 1px;
+}
+
+#data_table_inner
+{
+	width:			100%;
+	border-spacing:		0;
+	padding:		0;
+}
+
+#data_td_inner
+{
+	vertical-align:		top;
+	padding:		5px;
+}
+
+#footer_td_outer
+{
+	border-width: 		1px;
+}
+
+#footer_table_inner
+{
+	width:			100%;
+}
+
+#footer_copyright
+{
+	text-align:		left;
+}
+
+#footer_copyright_text
+{
+	font-size:		10px;
+}
+
+#footer_version
+{
+	text-align:		right;
+}
+
+#footer_version_text
+{
+	font-size:		10px;
+}
+
+#debug_td_outer
+{
+	border-width:	1px;
+}
+
+.menu_table
+{
+	width:			100%;
+	border-spacing:		0;
+	padding:		0;	
+}
+
+.menu_nav_table
+{
+	width:			100%;
+	border-spacing:		0;
+	padding:		0;
+}
+
+.error_table
+{
+	border:			0;
+	border-spacing:		0;
+	padding:		0;	
+}
+
+.error_td
+{
+	padding: 3px;	
+	border-width: 1px;
+}
+
+.notification_table
+{
+	padding:		0;
+	border-spacing:		0;
+	border:			0;
+	width:			100%;
+}
+
+.notification_td
+{
+	padding: 3px;	
+	border-width: 1px;
+}

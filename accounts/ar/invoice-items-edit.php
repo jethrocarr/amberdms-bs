@@ -22,6 +22,7 @@ class page_output
 	var $id;
 	var $itemid;
 	var $item_type;
+	var $requires;
 	
 	var $obj_menu_nav;
 	

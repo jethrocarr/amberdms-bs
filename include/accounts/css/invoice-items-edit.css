@@ -1,0 +1,24 @@
+.invoice_button_area
+{
+	margin-left:		5px;
+}
+.invoice_button_area a
+{
+	text-decoration:	none;
+}
+
+.invoice_button_area a:hover
+{
+	opacity:	.5;
+	color:		black;
+}
+
+.invoice_button_area strong
+{
+	vertical-align:	2px;
+}
+
+.invoice_button_area img
+{
+	border:		none;
+}
