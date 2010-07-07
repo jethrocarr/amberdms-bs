@@ -95,15 +95,22 @@ a:active {
 .table_options_dropdown 
 {
 	border-style: solid;
-	border-color: #000000;
+	border-color: #ffffff;
+	background-color: #fff298;
+	color: #000000
 }
 
-.table_options_dropdown tr:hover 
+.table_options_dropdown:hover 
 {
 	background-color: #92dd90;
 }
 
-
+.table_options
+{
+	background-color: #e7e7e7;
+	border-style: solid;
+	border-color: #666666;
+}
 
 
 /*

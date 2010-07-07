@@ -799,11 +799,11 @@ class table
 			{
 				print "<div id=\"". $this->tablename ."_link\">";
 
-				print "<table width=\"100%\" class=\"table_options_dropdown\">";
-				print "<tr bgcolor=\"#666666\">";
+				print "<table class=\"table_options_dropdown\">";
+				print "<tr>";
 
-					print "<td width=\"100%\" onclick=\"obj_show('". $this->tablename ."_form'); obj_hide('". $this->tablename ."_link');\">";
-					print "<b style=\"color: #ffffff; text-decoration: none\">ADJUST TABLE OPTIONS &gt;&gt;</b>";
+					print "<td onclick=\"obj_show('". $this->tablename ."_form'); obj_hide('". $this->tablename ."_link');\">";
+					print "ADJUST TABLE OPTIONS &gt;&gt;";
 					print "</td>";
 
 				print "</tr>";
@@ -816,7 +816,7 @@ class table
 
 		// border table / div object
 		print "<div id=\"". $this->tablename ."_form\">";
-		print "<table width=\"100%\" style=\"border: 1px solid #666666;\" bgcolor=\"#e7e7e7\"><tr><td>";
+		print "<table class=\"table_options\"><tr><td>";
 
 
 		
@@ -907,7 +907,7 @@ class table
 		print "<table width=\"100%\"><tr>";
 	
 	
-		print "<td width=\"50%\" valign=\"top\"  style=\"padding: 4px; background-color: #e7e7e7;\">";
+		print "<td width=\"50%\" valign=\"top\"  style=\"padding: 4px;\">";
 			print "<b>Fields to display:</b><br><br>";
 
 			print "<table width=\"100%\">";
@@ -939,7 +939,7 @@ class table
 		*/
 		
 		
-		print "<td width=\"50%\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+		print "<td width=\"50%\" valign=\"top\" style=\"padding: 4px;\">";
 			print "<b>Filter/Search Options:</b><br><br>";
 
 			print "<table width=\"100%\">";
@@ -968,7 +968,7 @@ class table
 		/* Order By Options */
 		if ($this->columns_order_options)
 		{
-			print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+			print "<td width=\"100%\" colspan=\"4\" valign=\"top\" style=\"padding: 4px;\">";
 
 				print "<br><b>Order By:</b><br>";
 
@@ -1013,7 +1013,7 @@ class table
 			Submit Row
 		*/
 		print "<tr>";
-		print "<td colspan=\"4\" valign=\"top\" style=\"padding: 4px; background-color: #e7e7e7;\">";
+		print "<td colspan=\"4\" valign=\"top\" style=\"padding: 4px;\">";
 	
 			print "<table>";
 			print "<tr><td>";

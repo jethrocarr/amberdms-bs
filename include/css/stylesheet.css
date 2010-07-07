@@ -77,16 +77,25 @@ a:hover
 	border-width: 1px;
 	border-spacing: 4px;
 	font-size: 12px;
+	width: 100%;
 }
 
 .table_options_dropdown td 
 {
 	padding: 8px;
+	width: 100%;
+	font-weight: bold;
 }
 
 .table_options_dropdown tr:hover 
 {
 	padding: 8px;
+}
+
+.table_options
+{
+	width: 100%;
+	border-width: 1px;
 }
 
 /*table highlight*/
