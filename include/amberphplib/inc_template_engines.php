@@ -488,8 +488,9 @@ class template_engine
 				if (preg_match("/^\S*\send/", $line))
 				{
 					$in_if = 0;
+					$execute_if = 0;
 				}
-				else
+				else if($execute_if == 1)
 				{
 					// remove commenting from the front of the line
 					$line_tmp = preg_replace("/^\S*\s/", "", $line);
@@ -535,17 +536,19 @@ class template_engine
 				{
 					// check for if loop
 					$fieldname = $matches[1];
-
 					log_debug("template_engine","Processing if field $fieldname");
 
-					if ($this->data[$fieldname] || $this->data_files[$fieldname])
+					if ((trim($this->data[$fieldname]) != '') || $this->data_files[$fieldname])
 					{
-						log_debug("template_engine", "File $fieldname has been set, processing optional lines.");
+						log_debug("template_engine", "Value or file $fieldname has been set, processing optional lines.");
 						$in_if = 1;
+						$execute_if = 1;
 					}
 					else
 					{
-						log_debug("template_engine", "File $fieldname has not been set, so will not display if section of template");
+						log_debug("template_engine", "File $fieldname has not been set, so will not display if section of template");	
+						$in_if = 1;
+						$execute_if = 0;					
 					}
 				}
 				else
@@ -557,7 +560,7 @@ class template_engine
 					{
 						foreach (array_keys($this->data) as $var)
 						{
-							$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+							$line_tmp = str_replace("($var)", trim($this->data[$var]), $line_tmp);
 						}
 					}
 
@@ -1036,8 +1039,8 @@ class template_engine_htmltopdf extends template_engine
 			$this->processed[$key] = str_replace("(tmp_filename)", $directory_prefix, $processed_row);
 		}
 		
+		//$this->data
 		
-		//exit("<pre>".print_r($this->data_array,true)."</pre>");
 		//exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)

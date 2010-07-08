@@ -18,8 +18,13 @@
 					<div class='from-address'>
 						<strong>From:</strong>
 						<p>
-							(company_name) (company_address1_street), (company_address1_zipcode), (company_address1_city)<br />
-							(company_address1_country)
+							<span class='address'>
+								(company_name)<br />
+								(company_address1_street)<br />
+								(company_address1_city)<br />
+								(company_address1_country)<br />
+								(company_address1_zipcode)
+							</span>
 							<br />
 							<br />
 							<strong>Email</strong> (company_contact_email) <br />
@@ -41,7 +46,7 @@
 							(customer_address1_country)<br />
 							(customer_address1_zipcode)<br />
 						</p>
-						
+						<br /><br /> 
 					</div>
 					
 					<div class='current-activity invoice_details'>
@@ -52,7 +57,7 @@
 							<tr> <td>(name_tax)</td> <td>(taxnumber)</td> </tr>
 <!-- end -->							
 <!-- if customer_tax_number -->
-							<tr> <th>Customer Tax ID</th> <td>(customer_tax_number)</td> </tr>
+							<tr> <td>Customer Tax ID</td> <td>(customer_tax_number)</td> </tr>
 <!-- end -->
 						</table>
 						

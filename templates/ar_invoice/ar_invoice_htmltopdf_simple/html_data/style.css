@@ -51,6 +51,10 @@ div.from-address h3 span {
 	font-weight: normal;
 }
 
+div.from-address span.address {
+	/*white-space: pre;*/
+}
+
 div.from-address p, div.to-address p {
 	margin: 0px;
 }
