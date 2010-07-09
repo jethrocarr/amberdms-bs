@@ -512,6 +512,11 @@ class form_input
 											(note: by default, table rows have their ID set to the name of the fieldname)
 						["search_filter"]		Enable/disable the optional text box to allow search/ filtering of a dropdown
 						["disabled"]			Set to yes to disable the field.
+						["autocomplete"]		Autocomplete option for input fields, it will display a dropdown that filters
+											as the user types, using the Jquery Autocomplete UI functions. Options are
+											currenly "sql" to use a SQL query set in ["options"]["autocomplete_sql"] and 
+											returning the column "label" to be used for the dropdown.
+
 
 			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
 			$option_array["translations"] = array();		Associate array used for labeling the values in radio or dropdown type fields
@@ -537,7 +542,7 @@ class form_input
 				}
 
 				// display
-				print "<input name=\"$fieldname\" ";
+				print "<input id=\"$fieldname\" name=\"$fieldname\" ";
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{
 					print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
@@ -1161,22 +1166,33 @@ class form_input
 
 
 	/*
-		render_actionsdefault()
+		render_javascript()
 
-		Processes all the javascript actions for the defaultvalue selections
+		For a number of form capabilities such as autocomplete of dropdowns and show/hide
+		javascript actions, the framework needs to output javascript to go along with the
+		form items.
+
+		We do that there, in the render_javascript function.
+
 	*/
-	function render_actionsdefault()
+	function render_javascript()
 	{
-		log_debug("form", "Executing render_actiondefault()");
+		log_debug("form", "Executing render_javascript()");
+
 
 
 		print "<script type=\"text/javascript\">";
 
 		foreach (array_keys($this->structure) as $fieldname)
 		{
-			// if actions enabled, configure all the actions that have been defined
+			/*
+				If any actions have been defined, process them
+			*/
+
 			if ($this->actions[$fieldname])
 			{
+				log_debug("form", "Processing action rules for $fieldname field");
+
 				foreach (array_keys($this->actions[$fieldname]) as $target_field)
 				{
 					if ($this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ])
@@ -1199,6 +1215,48 @@ class form_input
 						break;
 					}
 				}
+			}
+
+
+			/*
+				If the form type is input and has autocomplete, set a javascript value
+				for the autocomplete feature.
+			*/
+
+			if (!empty($this->structure[ $fieldname ]["options"]["autocomplete"]) && $this->structure[ $fieldname ]["type"] == "input")
+			{
+				log_write("debug", "form", "Setting autocomplete dropdown values for form field $fieldname");
+
+				$values = array();
+
+				// load autocomplete data from SQL query
+				if ($this->structure[ $fieldname ]["options"]["autocomplete"] == "sql")
+				{
+					log_write("debug", "form", "Fetching autocomplete data from SQL database");
+
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= $this->structure[ $fieldname ]["options"]["autocomplete_sql"];
+					$sql_obj->execute();
+
+
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+						
+						foreach ($sql_obj->data as $data_row)
+						{
+							$values[]	= $data_row["label"];
+						}
+					}
+				}
+
+				// write javascript for autocomplete options
+				print "$(function() {\n";
+					print "\tvar autocomplete_$fieldname = [". format_arraytocommastring($values, '"') ."];\n";
+					print "\t$(\"#$fieldname\").autocomplete({\n";
+					print "\tsource: autocomplete_$fieldname\n";
+					print "\t});\n";
+				print "});\n";											
 			}
 		}
 
@@ -1286,9 +1344,9 @@ class form_input
 
 		// end form
 		print "</form>";
-	
-		// execute javascript default actions
-		$this->render_actionsdefault();
+
+		// render javascript components
+		$this->render_javascript();
 	}
 
 
