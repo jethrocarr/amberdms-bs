@@ -451,10 +451,17 @@ function format_money($amount, $nocurrency = NULL)
 
 	returns a provided array as a comma seporated string - very useful for creating value
 	lists to be used in a SQL query.
+
+	Fields
+	array		Array of data.
+	encase		(optional) surrond each value with the char - eg set to " to have a list like "optionA", "optionB", created.
+
+	Returns
+	string		Formatted string
 */
-function format_arraytocommastring($array)
+function format_arraytocommastring($array, $encase = NULL)
 {
-	log_debug("misc", "Executing format_arraytocommastring(Array)");
+	log_write("debug", "misc", "Executing format_arraytocommastring(Array, $encase)");
 
 	$returnstring = "";
 
@@ -462,7 +469,7 @@ function format_arraytocommastring($array)
 
 	for ($i=0; $i < $array_num; $i++)
 	{
-		$returnstring .= $array[$i];
+		$returnstring .= $encase . $array[$i] . $encase;
 
 		if ($i != ($array_num - 1))
 		{
