@@ -130,6 +130,7 @@ $theme_path = "themes/".$folder."/";
 	
 	//include standard CSS file
 	print "<link href=\"include/css/stylesheet.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
+	print "<link href=\"external/jquery-ui/jquery-ui-1.8.2.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
 	
 	// include theme's CSS files
 	print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
@@ -165,6 +166,7 @@ $theme_path = "themes/".$folder."/";
 	?>
 	
 <script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
+<script type="text/javascript" src="external/jquery-ui/jquery-ui-1.8.2.js"></script>
 <script type="text/javascript" src="include/javascript/javascript.js"></script>
 
 
