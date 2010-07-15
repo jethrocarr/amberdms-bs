@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head> 
+	    <title>Quote (code_quote)</title>
+		<link rel="stylesheet" href="(tmp_filename)html_data/style.css" type="text/css" charset="utf-8" />
+	</head>
+	<body>
+		<div class='page'>
+			<div class='header'>
+				<img src='(company_logo)' alt='(company_name)' title='(company_name)'>
+			
+			</div>
+			
+			<div class='content'>
+
+				<div class='main-content'>
+					<div class='from-address'>
+						<strong>From:</strong>
+						<p>
+							<span class='address'>
+								(company_name)<br />
+								(company_address1_street)<br />
+								(company_address1_city)<br />
+								(company_address1_country)<br />
+								(company_address1_zipcode)
+							</span>
+							<br />
+							<br />
+							<strong>Email</strong> (company_contact_email) <br />
+							<strong>Phone</strong>  (company_contact_phone) <br />
+<!-- if company_contact_fax -->
+							<strong>Fax</strong> (company_contact_fax)  <br />
+<!-- end -->
+						</p>
+					
+					</div>
+					<div class='to-address'>
+						<strong>To:</strong>
+						<p>
+							(customer_contact)<br />
+							(customer_name)<br />
+							(customer_address1_street)<br />
+							(customer_address1_city)<br />
+							(customer_address1_state)<br />
+							(customer_address1_country)<br />
+							(customer_address1_zipcode)<br />
+						</p>
+						<br /><br /> 
+					</div>
+					
+					<div class='current-activity invoice_details'>
+						<strong>QUOTATION</strong>
+						<br /><br />						
+						<table>
+							<tr> <th>Quote No</th> <td>(code_quote)</td> </tr>
+							<tr> <th>Date Created</th> <td>(date_trans)</td> </tr>
+							<tr> <th>Valid Until</th> <td>(date_validtill)</td> </tr>
+						</table>
+					</div>
+					
+					
+					<div class='current-activity invoice_items'>
+						
+						<table>
+							<tr> <th>Number</th> <th>Description</th> <th>Quantity</th> <th>Unit</th> <th>Price</th> <th>Amount</th> </tr>
+<!-- foreach invoice_pages -->
+<!-- foreach invoice_items -->						
+							<tr> <td>(info)</td> <td>(description)</td> <td>(quantity)</td> <td>(units)</td> <td>(price)</td> <td>(amount)</td> </tr>
+<!-- end invoice_items -->
+<!-- end invoice_pages -->
+
+
+							<tr> <td colspan='2' class='top_border'></td> <td colspan='2' class='top_border'><strong>Subtotal</strong></td> <td class='top_border'></td> <td class='values top_border'>(amount)</td> </tr>
+<!-- foreach taxes -->
+							<tr> <td colspan='2'></td> <td colspan='2' class='top_border'>(name_tax)</td> <td class='top_border'></td> <td class='top_border'>(amount)</td> </tr>
+<!-- end -->
+
+<!-- foreach invoice_payments -->
+							<tr> <td colspan='2'></td> <td colspan='2' class='top_border'>Payment on (date)</td> <td class='top_border'></td> <td class='top_border'>- (amount)</td> </tr>							 
+<!-- end -->
+							<tr>
+								<td colspan='2'></td>
+								<td colspan='2' class='top_border'>Balance Owing </td>
+								<td class='top_border'></td>
+								<td class='values top_border'>(amount_currency) (amount_total)</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+		
+	</body>
+</html>

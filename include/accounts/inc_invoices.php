@@ -743,17 +743,16 @@ class invoice
 
 		// start the PDF object
 		//
-		// note: the & allows decontructors to operate
+		// note: the & allows decontructors to operate 
 		//       Unfortunatly this trick is now deprecated with PHP 5.3.x and creates unsilencable errors ~JC 20100110
 		//
 
 		// get template filename based on currently selected options
 		$template_data = sql_get_singlerow("SELECT `template_type`, `template_file` FROM templates WHERE template_type IN('". $this->type ."_invoice_tex', '". $this->type ."_invoice_htmltopdf') AND active='1' LIMIT 1");
-
+		//exit("<pre>".print_r($template_data, true)."</pre>");
 		switch($template_data['template_type']) 
 		{
-		
-			case 'ar_invoice_htmltopdf':
+			case $this->type .'_invoice_htmltopdf':
 				$this->obj_pdf =& New template_engine_htmltopdf;
 				$template_file = $template_data['template_file']."/index.html";
 				
@@ -767,7 +766,7 @@ class invoice
 				}			
 			break;
 			
-			case 'ar_invoice_tex':
+			case $this->type .'_invoice_tex':
 			default:
 				$this->obj_pdf =& New template_engine_latex;
 				$template_file = $template_data['template_file'].".tex";
