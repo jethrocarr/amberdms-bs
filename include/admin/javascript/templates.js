@@ -2,10 +2,9 @@ $(document).ready(function()
 {
 	$(".change_template").click(function()
 	{
-		if (this.id == "change_ar_invoice_template")
-		{
-			$(".ar_invoices_templates").show();
-		}
+		parent_table = $(this).parents("table.template_table");
+		$(".available_templates_row").hide();
+		$(".available_templates_row", parent_table).show();
 		return false;
 	})
 	

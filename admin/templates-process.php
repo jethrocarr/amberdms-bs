@@ -19,17 +19,18 @@ if (user_permissions_get("admin"))
 
 
 	// fetch all the data
-	$data["ar_invoice_tex"]			= @security_form_input_predefined("int", "ar_invoice_tex", 1, "Please select a valid AR invoice.");
+	$data["template_type"]			= @security_form_input_predefined("any", "template_type", 1, "Please select a valid AR invoice.");
+	$data["selected_template"]			= @security_form_input_predefined("int", "selected_template", 1, "Please select a valid template.");
 
 
 	// check that the returned ID belongs to the right template type
 	$obj_sql		= New sql_query;
-	$obj_sql->string	= "SELECT id FROM templates WHERE template_type IN('ar_invoice_tex', 'ar_invoice_htmltopdf') AND id='". $data["ar_invoice_tex"] ."'";
+	$obj_sql->string	= "SELECT id FROM templates WHERE template_type IN('".$data["template_type"]."_tex', '".$data["template_type"]."_htmltopdf') AND id='". $data["selected_template"] ."'";
 	$obj_sql->execute();
 
 	if (!$obj_sql->num_rows())
 	{
-		log_write("error", "process", "The provided ID (". $data["ar_invoice_tex"] .") does not match an ar_invoice_tex or ar_invoice_htmltopdf template type.");
+		log_write("error", "process", "The provided ID (". $data["selected_template"] .") does not match an ".$data["template_type"]."_tex or ".$data["template_type"]."_htmltopdf template type.");
 	}
 
 
@@ -59,10 +60,10 @@ if (user_permissions_get("admin"))
 			Update the template selection
 		*/
 
-		$sql_obj->string = "UPDATE templates SET active='0' WHERE template_type IN('ar_invoice_tex', 'ar_invoice_htmltopdf')";
+		$sql_obj->string = "UPDATE templates SET active='0' WHERE template_type IN('".$data["template_type"]."_tex', '".$data["template_type"]."_htmltopdf')";
 		$sql_obj->execute();
 
-		$sql_obj->string = "UPDATE templates SET active='1' WHERE id='". $data["ar_invoice_tex"] ."' LIMIT 1";
+		$sql_obj->string = "UPDATE templates SET active='1' WHERE id='". $data["selected_template"] ."' LIMIT 1";
 		$sql_obj->execute();
 
 
