@@ -15,7 +15,7 @@
 
 
 /*
-	CLASS TEMPLATE_ENGINE
+	CLASS TEMPLATE_ENGINE 
 
 	Base clase used by all other render classes. Provides basic template loading
 	options as well as field replacement.
@@ -1015,7 +1015,7 @@ class template_engine_htmltopdf extends template_engine
 	function generate_pdf()
 	{
 		log_debug("template_engine_htmltopdf", "Executing generate_pdf()");
-
+		//unset($_SESSION);
 
 		/*
 			Generate temporary file for template
@@ -1032,7 +1032,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_";
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/quotes/quotes_english_xhtml/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
@@ -1041,6 +1041,7 @@ class template_engine_htmltopdf extends template_engine
 		
 		//$this->data
 		
+		//exit("<pre>".print_r($this, true)."</pre>");
 		//exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)

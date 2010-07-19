@@ -95,7 +95,7 @@ div.content table{
 }
 
 div.main-content {
-	padding: 6mm 5mm 0px 9mm;
+	padding: 6mm 5mm 0mm 9mm;
 	width:187mm;
 }
 
@@ -115,28 +115,41 @@ div.invoice_details table th, div.invoice_details table td {
 	text-align: left;
 }
 
-div.main-content> div.invoice_items {
+div.main-content > div.invoice_items {
 	border-top: none;
 	font-size: 8pt;
 	clear: both;
 }
 
-div.main-content> div.invoice_items table tr th {
+div.main-content > div.invoice_items table {
+	margin-bottom: 0.8em;
+}
+
+div.main-content > div.invoice_items table:empty {
+	display: none;
+}
+
+div.main-content > div.invoice_items table tr th {
 	border-top: none;
 	text-align: left;
 	padding: 0.3mm 0.6mm 0mm 0mm;
 }
 
-div.main-content> div.invoice_items table tr td {
-	padding: 0.3mm 0.2mm 0mm 0mm;
+div.main-content > div.invoice_items table tr td {
+	padding: 0.3mm 0.4mm 0.4mm 0.2mm;
 	vertical-align: top;
 }
 
-div.main-content> div.invoice_items table tr td:first-child {
+div.main-content > div.invoice_items table tr td:first-child {
 	padding-left: 0.2mm;
 }
 
-div.main-content> div> div {
+div.main-content > div.invoice_items table tr:nth-child(even) td {
+	background-color: #DEDEDE;
+}
+
+
+div.main-content > div> div {
 	padding-left: 1mm;
 	padding-bottom: 1mm; 
 }

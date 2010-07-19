@@ -118,13 +118,26 @@ div.left-column> div.invoice_items table tr th {
 	text-align: left;
 	font-size: 10pt;
 }
-div.left-column> div.invoice_items table tr td {
-	padding: 0.3mm 0.2mm 0mm 0mm;
+
+div.left-column > div.invoice_items table{
+	margin-bottom: 1em;
+}
+
+div.left-column > div.invoice_items table:empty{
+	display: none;
+}
+
+div.left-column > div.invoice_items table tr td {
+	padding: 0.5mm 0.4mm 0.5mm 0.2mm;
 	vertical-align: top;
 }
 
 div.left-column> div.invoice_items table tr td:first-child {
 	padding-left: 0.2mm;
+}
+
+div.left-column> div.invoice_items table tr:nth-child(even) td {
+	background-color: #DEDEDE;
 }
 
 div.left-column> div> div {
