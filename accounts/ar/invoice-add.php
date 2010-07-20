@@ -34,9 +34,13 @@ class page_output
 
 	function execute()
 	{
+		
+		$customer_id = @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
+		
 		$this->obj_form_invoice			= New invoice_form_details;
 		$this->obj_form_invoice->type		= "ar";
 		$this->obj_form_invoice->invoiceid	= 0;
+		$this->obj_form_invoice->customer_id	= $customer_id;
 		$this->obj_form_invoice->processpage	= "accounts/ar/invoice-edit-process.php";
 		
 		$this->obj_form_invoice->execute();

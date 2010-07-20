@@ -20,6 +20,8 @@ class invoice_form_details
 {
 	var $type;		// Either "ar" or "ap"
 	var $invoiceid;		// ID of the invoice to edit (if any)
+	var $customer_id;		// customer ID (if any)
+	var $vendor_id;		// vendor ID (if any)
 	var $processpage;	// Page to submit the form to
 
 	var $locked;
@@ -32,7 +34,6 @@ class invoice_form_details
 	function execute()
 	{
 		log_debug("invoice_form_details", "Executing execute()");
-
 		if ($this->invoiceid)
 		{
 			$this->mode = "edit";
@@ -89,6 +90,7 @@ class invoice_form_details
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["width"]		= "600";
 			$structure["options"]["search_filter"]	= "enabled";
+			$structure["defaultvalue"]		= $this->vendor_id;
 			$this->obj_form->add_input($structure);
 		}
 		else
@@ -98,6 +100,7 @@ class invoice_form_details
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["width"]		= "600";
 			$structure["options"]["search_filter"]	= "enabled";
+			$structure["defaultvalue"]		= $this->customer_id;
 			$this->obj_form->add_input($structure);
 		}
 			

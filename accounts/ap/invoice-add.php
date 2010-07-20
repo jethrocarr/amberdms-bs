@@ -34,9 +34,12 @@ class page_output
 
 	function execute()
 	{
+		$vendor_id = @security_script_input('/^[0-9]*$/', $_GET["vendorid"]);
+		
 		$this->obj_form_invoice			= New invoice_form_details;
 		$this->obj_form_invoice->type		= "ap";
 		$this->obj_form_invoice->invoiceid	= 0;
+		$this->obj_form_invoice->vendor_id	= $vendor_id;
 		$this->obj_form_invoice->processpage	= "accounts/ap/invoice-edit-process.php";
 		
 		$this->obj_form_invoice->execute();
