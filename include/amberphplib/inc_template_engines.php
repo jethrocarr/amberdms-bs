@@ -610,12 +610,11 @@ class template_engine_latex extends template_engine
 	*/
 	function prepare_escape_fields()
 	{
-		log_debug("template_engine_latex", "Executing prepare_escape_fields()");
+		log_debug("template_engine_latex", "Executing prepare_escape_fields()");  
 
-		$target		= array('/%/', '/_/', '/\$/', '/&/', '/#/', '/€/');
-		$replace	= array('\%', '\_', '\\\$', '/\&/', '/\#/', '\euro{}');
-
-
+		$target		= array('/\\\/','/\{/','/\}/','/\^/', '/%/', '/_/', '/\$/', '/&/', '/#/','/~/', '/€/');
+		$replace	= array('\textbackslash','\{','\}','\textasciicircum','\%', '\_', '\\\$', '/\&/', '/\#/','\textasciitilde', '\euro{}');
+ 
 		// escape single fields
 		if ($this->data)
 		{
@@ -653,7 +652,7 @@ class template_engine_latex extends template_engine
 				}
 			}
 		}
-			
+		//exit("<pre>".print_r($this->data_array, true)."</pre>");
 	} // end of prepare_escape_fields
 
 	/*
