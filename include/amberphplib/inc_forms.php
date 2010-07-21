@@ -545,7 +545,7 @@ class form_input
 				print "<input id=\"$fieldname\" name=\"$fieldname\" ";
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{
-					print "value=\"". $this->structure[$fieldname]["defaultvalue"] ."\" ";
+					print "value=\"". htmlentities($this->structure[$fieldname]["defaultvalue"], ENT_QUOTES, "UTF-8") ."\" ";
 				}
 				
 

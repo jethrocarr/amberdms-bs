@@ -1725,14 +1725,14 @@ class table
 			// content for columns
 			foreach ($this->columns as $columns)
 			{
-				print "\"". $this->data_render[$i][$columns] ."\",";
+				print "\"". str_replace('"', '""',$this->data_render[$i][$columns]) ."\",";
 			}
 
 
 			// optional: row totals column
 			if ($this->total_rows)
 			{
-				print "\"". $this->data_render[$i]["total"] ."\",";
+				print "\"". str_replace('"', '""',$this->data_render[$i]["total"]) ."\",";
 			}
 	
 		}
@@ -1748,7 +1748,7 @@ class table
 				
 				if (in_array($column, $this->total_columns))
 				{
-					print $this->data_render["total"][$column];
+					print str_replace('"', '""',$this->data_render["total"][$column]);
 				}
 
 				print "\",";
@@ -1757,7 +1757,7 @@ class table
 			// optional: totals for rows
 			if ($this->total_rows)
 			{
-				print "\"". $this->data_render["total"]["total"] ."\",";
+				print "\"". str_replace('"', '""',$this->data_render["total"]["total"]) ."\",";
 			}
 
 			print "\n";
