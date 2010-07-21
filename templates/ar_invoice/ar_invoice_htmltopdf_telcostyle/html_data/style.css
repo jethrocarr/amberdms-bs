@@ -137,7 +137,7 @@ div.left-column> div.invoice_items table tr td:first-child {
 }
 
 div.left-column> div.invoice_items table tr:nth-child(even) td {
-	background-color: #DEDEDE;
+	background-color: #efefef;
 }
 
 div.left-column> div> div {
