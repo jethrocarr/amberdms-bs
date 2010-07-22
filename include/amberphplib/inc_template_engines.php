@@ -613,7 +613,7 @@ class template_engine_latex extends template_engine
 		log_debug("template_engine_latex", "Executing prepare_escape_fields()");  
 
 		$target		= array('/\\\/','/\{/','/\}/','/\^/', '/%/', '/_/', '/\$/', '/&/', '/#/','/~/', '/€/');
-		$replace	= array('\textbackslash','\{','\}','\textasciicircum','\%', '\_', '\\\$', '/\&/', '/\#/','\textasciitilde', '\euro{}');
+		$replace	= array('\textbackslash','\{','\}','\textasciicircum','\%', '\_', '\\\$', '\&', '\#','\textasciitilde', '\euro{}');
  
 		// escape single fields
 		if ($this->data)
@@ -1022,7 +1022,8 @@ class template_engine_htmltopdf extends template_engine
 
 		// generate unique tmp filename
 		$tmp_filename = file_generate_name("/tmp/amberdms_billing_system");
-
+		
+		
 		// write out template data
 		if (!$handle = fopen("$tmp_filename.html", "w"))
 		{	

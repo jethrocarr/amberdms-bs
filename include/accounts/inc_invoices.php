@@ -1339,7 +1339,12 @@ class invoice
 
 		// generate PDF
 		$this->generate_pdf();
-
+		if (error_check())
+		{
+			return 0;
+		}
+		
+		
 		// save to a temporary file
 		if ($this->type == "ar")
 		{
