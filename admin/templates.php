@@ -196,7 +196,7 @@ class page_output
 					print "<td class=\"available_templates_cell\" colspan=\"3\">";
 						print "<input type=\"hidden\" name=\"template_type\" value=\"".$invoice_type_name."\">&nbsp;&nbsp;";
 						print "<input type=\"submit\" value=\"Save Changes\">&nbsp;&nbsp;";
-						print "<input type=\"button\" value=\"Cancel\" class=\"cancelbutton\" id=\"cancelbuton_ar_invoices\">";
+						print "<input type=\"button\" value=\"Cancel\" class=\"cancelbutton\">";
 						print "<br />&nbsp;";
 					print "</td>";
 				print "</tr>";

@@ -8,12 +8,9 @@ $(document).ready(function()
 		return false;
 	})
 	
-	$(".cancelbutton").click(function()
-	{
-		if (this.id == "cancelbuton_ar_invoices")
-		{
-			$(".ar_invoices_templates").hide();
-		}
+	$("table.template_table .cancelbutton").click(function()
+	{		
+		$(".available_templates_row").hide();
 	});
 
 });
