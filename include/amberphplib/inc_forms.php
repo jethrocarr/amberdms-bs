@@ -510,6 +510,7 @@ class form_input
  						["css_row_class"]		Set the CSS class to a custom option for the rendered table row.
  						["css_row_id"]			Set the CSS id to a custom option for the rendered table row.
 											(note: by default, table rows have their ID set to the name of the fieldname)
+						["css_field_class"]		Set the CSS class of a field
 						["search_filter"]		Enable/disable the optional text box to allow search/ filtering of a dropdown
 						["disabled"]			Set to yes to disable the field.
 						["autocomplete"]		Autocomplete option for input fields, it will display a dropdown that filters
@@ -543,11 +544,16 @@ class form_input
 
 				// display
 				print "<input id=\"$fieldname\" name=\"$fieldname\" ";
+				
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{
 					print "value=\"". htmlentities($this->structure[$fieldname]["defaultvalue"], ENT_QUOTES, "UTF-8") ."\" ";
 				}
 				
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
 
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
@@ -602,6 +608,12 @@ class form_input
 					
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 				
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 
@@ -644,7 +656,12 @@ class form_input
 				
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
-
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 
 				// optional label/description
@@ -695,7 +712,12 @@ class form_input
 				
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
-
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px; height: ". $this->structure[$fieldname]["options"]["height"] ."px;\">";
 
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
@@ -934,6 +956,12 @@ class form_input
 					
 					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 						print "disabled=\"disabled\" ";
+						
+					if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+					{
+						print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+					}			
+						
 					
 					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\" id=\"". $fieldname ."_". $value ."\">";
 					print "<label for=\"". $fieldname ."_". $value ."\">". $translations[$value] ."</label><br>";
@@ -995,6 +1023,12 @@ class form_input
 				
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 
 				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\" id=\"". $fieldname ."\">";
 
@@ -1069,6 +1103,12 @@ class form_input
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"";
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 				print "> ";
 
 
@@ -1147,6 +1187,12 @@ class form_input
 				print "<input type=\"file\" name=\"$fieldname\"";
 				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
 					print "disabled=\"disabled\" ";
+					
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+				}			
+					
 				print "> <i>Note: File must be no larger than $upload_maxbytes.</i>";
 
 				// optional label/description
@@ -1249,6 +1295,7 @@ class form_input
 						}
 					}
 				}
+				
 
 				// write javascript for autocomplete options
 				print "$(function() {\n";

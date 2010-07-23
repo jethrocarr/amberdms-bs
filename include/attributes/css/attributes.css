@@ -1,60 +1,14 @@
-.add_attribute_box
+.expand_collapse
 {
-	background-color:	#A3C8ED;
-	/* width:			500px; */	
-	padding:		8px;
-	-moz-border-radius:	8px;
-	-webkit-border-radius:	8px;
-	border:			1px solid #2580A2;
-	padding:		5px;
+	text-align: right;
 }
 
-.add_attribute_box h4
+tr[class*='group_row']
 {
-	margin: 0px 0px 0px 5px;
+	display: none;
 }
 
-.add_attribute_box label
+.add_group
 {
-	margin: 5px 0px 0px 5px;
+	display: none;
 }
-
-.add_attribute_box input
-{
-	margin: 0px 0px 0px 3px;
-}
-
-
-
-/*for import page*/
-.hide_element
-{
-	display:	none;
-}
-
-.show_element
-{
-	display:	inline;
-}
-
-.dropdown
-{
-	width:		50%;
-}
-
-div[class*='toggle']
-{
-	text-align:	center;
-}
-
-.include
-{
-	text-align:	center;
-}
-
-.helpmessage
-{
-	color:	#ABABAB;
-}
-
-

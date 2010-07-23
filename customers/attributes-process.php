@@ -32,53 +32,82 @@ if (user_permissions_get('customers_write'))
 	*/
 
 	$obj_customer->id			= @security_form_input_predefined("int", "id_customer", 1, "");
-
-
 	$data = array();
-
-	// determine number of rows
-	$data["num_values"]			= @security_form_input_predefined("int", "num_values", 0, "");
+	$data["highest_attr_id"]		= @security_form_input_predefined("int", "highest_attr_id", 0, "");
 
 
 	/*
 		Fetch & Verify attribute data
 	*/
 
-	for ($i = 0; $i < $data["num_values"]; $i++)
+	for ($i = 0; $i <= $data["highest_attr_id"]; $i++)
 	{
 		/*
 			Fetch data
 		*/
+//	$test_key = @security_form_input_predefined("any", "attribute_". $i ."_key", 0, "");
+//	if ($test_key != ""){print "yay"; die;} else {print $test_key; die;}
 		$data_tmp			= array();
-		$data_tmp["id"]			= @security_form_input_predefined("int", "attribute_". $i ."_id", 0, "");
+		$data_tmp["id"]			= $i;
 		$data_tmp["key"]		= @security_form_input_predefined("any", "attribute_". $i ."_key", 0, "");
 		$data_tmp["value"]		= @security_form_input_predefined("any", "attribute_". $i ."_value", 0, "");
 		$data_tmp["delete_undo"]	= @security_form_input_predefined("any", "attribute_". $i ."_delete_undo", 0, "");
+		$data_tmp["id_group"]	 	= @security_form_input_predefined("int", "attribute_". $i ."_group", 0, "");
 		
 
 		/*
 			Process Raw Data
 		*/
-		if ($data_tmp["id"] && $data_tmp["delete_undo"] == "true")
+		if (!empty($data_tmp["key"]) && $data_tmp["delete_undo"] == "true")
 		{
 			$data_tmp["mode"] = "delete";
+			$data["attributes"][] = $data_tmp;
+//			print "hi"; die;
 		}
+		
+		elseif (empty($data_tmp["key"]) && !empty($data_tmp["value"]))
+		{
+			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
+			log_write("error", "page_output", "Both the key and value fields must be completed");
+		}
+		
+		elseif (!empty($data_tmp["key"]) && empty($data_tmp["value"]))
+		{
+			error_flag_field("attribute_" .$data_tmp["id"]. "_value");
+			log_write("error", "page_output", "Both the key and value fields must be completed");
+		}
+		
 		else
 		{
-			if (!empty($data_tmp["key"]) && $data_tmp["delete_undo"] == "false")
-			{
-				$data_tmp["mode"] = "update";
-			}
+			//$data_tmp["mode"] = "update";
+			$data["attributes"][] = $data_tmp;
+//				print_r($data_tmp);
+//				print_r($data); die;
 		}
+		
+		
+//		error_flag_field($col);
+//					error_flag_field($col2);
+//				 	log_write("error", "page_output", "Each column must be assigned a unique role.");
 
+				
+//			if(empty($attribute["key"]) || $attribute["value"])
+//			{
+//				$_SESSION["error"]["attribute" .$attribute["id"] ."-error"] = "Both key and attribute must be set";
+//				header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."");
+//				exit(0);
+//			}
+		
+		
+//print_r($data); die;
 
 		/*
 			Add to array
 		*/
-		$data["attributes"][] = $data_tmp;
+//		$data["attributes"][] = $data_tmp;
 	}
-
-
+//print "<pre>";
+//print_r($data); print "</pre>"; die;
 
 	/*
 		Error Handling
@@ -96,7 +125,7 @@ if (user_permissions_get('customers_write'))
 	if ($_SESSION["error"]["message"])
 	{
 		$_SESSION["error"]["form"]["attributes_customer"] = "failed";
-		header("Location: ../index.php?page=customer/attributes.php&id_customer=". $obj_customer->id ."");
+		header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."");
 		exit(0);
 	}
 
@@ -119,64 +148,122 @@ if (user_permissions_get('customers_write'))
 
 
 	// fetch all current records
-	$obj_attributes->load_data_all();
+	//$obj_attributes->load_data_all();
+	
 
 
 	// update records
 	foreach ($data["attributes"] as $attribute)
 	{
-		if (!empty($attribute["mode"]))
+		$obj_attribute = New attributes;
+		$obj_attribute->load_data();
+		$obj_attribute->id  = $attribute["id"];
+		
+		if ($attribute["mode"] == "delete")
 		{
-			$obj_attribute		= New attributes;
-
-
-			if ($attribute["id"])
-			{
-				$obj_attribute->id = $attribute["id"];
-	
-				$obj_attribute->load_data();
-			}
-
-
-			if ($attribute["mode"] == "update")
-			{
-				// data sent through, we should update an existing attribute. But first, let's check if we actually need to
-				// make a change or not.
-
-				if ($obj_attribute->data["value"] != $attribute["name"] || $obj_attribute->data["key"] != $attribute["key"])
-				{
-					/*
-						Update attribute
-					*/
-					log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
-
-
-					$obj_attribute->id_owner		= $obj_customer->id;
-					$obj_attribute->type			= "customer";
+//			print $attribute["id"]; die;
+			$obj_attribute->action_delete();
+		}
+		
+		//if mode is empty, determine if mode should be update or create
+		elseif (empty($attribute["mode"]))
+		{
+			$obj_attribute->id_owner	= $obj_customer->id;
+			$obj_attribute->type		= "customer";
+			$obj_attribute->id_group	= $attribute["id_group"];
+			$obj_attribute->data["key"]	= $attribute["key"];
+			$obj_attribute->data["value"]	= $attribute["value"];
 			
-					$obj_attribute->data["key"]		= $attribute["key"];
-					$obj_attribute->data["value"]		= $attribute["value"];
-
-					$obj_attribute->action_update();
-				}
-				else
-				{
-					log_write("debug", "process", "Not updating attribute ". $attribute["id"] ." due to no change in details");
-				}
-			}
-			elseif ($attribute["mode"] == "delete")
+			//if id doesn't exist, create new
+			if(!$obj_attribute->verify_id())
 			{
-				$obj_attribute->action_delete();
+				$obj_attribute->action_create();	
 			}
-		}
-		else
-		{
-			// new row but empty/deleted
-		}
-
+				
+//				//check if a change needs to be made
+//				if ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
+//				{
+//					log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
+//					
+//					$obj_attribute->id_owner		= $obj_customer->id;
+//					$obj_attribute->type			= "customer";
+//					$obj_attribute->id_group		= $attribute["id_group"];			
+//					$obj_attribute->data["key"]		= $attribute["key"];
+//					$obj_attribute->data["value"]		= $attribute["value"];
+//					$obj_attribute->action_update();
+//				}
+//			}
+			//otherwise, update
+			elseif ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
+			{
+				log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
+				$obj_attribute->action_update();
+			}
+		}		
 	}
+//		if (!empty($attribute["mode"]))
+//		{
+//			$obj_attribute		= New attributes;
+//
+//
+//			if ($attribute["id"])
+//			{
+//				$obj_attribute->id = $attribute["id"];
+////$obj_attribute->id = 5;
+////	log_write("debug", "process", "LOAD DATA");
+////				print $obj_attribute->load_data(); die;
+////				print "Hello";
+////				print $attribute["id"];
+////				print_r($obj_attribute->data);
+////				die;
+//				
+//				
+//			}
+//
+//
+//			if ($attribute["mode"] == "update")
+//			{
+//				// data sent through, we should update an existing attribute. But first, let's check if we actually need to
+//				// make a change or not.
+//
+//				if ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
+//				{
+//					/*
+//						Update attribute
+//					*/
+//					log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
+//
+//
+//					$obj_attribute->id_owner		= $obj_customer->id;
+//					$obj_attribute->type			= "customer";
+//					$obj_attribute->id_group		= $attribute["id_group"];
+//			
+////					$obj_attribute->data["key"]		= $attribute["key"];
+////					$obj_attribute->data["value"]		= $attribute["value"];
+////					$obj_attribute->data["id_group"]	= $attribute["id_group"];
+//
+//					$obj_attribute->action_update();
+//				}
+//				else
+//				{
+//					log_write("debug", "process", "Not updating attribute ". $attribute["id"] ." due to no change in details");
+//				}
+//			}
+//			elseif ($attribute["mode"] == "delete")
+//			{
+//				$obj_attribute->action_delete();
+//			}
+//		}
+//		else
+//		{
+//			// new row but empty/deleted
+//		}
+//
+//	}
+//
+//	log_write("notification", "process", "Customer attributes updated.");
 
-	log_write("notification", "process", "Customer attributes updated.");
+
 
 
 	/*
@@ -193,6 +280,26 @@ if (user_permissions_get('customers_write'))
 		log_write("error", "process", "An unexpected error occured, the attributes remain unchanged");
 
 		$sql_obj->trans_rollback();
+	}
+	
+	/*check if any groups no longer have attributes assigned to them. if so, delete the group*/
+	//get all group ids
+	//for each one, test if there is an attribute
+	
+	$group_ids = New sql_query;
+	$group_ids->string = "SELECT id FROM attributes_group";
+	$group_ids->execute();
+	
+	$group_ids->fetch_array();			
+	foreach ($group_ids->data as $data)
+	{
+		$test_val = sql_get_singlevalue("SELECT id AS value FROM attributes WHERE id_group = " .$data["id"]);
+		if($test_val == 0)
+		{
+			$delete_group = New sql_query;
+			$delete_group->string = "DELETE FROM attributes_group WHERE id=" .$data["id"];
+			$delete_group->execute();
+		}
 	}
 
 	// display updated details

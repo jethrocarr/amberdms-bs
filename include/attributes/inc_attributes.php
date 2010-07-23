@@ -17,6 +17,7 @@ class attributes {
 
 	var $id;		// ID of attribute
 	var $id_owner;		// ID of attribute's owner
+	var $id_group;		// ID of attribute's group
 	var $type;		// type of attribute
 
 	var $data;		// holds values of record fields
@@ -109,7 +110,9 @@ class attributes {
 		log_debug("attributes", "Executing load_data()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT * FROM attributes WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id_owner, id_group, type, `key`, value, group_name  
+						FROM attributes LEFT JOIN attributes_group ON attributes.id_group = attributes_group.id 
+						WHERE attributes.id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -117,6 +120,8 @@ class attributes {
 			$sql_obj->fetch_array();
 
 			$this->id_owner		= $sql_obj->data[0]["id_owner"];
+			$this->id_group		= $sql_obj->data[0]["id_group"];
+			$this->group_name	= $sql_obj->data[0]["group_name"];
 			$this->type		= $sql_obj->data[0]["type"];
 
 			$this->data["key"]	= $sql_obj->data[0]["key"];
@@ -148,8 +153,11 @@ class attributes {
 		$sql_obj = New sql_query;
 
 		$sql_obj->prepare_sql_settable("attributes");
-		$sql_obj->prepare_sql_addfield("id");
+		$sql_obj->prepare_sql_addjoin("left join attributes_group on attributes.id_group = attributes_group.id");
+		$sql_obj->prepare_sql_addfield("attributes.id");
 		$sql_obj->prepare_sql_addfield("id_owner");
+		$sql_obj->prepare_sql_addfield("id_group");
+		$sql_obj->prepare_sql_addfield("group_name");
 		$sql_obj->prepare_sql_addfield("type");
 		$sql_obj->prepare_sql_addfield("`key`");
 		$sql_obj->prepare_sql_addfield("value");
@@ -160,6 +168,11 @@ class attributes {
 			$sql_obj->prepare_sql_addwhere("id_owner='". $this->id_owner ."'");
 		}
 
+		if ($this->id_group)
+		{
+			$sql_obj->prepare_sql_addwhere("id_owner='". $this->id_group ."'");
+		}
+		
 		if ($this->type)
 		{
 			$sql_obj->prepare_sql_addwhere("type='". $this->type ."'");
@@ -210,12 +223,14 @@ class attributes {
 
 		// create a new attribute
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO `attributes` ( type, id_owner ) VALUES ('". $this->type ."', '". $this->id_owner ."')";
+		$sql_obj->string	= "INSERT INTO `attributes` ( id, type, id_owner, id_group, `key`, value) 
+						VALUES ('". $this->id ."', '". $this->type ."', '". $this->id_owner ."', '". $this->id_group . "', '". $this->data["key"].  "', '". $this->data["value"]. "')";
 		$sql_obj->execute();
 
 		$this->id = $sql_obj->fetch_insert_id();
 
-		return $this->id;
+//		return $this->id; 
+return 1;
 
 	} // end of action_create
 
@@ -249,19 +264,19 @@ class attributes {
 			(Note: if this function has been called by the action_update() wrapper function
 			this step will already have been performed and we can just ignore it)
 		*/
-		if (!$this->id)
-		{
-			$mode = "create";
-
-			if (!$this->action_create())
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			$mode = "update";
-		}
+//		if (!$this->id)
+//		{
+//			$mode = "create";
+//
+//			if (!$this->action_create())
+//			{
+//				return 0;
+//			}
+//		}
+//		else
+//		{
+//			$mode = "update";
+//		}
 
 
 		/*
@@ -270,6 +285,7 @@ class attributes {
 
 		$sql_obj->string	= "UPDATE `attributes` SET "
 						."`id_owner`='".$this->id_owner ."', "
+						."`id_group`='".$this->id_group ."', "
 						."`type`='". $this->type ."', "
 						."`key`='".$this->data["key"] ."', "
 						."`value`='". $this->data["value"] ."'"
@@ -318,7 +334,7 @@ class attributes {
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
 
-
+//print "this is id". $this->id; die;
 		// delete the attribute
 		$sql_obj->string	= "DELETE FROM attributes WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
