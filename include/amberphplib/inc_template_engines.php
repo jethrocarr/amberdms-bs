@@ -1031,8 +1031,8 @@ class template_engine_htmltopdf extends template_engine
 			return 0;
 		}
 		
-		$directory_prefix = $tmp_filename."_";
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
+		$directory_prefix = $tmp_filename."_"; 
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcostyle/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
