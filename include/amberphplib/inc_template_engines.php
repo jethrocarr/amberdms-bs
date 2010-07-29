@@ -1052,7 +1052,7 @@ class template_engine_htmltopdf extends template_engine
 				return 0;
 			}
 		}
-
+ 
 		fclose($handle);
 
 

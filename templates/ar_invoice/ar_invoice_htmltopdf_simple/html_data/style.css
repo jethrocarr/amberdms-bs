@@ -132,11 +132,11 @@ div.main-content > div.invoice_items table:empty {
 div.main-content > div.invoice_items table tr th {
 	border-top: none;
 	text-align: left;
-	padding: 0.3mm 0.6mm 0mm 0mm;
+	padding: 0.5mm 1mm 0.4mm 1mm;
 }
 
 div.main-content > div.invoice_items table tr td {
-	padding: 0.3mm 0.4mm 0.4mm 0.2mm;
+	padding: 0.5mm 1mm 0.6mm 1mm;
 	vertical-align: top;
 }
 

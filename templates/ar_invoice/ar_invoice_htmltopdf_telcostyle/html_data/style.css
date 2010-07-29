@@ -117,6 +117,7 @@ div.left-column> div.invoice_items table tr th {
 	border-top: none;
 	text-align: left;
 	font-size: 10pt;
+	padding: 0.5mm 1mm 0.5mm 1mm;
 }
 
 div.left-column > div.invoice_items table{
@@ -128,7 +129,7 @@ div.left-column > div.invoice_items table:empty{
 }
 
 div.left-column > div.invoice_items table tr td {
-	padding: 0.5mm 0.4mm 0.5mm 0.2mm;
+	padding: 0.5mm 1mm 0.5mm 1mm;
 	vertical-align: top;
 }
 
