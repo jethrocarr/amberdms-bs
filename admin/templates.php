@@ -10,6 +10,8 @@
 class page_output
 {
 	var $obj_form;
+	var $obj_form_invoice_email;
+	var $obj_form_quote_email;
 	//var $obj_sql_ar_invoice;
 	var $obj_sql_invoice_data = array();
 
@@ -66,6 +68,102 @@ class page_output
 		$this->obj_form = New form_input;
 		$this->obj_form->action = "admin/templates-process.php";
 		$this->obj_form->method = "post";
+		
+		
+		
+		/*
+			Define invoice email template form
+		*/
+		
+		$this->obj_form_invoice_email = New form_input;
+		$this->obj_form_invoice_email->formname = "invoice_email_template";
+		$this->obj_form_invoice_email->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form_invoice_email->action = "admin/templates-process.php";
+		$this->obj_form_invoice_email->method = "post";
+		
+		// message
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_message";
+		$structure["type"]		= "textarea";
+		$structure["defaultvalue"]	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_EMAIL') LIMIT 1");
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
+		$this->obj_form_invoice_email->add_input($structure);
+		
+		// action type
+		$structure = NULL;
+		$structure["fieldname"]		= "action";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'email_template';
+		$this->obj_form_invoice_email->add_input($structure);	
+		
+		// template type
+		$structure = NULL;
+		$structure["fieldname"]		= "template_type";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'invoice';
+		$this->obj_form_invoice_email->add_input($structure);	
+		
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save";
+		$this->obj_form_invoice_email->add_input($structure);
+		
+					
+		$this->obj_form_invoice_email->subforms["hidden"]			= array("action", "template_type");
+		$this->obj_form_invoice_email->subforms["Invoice Email"]	= array("email_message", "submit");
+
+		
+		/*
+			Define quote email template form
+		*/
+		$this->obj_form_quote_email = New form_input;
+		$this->obj_form_quote_email->formname = "invoice_email_template";
+		$this->obj_form_quote_email->language = $_SESSION["user"]["lang"];
+
+		$this->obj_form_quote_email->action = "admin/templates-process.php";
+		$this->obj_form_quote_email->method = "post";
+		
+		
+		// message
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_message";
+		$structure["type"]		= "textarea";
+		$structure["defaultvalue"]	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
+		$this->obj_form_quote_email->add_input($structure);
+		
+		// action type
+		$structure = NULL;
+		$structure["fieldname"]		= "action";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'email_template';
+		$this->obj_form_quote_email->add_input($structure);	
+		
+		// template type
+		$structure = NULL;
+		$structure["fieldname"]		= "template_type";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'quote';
+		$this->obj_form_quote_email->add_input($structure);	
+		
+		
+		// submit button
+		$structure = NULL;
+		$structure["fieldname"] 	= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "Save";
+		$this->obj_form_quote_email->add_input($structure);
+					
+		$this->obj_form_quote_email->subforms["hidden"]			= array("action", "template_type");
+		$this->obj_form_quote_email->subforms["Quote Email"]	= array("email_message", "submit");
+		
+		
+		
 	}
 
 
@@ -194,6 +292,7 @@ class page_output
 				
 				print "<tr class=\"available_templates_row ar_invoices_templates\">";
 					print "<td class=\"available_templates_cell\" colspan=\"3\">";
+						print "<input type=\"hidden\" name=\"action\" value=\"pdf_template\">&nbsp;&nbsp;";
 						print "<input type=\"hidden\" name=\"template_type\" value=\"".$invoice_type_name."\">&nbsp;&nbsp;";
 						print "<input type=\"submit\" value=\"Save Changes\">&nbsp;&nbsp;";
 						print "<input type=\"button\" value=\"Cancel\" class=\"cancelbutton\">";
@@ -203,6 +302,19 @@ class page_output
 			print "</table>";
 			print "</form>";
 		}
+		
+		// Email Templates
+		print "<div>"; 
+			print "<p><h3>Email Templates:</h3></p>";
+			// Invoice Email Template
+			$this->obj_form_invoice_email->render_form();
+		
+		
+			// Quote Email Template
+		
+			$this->obj_form_quote_email->render_form();
+		print "</div>";
+		
 	}
 
 	

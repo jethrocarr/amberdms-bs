@@ -214,6 +214,9 @@ class invoice
 	var $id;		// ID of invoice
 	
 	var $data;		// array for storage of all invoice data
+		
+	var $invoice_fields;		// array for storage of all invoice fields with associated data
+	
 
 	var $obj_pdf;		// generated PDF object
 
@@ -340,6 +343,112 @@ class invoice
 		
 	} // end of load_data
 
+
+	
+
+	/*
+		load_data
+
+		Loads the invoice data for exporting for PDF or email or other purposes.
+
+		Return Codes
+		0	failure
+		1	success
+	*/
+	function load_data_export()
+	{
+	
+
+		/*
+			Customer Data
+		*/
+		
+
+		// fetch customer data
+		$sql_customer_obj		= New sql_query;
+		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, tax_number, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
+		$sql_customer_obj->execute(); 
+		$sql_customer_obj->fetch_array(); 
+
+
+		// customer fields
+		$this->invoice_fields["code_customer"] = $sql_customer_obj->data[0]["code_customer"]; 
+		$this->invoice_fields["customer_name"] = $sql_customer_obj->data[0]["name_customer"]; 
+		$this->invoice_fields["customer_contact"] = $sql_customer_obj->data[0]["name_contact"]; 
+		$this->invoice_fields["customer_address1_street"] = $sql_customer_obj->data[0]["address1_street"]; 
+		$this->invoice_fields["customer_address1_city"] = $sql_customer_obj->data[0]["address1_city"]; 
+		$this->invoice_fields["customer_address1_state"] = $sql_customer_obj->data[0]["address1_state"]; 
+		$this->invoice_fields["customer_address1_country"] = $sql_customer_obj->data[0]["address1_country"]; 
+
+		if ($sql_customer_obj->data[0]["address1_zipcode"] == 0)
+		{
+			$sql_customer_obj->data[0]["address1_zipcode"] = "";
+		}
+		
+		$this->invoice_fields["customer_tax_number"] = $sql_customer_obj->data[0]["tax_number"]; 
+		$this->invoice_fields["customer_address1_zipcode"] = $sql_customer_obj->data[0]["address1_zipcode"]; 
+
+
+
+		// fetch company data
+		$sql_company_obj		= New sql_query;
+		$sql_company_obj->string	= "SELECT name, value FROM config WHERE name LIKE '%COMPANY%'";
+		$sql_company_obj->execute(); 
+		$sql_company_obj->fetch_array(); 
+
+		foreach ($sql_company_obj->data as $data_db)
+		{
+			$data_company[ strtolower($data_db["name"]) ] = $data_db["value"];
+		}
+
+		// company fields
+		$this->invoice_fields["company_name"] = $data_company["company_name"]; 
+		
+		$this->invoice_fields["company_contact_email"] = $data_company["company_contact_email"]; 
+		$this->invoice_fields["company_contact_phone"] = $data_company["company_contact_phone"]; 
+		$this->invoice_fields["company_contact_fax"] = $data_company["company_contact_fax"]; 
+		
+		$this->invoice_fields["company_address1_street"] = $data_company["company_address1_street"]; 
+		$this->invoice_fields["company_address1_city"] = $data_company["company_address1_city"]; 
+		$this->invoice_fields["company_address1_state"] = $data_company["company_address1_state"]; 
+		$this->invoice_fields["company_address1_country"] = $data_company["company_address1_country"]; 
+		$this->invoice_fields["company_address1_zipcode"] = $data_company["company_address1_zipcode"]; 
+		
+		if ($this->type == "ar")
+		{
+			$this->invoice_fields["company_payment_details"] = $data_company["company_payment_details"]; 
+		}
+
+		
+
+		/*
+			Invoice Data (exc items/taxes)
+		*/
+		if ($this->type == "ar")
+		{
+			$this->invoice_fields["code_invoice"] = $this->data["code_invoice"]; 
+			$this->invoice_fields["code_ordernumber"] = $this->data["code_ordernumber"]; 
+			$this->invoice_fields["date_due"] = time_format_humandate($this->data["date_due"]);  
+		}
+		else
+		{
+			$this->invoice_fields["code_quote"] = $this->data["code_quote"]; 
+			$this->invoice_fields["date_validtill"] = time_format_humandate($this->data["date_validtill"]);  
+		}
+		
+		$this->invoice_fields["date_trans"] = time_format_humandate($this->data["date_trans"]);  
+		$this->invoice_fields["amount"] = format_money($this->data["amount"]);  
+		$this->invoice_fields["amount_total"] = format_money($this->data["amount_total"] - $this->data["amount_paid"]);  
+		$this->invoice_fields["amount_currency"] = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") ; 
+
+		if ($this->data["amount_paid"] > 0)
+		{
+			$this->invoice_fields["amount_paid"] = format_money($this->data["amount_paid"]);    
+		}
+
+
+		return 1;
+	}
 
 	/*
 		prepare_set_defaults
@@ -740,7 +849,12 @@ class invoice
 	function generate_pdf()
 	{
 		log_debug("invoice", "Executing generate_pdf()");
-
+		
+		
+		$this->load_data_export();
+		
+		
+		
 		// start the PDF object
 		//
 		// note: the & allows decontructors to operate 
@@ -796,103 +910,22 @@ class invoice
 		}
 
 		
-
-		/*
-			Customer Data
-		*/
-		
-
-		// fetch customer data
-		$sql_customer_obj		= New sql_query;
-		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, tax_number, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
-		$sql_customer_obj->execute();
-		$sql_customer_obj->fetch_array();
-
-
-		// customer fields
-		$this->obj_pdf->prepare_add_field("code_customer", $sql_customer_obj->data[0]["code_customer"]);
-		$this->obj_pdf->prepare_add_field("customer_name", $sql_customer_obj->data[0]["name_customer"]);
-		$this->obj_pdf->prepare_add_field("customer_contact", $sql_customer_obj->data[0]["name_contact"]);
-		$this->obj_pdf->prepare_add_field("customer_address1_street", $sql_customer_obj->data[0]["address1_street"]);
-		$this->obj_pdf->prepare_add_field("customer_address1_city", $sql_customer_obj->data[0]["address1_city"]);
-		$this->obj_pdf->prepare_add_field("customer_address1_state", $sql_customer_obj->data[0]["address1_state"]);
-		$this->obj_pdf->prepare_add_field("customer_address1_country", $sql_customer_obj->data[0]["address1_country"]);
-
-		if ($sql_customer_obj->data[0]["address1_zipcode"] == 0)
-		{
-			$sql_customer_obj->data[0]["address1_zipcode"] = "";
-		}
-		
-		$this->obj_pdf->prepare_add_field("customer_tax_number", $sql_customer_obj->data[0]["tax_number"]);
-		$this->obj_pdf->prepare_add_field("customer_address1_zipcode", $sql_customer_obj->data[0]["address1_zipcode"]);
-
-
-
 		/*
 			Company Data
 		*/
 		
 		// company logo
 		$this->obj_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
-
-		// fetch company data
-		$sql_company_obj		= New sql_query;
-		$sql_company_obj->string	= "SELECT name, value FROM config WHERE name LIKE '%COMPANY%'";
-		$sql_company_obj->execute();
-		$sql_company_obj->fetch_array();
-
-		foreach ($sql_company_obj->data as $data_db)
-		{
-			$data_company[ strtolower($data_db["name"]) ] = $data_db["value"];
-		}
-
-		// company fields
-		$this->obj_pdf->prepare_add_field("company_name", $data_company["company_name"]);
 		
-		$this->obj_pdf->prepare_add_field("company_contact_email", $data_company["company_contact_email"]);
-		$this->obj_pdf->prepare_add_field("company_contact_phone", $data_company["company_contact_phone"]);
-		$this->obj_pdf->prepare_add_field("company_contact_fax", $data_company["company_contact_fax"]);
 		
-		$this->obj_pdf->prepare_add_field("company_address1_street", $data_company["company_address1_street"]);
-		$this->obj_pdf->prepare_add_field("company_address1_city", $data_company["company_address1_city"]);
-		$this->obj_pdf->prepare_add_field("company_address1_state", $data_company["company_address1_state"]);
-		$this->obj_pdf->prepare_add_field("company_address1_country", $data_company["company_address1_country"]);
-		$this->obj_pdf->prepare_add_field("company_address1_zipcode", $data_company["company_address1_zipcode"]);
 		
-		if ($this->type == "ar")
-		{
-			$this->obj_pdf->prepare_add_field("company_payment_details", $data_company["company_payment_details"]);
-		}
-
 		
-
-		/*
-			Invoice Data (exc items/taxes)
-		*/
-		if ($this->type == "ar")
-		{
-			$this->obj_pdf->prepare_add_field("code_invoice", $this->data["code_invoice"]);
-			$this->obj_pdf->prepare_add_field("code_ordernumber", $this->data["code_ordernumber"]);
-			$this->obj_pdf->prepare_add_field("date_due", time_format_humandate($this->data["date_due"]));
-		}
-		else
-		{
-			$this->obj_pdf->prepare_add_field("code_quote", $this->data["code_quote"]);
-			$this->obj_pdf->prepare_add_field("date_validtill", time_format_humandate($this->data["date_validtill"]));
+		// convert the invoice_fields array into 
+		foreach($this->invoice_fields as $invoice_field_key => $invoice_field_value) {
+			$this->obj_pdf->prepare_add_field($invoice_field_key, $invoice_field_value);
 		}
 		
-		$this->obj_pdf->prepare_add_field("date_trans", time_format_humandate($this->data["date_trans"]));
-		$this->obj_pdf->prepare_add_field("amount", format_money($this->data["amount"]));
-		$this->obj_pdf->prepare_add_field("amount_total", format_money($this->data["amount_total"] - $this->data["amount_paid"]));
-		$this->obj_pdf->prepare_add_field("amount_currency", sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") );
-
-		if ($this->data["amount_paid"] > 0)
-		{
-			$this->obj_pdf->prepare_add_field("amount_paid", format_money($this->data["amount_paid"]));
-		}
-
-
-
+		
 		/*
 			Invoice Items
 			(excluding tax items - these need to be processed in a different way)
@@ -1330,7 +1363,6 @@ class invoice
 		}
 
 
-	
 		/*
 			Generate a PDF of the invoice and save to tmp file
 		*/
@@ -1344,7 +1376,6 @@ class invoice
 			return 0;
 		}
 		
-		
 		// save to a temporary file
 		if ($this->type == "ar")
 		{
@@ -1353,6 +1384,7 @@ class invoice
 		else
 		{
 			$tmp_filename = file_generate_name("/tmp/quote_". $this->data["code_quote"] ."", "pdf");
+			//$email_template	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
 		}
 			
 

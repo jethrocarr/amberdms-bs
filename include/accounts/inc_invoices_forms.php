@@ -274,6 +274,7 @@ class invoice_form_export
 
 	var $obj_form_email;
 	var $obj_form_download;
+	var $obj_invoice;
 	var $obj_pdf;
 
 
@@ -309,7 +310,41 @@ class invoice_form_export
 		$obj_sql_customer->fetch_array();
 
 
-	
+			
+		$obj_invoice	= New invoice;
+		$obj_invoice->type	= $this->type;
+		$obj_invoice->id = $this->invoiceid;
+		
+		$obj_invoice->load_data_export();
+		$invoice_data = $obj_invoice->invoice_fields;
+		
+		$invoice_data_parts['keys'] =  array_keys($invoice_data);
+		$invoice_data_parts['values'] = array_values($invoice_data);
+		
+		foreach($invoice_data_parts['keys'] as $index => $key)
+		{
+			$invoice_data_parts['keys'][$index] = "(".$key.")";
+		} 	
+		foreach($invoice_data_parts['values'] as $index => $value)
+		{
+			$invoice_data_parts['values'][$index] = trim($value);
+		} 
+		
+		
+		if ($this->type == "ar")
+		{
+			$email_message	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_EMAIL') LIMIT 1");
+		}
+		else
+		{
+			$email_message	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
+		}
+		
+		
+		//echo $email_message;
+		$email_message = str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $email_message);
+		
+		//echo "<pre>".print_r($email_message, true)."</pre>";
 
 
 		/*
@@ -336,6 +371,8 @@ class invoice_form_export
 		
 		$this->obj_form_email->add_input($structure);
 
+
+		
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "subject";
@@ -377,7 +414,8 @@ class invoice_form_export
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_message";
 		$structure["type"]		= "textarea";
-		$structure["defaultvalue"]	= "Please see attached PDF";
+		$structure["defaultvalue"] = $email_message;
+
 		$structure["options"]["width"]	= "600";
 		$structure["options"]["height"]	= "100";
 		$this->obj_form_email->add_input($structure);
