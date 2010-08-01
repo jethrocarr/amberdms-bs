@@ -347,7 +347,7 @@ class invoice
 	
 
 	/*
-		load_data
+		load_data_export
 
 		Loads the invoice data for exporting for PDF or email or other purposes.
 
@@ -849,8 +849,9 @@ class invoice
 	function generate_pdf()
 	{
 		log_debug("invoice", "Executing generate_pdf()");
-		
-		
+	
+
+		$this->load_data();	
 		$this->load_data_export();
 		
 		

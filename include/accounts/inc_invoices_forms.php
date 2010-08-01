@@ -315,6 +315,7 @@ class invoice_form_export
 		$obj_invoice->type	= $this->type;
 		$obj_invoice->id = $this->invoiceid;
 		
+		$obj_invoice->load_data();
 		$obj_invoice->load_data_export();
 		$invoice_data = $obj_invoice->invoice_fields;
 		
