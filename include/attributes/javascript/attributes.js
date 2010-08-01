@@ -5,6 +5,7 @@
 */
 
 var highest_attr_id;
+var error_color = "";
 
 $(document).ready(function()
 {
@@ -40,7 +41,9 @@ $(document).ready(function()
 	$("a[id^='move_row_']").live("click", function()
 	{
 		id = this.id.substring(9);
-		group_id = $(this).parent().parent().parent().attr("class").substring(26);
+		console.log(id);
+		group_id = $(this).parent().parent().parent().removeClass("form_error").attr("class").substring(26);
+		console.log(group_id);
 		show_move_dropdown(id, group_id);
 		return false;
 	});
@@ -85,7 +88,16 @@ $(document).ready(function()
 	});
 	
 	error_color = $(".form_error").css("background-color");
-	$(".form_error").removeClass("form_error").css("background-color", error_color);
+//	$(".form_error").removeClass("form_error").css("background-color", error_color);
+	error_row = $(".form_error").attr("class");
+	if(error_row)
+	{
+		$(error_row).removeClass("form_error").css("background-color", error_color);
+		show_class = error_row.substring(27);
+		$("." + show_class).show();
+		$("#" + show_class).removeClass("show_attributes").addClass("hide_attributes");
+		$("#" + show_class).children("td:last").html("<b>^</b>");
+	}
 
 });
 
@@ -172,6 +184,14 @@ function add_group()
 			
 			highest_attr_id = parseInt(highest_attr_id)+2;
 			$("input[name='highest_attr_id']").val(highest_attr_id);
+			
+			//add group id to list
+			new_val = $("input[name='new_groups']").val() + id + ",";
+			$("input[name='new_groups']").val(new_val);
+			
+			//create variable to hold list of attributes
+			attribute_list = attr_one_num + "," + attr_two_num;
+			$(".form_table").after("<input type=\"hidden\" name=\"group_" + id + "_attribute_list\" value=\"" + attribute_list + "\" />");
 		});
 	}
 }
@@ -199,6 +219,7 @@ function move_attribute_row(attr_id, group_id)
 		add_attribute_row(attr_id);
 	}
 	old_location = $("#attribute_" + attr_id + "_key").parent().parent();
+	old_group_id = $(old_location).attr("class").substring(27);
 	new_location = $(old_location).clone().insertBefore($(".last_row").parent().parent(".group_row_" + group_id)).removeAttr("class").addClass("table_highlight").addClass("group_row_" + group_id);
 	$(old_location).remove();
 	
@@ -220,6 +241,25 @@ function move_attribute_row(attr_id, group_id)
 			});
 		});
 	}); 
+	
+	//add attribute to group list
+	new_val = $("input[name='group_" + group_id + "_attribute_list']").val() + group_id + ",";
+	$("input[name='group_" + group_id + "_attribute_list']").val(new_val);
+	
+	//remove from old group attribute list
+	if($("input[name='group_" + old_group_id + "_attribute_list']"))
+	{
+		attr_array = $("input[name='group_" + old_group_id + "_attribute_list']").val().split(",");
+		tmp_array = new Array();
+		for (i=0; i<attr_array.length; i++)
+		{
+			if(attr_array[i] != attr_id)
+			{
+				tmp_array.push(attr_array[i]);
+			}
+		}
+		$("input[name='group_" + old_group_id + "_attribute_list']").val(tmp_array.toString())
+	}	
 }
 /*
 	add_attribute_row
@@ -240,8 +280,17 @@ function add_attribute_row(id)
 	$(new_row).children().children("input[name='attribute_" + id + "_delete_undo']").attr("name", "attribute_" + highest_attr_id + "_delete_undo").val("false");
 	$(new_row).children().children().children("#move_row_" + id).attr("id", "move_row_" + highest_attr_id);
 	$(new_row).children().children("select[id^='select_group_attr_']").remove();
-	$(new_row).children().children("a[id^='move_row_']").show();
+	$(new_row).children().children().children("a[id^='move_row_']").show();
+	console.log("move show");
+	console.log($(new_row).children().children("a[id^='move_row_']"));
+	console.log($(new_row).children().children().children("a"));
 	$(new_row).children().children("input[name$='_group']").attr("name", "attribute_" + highest_attr_id + "_group");
+	
+	field_color = $(".table_highlight").css("background-color");
+	if($(new_row).css("background-color") == error_color)
+	{
+		$(new_row).css("background-color", field_color);
+	}
 	
 	//$(new_row).children().children("input[name='attribute_" + num_values + "_key']").attr("id", "attribute_" + num_values + "_key");
 	
@@ -257,6 +306,11 @@ function add_attribute_row(id)
 	//add one to num_tran
 	//num_values++;
 	$("input[name='highest_attr_id']").val(highest_attr_id);
+	
+	//add attribute to group list
+	group_id = $(new_row).attr("class").substring(27);
+	new_val = $("input[name='group_" + group_id + "_attribute_list']").val() + highest_attr_id + ",";
+	$("input[name='group_" + group_id + "_attribute_list']").val(new_val);
 	
 //	//add function calls to new row
 //	$("select[name^='attribute_" + (num_values-1) + "']").change(add_attribute_row);

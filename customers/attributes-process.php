@@ -34,6 +34,19 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->id			= @security_form_input_predefined("int", "id_customer", 1, "");
 	$data = array();
 	$data["highest_attr_id"]		= @security_form_input_predefined("int", "highest_attr_id", 0, "");
+	$data["new_groups"]			= @security_form_input_predefined("any", "new_groups", 0, "");
+	
+	//print $data["new_groups"]; 
+	$group_array = explode(",", $data["new_groups"]);
+	for ($i=0; $i<count($group_array); $i++)
+	{
+//		$ $attr_list; 
+		if(!empty($group_array[$i])){
+			$data["new_group_attributes"][$group_array[$i]] = @security_form_input_predefined("any", "group_".$group_array[$i]."_attribute_list", 0, "");
+		}
+	}
+		
+	
 
 
 	/*
@@ -42,6 +55,7 @@ if (user_permissions_get('customers_write'))
 
 	for ($i = 0; $i <= $data["highest_attr_id"]; $i++)
 	{
+//	 print "  i  :".$i;
 		/*
 			Fetch data
 		*/
@@ -60,19 +74,24 @@ if (user_permissions_get('customers_write'))
 		*/
 		if (!empty($data_tmp["key"]) && $data_tmp["delete_undo"] == "true")
 		{
+			//print "  delete  ";
 			$data_tmp["mode"] = "delete";
 			$data["attributes"][] = $data_tmp;
 //			print "hi"; die;
 		}
 		
-		elseif (empty($data_tmp["key"]) && !empty($data_tmp["value"]))
+		elseif (empty($data_tmp["key"]) && empty($data_tmp["value"]))
 		{
-			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
-			log_write("error", "page_output", "Both the key and value fields must be completed");
+			//print "   empty  ";
+//			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
+//			log_write("error", "page_output", "Both the key and value fields must be completed");
+			continue;
 		}
 		
-		elseif (!empty($data_tmp["key"]) && empty($data_tmp["value"]))
+		elseif (empty($data_tmp["key"]) || empty($data_tmp["value"]))
 		{
+			//print " one empty ";
+			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
 			error_flag_field("attribute_" .$data_tmp["id"]. "_value");
 			log_write("error", "page_output", "Both the key and value fields must be completed");
 		}
@@ -123,9 +142,17 @@ if (user_permissions_get('customers_write'))
 
 	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
-	{
+	{	
+		$tmp_string = "";
+		print_r($data["new_group_attributes"]);
+		foreach($data["new_group_attributes"] as $group=>$attributes)
+		{
+			$tmp_string .= "&group_" . $group . "_attributes_list=" . $attributes;	
+			print $tmp_string;	
+		}
+		//die;
 		$_SESSION["error"]["form"]["attributes_customer"] = "failed";
-		header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."");
+		header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."&new_groups=". $data["new_groups"]. $tmp_string);
 		exit(0);
 	}
 
@@ -290,17 +317,21 @@ if (user_permissions_get('customers_write'))
 	$group_ids->string = "SELECT id FROM attributes_group";
 	$group_ids->execute();
 	
-	$group_ids->fetch_array();			
+	$group_ids->fetch_array();
+	//print_r($group_ids->data); 	
 	foreach ($group_ids->data as $data)
 	{
 		$test_val = sql_get_singlevalue("SELECT id AS value FROM attributes WHERE id_group = " .$data["id"]);
+		//print $test_val . "     ";
 		if($test_val == 0)
 		{
+		//print "ere";
 			$delete_group = New sql_query;
 			$delete_group->string = "DELETE FROM attributes_group WHERE id=" .$data["id"];
 			$delete_group->execute();
 		}
 	}
+	
 
 	// display updated details
 	header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id);
