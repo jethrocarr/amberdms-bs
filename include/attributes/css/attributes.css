@@ -12,3 +12,8 @@ tr[class*='group_row']
 {
 	display: none;
 }
+
+.change_group_name
+{
+	display: none;
+}

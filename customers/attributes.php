@@ -21,7 +21,10 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_journal;
 	
+	var $highest_attr_id;
 	var $new_groups_array;
+	
+	var $no_attributes;
 
 
 	function page_output()
@@ -101,7 +104,19 @@ class page_output
 
 		$this->obj_attributes->load_data_all();
 
-
+		//set no_attributes to true if no attributes currently exist for the customer
+		if (!count($this->obj_attributes->data))
+		{
+			$this->no_attributes = "true";
+		}
+		else
+		{
+			$this->no_attributes = "false";
+		}
+		
+		print "<pre>";
+		print_r($this->obj_attributes->data);
+		print "</pre>";
 		/*
 			Define form structure
 		*/
@@ -117,20 +132,15 @@ class page_output
 		 */
 		$this->group_arrays			= array();  
 		$this->last_row_in_group		= array();
-		$this->highest_attr_id			= 0;
+		$this->highest_attr_id			= sql_get_singlevalue("SELECT id AS value FROM attributes ORDER BY id DESC LIMIT 1");		
 		
 		/*
 		 * 	Assign attributes to correct groups
-		 * 	Count highest attribute	
 		 */
 		foreach ($this->obj_attributes->data as $attribute)
 		{
 			$this->group_arrays[$attribute["id_group"]][] = $attribute["id"];
 			$this->group_arrays[$attribute["id_group"]]["name"] = $attribute["group_name"];
-			if($attribute["id"] > $this->highest_attr_id)
-			{
-				$this->highest_attr_id = $attribute["id"];
-			}
 		}
 		
 
@@ -144,6 +154,24 @@ class page_output
 			$this->last_row_in_group[$group_id] = $this->highest_attr_id;
 		}		
 
+		/*
+		 * 	If no attributes currently exist, create a default group in the database
+		 * 	Name is "Default Group [id]" so that no others are overwritten
+		 * 	Id is obtained by finding highest in the DB and adding one
+		 * 	This takes into account multiple customers, possibility of unchanged names, etc
+		 */
+		if ($this->no_attributes == "true")
+		{
+			$add_group		= New sql_query;
+			$add_group->string	= "INSERT INTO attributes_group(group_name) VALUES(\"Default Group\")";
+			$add_group->execute();			
+			$new_group_id 		= $add_group->fetch_insert_id();
+			
+			$this->group_arrays[$new_group_id]["name"] = "Default Group";
+			$this->group_arrays[$new_group_id][] = ++$this->highest_attr_id;
+			$this->group_arrays[$new_group_id][] = ++$this->highest_attr_id;
+			$this->last_row_in_group[$group_id]  = $this->highest_attr_id;
+		}
 		
 		/*
 		 * 	Add new groups to the group array
@@ -172,7 +200,8 @@ class page_output
 				$this->group_arrays[$this->new_groups_array[$i]]["name"] = $group_name;
 			}
 		}
-
+		print "<pre>";
+print_r($this->group_arrays); print "</pre>";
 		/*
 		 * 	Generate form fields
 		 */
@@ -301,9 +330,12 @@ class page_output
 		}
 
 		//add new group field/ button
-		print "<p id=\"show_add_group\"><strong><a href=\"\">Create New Group...</a></strong></p>";
-		print "<p class=\"add_group\"><strong>Create New Group:</strong></p>";
-		print "<p class=\"add_group\">Name: <input type=\"text\" name=\"add_group\" /> &nbsp; <a href=\"\" class=\"button_small\" id=\"add_group\">Add</a> &nbsp; <a href=\"\" class=\"button_small\" id=\"close_add_group\">Cancel</a></p>";
+		if (user_permissions_get("customers_write"))
+		{
+			print "<p id=\"show_add_group\"><strong><a href=\"\">Create New Group...</a></strong></p>";
+			print "<p class=\"add_group\"><strong>Create New Group:</strong></p>";
+			print "<p class=\"add_group\">Name: <input type=\"text\" name=\"add_group\" /> &nbsp; <a href=\"\" class=\"button_small\" id=\"add_group\">Add</a> &nbsp; <a href=\"\" class=\"button_small\" id=\"close_add_group\">Cancel</a></p>";
+		}
 		
 		// start form/table structure
 		print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
@@ -313,9 +345,31 @@ class page_output
 		foreach	($this->group_arrays as $group_id=>$attributes)
 		{
 			//header
-			print "<tr class=\"header show_attributes\" id=\"group_row_". $group_id. "\">";
-			print "<td colspan=\"3\"><b>". $attributes["name"] ."</b></td>";
-			print "<td class=\"expand_collapse\"><b>v</b></td>";
+			if(count($this->group_arrays) == 1)
+			{
+				print "<tr class=\"header hide_attributes\" id=\"group_row_". $group_id. "\">";
+			}
+			else
+			{
+				print "<tr class=\"header show_attributes\" id=\"group_row_". $group_id. "\">";
+			}
+			print "<td colspan=\"3\">";
+			print "<div class=\"group_name\" id=\"group_name_" .$group_id. "\"><b>". $attributes["name"] ."</b>";
+			if (user_permissions_get("customers_write"))
+			{ 
+				print "&nbsp;&nbsp;&nbsp;<a href=\"\" class=\"show_change_group_name\" id=\"show_change_group_name_" .$group_id. "\">change name...</a>";
+			}
+			print "</div>";
+			print "<div class=\"change_group_name\" id=\"change_group_name_" .$group_id. "\">Group Name: <input type=\"text\" value=\"" .$attributes["name"]. "\" name=\"change_group_name_" .$group_id. "\" /> &nbsp; <a href=\"\" class=\"button_small change_group_name_button\" id=\"change_group_name_button_" .$group_id. "\">Change</a> &nbsp; <a href=\"\" class=\"button_small close_change_group_name\" id=\"close_change_group_name_" .$group_id. "\">Cancel</a></div>";
+			print "</td>";
+			if(count($this->group_arrays) == 1)
+			{
+				print "<td class=\"expand_collapse\"><b>^</b></td>";
+			}
+			else
+			{
+				print "<td class=\"expand_collapse\"><b>v</b></td>";
+			}
 			print "</tr>";
 			
 			//subheader
@@ -355,7 +409,10 @@ class page_output
 					
 					print "<td width=\"15%\" valign=\"top\">";
 					$this->obj_form->render_field("attribute_". $id ."_group");
-					print "<strong><a href=\"\" id=\"move_row_" .$id. "\">move...</a></strong></td>";
+					if (user_permissions_get("customers_write"))
+					{
+						print "<strong><a href=\"\" id=\"move_row_" .$id. "\">move...</a></strong></td>";
+					}
 					
 					print "<td width=\"5%\" valign=\"top\">";
 					if (user_permissions_get("customers_write"))
