@@ -18,8 +18,6 @@ if (user_permissions_get("admin"))
 
 	$data["action"]			= @security_form_input_predefined("any", "action", 1, "Please select a valid action.");
 	
-	
-	//echo "<pre>".print_r($data["action"],true)."</pre>";
 	// if we are submitting data to select a PDF template
 	if( $data["action"] == 'pdf_template')
 	{

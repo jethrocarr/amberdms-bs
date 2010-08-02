@@ -21,10 +21,24 @@
 	padding-bottom:		25px;
 }
 
+
+.email_template_text
+{
+	display: block;
+	float: left;
+}
+
+
 .current_template_description
 {
 	text-align:		left;
 	padding-top:		15px;
+}
+
+.current_email_template 
+{
+	white-space: pre;
+	padding-top:		0px;
 }
 
 .change_template
