@@ -114,9 +114,6 @@ class page_output
 			$this->no_attributes = "false";
 		}
 		
-		print "<pre>";
-		print_r($this->obj_attributes->data);
-		print "</pre>";
 		/*
 			Define form structure
 		*/
@@ -137,7 +134,7 @@ class page_output
 		/*
 		 * 	Assign attributes to correct groups
 		 */
-		foreach ($this->obj_attributes->data as $attribute)
+		foreach ((array)$this->obj_attributes->data as $attribute)
 		{
 			$this->group_arrays[$attribute["id_group"]][] = $attribute["id"];
 			$this->group_arrays[$attribute["id_group"]]["name"] = $attribute["group_name"];
@@ -200,8 +197,7 @@ class page_output
 				$this->group_arrays[$this->new_groups_array[$i]]["name"] = $group_name;
 			}
 		}
-		print "<pre>";
-print_r($this->group_arrays); print "</pre>";
+
 		/*
 		 * 	Generate form fields
 		 */

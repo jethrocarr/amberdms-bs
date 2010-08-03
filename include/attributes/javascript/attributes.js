@@ -10,7 +10,6 @@ var error_color = "";
 $(document).ready(function()
 {
 	highest_attr_id = $("input[name='highest_attr_id']").val();
-	console.log(highest_attr_id);
 	/*
 		When any element in the last row is changed (therefore, having data put into it), call a function to create a new row
 	 */
@@ -100,8 +99,6 @@ $(document).ready(function()
 	});
 	
 	//id = $(".hide_attributes").id;
-	console.log("huih");
-	console.log($(".hide_attributes"));
 	//$("." + id).show();
 	
 	/*
@@ -149,7 +146,6 @@ $(document).ready(function()
 	{
 		id = this.id.substring(25);
 		change_group_name(id);
-		console.log("hi");
 		return false;
 	});
 	
