@@ -365,12 +365,12 @@ function service_usage_alerts_generate($customerid = NULL)
 						Fetch the amount of usage
 					*/
 			
-					$usage_obj					= New service_usage;
-					$usage_obj->id_service_customer		= $customer_data["id"];
+					$usage_obj					= New service_usage_generic;
+					$usage_obj->id_service_customer			= $customer_data["id"];
 					$usage_obj->date_start				= $period_data["date_start"];
 					$usage_obj->date_end				= $period_data["date_end"];
 					
-					if ($usage_obj->prepare_load_servicedata())
+					if ($usage_obj->load_data_service())
 					{
 						$usage_obj->fetch_usagedata();
 

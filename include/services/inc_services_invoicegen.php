@@ -936,12 +936,12 @@ function service_invoices_generate($customerid = NULL)
 									Fetch usage amount
 								*/
 								
-								$usage_obj					= New service_usage;
+								$usage_obj					= New service_usage_generic;
 								$usage_obj->id_service_customer			= $period_usage_data["id_service_customer"];
 								$usage_obj->date_start				= $period_usage_data["date_start"];
 								$usage_obj->date_end				= $period_usage_data["date_end"];
 								
-								if ($usage_obj->prepare_load_servicedata())
+								if ($usage_obj->load_data_service())
 								{
 									$usage_obj->fetch_usagedata();
 
