@@ -228,7 +228,6 @@ class template_engine
 			{	
 				foreach($current_level[$fieldname] as $key => $current_level_part)
 				{
-					
 				 	if (preg_match("/^\S*\sif\s(\S*)\sne\sprevious\s-->/", $line, $matches))
 				 	{
 				 		$line_tmp = '';
@@ -243,7 +242,21 @@ class template_engine
 					 		$line_tmp = stristr($line, "<!-- endif -->");
 				 		}
 				 		$line_tmp = str_replace("<!-- endif -->", '', $line_tmp);
-						//echo "<pre>".htmlentities(print_r($line_tmp, true), ENT_QUOTES)."</pre>";
+				 	}
+				 	else if (preg_match("/^\S*\sif\s(\S*)/", $line, $matches))
+				 	{
+				 		$line_tmp = '';
+				 		$match = $matches[1];
+				 		if($current_level_part[$match] != '')
+				 		{
+						 	$line_tmp = str_replace($matches[0], '', $line);
+						 	
+				 		}
+				 		else
+				 		{	// only print what is after the endif
+					 		$line_tmp = stristr($line, "<!-- endif -->");
+				 		}
+				 		$line_tmp = str_replace("<!-- endif -->", '', $line_tmp);
 				 	}
 				 	else
 				 	{
@@ -273,14 +286,12 @@ class template_engine
 					
 					$line_array[$j][] = $line_tmp;
 				}
-			//echo "<pre>".htmlentities(print_r($this->data, true), ENT_QUOTES)."</pre>";
 			}
 			else
 			{	
 				if(isset($current_level[$fieldnames[$level]]))
 				{
 					$inner_line_array = $this->process_template_loops($line, $current_level[$fieldnames[$level]], $fieldname, $fieldnames, $level+1);
-					//echo "<pre>".htmlentities(print_r($inner_line_array, true), ENT_QUOTES)."</pre>";
 					$line_array[$j][] = implode("\n",$inner_line_array);
 				}
 			}
@@ -289,75 +300,6 @@ class template_engine
 		return $line_array;
 	}
 
-	/*
-	 	Development  prepare_filltemplate_new function
-
-		This is currently not in use, but it is the start of the new code to parse template filkes
-		Runs through the template and performs replacements for all the defined
-		fields.
-		
-		Returns
-		0			failure
-		1			success
-	*/
-	function prepare_filltemplate_new() {
-		log_debug("template_engine", "Executing prepare_filltemplate()");
-
-		
-
-		$fieldname	= "";
-		$fieldnames = array(0 => '');
-		$repeated_processed_lines = array();
-		
-		
-		$in_foreach	= 0; 
-		$in_if		= 0;
-		
-		 
-		echo "<div style='font-size: 8pt; font-family: sans-serif;'>";
-		for ($i = 0; $i < count($this->template); $i++)
-		{
-		
-			$line = $this->template[$i];
-			if (preg_match("/^\S*\sforeach\s(\S*)/", $line, $matches))
-			{
-				$fieldname = $matches[1];
-				
-				
-				for ($j = $i; $j < count($this->template); $j++)
-				{
-					$end_line = $this->template[$j];
-					if (preg_match("/^\S*\send(\s$fieldname)*\s-->/", $end_line, $matches) )
-					{
-						echo $fieldname . " - " . htmlentities($end_line, ENT_QUOTES)."<br />";
-						break; 
-					} 
-				}
-				$rows = $j+ 1 - $i;
-				$section[$fieldname] = array_slice($this->template, $i, $rows);
-						
-			}
-			//	if (preg_match("/^\S*\sif\s(\S*)/", $line, $matches))
-			
-			//	if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
-			//	if (preg_match("/^\S*\send[\s->]*$/", $line))
-		
-			//echo "<div style='height: 14px; white-space: pre;' >";
-			//echo "<span style='display: block; float: left; clear: left; background: #9999FF; width: 3em; border-bottom: 1px solid #cccccc;'> ".$i."</span> ";
-			//echo htmlentities($line, ENT_QUOTES)."";
-			//echo "</div>";
-		}
-		
-		echo "</div>";
-		echo "<pre>".htmlentities(print_r($section,true), ENT_QUOTES)."</pre>";
-		$_SESSION["user"]["log_debug"] = array();
-		exit();
-		//$this->processed[] = $line_tmp;
-		
-	}
-	
-	
-	
 	/*
 		prepare_filltemplate
 
@@ -449,8 +391,25 @@ class template_engine
 						for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
 						{
 							$line_tmp = $line;
+						
+						
+						 	if (preg_match("/^\S*\sif\s(\S*)\s-->/", $line, $matches))
+						 	{
+						 		$line_tmp = '';
+						 		$match = $matches[1];
+						 		if(($this->data[$match] != '') || ($this->data_array[$match][$j] != ''))
+						 		{
+								 	$line_tmp = str_replace($matches[0], '', $line);
+								 	
+						 		}
+						 		else
+						 		{	// only print what is after the endif
+							 		$line_tmp = stristr($line, "<!-- endif -->");
+						 		}
+						 		$line_tmp = str_replace("<!-- endif -->", '', $line_tmp);
+						 	}
 
-							$line_tmp = preg_replace("/^\S*\s/", "", $line);
+							$line_tmp = preg_replace("/^\S*\s/", "", $line_tmp);
 							// run through the loop items
 							foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 							{
@@ -1032,16 +991,13 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_"; 
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcostyle/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
 			$this->processed[$key] = str_replace("(tmp_filename)", $directory_prefix, $processed_row);
 		}
 		
-		//$this->data
-		
-		//exit("<pre>".print_r($this, true)."</pre>");
 		//exit(implode("",$this->processed));
 
 		foreach ($this->processed as $line)
@@ -1070,13 +1026,8 @@ class template_engine_htmltopdf extends template_engine
 		foreach((array) $data_directory_items as $data_dir_file) {
 			$filename = basename($data_dir_file);
 			$new_file_path =  $tmp_data_directory."/".$filename;
-			//echo $new_file_path."<br />";
 			copy($data_dir_file, $new_file_path);
 		}
-				
-		//print("<pre>".print_r($data_directory_items,true)."</pre>");
-		//exit("<pre>".print_r(glob($tmp_data_directory."/*"),true)."</pre>");
-		
 																				
 
 		/*

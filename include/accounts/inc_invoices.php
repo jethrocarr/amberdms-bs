@@ -419,8 +419,6 @@ class invoice
 			$this->invoice_fields["company_payment_details"] = $data_company["company_payment_details"]; 
 		}
 
-		
-
 		/*
 			Invoice Data (exc items/taxes)
 		*/
@@ -428,6 +426,7 @@ class invoice
 		{
 			$this->invoice_fields["code_invoice"] = $this->data["code_invoice"]; 
 			$this->invoice_fields["code_ordernumber"] = $this->data["code_ordernumber"]; 
+			$this->invoice_fields["code_ponumber"] = $this->data["code_ponumber"]; 
 			$this->invoice_fields["date_due"] = time_format_humandate($this->data["date_due"]);  
 		}
 		else

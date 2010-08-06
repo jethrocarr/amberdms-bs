@@ -336,6 +336,11 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		case "email":
 			$expression = "/^([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+$/";
 		break;
+		
+		case "multiple_email":
+			$expression = "/^  (([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+)  $/";
+		break;
+		
 
 		case "ipv4":
 			$expression = "/^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:[.](?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/";
