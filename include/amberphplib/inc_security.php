@@ -338,7 +338,42 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 		break;
 		
 		case "multiple_email":
-			$expression = "/^  (([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+)  $/";
+			// Single email address
+			$email_regex = "/^<?(([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+)>?$/";	
+			
+			// Whole email address string
+			$expression = "/^(([A-Za-z0-9._-])+\@(([A-Za-z0-9-])+\.)+([A-Za-z0-9])+,?\s?)+$/";
+			
+			// grab submitted data from $_POST 
+			$unsafe_email_addresses = $_POST[$valuename];	
+			
+			// split at spaces and commas
+			$email_address_string_parts = preg_split("/[\s,]+/", $unsafe_email_addresses);
+			
+			$email_addresses = array();
+			foreach($email_address_string_parts as $email_address_string_part)
+			{
+				// check each item against the email address regex, capture the email address
+				preg_match($email_regex, $email_address_string_part, $matches);
+				// if we have an email address, add it to the array
+				if($matches[1] != '')
+				{
+					$email_addresses[] = $matches[1];
+				}
+			}
+			// implode the email addresses using a comma and a space
+			$new_email_address_string = implode(", ",$email_addresses);
+			
+			// recheck the string., if it passes, return it
+			preg_match($expression, $new_email_address_string, $matches);
+			if($matches[0] == $new_email_address_string)
+			{
+				return $matches[0];
+			} 
+			else
+			{
+				return "error";
+			}
 		break;
 		
 

@@ -227,11 +227,10 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 		// send email
 		$data["sender"]		= @security_form_input_predefined("any", "sender", 1, "");
 		$data["subject"]	= @security_form_input_predefined("any", "subject", 1, "");
-		$data["email_to"]	= @security_form_input_predefined("any", "email_to", 1, "");
-		$data["email_cc"]	= @security_form_input_predefined("any", "email_cc", 0, "");
-		$data["email_bcc"]	= @security_form_input_predefined("any", "email_bcc", 0, "");
+		$data["email_to"]	= @security_form_input_predefined("multiple_email", "email_to", 1, "");
+		$data["email_cc"]	= @security_form_input_predefined("multiple_email", "email_cc", 0, "");
+		$data["email_bcc"]	= @security_form_input_predefined("multiple_email", "email_bcc", 0, "");
 		$data["message"]	= @security_form_input_predefined("any", "email_message", 1, "");
-	
 
 		// check if email sending is permitted
 		if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") != "enabled")
