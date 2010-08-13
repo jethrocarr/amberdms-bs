@@ -1,19 +1,37 @@
+/*
+ * 	include/attributes/css/attributes.css
+ * 
+ * 	Provides style rules specific to attribute pages
+ */
+
 .expand_collapse
 {
-	text-align: right;
+	text-align: 	right;
+	vertical-align:	top;
 }
 
-tr[class*='group_row']
+.hidden_attribute_row
 {
-	display: none;
+	display: 	none;
 }
 
 .add_group
 {
-	display: none;
+	display: 	none;
 }
 
 .change_group_name
 {
-	display: none;
+	display: 	none;
+}
+
+.hidden_move
+{
+	display: 	none;
+}
+
+.delete_group_cell
+{
+	text-align: 	right;
+	vertical-align: top;	
 }

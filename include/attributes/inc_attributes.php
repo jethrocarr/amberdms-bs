@@ -12,16 +12,13 @@
 
 	Provides functions for managing attribute values
 */
-
 class attributes {
 
 	var $id;		// ID of attribute
 	var $id_owner;		// ID of attribute's owner
 	var $id_group;		// ID of attribute's group
 	var $type;		// type of attribute
-
 	var $data;		// holds values of record fields
-
 
 
 	/*
@@ -177,17 +174,6 @@ class attributes {
 		{
 			$sql_obj->prepare_sql_addwhere("type='". $this->type ."'");
 		}
-/*
-		if ($this->data["key"])
-		{
-			$sql_obj->prepare_sql_addwhere("key='". $this->data["key"] ."'");
-		}
-
-		if ($this->data["value"])
-		{
-			$sql_obj->prepare_sql_addwhere("value='". $this->data["value"] ."'");
-		}
-*/
 
 		$sql_obj->generate_sql();
 		$sql_obj->execute();
@@ -230,7 +216,7 @@ class attributes {
 		$this->id = $sql_obj->fetch_insert_id();
 
 //		return $this->id; 
-return 1;
+		return 1;
 
 	} // end of action_create
 
@@ -256,27 +242,6 @@ return 1;
 		*/
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
-
-
-		/*
-			If no ID exists, create a new attribute value first
-
-			(Note: if this function has been called by the action_update() wrapper function
-			this step will already have been performed and we can just ignore it)
-		*/
-//		if (!$this->id)
-//		{
-//			$mode = "create";
-//
-//			if (!$this->action_create())
-//			{
-//				return 0;
-//			}
-//		}
-//		else
-//		{
-//			$mode = "update";
-//		}
 
 
 		/*
@@ -334,7 +299,6 @@ return 1;
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
 
-//print "this is id". $this->id; die;
 		// delete the attribute
 		$sql_obj->string	= "DELETE FROM attributes WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();

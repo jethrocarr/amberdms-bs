@@ -17,50 +17,32 @@ require("../include/attributes/inc_attributes.php");
 
 if (user_permissions_get('customers_write'))
 {
-	/*
-		Init Objects
-	*/
-
+	//initalise objects
 	$obj_customer		= New customer;
-
 	$obj_attributes		= New attributes;
 
 
-
-	/*
-		Import form data
-	*/
-
+	//import data
 	$obj_customer->id			= @security_form_input_predefined("int", "id_customer", 1, "");
+	
 	$data = array();
 	$data["highest_attr_id"]		= @security_form_input_predefined("int", "highest_attr_id", 0, "");
 	$data["new_groups"]			= @security_form_input_predefined("any", "new_groups", 0, "");
 	
-	//print $data["new_groups"]; 
-	$group_array = explode(",", $data["new_groups"]);
-	for ($i=0; $i<count($group_array); $i++)
+	//grab lists of attributes for new groups
+	$new_groups_array = explode(",", $data["new_groups"]);
+	for ($i=0; $i<count($new_groups_array); $i++)
 	{
-//		$ $attr_list; 
-		if(!empty($group_array[$i])){
-			$data["new_group_attributes"][$group_array[$i]] = @security_form_input_predefined("any", "group_".$group_array[$i]."_attribute_list", 0, "");
+		if(!empty($new_groups_array[$i])){
+			$data["new_group_attributes"][$new_groups_array[$i]] = @security_form_input_predefined("any", "group_".$new_groups_array[$i]."_attribute_list", 0, "");
 		}
 	}
 		
-	
 
-
-	/*
-		Fetch & Verify attribute data
-	*/
-
+	//fetch and varify data
+	$groups_array = array();
 	for ($i = 0; $i <= $data["highest_attr_id"]; $i++)
 	{
-//	 print "  i  :".$i;
-		/*
-			Fetch data
-		*/
-//	$test_key = @security_form_input_predefined("any", "attribute_". $i ."_key", 0, "");
-//	if ($test_key != ""){print "yay"; die;} else {print $test_key; die;}
 		$data_tmp			= array();
 		$data_tmp["id"]			= $i;
 		$data_tmp["key"]		= @security_form_input_predefined("any", "attribute_". $i ."_key", 0, "");
@@ -68,70 +50,52 @@ if (user_permissions_get('customers_write'))
 		$data_tmp["delete_undo"]	= @security_form_input_predefined("any", "attribute_". $i ."_delete_undo", 0, "");
 		$data_tmp["id_group"]	 	= @security_form_input_predefined("int", "attribute_". $i ."_group", 0, "");
 		
-
-		/*
-			Process Raw Data
-		*/
-		if (!empty($data_tmp["key"]) && $data_tmp["delete_undo"] == "true")
+		//create an array of group ids 
+		if (!in_array($data_tmp["id_group"], $group_array_2))
 		{
-			//print "  delete  ";
-			$data_tmp["mode"] = "delete";
-			$data["attributes"][] = $data_tmp;
-//			print "hi"; die;
+			$groups_array[] = $data_tmp["id_group"];
 		}
 		
-		elseif (empty($data_tmp["key"]) && empty($data_tmp["value"]))
+		/*
+		 * 	Verify data
+		 * 	Check for delete requests
+		 * 	Check for errors
+		 */
+		//if data, do nothing
+		if (empty($data_tmp["key"]) && empty($data_tmp["value"]))
 		{
-			//print "   empty  ";
-//			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
-//			log_write("error", "page_output", "Both the key and value fields must be completed");
 			continue;
 		}
 		
+		//set delete flags
+		elseif ($data_tmp["delete_undo"] == "true")
+		{
+			$data_tmp["mode"] = "delete";
+			$data["attributes"][] = $data_tmp;
+		}
+		
+		//check for errors
+		//both key and value fields must be completed
 		elseif (empty($data_tmp["key"]) || empty($data_tmp["value"]))
 		{
-			//print " one empty ";
 			error_flag_field("attribute_" .$data_tmp["id"]. "_key");
 			error_flag_field("attribute_" .$data_tmp["id"]. "_value");
 			log_write("error", "page_output", "Both the key and value fields must be completed");
 		}
 		
+		//otherwise, add to array to be processed
 		else
 		{
-			//$data_tmp["mode"] = "update";
 			$data["attributes"][] = $data_tmp;
-//				print_r($data_tmp);
-//				print_r($data); die;
 		}
-		
-		
-//		error_flag_field($col);
-//					error_flag_field($col2);
-//				 	log_write("error", "page_output", "Each column must be assigned a unique role.");
-
-				
-//			if(empty($attribute["key"]) || $attribute["value"])
-//			{
-//				$_SESSION["error"]["attribute" .$attribute["id"] ."-error"] = "Both key and attribute must be set";
-//				header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."");
-//				exit(0);
-//			}
-		
-		
-//print_r($data); die;
-
-		/*
-			Add to array
-		*/
-//		$data["attributes"][] = $data_tmp;
 	}
-//print "<pre>";
-//print_r($data); print "</pre>"; die;
 
-	/*
-		Error Handling
-	*/
-
+	//check for new attribute rows
+	$new_attributes = array();
+	for($i=0; $i<count($groups_array); $i++)
+	{
+		$new_attributes[$groups_array[$i]] = @security_form_input_predefined("any", "group_" .$groups_array[$i]. "_new_attributes", 0, "");
+	}
 
 	// verify customer
 	if (!$obj_customer->verify_id())
@@ -139,45 +103,33 @@ if (user_permissions_get('customers_write'))
 		log_write("error", "process", "The supplied customer ID of ". $obj_customer->id ." is not valid");
 	}
 
-
 	// return to input page in event of an error
 	if ($_SESSION["error"]["message"])
 	{	
+		//prepare GET data to add to URL
 		$tmp_string = "";
-		print_r($data["new_group_attributes"]);
+		//add new groups and attributes
 		foreach($data["new_group_attributes"] as $group=>$attributes)
 		{
 			$tmp_string .= "&group_" . $group . "_attributes_list=" . $attributes;	
 			print $tmp_string;	
 		}
-		//die;
+		//add new attributes
+		foreach($new_attributes as $group=>$attributes)
+		{
+			$tmp_string .="&group_" .$group. "_new_attributes=" .$attributes;
+		}
+
 		$_SESSION["error"]["form"]["attributes_customer"] = "failed";
 		header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id ."&new_groups=". $data["new_groups"]. $tmp_string);
 		exit(0);
 	}
 
-
-
 	/*
-		Transaction Start
-	*/
-
+	 * 	Add/ delete attributes and groups from database
+	 */
 	$sql_obj = New sql_query;
 	$sql_obj->trans_begin();
-
-
-
-	/*
-		Update Attributes
-	*/
-
-	log_write("debug", "process", "Updating Attributes");
-
-
-	// fetch all current records
-	//$obj_attributes->load_data_all();
-	
-
 
 	// update records
 	foreach ($data["attributes"] as $attribute)
@@ -186,9 +138,9 @@ if (user_permissions_get('customers_write'))
 		$obj_attribute->load_data();
 		$obj_attribute->id  = $attribute["id"];
 		
+		//if attribute is to be deleted, call delete action
 		if ($attribute["mode"] == "delete")
 		{
-//			print $attribute["id"]; die;
 			$obj_attribute->action_delete();
 		}
 		
@@ -207,19 +159,6 @@ if (user_permissions_get('customers_write'))
 				$obj_attribute->action_create();	
 			}
 				
-//				//check if a change needs to be made
-//				if ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
-//				{
-//					log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
-//					
-//					$obj_attribute->id_owner		= $obj_customer->id;
-//					$obj_attribute->type			= "customer";
-//					$obj_attribute->id_group		= $attribute["id_group"];			
-//					$obj_attribute->data["key"]		= $attribute["key"];
-//					$obj_attribute->data["value"]		= $attribute["value"];
-//					$obj_attribute->action_update();
-//				}
-//			}
 			//otherwise, update
 			elseif ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
 			{
@@ -228,74 +167,8 @@ if (user_permissions_get('customers_write'))
 			}
 		}		
 	}
-//		if (!empty($attribute["mode"]))
-//		{
-//			$obj_attribute		= New attributes;
-//
-//
-//			if ($attribute["id"])
-//			{
-//				$obj_attribute->id = $attribute["id"];
-////$obj_attribute->id = 5;
-////	log_write("debug", "process", "LOAD DATA");
-////				print $obj_attribute->load_data(); die;
-////				print "Hello";
-////				print $attribute["id"];
-////				print_r($obj_attribute->data);
-////				die;
-//				
-//				
-//			}
-//
-//
-//			if ($attribute["mode"] == "update")
-//			{
-//				// data sent through, we should update an existing attribute. But first, let's check if we actually need to
-//				// make a change or not.
-//
-//				if ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
-//				{
-//					/*
-//						Update attribute
-//					*/
-//					log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
-//
-//
-//					$obj_attribute->id_owner		= $obj_customer->id;
-//					$obj_attribute->type			= "customer";
-//					$obj_attribute->id_group		= $attribute["id_group"];
-//			
-////					$obj_attribute->data["key"]		= $attribute["key"];
-////					$obj_attribute->data["value"]		= $attribute["value"];
-////					$obj_attribute->data["id_group"]	= $attribute["id_group"];
-//
-//					$obj_attribute->action_update();
-//				}
-//				else
-//				{
-//					log_write("debug", "process", "Not updating attribute ". $attribute["id"] ." due to no change in details");
-//				}
-//			}
-//			elseif ($attribute["mode"] == "delete")
-//			{
-//				$obj_attribute->action_delete();
-//			}
-//		}
-//		else
-//		{
-//			// new row but empty/deleted
-//		}
-//
-//	}
-//
-//	log_write("notification", "process", "Customer attributes updated.");
 
-
-
-
-	/*
-		Commit / Error Handle
-	*/
+	//check for errors
 	if (!error_check())
 	{
 
@@ -305,46 +178,42 @@ if (user_permissions_get('customers_write'))
 	{
 		// error encountered
 		log_write("error", "process", "An unexpected error occured, the attributes remain unchanged");
-
 		$sql_obj->trans_rollback();
 	}
 	
-	/*check if any groups no longer have attributes assigned to them. if so, delete the group*/
-	//get all group ids
-	//for each one, test if there is an attribute
-	
+	/*
+	 * 	If no attributes exist for any of the groups in the database, delete the group
+	 */	
 	$group_ids = New sql_query;
 	$group_ids->string = "SELECT id FROM attributes_group";
 	$group_ids->execute();
 	
 	$group_ids->fetch_array();
-	//print_r($group_ids->data); 	
+ 	
 	foreach ($group_ids->data as $data)
 	{
 		$test_val = sql_get_singlevalue("SELECT id AS value FROM attributes WHERE id_group = " .$data["id"]);
-		//print $test_val . "     ";
 		if($test_val == 0)
 		{
-		//print "ere";
 			$delete_group = New sql_query;
 			$delete_group->string = "DELETE FROM attributes_group WHERE id=" .$data["id"];
 			$delete_group->execute();
+			
+			log_write("notification", "process", "Group has been successfully deleted");
 		}
 	}
 	
-
 	// display updated details
 	header("Location: ../index.php?page=customers/attributes.php&id_customer=". $obj_customer->id);
 	exit(0);
 
 }
+
 else
 {
-	// user does not have perms to view this page/isn't logged on
+	// user does not have permission to view this page/isn't logged on
 	error_render_noperms();
 	header("Location: ../index.php?page=message.php");
 	exit(0);
 }
-
-
 ?>
