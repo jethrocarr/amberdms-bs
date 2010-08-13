@@ -210,7 +210,7 @@ if (isset($page_obj->requires["javascript"]))
 				print "<p id=\"header_logout_text\">logged on as ". $_SESSION["user"]["name"] ." | <a href=\"index.php?page=user/options.php\">options</a> | <a href=\"index.php?page=user/logout.php\">logout</a></p>";
 				
 				//if in translation mode, print short explanation and button to form
-				if ($_SESSION["user"]["translation"]=="show_all_translatable_fields" || $_SESSION["user"]["translation"]=="show_only_non-translated_fields")
+				if (isset($_SESSION["user"]["translation"]) && ($_SESSION["user"]["translation"]=="show_all_translatable_fields" || $_SESSION["user"]["translation"]=="show_only_non-translated_fields"))
 				{
 					print "<p> <strong><a href=\"javascript:openPopup('popup.php?page=popup/translation_form.php')\">Open translation form</a></strong> </p>";
 				}

@@ -152,7 +152,7 @@ class form_input
 					case "hidden":
 
 						// only set the field if a value has been provided - ie: don't set to blank for any reason
-						if ($_SESSION["error"]["$fieldname"])
+						if (isset($_SESSION["error"]["$fieldname"]) && ($_SESSION["error"]["$fieldname"] != ''))
 						{
 							$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
 						}
@@ -161,7 +161,11 @@ class form_input
 
 					default:
 						// set the default value
-						$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+				
+						if (isset($_SESSION["error"]["$fieldname"]))
+						{
+							$this->structure[$fieldname]["defaultvalue"] = stripslashes($_SESSION["error"][$fieldname]);
+						}
 					break;
 				}
 			}
@@ -309,14 +313,17 @@ class form_input
 		log_debug("form", "Executing render_row($fieldname)");
 		
 		//create array of classes
-		$class_array = array();		
-		if (is_array($this->structure[$fieldname]["options"]["css_row_class"]))
-		{
-			array_merge($class_array, $this->structure[$fieldname]["options"]["css_row_class"]);
-		}
-		else
-		{
-			$class_array[] = $this->structure[$fieldname]["options"]["css_row_class"];
+		$class_array = array();
+		if(isset($this->structure[$fieldname]["options"]["css_row_class"]))
+		{		
+			if (is_array($this->structure[$fieldname]["options"]["css_row_class"]))
+			{
+				array_merge($class_array, $this->structure[$fieldname]["options"]["css_row_class"]);
+			}
+			else
+			{
+				$class_array[] = $this->structure[$fieldname]["options"]["css_row_class"];
+			}
 		}
 		
 		if (isset($_SESSION["error"]["$fieldname-error"]))
@@ -324,7 +331,7 @@ class form_input
 			$class_array[] = "form_error";
 		}
 		
-		if ($this->structure[$fieldname]["options"]["css_row_id"])
+		if (isset($this->structure[$fieldname]["options"]["css_row_id"]))
 		{
 			print "<tr id=\"". $this->structure[$fieldname]["options"]["css_row_id"] ."\" ";
 		}
@@ -558,7 +565,7 @@ class form_input
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
 					
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 				
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
@@ -654,7 +661,7 @@ class form_input
 					print " value=\"". $this->structure[$fieldname]["defaultvalue"]. "\" " ;
 				}
 				
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -710,7 +717,7 @@ class form_input
 					print "wrap=\"". $this->structure[$fieldname]["options"]["wrap"] ."\" ";
 				}
 				
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if ( isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -1021,7 +1028,7 @@ class form_input
 					print "\" ";
 				}
 				
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -1094,14 +1101,14 @@ class form_input
 					// write filter field
 					print "<input id=\"_" .$fieldname. "\" class=\"dropdown_filter\" style=\"width:". $width_filter ."px\"";
 					
-					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+					if ( isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 						print "disabled=\"disabled\" ";
 					print "/>&nbsp;";
 				}
 
 				// start dropdown/select box
 				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"";
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if ( isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -1113,14 +1120,14 @@ class form_input
 
 
 				// if there is only 1 option avaliable, see if we should auto-select it.
-				if ($this->structure[$fieldname]["options"]["noselectoption"])
+				if (!empty($this->structure[$fieldname]["options"]["noselectoption"]))
 				{
 					$this->structure[$fieldname]["options"]["autoselect"];
 					log_write("warning", "inc_forms", "obsolete usage of noselectoption dropdown option for field $fieldname");
 				}
 
 				
-				if ($this->structure[$fieldname]["options"]["autoselect"] && $this->structure[$fieldname]["values"])
+				if (!empty($this->structure[$fieldname]["options"]["autoselect"]) && !empty($this->structure[$fieldname]["values"]))
 				{
 					if (count($this->structure[$fieldname]["values"]) == 1)
 					{
@@ -1130,7 +1137,7 @@ class form_input
 				
 
 				// if there is no current entry, add a select entry as default
-				if (!$this->structure[$fieldname]["defaultname"] && !$autoselect)
+				if ((!isset($this->structure[$fieldname]["defaultname"]) || ($this->structure[$fieldname]["defaultname"] == null)) && (!isset($autoselect) || ($autoselect == null)))
 				{
 					print "<option selected value=\"\">-- select --</option>";
 				}
@@ -1185,7 +1192,7 @@ class form_input
 
 				// input field
 				print "<input type=\"file\" name=\"$fieldname\"";
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	

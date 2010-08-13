@@ -46,7 +46,7 @@ class page_output
 		else
 		{
 			// load from session vars
-			if ($_SESSION["form"]["timereg"]["employeeid"])
+			if (isset($_SESSION["form"]["timereg"]["employeeid"]) && ($_SESSION["form"]["timereg"]["employeeid"] != NULL))
 				$this->employeeid = $_SESSION["form"]["timereg"]["employeeid"];
 		}
 
@@ -687,7 +687,7 @@ class page_output
 		// check for date in the future
 		if ($this->config_timesheet_booktofuture == "disabled")
 		{
-			if (time_date_to_timestamp(time_calculate_weekstart($date_option_nextweek, $date_option_nextyear)) < mktime())
+			if (time_date_to_timestamp(time_calculate_weekstart($date_option_nextweek, $date_option_nextyear)) < time())
 			{
 				// end date is in not in the future
 				print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg.php&employeeid=". $this->employeeid ."&weekofyear=". $date_option_nextweek ."&year=". $date_option_nextyear ."\">Next Week &gt;&gt;</a>";

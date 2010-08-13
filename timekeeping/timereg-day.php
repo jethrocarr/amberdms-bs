@@ -137,7 +137,7 @@ class page_output
 		// prevent access to a date in the future
 		if ($this->config_timesheet_booktofuture == "disabled")
 		{
-			if (time_date_to_timestamp($this->date) > mktime())
+			if (time_date_to_timestamp($this->date) > time())
 			{
 				log_write("error", "page_output", "You are unable to book time to days in future. If you wish to change this behaviour, adjust the TIMESHEET_BOOKTOFUTURE configuration option.");
 				return 0;
@@ -278,7 +278,7 @@ class page_output
 
 		if ($this->config_timesheet_booktofuture == "disabled")
 		{
-			if (time_date_to_timestamp($date_next) < mktime())
+			if (time_date_to_timestamp($date_next) < time())
 			{
 				print " <a class=\"button\" href=\"index.php?page=timekeeping/timereg-day.php&date=$date_next&employeeid=". $this->employeeid ."\">Next Day &gt;&gt;</a>";
 			}

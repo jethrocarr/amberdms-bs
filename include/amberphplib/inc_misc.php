@@ -565,7 +565,7 @@ function time_format_humandate($date = NULL)
 	else
 	{
 		// no date supplied - generate current timestamp
-		$timestamp = mktime();
+		$timestamp = time();
 	}
 
 
@@ -789,7 +789,7 @@ function time_calculate_monthdate_last($date = NULL)
 
 	if (!$date)
 	{
-		$timestamp	= mktime();
+		$timestamp	= time();
 		$date		= date("Y-m-d", $timestamp);
 	}
 	else
@@ -995,9 +995,9 @@ function file_generate_name($basename, $extension = NULL)
 
 	// calculate a temporary filename
 	$uniqueid = 0;
-	while ($complete == "")
+	while (!isset($complete) || ($complete == ""))
 	{
-		$filename = $basename ."_". mktime() ."_$uniqueid" . $extension;
+		$filename = $basename ."_". time() ."_$uniqueid" . $extension;
 
 		if (file_exists($filename))
 		{
@@ -1128,7 +1128,7 @@ function dir_generate_name($basename)
 	$uniqueid = 0;
 	while ($complete == "")
 	{
-		$dirname = $basename ."_". mktime() ."_$uniqueid";
+		$dirname = $basename ."_". time() ."_$uniqueid";
 
 		if (file_exists($dirname))
 		{

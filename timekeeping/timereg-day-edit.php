@@ -74,7 +74,7 @@ class page_output
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		if ($_SESSION["timereg"]["year"])
+		if (!empty($_SESSION["timereg"]["year"]))
 		{
 			$this->obj_menu_nav->add_item("Weekview", "page=timekeeping/timereg.php&year=". $_SESSION["timereg"]["year"] ."&weekofyear=". $_SESSION["timereg"]["weekofyear"]."");
 		}

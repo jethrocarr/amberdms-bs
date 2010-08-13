@@ -735,7 +735,7 @@ class table
 				// label as Y or N. The render functions may perform further work such
 				// as displaying icons instead
 
-				if ($this->data[$row][$column])
+				if (!empty($this->data[$row][$column]))
 				{
 					$result = "Y";
 				}
@@ -1379,7 +1379,7 @@ class table
 					*/
 
 					// if statements
-					if ($this->links[$link]["options"]["logic"]["if"])
+					if (!empty($this->links[$link]["options"]["logic"]["if"]))
 					{
 						foreach (array_keys($this->links[$link]["options"]["logic"]["if"]) as $logic)
 						{
@@ -1399,7 +1399,7 @@ class table
 					}
 
 					// if not statements
-					if ($this->links[$link]["options"]["logic"]["if_not"])
+					if (!empty($this->links[$link]["options"]["logic"]["if_not"]))
 					{
 						foreach (array_keys($this->links[$link]["options"]["logic"]["if_not"]) as $logic)
 						{
@@ -1548,7 +1548,7 @@ class table
 						*/
 
 						// if statements
-						if ($this->links[$link]["options"]["logic"]["if"])
+						if (isset($this->links[$link]["options"]["logic"]["if"]) && ($this->links[$link]["options"]["logic"]["if"] != NULL))
 						{
 							foreach (array_keys($this->links[$link]["options"]["logic"]["if"]) as $logic)
 							{
@@ -1568,7 +1568,7 @@ class table
 						}
 
 						// if not statements
-						if ($this->links[$link]["options"]["logic"]["if_not"])
+						if (isset($this->links[$link]["options"]["logic"]["if_not"]) && ($this->links[$link]["options"]["logic"]["if_not"] != NULL))
 						{
 							foreach (array_keys($this->links[$link]["options"]["logic"]["if_not"]) as $logic)
 							{
@@ -1960,10 +1960,6 @@ class table
 
 		// company logo
 		$template_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
-
-		// options
-		$template_pdf->prepare_add_field("", time_format_humandate($this->date_start));
-
 
 		// table name
 		$template_pdf->prepare_add_field("table_name", language_translate_string($this->language, $this->tablename));

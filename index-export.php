@@ -128,7 +128,7 @@ if ($page_valid)
 		Setup HTTP headers we need for doing a file download
 	*/
 
-	$filename = "amberdms_bs_". mktime() .".$mode";
+	$filename = "amberdms_bs_". time() .".$mode";
 	
 	// required for IE, otherwise Content-disposition is ignored
 	if (ini_get('zlib.output_compression'))

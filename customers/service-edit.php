@@ -110,7 +110,7 @@ class page_output
 
 
 		// verify that the service-customer entry exists
-		if ($this->ob_customer->id_service_customer)
+		if (isset($this->ob_customer->id_service_customer))
 		{
 			if (!$this->obj_customer->verify_id_service_customer())
 			{
