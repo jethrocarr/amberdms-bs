@@ -27,8 +27,8 @@ if (user_permissions_get("admin"))
 	$data["CURRENCY_DEFAULT_NAME"]			= @security_form_input_predefined("any", "CURRENCY_DEFAULT_NAME", 1, "");
 	$data["CURRENCY_DEFAULT_SYMBOL"]		= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL", 1, "");
 	$data["CURRENCY_DEFAULT_SYMBOL_POSITION"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_SYMBOL_POSITION", 1, "");
-	
-
+	$data["CURRENCY_DEFAULT_THOUSANDS_SEPARATOR"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_THOUSANDS_SEPARATOR", 1, "");
+	$data["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_DECIMAL_SEPARATOR", 1, "");
 
 
 

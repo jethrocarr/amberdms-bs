@@ -415,12 +415,13 @@ function format_linkbox($type, $hyperlink, $text)
 function format_money($amount, $nocurrency = NULL)
 {
 	log_debug("misc", "Executing format_money($amount)");
-
-	// 2 decimal places
-	$amount = sprintf("%0.2f", $amount);
+	
+	//get separators
+	$thousands	= $GLOBALS["config"]["CURRENCY_DEFAULT_THOUSANDS_SEPARATOR"];
+	$decimal	= $GLOBALS["config"]["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"];
 
 	// formatting for readability
-	$amount = number_format($amount, "2", ".", ",");
+	$amount 	= number_format($amount, "2", $decimal, $thousands);
 
 
 	if ($nocurrency)
@@ -430,15 +431,15 @@ function format_money($amount, $nocurrency = NULL)
 	else
 	{
 		// add currency & return
-		$position = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL_POSITION'");
+		$position = $GLOBALS["config"]["CURRENCY_DEFAULT_SYMBOL_POSITION"];
 
 		if ($position == "after")
 		{
-			$result = "$amount ". sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'");
+			$result = "$amount ". $GLOBALS["config"]["CURRENCY_DEFAULT_SYMBOL"];
 		}
 		else
 		{
-			$result = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_SYMBOL'") ."$amount";
+			$result = $GLOBALS["config"]["CURRENCY_DEFAULT_SYMBOL"] ."$amount";
 		}
 
 		return $result;
