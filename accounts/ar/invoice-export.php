@@ -22,6 +22,8 @@ class page_output
 
 	function page_output()
 	{
+		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-export.js";
+		
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
