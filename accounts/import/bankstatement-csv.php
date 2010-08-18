@@ -76,7 +76,7 @@ class page_output
 		    //do not create an example if no data is present in any of the columns
 		    for ($j=count($_SESSION["csv_array"])-1; $j>0; $j--)
 		    {		    
-			if ($_SESSION["csv_array"][$j][$i] != "")
+			if (!empty($_SESSION["csv_array"][$j][$i]))
 			{
 			    $this->example_array[$i+1]	= $_SESSION["csv_array"][$j][$i];
 			    break;
