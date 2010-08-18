@@ -113,7 +113,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 		if ($errormsg == "")
 		{
 			$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
-			$errormsg	= "Sorry, \"$translation\" must be at least $numchars charactors.";
+			$errormsg	= "Sorry, \"$translation\" must be at least $numchars characters.";
 		}
 
 		// report the error
