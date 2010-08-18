@@ -56,7 +56,7 @@ class page_output
 	
 		if (!$this->date_selected_year)
 		{
-			if ($_SESSION["timereg"]["year"])
+			if (!empty($_SESSION["timereg"]["year"]))
 			{
 				$this->date_selected_year = $_SESSION["timereg"]["year"];
 			}
@@ -68,7 +68,7 @@ class page_output
 		
 		if (!$this->date_selected_weekofyear)
 		{
-			if ($_SESSION["timereg"]["weekofyear"])
+			if (!empty($_SESSION["timereg"]["weekofyear"]))
 			{
 				$this->date_selected_weekofyear = $_SESSION["timereg"]["weekofyear"];
 			}
@@ -759,25 +759,25 @@ class page_output
 			// custom labels and links
 			if ($this->config_timesheet_booktofuture == "disabled")
 			{
-				if (time_date_to_timestamp($this->date_selected_daysofweek[0]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[0]) < time())
 					$this->obj_table_week->custom_column_link("monday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[0] ."");
 
-				if (time_date_to_timestamp($this->date_selected_daysofweek[1]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[1]) < time())
 					$this->obj_table_week->custom_column_link("tuesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[1] ."");
 
-				if (time_date_to_timestamp($this->date_selected_daysofweek[2]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[2]) < time())
 					$this->obj_table_week->custom_column_link("wednesday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[2] ."");
 				
-				if (time_date_to_timestamp($this->date_selected_daysofweek[3]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[3]) < time())
 					$this->obj_table_week->custom_column_link("thursday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[3] ."");
 				
-				if (time_date_to_timestamp($this->date_selected_daysofweek[4]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[4]) < time())
 					$this->obj_table_week->custom_column_link("friday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[4] ."");
 				
-				if (time_date_to_timestamp($this->date_selected_daysofweek[5]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[5]) < time())
 					$this->obj_table_week->custom_column_link("saturday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[5] ."");
 				
-				if (time_date_to_timestamp($this->date_selected_daysofweek[6]) < mktime())
+				if (time_date_to_timestamp($this->date_selected_daysofweek[6]) < time())
 					$this->obj_table_week->custom_column_link("sunday", "index.php?page=timekeeping/timereg-day.php&date=". $this->date_selected_daysofweek[6] ."");
 			}
 			else

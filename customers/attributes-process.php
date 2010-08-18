@@ -51,7 +51,7 @@ if (user_permissions_get('customers_write'))
 		$data_tmp["id_group"]	 	= @security_form_input_predefined("int", "attribute_". $i ."_group", 0, "");
 		
 		//create an array of group ids 
-		if (!in_array($data_tmp["id_group"], $group_array_2))
+		if (empty($group_array_2) || !in_array($data_tmp["id_group"], $group_array_2))
 		{
 			$groups_array[] = $data_tmp["id_group"];
 		}
@@ -104,7 +104,7 @@ if (user_permissions_get('customers_write'))
 	}
 
 	// return to input page in event of an error
-	if ($_SESSION["error"]["message"])
+	if (!empty($_SESSION["error"]["message"]))
 	{	
 		//prepare GET data to add to URL
 		$tmp_string = "";
@@ -139,7 +139,7 @@ if (user_permissions_get('customers_write'))
 		$obj_attribute->id  = $attribute["id"];
 		
 		//if attribute is to be deleted, call delete action
-		if ($attribute["mode"] == "delete")
+		if (isset($attribute["mode"]) && ($attribute["mode"] == "delete"))
 		{
 			$obj_attribute->action_delete();
 		}
@@ -160,7 +160,7 @@ if (user_permissions_get('customers_write'))
 			}
 				
 			//otherwise, update
-			elseif ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || $obj_attribute->data["id_group"] != $attribute["id_group"])
+			elseif ($obj_attribute->data["value"] != $attribute["value"] || $obj_attribute->data["key"] != $attribute["key"] || ( isset($attribute["id_group"]) && ($obj_attribute->data["id_group"] != $attribute["id_group"])))
 			{
 				log_write("debug", "process", "Updating attribute ". $attribute["id"] ." due to changed details");
 				$obj_attribute->action_update();

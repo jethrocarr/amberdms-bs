@@ -167,7 +167,7 @@ class page_output
 
 
 			// fetch vendor's current tax status
-			if (!$_SESSION["error"]["message"])
+			if (empty($_SESSION["error"]["message"]))
 			{
 				$sql_vendor_taxes_obj		= New sql_query;
 				$sql_vendor_taxes_obj->string	= "SELECT taxid FROM vendors_taxes WHERE vendorid='". $this->id ."'";

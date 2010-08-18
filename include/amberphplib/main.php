@@ -82,7 +82,7 @@ function log_write($type, $category, $content)
 		$_SESSION["notification"]["message"][] = $content;
 		
 		// print log messages when running from CLI
-		if ($_SESSION["mode"] == "cli")
+		if (isset($_SESSION["mode"]) && ($_SESSION["mode"] == "cli"))
 			print "$content\n";
 	}
 

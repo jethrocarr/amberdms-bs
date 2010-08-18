@@ -1127,7 +1127,7 @@ function dir_generate_name($basename)
 
 	// calculate a temporary directory name
 	$uniqueid = 0;
-	while ($complete == "")
+	while (!isset($complete) || $complete == "")
 	{
 		$dirname = $basename ."_". time() ."_$uniqueid";
 

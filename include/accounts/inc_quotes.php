@@ -80,7 +80,7 @@ function quotes_render_summarybox($id)
 		}
 		else
 		{
-			if (time_date_to_timestamp($sql_obj->data[0]["date_validtill"]) <= mktime())
+			if (time_date_to_timestamp($sql_obj->data[0]["date_validtill"]) <= time())
 			{
 				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";

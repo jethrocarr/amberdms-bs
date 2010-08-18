@@ -51,7 +51,7 @@ if (user_permissions_get("admin"))
 		Set HTTP headers
 	*/
 
-	$filename = "amberdms_bs_export_". mktime() .".sql.gz";
+	$filename = "amberdms_bs_export_". time() .".sql.gz";
 	
 	// required for IE, otherwise Content-disposition is ignored
 	if (ini_get('zlib.output_compression'))

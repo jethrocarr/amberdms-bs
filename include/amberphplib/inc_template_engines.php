@@ -382,6 +382,15 @@ class template_engine
 						$repeated_processed_line_sections = $this->process_template_loops($line, $this->data_array[$parent_fieldname], $fieldname, $fieldnames, 2);
 						for ($j=0; $j < count($this->data_array[$parent_fieldname]); $j++)
 						{
+							if(empty($repeated_processed_lines[$j]))
+							{
+								$repeated_processed_lines[$j] = array();
+							}
+						
+							if(empty($repeated_processed_line_sections[$j]))
+							{
+								$repeated_processed_line_sections[$j] = array();
+							}
 							$repeated_processed_lines[$j] = array_merge((array)$repeated_processed_lines[$j], (array)$repeated_processed_line_sections[$j]);
 						}
 					
@@ -497,7 +506,7 @@ class template_engine
 					$fieldname = $matches[1];
 					log_debug("template_engine","Processing if field $fieldname");
 
-					if ((trim($this->data[$fieldname]) != '') || $this->data_files[$fieldname])
+					if (!empty($this->data_files[$fieldname]) && (trim($this->data[$fieldname]) != ''))
 					{
 						log_debug("template_engine", "Value or file $fieldname has been set, processing optional lines.");
 						$in_if = 1;
@@ -869,8 +878,6 @@ class template_engine_htmltopdf extends template_engine
 			{
 				for ($j=0; $j < count($this->data_array[$fieldname]); $j++)
 				{
-					$line_tmp = $line;
-						
 					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 					{
 						$this->data_array[$fieldname][$j][$var] = htmlentities($this->data_array[$fieldname][$j][$var], ENT_QUOTES, "UTF-8");
@@ -1066,11 +1073,11 @@ class template_engine_htmltopdf extends template_engine
 			$this->output = file_get_contents("$tmp_filename.pdf");
 
 			// remove temporary files from disk
-			unlink("$tmp_filename");
-			unlink("$tmp_filename.aux");
-			unlink("$tmp_filename.log");
-			unlink("$tmp_filename.html");
-			unlink("$tmp_filename.pdf");
+			@ unlink("$tmp_filename");
+			@ unlink("$tmp_filename.aux");
+			@ unlink("$tmp_filename.log");
+			@ unlink("$tmp_filename.html");
+			@ unlink("$tmp_filename.pdf");
 
 			// cleanup texlive home directory
 			system("rm -rf ". $tmp_filename ."_html_data");

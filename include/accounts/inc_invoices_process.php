@@ -262,7 +262,7 @@ function invoice_form_export_process($type, $returnpage_error, $returnpage_succe
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (!empty($_SESSION["error"]["message"]))
 	{	
 		header("Location: ../../index.php?page=$returnpage_error&id=". $invoice->id ."");
 		exit(0);

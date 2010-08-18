@@ -52,7 +52,7 @@ class page_output
 
 	function execute()
 	{
-		if ($_SESSION["error"]["message"])
+		if (!empty($_SESSION["error"]["message"]))
 		{
 			// an error occured during the form submittal - in this case, we don't need to regenerate the patch
 		}
@@ -97,7 +97,7 @@ class page_output
 					
 			$version = $GLOBALS["config"]["app_version"];
 
-			if (!$amberdms_source[ $version ])
+			if (!isset($amberdms_source[ $version ]) || !$amberdms_source[ $version ])
 			{
 				log_write("error", "execute", "Unknown version of Amberdms Billing System, unable to generate diff!");
 				return 0;

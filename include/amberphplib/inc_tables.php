@@ -1134,7 +1134,8 @@ class table
 		// translate the column labels
 		$this->render_column_names();
 
-
+		$total_rows_incrementing = 0;
+		
 		// format data rows
 		for ($i=0; $i < $this->data_num_rows; $i++)
 		{

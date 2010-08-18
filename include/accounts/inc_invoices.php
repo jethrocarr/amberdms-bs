@@ -435,6 +435,11 @@ class invoice
 			$this->invoice_fields["date_validtill"] = time_format_humandate($this->data["date_validtill"]);  
 		}
 		
+		if(!isset($this->data["amount_paid"]))
+		{
+			$this->data["amount_paid"] = 0;
+		}
+		
 		$this->invoice_fields["date_trans"] = time_format_humandate($this->data["date_trans"]);  
 		$this->invoice_fields["amount"] = format_money($this->data["amount"]);  
 		$this->invoice_fields["amount_total"] = format_money($this->data["amount_total"] - $this->data["amount_paid"]);  
@@ -1126,6 +1131,11 @@ class invoice
 			}
 
 			// define group summary values
+			if(!isset($structure_group_summary[ $structure["group"] ]))
+			{
+				$structure_group_summary[ $structure["group"] ] = 0;
+			}
+			
 			$structure_group_summary[ $structure["group"] ] += $itemdata["amount"];
 
 
@@ -1148,7 +1158,7 @@ class invoice
 
 
 			// if a discount exists, then we add an additional item row for the discount
-			if ($itemdata["discount"])
+			if (!empty($itemdata["discount"]))
 			{
 				$structure["description"]	= "Discount of ".  $itemdata["discount"] ."%";
 				$structure["quantity"]		= "";
@@ -1244,12 +1254,15 @@ class invoice
 		$sql_payment_obj			= New sql_query;
 		$sql_payment_obj->string		= "SELECT id, amount, description FROM account_items WHERE invoiceid='". $this->id ."' AND invoicetype='". $this->type ."' AND type='payment'";
 		$sql_payment_obj->execute();
+		
+		
+		
+		$structure_payments = array();
 
 		if ($sql_payment_obj->num_rows())
 		{
 			$sql_payment_obj->fetch_array();
 
-			$structure_payments = array();
 			foreach ($sql_payment_obj->data as $itemdata)
 			{
 				$structure = array();
@@ -1292,7 +1305,7 @@ class invoice
 
 
 		// add discount group last
-		if ($structure_group_summary["group_discount"] > 0)
+		if (isset($structure_group_summary["group_discount"]) && ($structure_group_summary["group_discount"] > 0))
 		{
 			$structure = array();
 

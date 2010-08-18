@@ -248,7 +248,7 @@ class page_output
 								$id = $array[$j][$i];
 								print "<td class=\"available_templates_cell\" valign=\"top\">";
 									print "<p><strong>". $invoice_type_data['templates'][$id]["template_name"] ."</strong></p>";
-									print "<p>" .$invoice_type_data['templates']["template_description"] ."</p>";
+									print "<p>" .$invoice_type_data['templates'][$id]["template_description"] ."</p>";
 								print "</td>";
 							}
 							else

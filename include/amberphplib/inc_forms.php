@@ -613,7 +613,7 @@ class form_input
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
 					
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -679,11 +679,20 @@ class form_input
 			break;
 			
 			case "hidden":
+			
+				if (!isset($this->structure[$fieldname]["defaultvalue"]))
+				{
+						$this->structure[$fieldname]["defaultvalue"] = '';
+				}
 				print "<input type=\"hidden\" name=\"$fieldname\" value=\"". $this->structure[$fieldname]["defaultvalue"] ."\">";
 			break;
 
 			case "text":
-
+		
+				if (!isset($this->structure[$fieldname]["defaultvalue"]))
+				{
+						$this->structure[$fieldname]["defaultvalue"] = '';
+				}
 				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
 
 				print "$translation";
@@ -961,7 +970,7 @@ class form_input
 						print "\" ";
 					}
 					
-					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+					if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 						print "disabled=\"disabled\" ";
 						
 					if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
@@ -1148,7 +1157,7 @@ class form_input
 				foreach ($this->structure[$fieldname]["values"] as $value)
 				{
 					// is the current row, the one that is in use? If so, add the 'selected' tag to it
-					if ($value == $this->structure[$fieldname]["defaultvalue"])
+					if (isset($this->structure[$fieldname]["defaultvalue"]) && ($value == $this->structure[$fieldname]["defaultvalue"]))
 					{
 						print "<option selected ";
 					}
@@ -1242,13 +1251,13 @@ class form_input
 				If any actions have been defined, process them
 			*/
 
-			if ($this->actions[$fieldname])
+			if (!empty($this->actions[$fieldname]))
 			{
 				log_debug("form", "Processing action rules for $fieldname field");
 
 				foreach (array_keys($this->actions[$fieldname]) as $target_field)
 				{
-					if ($this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ])
+					if (isset($this->structure[$fieldname]["defaultvalue"]) && !empty($this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ]))
 					{
 						$action = $this->actions[$fieldname][ $target_field ][ $this->structure[$fieldname]["defaultvalue"] ];
 					}
