@@ -607,9 +607,7 @@ class form_input
 				print "<input name=\"$fieldname\" ";
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{	
-					//change decimal point to confugred value
-					$formatted_value = str_replace(".", $GLOBALS["config"]["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"], $this->structure[$fieldname]["defaultvalue"]);
-					print "value=\"". $formatted_value ."\" ";
+					print "value=\"". format_money($this->structure[$fieldname]["defaultvalue"], 1) ."\" ";
 				}
 
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
