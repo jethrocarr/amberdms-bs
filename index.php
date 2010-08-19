@@ -212,7 +212,7 @@ if (isset($page_obj->requires["javascript"]))
 				//if in translation mode, print short explanation and button to form
 				if (isset($_SESSION["user"]["translation"]) && ($_SESSION["user"]["translation"]=="show_all_translatable_fields" || $_SESSION["user"]["translation"]=="show_only_non-translated_fields"))
 				{
-					print "<p> <strong><a href=\"javascript:openPopup('popup.php?page=popup/translation_form.php')\">Open translation form</a></strong> </p>";
+					print "<p> <strong><a href=\"javascript:openPopup('popup.php?page=popup/translation_form.php')\"><img src=\"images/buttons/translate_app.gif\" alt=\"Translate App\" border=\"0\"></a></strong> </p>";
 				}
 			}
 

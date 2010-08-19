@@ -103,7 +103,11 @@ $theme_path = "themes/".$folder."/";
 	<meta name="copyright" content="(C)Copyright 2010 Amberdms Ltd.">
 
 	<?php
-
+	
+	//include standard CSS file
+	print "<link href=\"include/css/stylesheet.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
+	print "<link href=\"external/jquery-ui/jquery-ui-1.8.2.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
+	
 	// include theme's CSS files
 	print "<link href=\"".$theme_path ."theme.css\" rel=\"stylesheet\" type=\"text/css\" />\n";
 
