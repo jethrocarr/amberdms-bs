@@ -152,8 +152,10 @@ class page_output
 
 
 		// timezone
-		$structure 			= form_helper_prepare_timezonedropdown("option_timezone");
-		$structure["defaultvalue"]	= $options["timezone"];
+		$structure 				= form_helper_prepare_timezonedropdown("option_timezone");
+		$structure["defaultvalue"]		= $options["timezone"];
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_form->add_input($structure);
 		
 		$this->obj_form->subforms["user_options"][]	= "option_timezone";
@@ -174,6 +176,7 @@ class page_output
 		$structure = form_helper_prepare_dropdownfromdb("option_default_employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "enabled";
 		$structure["defaultvalue"]		= $options["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
@@ -183,6 +186,7 @@ class page_output
 		$structure = form_helper_prepare_dropdownfromdb("option_theme", "SELECT id, theme_name as label FROM themes ORDER BY theme_name");
 		$structure["options"]["autoselect"] = "yes";
 		$structure["options"]["width"] = "600";
+		$structure["options"]["search_filter"]	= "enabled";
 		$structure["defaultvalue"] = $options["theme"];
 		$this->obj_form->add_input($structure);
 		
