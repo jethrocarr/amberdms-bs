@@ -294,7 +294,11 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 				$translation	= language_translate_string($_SESSION["user"]["lang"], $valuename);
 				$errormsg	= "Invalid $translation supplied, please correct.";
 			}
-
+			// replace configs with standard symbols for processing
+			$config_array = array($GLOBALS["config"]["CURRENCY_DEFAULT_SYMBOL"], $GLOBALS["config"]["CURRENCY_DEFAULT_THOUSANDS_SEPARATOR"], $GLOBALS["config"]["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"]);
+			$default_array = array("", "", ".");
+			$formatted_string = str_replace($config_array, $default_array, $_POST[$valuename]);
+			$_POST[$valuename] = $formatted_string;
 			// verify as a floating point number
 			$expression = "/^[0-9]*.[0-9]*$/";
 			$value = security_form_input($expression, $valuename, $numchar, $errormsg);
