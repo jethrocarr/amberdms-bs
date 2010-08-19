@@ -31,6 +31,15 @@ if (user_permissions_get("admin"))
 	$data["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"]	= @security_form_input_predefined("any", "CURRENCY_DEFAULT_DECIMAL_SEPARATOR", 1, "");
 
 
+	/*
+	 	Check that decimal and thousands separators are different
+	 */
+	if ($data["CURRENCY_DEFAULT_THOUSANDS_SEPARATOR"] == $data["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"])
+	{
+		error_flag_field("CURRENCY_DEFAULT_THOUSANDS_SEPARATOR");
+		error_flag_field("CURRENCY_DEFAULT_DECIMAL_SEPARATOR");
+		log_write("error", "page_output", "Thousands and decimal separators must be different.");
+	}
 
 	/*
 		Process Errors
