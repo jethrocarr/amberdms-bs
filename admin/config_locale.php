@@ -38,9 +38,15 @@ class page_output
 		$this->obj_form->method = "post";
 
 
+		// language options
+		$structure = form_helper_prepare_radiofromdb("LANGUAGE_DEFAULT", "SELECT name as id, name as label FROM language_avaliable ORDER BY name");
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
 		// appearance options
 		$structure = form_helper_prepare_dropdownfromdb("THEME_DEFAULT", "SELECT id, theme_name as label FROM themes ORDER BY theme_name");
 		$structure["options"]["autoselect"]	= "yes";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
 		// time options
@@ -101,6 +107,7 @@ class page_output
 		
 		
 		// define subforms
+		$this->obj_form->subforms["config_language"]		= array("LANGUAGE_DEFAULT");
 		$this->obj_form->subforms["config_appearance"]		= array("THEME_DEFAULT");
 		$this->obj_form->subforms["config_date"]		= array("DATEFORMAT", "TIMEZONE_DEFAULT");
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL", "CURRENCY_DEFAULT_SYMBOL_POSITION", "CURRENCY_DEFAULT_THOUSANDS_SEPARATOR", "CURRENCY_DEFAULT_DECIMAL_SEPARATOR");
