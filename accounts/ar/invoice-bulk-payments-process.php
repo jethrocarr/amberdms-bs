@@ -10,24 +10,53 @@ if (user_permissions_get('accounts_ar_write'))
 {
 	//get data
 	$highest_invoice_id 	= @security_form_input_predefined("int", "highest_invoice_id", 1, "");
+	
 	$data 			= array();
-	$data["date_trans"]		= @security_form_input_predefined("date", "payment_date", 1, "You must enter a payment date");
-	$data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "You must select an account to pay to");
-
-	//start SQL query
-	$sql_obj = New sql_query;
-	$sql_obj->trans_begin();
+	$data["date_trans"]	= @security_form_input_predefined("date", "payment_date", 1, "You must enter a payment date");
+	$data["chartid"]	= @security_form_input_predefined("int", "chartid", 1, "You must select an account to pay to");
+	
+	$invoices		= array();
+	for ($i = 0; $i <= $highest_invoice_id; $i++)
+	{
+		$invoices[$i]["ticked"] = @security_form_input_predefined("any", "pay_invoice_$i", 0, "");
+	}
+	
 	
 	for ($i = 0; $i <= $highest_invoice_id; $i++)
 	{
+		if (empty($invoices[$i]["ticked"]))
+		{
+			unset($invoices[$i]);
+		}
+		else
+		{
+			$invoices[$i]["checked"] = @security_form_input_predefined("any", "checked_status_invoice_$i", 1, "");
+			$invoices[$i]["amount"] = @security_form_input_predefined("money", "amount_invoice_$i", 1, "");
+		}
+	}
+	
+	//if there are errors, redirect
+	if (error_check())
+	{
+		$_SESSION["error"]["form"]["invoice-bulk-payments"] = "failed";
+		header("Location: ../../index.php?page=accounts/ar/invoice-bulk-payments.php");
+		exit(0);
+	}
+	
+	//process
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
+	
+	foreach ($invoices as $id=>$record)
+	{
 		//only process rows that have been ticked 'to pay'
-		$checked = @security_form_input_predefined("any", "checked_status_invoice_$i", 0, "");
-		$ticked = @security_form_input_predefined("any", "pay_invoice_$i", 0, "");
-		if ($checked == "true")
+//		$checked = @security_form_input_predefined("any", "checked_status_invoice_$i", 0, "");
+//		$ticked = @security_form_input_predefined("any", "pay_invoice_$i", 0, "");
+		if ($invoices[$id]["checked"] == "true")
 		{
 			//create new invoice item
 			$item = New invoice_items;
-			$item->id_invoice = $i;
+			$item->id_invoice = $id;
 			$item->type_invoice = "ar";
 			$item->type_item = "payment";
 			
@@ -38,7 +67,7 @@ if (user_permissions_get('accounts_ar_write'))
 			}
 
 			//get amount
-			$data["amount"] = @security_form_input_predefined("money", "amount_invoice_$i", 0, "");
+			$data["amount"] = $invoices[$id]["amount"];
 
 			//process
 			if (!$item->prepare_data($data))
@@ -53,21 +82,17 @@ if (user_permissions_get('accounts_ar_write'))
 		}
 	}
 	
-	//error checking
-	if ($_SESSION["error"]["message"])
-	{	
-		$_SESSION["error"]["form"]["invoice-bulk-payments"] = "failed";
-	}
-	
 	//if there are errors, do not execute any queries
 	if (error_check())
 	{
 		$sql_obj->trans_rollback();	
+		$_SESSION["error"]["form"]["invoice-bulk-payments"] = "failed";
 		log_write("error", "invoice-bulk-payments", "An error occured whilst updating the invoice item. No changes have been made.");
 	}
 	else
 	{
 		$sql_obj->trans_commit();
+		$_SESSION["notification"]["message"] = array("Payments have been updated successfully");
 	}
 	
 	// display updated details

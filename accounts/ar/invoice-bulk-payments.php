@@ -178,6 +178,7 @@ class page_output
 
 		// heading
 		print "<h3>BULK PAYMENTS ON ACCOUNTS RECEIVABLES INVOICES</h3><br><br>";
+		print "<p>This page allows you to make payments against multiple invoices at one time.</p><br />";
 
 		// display options form
 		$this->obj_table->render_options_form();
