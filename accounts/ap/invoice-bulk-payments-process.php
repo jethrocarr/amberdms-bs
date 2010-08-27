@@ -6,7 +6,7 @@ require("../../include/accounts/inc_invoices_items.php");
 require("../../include/accounts/inc_invoices.php");
 
 
-if (user_permissions_get('accounts_ar_write'))
+if (user_permissions_get('accounts_ap_write'))
 {
 	//get data
 	$highest_invoice_id 	= @security_form_input_predefined("int", "highest_invoice_id", 1, "");
@@ -38,8 +38,8 @@ if (user_permissions_get('accounts_ar_write'))
 	//if there are errors, redirect
 	if (error_check())
 	{
-		$_SESSION["error"]["form"]["invoice-bulk-payments-ar"] = "failed";
-		header("Location: ../../index.php?page=accounts/ar/invoice-bulk-payments.php");
+		$_SESSION["error"]["form"]["invoice-bulk-payments-ap"] = "failed";
+		header("Location: ../../index.php?page=accounts/ap/invoice-bulk-payments.php");
 		exit(0);
 	}
 	
@@ -55,7 +55,7 @@ if (user_permissions_get('accounts_ar_write'))
 			//create new invoice item
 			$item = New invoice_items;
 			$item->id_invoice = $id;
-			$item->type_invoice = "ar";
+			$item->type_invoice = "ap";
 			$item->type_item = "payment";
 			
 			//verify invoice exists
@@ -84,8 +84,8 @@ if (user_permissions_get('accounts_ar_write'))
 	if (error_check())
 	{
 		$sql_obj->trans_rollback();	
-		$_SESSION["error"]["form"]["invoice-bulk-payments-ar"] = "failed";
-		log_write("error", "invoice-bulk-payments-ar", "An error occured whilst updating the invoice item. No changes have been made.");
+		$_SESSION["error"]["form"]["invoice-bulk-payments-ap"] = "failed";
+		log_write("error", "invoice-bulk-payments-ap", "An error occured whilst updating the invoice item. No changes have been made.");
 	}
 	else
 	{
@@ -94,7 +94,7 @@ if (user_permissions_get('accounts_ar_write'))
 	}
 	
 	// display updated details
-	header("Location: ../../index.php?page=accounts/ar/invoice-bulk-payments.php");
+	header("Location: ../../index.php?page=accounts/ap/invoice-bulk-payments.php");
 	exit(0);
 }
 else

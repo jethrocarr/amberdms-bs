@@ -1,8 +1,8 @@
 <?php
 /*
-	accounts/ar/invoice-bulk-payments.php
+	accounts/ap/invoice-bulk-payments.php
 	
-	access: accounts_ar_write
+	access: accounts_ap_write
 
 	Lists all invoices in system and allows user to load multiple payments
 */
@@ -18,12 +18,12 @@ class page_output
 	{
 		// requirements
 		$this->requires["css"][]		= "include/accounts/css/invoice-bulk-payments.css";
-		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-bulk-payments_ar.js";
+		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-bulk-payments-ap.js";
 	}
 
 	function check_permissions()
 	{
-		return user_permissions_get('accounts_ar_write');
+		return user_permissions_get('accounts_ap_write');
 	}
 
 	function check_requirements()
@@ -39,33 +39,32 @@ class page_output
 		$this->obj_table = New table;
 
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= "invoice-bulk-payments-ar";
+		$this->obj_table->tablename	= "invoice-bulk-payments-ap";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
-		$this->obj_table->add_column("standard", "code_ordernumber", "account_ar.code_ordernumber");
-		$this->obj_table->add_column("standard", "code_ponumber", "account_ar.code_ponumber");
-		$this->obj_table->add_column("standard", "name_customer", "CONCAT_WS(' -- ', customers.code_customer, customers.name_customer)");
+		$this->obj_table->add_column("standard", "name_vendor", "CONCAT_WS(' -- ', vendors.code_vendor, vendors.name_vendor)");
+		$this->obj_table->add_column("standard", "code_invoice", "account_ap.code_invoice");
+		$this->obj_table->add_column("standard", "code_ordernumber", "account_ap.code_ordernumber");
+		$this->obj_table->add_column("standard", "code_ponumber", "account_ap.code_ponumber");
 		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
-		$this->obj_table->add_column("date", "date_trans", "account_ar.date_trans");
-		$this->obj_table->add_column("date", "date_due", "account_ar.date_due");
-		$this->obj_table->add_column("price", "amount_tax", "account_ar.amount_tax");
-		$this->obj_table->add_column("price", "amount", "account_ar.amount");
-		$this->obj_table->add_column("price", "amount_total", "account_ar.amount_total");
-		$this->obj_table->add_column("price", "amount_paid", "account_ar.amount_paid");
-		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
+		$this->obj_table->add_column("date", "date_trans", "account_ap.date_trans");
+		$this->obj_table->add_column("date", "date_due", "account_ap.date_due");
+		$this->obj_table->add_column("price", "amount_tax", "account_ap.amount_tax");
+		$this->obj_table->add_column("price", "amount", "account_ap.amount");
+		$this->obj_table->add_column("price", "amount_total", "account_ap.amount_total");
+		$this->obj_table->add_column("price", "amount_paid", "account_ap.amount_paid");
 		$this->obj_table->add_column("standard", "pay", "NONE");
 		
 		// defaults
-		$this->obj_table->columns		= array("code_invoice", "name_customer", "date_trans", "amount_total", "amount_paid", "pay");
+		$this->obj_table->columns		= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid", "pay");
 		$this->obj_table->columns_order		= array("code_invoice");
-		$this->obj_table->columns_order_options	= array("code_invoice", "code_ordernumber", "code_ponumber", "name_customer", "name_staff", "date_trans", "date_due", "sent", "pay");
-
+		$this->obj_table->columns_order_options	= array("name_vendor", "code_invoice", "code_ordernumber", "code_ponumber", "name_staff", "date_trans", "date_due", "sent", "pay");
+		
 		// define SQL structure
-		$this->obj_table->sql_obj->prepare_sql_settable("account_ar");
-		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_ar.id");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN customers ON customers.id = account_ar.customerid");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ar.employeeid");
+		$this->obj_table->sql_obj->prepare_sql_settable("account_ap");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_ap.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN vendors ON vendors.id = account_ap.vendorid");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_ap.employeeid");
 
 		// acceptable filter options
 		$structure = NULL;
@@ -81,12 +80,12 @@ class page_output
 		$this->obj_table->add_filter($structure);
 		
 		$structure				= form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
-		$structure["sql"]			= "account_ar.employeeid='value'";
+		$structure["sql"]			= "account_ap.employeeid='value'";
 		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_table->add_filter($structure);
 
-		$structure				= form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
-		$structure["sql"]			= "account_ar.customerid='value'";
+		$structure				= form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
+		$structure["sql"]			= "account_ap.vendorid='value'";
 		$structure["options"]["search_filter"]	= "enabled";
 		$this->obj_table->add_filter($structure);
 
@@ -95,8 +94,9 @@ class page_output
 		$structure["type"]		= "checkbox";
 		$structure["options"]["label"]	= "Hide Closed Invoices";
 		$structure["defaultvalue"]	= "enabled";
-		$structure["sql"]		= "account_ar.amount_paid!=account_ar.amount_total";
+		$structure["sql"]		= "account_ap.amount_paid!=account_ap.amount_total";
 		$this->obj_table->add_filter($structure);
+		
 
 		// load options
 		$this->obj_table->load_options_form();
@@ -110,10 +110,10 @@ class page_output
 		
 		//establish new form object
 		$this->obj_form = New form_input;
-		$this->obj_form->formname = "invoice-bulk-payments-ar";
+		$this->obj_form->formname = "invoice-bulk-payments-ap";
 		$this->obj_form->language = $_SESSION["user"]["lang"];
 
-		$this->obj_form->action = "accounts/ar/invoice-bulk-payments-process.php";
+		$this->obj_form->action = "accounts/ap/invoice-bulk-payments-process.php";
 		$this->obj_form->method = "post";
 		
 		$highest_invoice_id = 0;
@@ -153,7 +153,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure = charts_form_prepare_acccountdropdown("chartid", "ar_payment");
+		$structure = charts_form_prepare_acccountdropdown("chartid", "ap_payment");
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
@@ -177,7 +177,7 @@ class page_output
 	{
 
 		// heading
-		print "<h3>BULK PAYMENTS ON ACCOUNTS RECEIVABLES INVOICES</h3><br><br>";
+		print "<h3>BULK PAYMENTS ON ACCOUNTS PAYABLE INVOICES</h3><br><br>";
 		print "<p>This page allows you to make payments against multiple invoices at one time.</p><br />";
 
 		// display options form
@@ -191,7 +191,7 @@ class page_output
 		elseif (!$this->obj_table->data_num_rows)
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM account_ar LIMIT 1";
+			$sql_obj->string	= "SELECT id FROM account_ap LIMIT 1";
 			$sql_obj->execute();
 			
 			if ($sql_obj->num_rows())
@@ -200,7 +200,7 @@ class page_output
 			}
 			else
 			{
-				format_msgbox("info", "<p>You currently have no AR invoices in your database.</p>");
+				format_msgbox("info", "<p>You currently have no AP invoices in your database.</p>");
 			}
 		}			
 		else
@@ -271,7 +271,7 @@ class page_output
 				print "<td>";
 				print "<div id=\"submit_div\">";
 					$this->obj_form->render_field("highest_invoice_id");
-					print "Pay Into:&nbsp;";
+					print "Pay From:&nbsp;";
 					$this->obj_form->render_field("chartid");
 					print "<br /><br />";
 					$this->obj_form->render_field("payment_date");
