@@ -11,9 +11,9 @@ if (user_permissions_get('accounts_ar_write'))
 	//get data
 	$highest_invoice_id 	= @security_form_input_predefined("int", "highest_invoice_id", 1, "");
 	$data 			= array();
-	$data["date"]		= @security_form_input_predefined("date", "payment_date", 1, "You must enter a payment date");
-	$data["chart"]		= @security_form_input_predefined("int", "chartid", 1, "You must select an account to pay to");
-	
+	$data["date_trans"]		= @security_form_input_predefined("date", "payment_date", 1, "You must enter a payment date");
+	$data["chartid"]		= @security_form_input_predefined("int", "chartid", 1, "You must select an account to pay to");
+
 	//start SQL query
 	$sql_obj = New sql_query;
 	$sql_obj->trans_begin();
