@@ -124,6 +124,19 @@ a:hover
 	padding: 4px;
 }
 
+.table_highlight_bubble
+{
+	padding: 4px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-khtml-box-sizing: content-box;
+	box-sizing: content-box;
+}
+
 /*table linkbox*/
 
 .table_linkbox_default td 

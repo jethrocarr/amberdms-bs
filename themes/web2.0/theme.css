@@ -172,6 +172,10 @@ a:active {
 	border-radius: 7px;
 }
 
+.table_highlight_bubble
+{
+	background-color: #f5e7f3;
+}
 
 /*
 	table_linkbox

@@ -1,0 +1,15 @@
+/*
+ * 	Stylesheet for:
+ * 		accounts/ar/invoice-bulk-payments.php
+ * 		accounts/ap/invoice-bulk-payments.php
+ */
+
+#submit
+{
+	float: right;
+}
+
+#submit_div
+{
+	padding: 5px;
+}

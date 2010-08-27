@@ -365,6 +365,7 @@ function format_size_bytes($string)
 	Supported types:
 	important
 	info
+	bubble
 */
 function format_msgbox($type, $text)
 {

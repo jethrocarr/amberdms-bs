@@ -524,6 +524,7 @@ class form_input
 											as the user types, using the Jquery Autocomplete UI functions. Options are
 											currenly "sql" to use a SQL query set in ["options"]["autocomplete_sql"] and 
 											returning the column "label" to be used for the dropdown.
+						["nolabel"]			Set to true to remove labels from checkboxes, etc
 
 
 			$option_array["values"] = array();			Array of values - used for radio or dropdown type fields
@@ -1051,16 +1052,19 @@ class form_input
 
 
 				// post field label
-				if (isset($this->structure[$fieldname]["options"]["label"]))
+				if (!isset($this->structure[$fieldname]["options"]["nolabel"]))
 				{
-					$translation = $this->structure[$fieldname]["options"]["label"];
+					if (isset($this->structure[$fieldname]["options"]["label"]))
+					{
+						$translation = $this->structure[$fieldname]["options"]["label"];
+					}
+					else
+					{
+						$translation = language_translate_string($this->language, $fieldname);
+					}
+	
+					print "<label for=\"$fieldname\">$translation</label><br>";
 				}
-				else
-				{
-					$translation = language_translate_string($this->language, $fieldname);
-				}
-
-				print "<label for=\"$fieldname\">$translation</label><br>";
 
 
 			break;
