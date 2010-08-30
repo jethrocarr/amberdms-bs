@@ -131,9 +131,8 @@ class page_output
 			$group_arrays_by_name[$attribute["group_name"]]["name"] = $attribute["group_name"];
 			$group_arrays_by_name[$attribute["group_name"]]["group_id"] = $attribute["id_group"];
 		}
-		// sort attribute groups by key
-		ksort($group_arrays_by_name, SORT_STRING);
-		
+		// sort attribute groups by key, use strnatcasecmp as ksort is capital sensitive
+		uksort($group_arrays_by_name, "strnatcasecmp"); 
 		/*
 		 * 	Assign attributes to correct group arrays indexed by ID after sorting.
 		 */
