@@ -118,6 +118,12 @@ class page_output
 		$this->obj_table->add_filter($structure);
 
 		$structure = NULL;
+		$structure["fieldname"] 		= "invoice_notes_search";
+		$structure["type"]			= "input";
+		$structure["sql"]			= "notes LIKE '%value%'";
+		$this->obj_table->add_filter($structure);
+
+		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
 		$structure["type"]		= "checkbox";
 		$structure["options"]["label"]	= "Hide Closed Invoices";
