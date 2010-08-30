@@ -118,19 +118,34 @@ class page_output
 		 * 	Create variables to track number of attributes and their groups
 		 */
 		$this->group_arrays			= array();  
-		$this->last_row_in_group		= array();
-		$this->highest_attr_id			= sql_get_singlevalue("SELECT id AS value FROM attributes ORDER BY id DESC LIMIT 1");		
+		$this->last_row_in_group	= array();
+		$this->highest_attr_id		= sql_get_singlevalue("SELECT id AS value FROM attributes ORDER BY id DESC LIMIT 1");		
 
 		/*
-		 * 	Assign attributes to correct groups
+		 * 	Assign attributes to groups by group name for sorting
 		 */
+		$group_arrays_by_name = array();
 		foreach ((array)$this->obj_attributes->data as $attribute)
 		{
-			$this->group_arrays[$attribute["id_group"]][] = $attribute["id"];
-			$this->group_arrays[$attribute["id_group"]]["name"] = $attribute["group_name"];
+			$group_arrays_by_name[$attribute["group_name"]][] = $attribute["id"];
+			$group_arrays_by_name[$attribute["group_name"]]["name"] = $attribute["group_name"];
+			$group_arrays_by_name[$attribute["group_name"]]["group_id"] = $attribute["id_group"];
 		}
-
-
+		// sort attribute groups by key
+		ksort($group_arrays_by_name, SORT_STRING);
+		
+		/*
+		 * 	Assign attributes to correct group arrays indexed by ID after sorting.
+		 */
+		foreach ($group_arrays_by_name as $array_grouped_by_name)
+		{
+			// Copy the group ID into a variable so we can unset it in the array.
+			$array_group_id = $array_grouped_by_name["group_id"];			
+			unset($array_grouped_by_name["group_id"]);
+			// Place the attributes into the correct array by ID number
+			$this->group_arrays[$array_group_id] = $array_grouped_by_name;
+		}
+		
 		/*
 		 * 	Add one (empty) attribute row to each group 
 		 * 	Add the dynamically created attribute rows to each group
@@ -362,7 +377,7 @@ class page_output
 		print "<table class=\"form_table\" width=\"100%\">";
 
 		// display all the rows
-		foreach	($this->group_arrays as $group_id=>$attributes)
+		foreach	($this->group_arrays as $group_id => $attributes)
 		{
 			//header
 			if(count($this->group_arrays) == 1)
@@ -435,7 +450,7 @@ class page_output
 					{
 						print "<tr class=\"table_highlight form_error group_row_". $group_id. "\" >";
 					}
-					elseif(count($this->group_arrays) == 1)
+					else if(count($this->group_arrays) == 1)
 					{
 						print "<tr class=\"table_highlight group_row_". $group_id ."\">";
 					}
