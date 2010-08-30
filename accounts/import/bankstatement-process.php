@@ -31,6 +31,10 @@ if (user_permissions_get("accounts_import_statement"))
 	//set file type
 	$filetype = format_file_extension($_FILES["BANK_STATEMENT"]["name"]);
 	
+	$dest_account = @security_form_input_predefined("int", "dest_account", 1, "");
+	$employeeid	= @security_form_input_predefined("any", "employeeid", 1, "");
+	
+	
 	//process CSV file
 	if ($filetype == "csv")
 	{
@@ -53,6 +57,8 @@ if (user_permissions_get("accounts_import_statement"))
 		
 		//assign to session variable
 		$_SESSION["csv_array"] = $transactions;
+		$_SESSION["dest_account"] = $dest_account;
+		$_SESSION["employeeid"] = $employeeid;
 		
 		header("Location: ../../index.php?page=accounts/import/bankstatement-csv.php");
 		exit(0);

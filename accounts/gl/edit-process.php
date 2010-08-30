@@ -21,8 +21,6 @@ if (user_permissions_get('accounts_gl_write'))
 {
 	$obj_gl = New gl_transaction;
 
-
-
 	/*
 		Import POST Data
 	*/
@@ -156,7 +154,6 @@ if (user_permissions_get('accounts_gl_write'))
 	*/
 
 	$obj_gl->action_update();
-
 
 	// display updated details
 	header("Location: ../../index.php?page=accounts/gl/view.php&id=". $obj_gl->id);

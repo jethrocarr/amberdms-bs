@@ -1359,7 +1359,7 @@ class journal_process extends journal_base
 
 		// defaults
 		$this->structure["userid"]	= $_SESSION["user"]["id"];
-		$this->structure["timestamp"]	= mktime();
+		$this->structure["timestamp"]	= time();
 	}
 
 
@@ -1547,7 +1547,7 @@ class journal_process extends journal_base
 		/*
 			If no ID supplied, create a new journal entry first
 		*/
-		if (!$this->structure["id"])
+		if (empty($this->structure["id"]))
 		{
 			$mode = "create";
 

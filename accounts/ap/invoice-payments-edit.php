@@ -29,7 +29,7 @@ class page_output
 
 	function page_output()
 	{
-		// fetch vapiables
+		// fetch variables
 		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$this->itemid		= @security_script_input('/^[0-9]*$/', $_GET["itemid"]);
 
@@ -42,8 +42,6 @@ class page_output
 		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ap/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ap/invoice-delete.php&id=". $this->id ."");
 	}
-
-
 
 	function check_permissions()
 	{

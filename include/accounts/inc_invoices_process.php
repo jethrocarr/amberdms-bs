@@ -155,7 +155,7 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 			}
 
 			// display items page
-			$returnpage_success = ereg_replace("view", "items", $returnpage_success);
+			$returnpage_success = str_replace("view", "items", $returnpage_success);
 			header("Location: ../../index.php?page=$returnpage_success&id=". $invoice->id ."");
 		}
 		else

@@ -46,6 +46,7 @@ class page_output
 		$this->obj_form			= New form_input;
 		$this->obj_form->formname	= "bankstatement_assign";
 		
+		
 		$i=1;
 		foreach ($this->statement_array as $transaction=>$data)
 		{
@@ -71,6 +72,27 @@ class page_output
 			$structure["type"]		= "hidden";
 			$structure["defaultvalue"]	= $data["amount"];
 			$this->obj_form->add_input($structure);
+			
+			//hidden other_party field
+			if(isset($data["other_party"]) && $data["other_party"]!="")
+			{
+				$structure			= NULL;
+				$structure["fieldname"]		= $name."-other_party";
+				$structure["type"]		= "hidden";
+				$structure["defaultvalue"]	= $data["other_party"];
+				$this->obj_form->add_input($structure);
+			}
+			
+			
+			//hidden transaction_type field
+			if(isset($data["transaction_type"]) && $data["transaction_type"]!="")
+			{
+				$structure			= NULL;
+				$structure["fieldname"]		= $name."-transaction_type";
+				$structure["type"]		= "hidden";
+				$structure["defaultvalue"]	= $data["transaction_type"];
+				$this->obj_form->add_input($structure);
+			}			
 			
 			//hidden code field
 			if(isset($data["code"]) && $data["code"]!="")
@@ -254,7 +276,12 @@ class page_output
 				
 				//other party
 				print "<td>";
-					print $data["other_party"];
+					print $data["other_party"];			
+				
+					if (isset($data["other_party"]) && $data["other_party"]!="")
+					{
+						$this->obj_form->render_field($name."-other_party");
+					}
 				print "</td>";
 				
 				//other information
@@ -277,6 +304,10 @@ class page_output
 					$this->obj_form->render_field($name."-reference");
 				}				
 				
+				if (isset($data["transaction_type"]) && $data["transaction_type"]!="")
+				{
+					$this->obj_form->render_field($name."-transaction_type");
+				}			
 				print "</td>";
 			    
 				//assign

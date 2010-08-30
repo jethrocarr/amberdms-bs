@@ -108,9 +108,10 @@ class gl_transaction
 		/*
 			Check Balance
 		*/
-
+		$this->data["total_credit"] = 0;
+		$this->data["total_debit"] = 0;
 		// add transaction rows to total credits and debits
-		for ($i = 0; $i < $this->data["num_trans"]; $i++)
+		for ($i = 0; $i <= $this->data["num_trans"]; $i++)
 		{
 			$this->data["total_credit"]	+= $this->data["trans"][$i]["credit"];
 			$this->data["total_debit"]	+= $this->data["trans"][$i]["debit"];
@@ -274,7 +275,7 @@ class gl_transaction
 	{
 		log_debug("inc_gl", "Executing action_update()");
 
-
+		
 		/*
 			Start Transaction
 		*/

@@ -26,7 +26,10 @@ function toggleIncludeTransaction(elem)
 	{
 		$(elem).siblings().css("font-style", "italic").fadeTo("fast", 0.5);
 		$(elem).siblings(".dropdown").children().attr("disabled", "disabled");
-		$(elem).children().attr("src", "images/icons/plus.gif");
+		
+		$('img', elem).attr("src", "images/icons/plus.gif");
+		$('input', elem).attr("value", "false");
+		
 		$(elem).removeClass("remove").addClass("add");
 		$(elem).siblings(".done").children().fadeOut("fast");
 		$(elem).siblings(".dropdown").children("div:not('.assign')").fadeOut("fast");
@@ -35,7 +38,10 @@ function toggleIncludeTransaction(elem)
 	{
 		$(elem).siblings().css("font-style", "normal").fadeTo("fast", 1);
 		$(elem).siblings(".dropdown").children().removeAttr("disabled", "disabled");
-		$(elem).children().attr("src", "images/icons/minus.gif");
+		
+		$('img', elem).attr("src", "images/icons/minus.gif");
+		$('input', elem).attr("value", "true");
+		
 		$(elem).removeClass("add").addClass("remove");
 		if ($(elem).siblings(".dropdown").children(".assign").children().val() != "")
 		{

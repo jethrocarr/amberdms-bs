@@ -7,6 +7,8 @@
 	Allows uploading of a bank statement to assign types for each entry.
 */
 
+require("include/accounts/inc_charts.php");
+
 class page_output
 {
 	var $obj_form;
@@ -39,13 +41,31 @@ class page_output
 		$structure["type"]	= "file";
 		$this->obj_form->add_input($structure);
 		
+		
+		$structure = charts_form_prepare_acccountdropdown("dest_account", "ap_summary_account");
+			
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
+		$structure["options"]["search_filter"]	= "enabled";
+		$structure["options"]["width"]		= "600";
+		$this->obj_form->add_input($structure);
+		
+		
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["search_filter"]	= "enabled";
+		$structure["defaultvalue"]		= @$_SESSION["user"]["default_employeeid"];
+		$this->obj_form->add_input($structure);
+		
+		
 		$structure 			= NULL;
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Import";
 		$this->obj_form->add_input($structure);
 		
-		$this->obj_form->subforms["upload_bank_statement"]	= array("BANK_STATEMENT");
+		$this->obj_form->subforms["upload_bank_statement"]	= array("BANK_STATEMENT", "dest_account", "employeeid" );
 		$this->obj_form->subforms["import"]			= array("submit");
 	} 
 
