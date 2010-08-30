@@ -423,7 +423,7 @@ class services_form_plan
 		$this->obj_form->add_input($structure);
 
 
-		$structure = form_helper_prepare_radiofromdb("billing_cycle", "SELECT id, name as label FROM billing_cycles");
+		$structure = form_helper_prepare_radiofromdb("billing_cycle", "SELECT id, name as label, description as label1 FROM billing_cycles ORDER BY priority");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 		

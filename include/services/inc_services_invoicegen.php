@@ -323,12 +323,24 @@ function service_periods_add($id_service_customer, $billing_mode)
 
 	switch ($billing_cycle)
 	{
+		case "weekly":
+			$sql_add_string = "1 WEEK";
+		break;
+
+		case "fortnightly":
+			$sql_add_string = "2 WEEK";
+		break;
+
 		case "monthly":
 			$sql_add_string = "1 MONTH";
 		break;
 
 		case "6monthly":
 			$sql_add_string = "6 MONTH";
+		break;
+
+		case "quarterly":
+			$sql_add_string = "1 QUARTER";
 		break;
 
 		case "yearly":
