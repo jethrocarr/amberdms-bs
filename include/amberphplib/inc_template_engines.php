@@ -314,7 +314,6 @@ class template_engine
 	{
 		log_debug("template_engine", "Executing prepare_filltemplate()");
 
-		
 
 		$fieldname	= "";
 		$fieldnames = array(0 => '');
@@ -331,7 +330,6 @@ class template_engine
 			if ($in_foreach)
 			{
 				$current_fieldname = $fieldnames[$in_foreach];
-				//echo htmlentities($line, ENT_QUOTES)." - $in_foreach<br />";
 				
 				// check for loop end
 				if (preg_match("/^\S*\send\s($current_fieldname)/", $line))
@@ -506,7 +504,7 @@ class template_engine
 					$fieldname = $matches[1];
 					log_debug("template_engine","Processing if field $fieldname");
 
-					if (!empty($this->data_files[$fieldname]) && (trim($this->data[$fieldname]) != ''))
+					if (!empty($this->data[$fieldname]) && (trim($this->data[$fieldname]) != '') || (!empty($this->data_files[$fieldname]) && (trim($this->data_files[$fieldname]) != '')))
 					{
 						log_debug("template_engine", "Value or file $fieldname has been set, processing optional lines.");
 						$in_if = 1;
@@ -998,15 +996,15 @@ class template_engine_htmltopdf extends template_engine
 		}
 		
 		$directory_prefix = $tmp_filename."_"; 
-		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_simple/";
+		//$directory_prefix = "https://devel-web-tom.local.amberdms.com/development/amberdms/oss-amberdms-bs/trunk/templates/ar_invoice/ar_invoice_htmltopdf_telcostyle/";
 		
 		foreach((array)$this->processed as $key => $processed_row)
 		{	
 			$this->processed[$key] = str_replace("(tmp_filename)", $directory_prefix, $processed_row);
 		}
-		
-		//exit(implode("",$this->processed));
-
+		//print(implode("",$this->processed));
+		//log_debug_render();
+		//exit();
 		foreach ($this->processed as $line)
 		{
 			if (fwrite($handle, $line) === FALSE)
