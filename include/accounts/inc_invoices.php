@@ -127,7 +127,7 @@ function invoice_render_summarybox($type, $id)
 		{
 			if ($sql_obj->data[0]["amount_paid"] == $sql_obj->data[0]["amount_total"])
 			{
-				print "<table width=\"100%\" class=\"table_highlight_green\">";
+				print "<table width=\"100%\" class=\"table_highlight_open\">";
 				print "<tr>";
 					print "<td>";
 					print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is closed (fully paid).</b>";
