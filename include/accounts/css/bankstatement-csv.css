@@ -1,0 +1,41 @@
+div.input_structure label
+{
+	display: block;
+	padding: 5px 0px 5px 5px;
+	min-height: 30px;
+	 /* IE6 underscore hack, height does the same in IE6 as min-height does everywhere else */
+	_height: 30px;
+}
+
+div.input_structure .selected_structure 
+{
+	float: left;
+	margin: 4px 6px 14px 0px;
+}
+
+div.input_structure .edit_or_delete 
+{
+	float:right;
+}
+
+div.input_structure .edit_or_delete 
+{
+	float:right;
+}
+
+a.edit_item_link
+{
+	color: #008800; 
+}
+
+a.delete_item_link
+{	
+	color: #ff0000;
+	
+}
+
+div.input_structure .custom_structure 
+{
+	display: none;
+	padding-left: 1em;
+}
