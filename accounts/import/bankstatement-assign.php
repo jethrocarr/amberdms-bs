@@ -51,7 +51,7 @@ class page_output
 		foreach ($this->statement_array as $transaction=>$data)
 		{
 			$name 			= "transaction".$i;
-		    
+
 			//assignment drop down
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-assign";
@@ -63,7 +63,7 @@ class page_output
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-date";
 			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= $data["date"];
+			$structure["defaultvalue"]	= date("Y-m-d", strtotime(str_replace("/", "-",$data["date"])));
 			$this->obj_form->add_input($structure);
 			
 			//hidden amount field
@@ -159,11 +159,6 @@ class page_output
 			$structure			= form_helper_prepare_dropdownfromdb($name."-interestasset", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id WHERE act.value = \"Asset\" ORDER BY ac.code_chart ASC");
 			$this->obj_form->add_input($structure);
 			
-			//Interest expense account drop down
-			$structure			= NULL;
-			$structure			= form_helper_prepare_dropdownfromdb($name."-interestexpense", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id WHERE act.value = \"Expense\" ORDER BY ac.code_chart ASC");
-			$this->obj_form->add_input($structure);
-			
 			//Interest income account drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-interestincome", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id WHERE act.value = \"Income\" ORDER BY ac.code_chart ASC");
@@ -179,11 +174,19 @@ class page_output
 			$structure			= form_helper_prepare_dropdownfromdb($name."-transferto", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
 			$this->obj_form->add_input($structure);
 			
+			
+			
 			//Hidden enabled field
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-enabled";
 			$structure["type"]		= "hidden";
-			$structure["defaultvalue"]	= "true";
+			
+			// if the amount is not a number, disable the row
+			if(!is_numeric($data["amount"])) {
+				$structure["defaultvalue"]	= "false";
+			} else {
+				$structure["defaultvalue"]	= "true";
+			}
 			$this->obj_form->add_input($structure);
 			
 			
@@ -345,8 +348,6 @@ class page_output
 					print "<div class=\" hide_element toggle_interest\">";
 					print "Interest into asset account: ";
 					$this->obj_form->render_field($name."-interestasset");
-					print " and tax into expense account: ";
-					$this->obj_form->render_field($name."-interestexpense");
 					print " from income account: ";
 					$this->obj_form->render_field($name."-interestincome");
 					print "</div>";

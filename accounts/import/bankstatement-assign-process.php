@@ -167,7 +167,6 @@ if (user_permissions_get("accounts_import_statement"))
 				{
 					//determine asset, expense, and income account
 					$interestasset		= @security_form_input_predefined("int", $name."-interestasset", 1, "");
-					$interestexpense	= @security_form_input_predefined("int", $name."-interestexpense", 1, "");
 					$interestincome		= @security_form_input_predefined("int", $name."-interestincome", 1, "");				
 				}
 				
@@ -233,19 +232,12 @@ if (user_permissions_get("accounts_import_statement"))
 			
 			
 				// verify transaction data
-				if ($obj_gl->data["num_trans"])
-				{
-					if (!$obj_gl->verify_valid_trans())
-					{
-						// set returns
-						//$_SESSION["error"]["total_credit"]	= $obj_gl->data["total_credit"];
-						//$_SESSION["error"]["total_debit"]	= $obj_gl->data["total_debit"];
-			
-						// highlight the first two transaction rows
-						//$_SESSION["error"]["trans_0-error"] = 1;
-						//$_SESSION["error"]["trans_1-error"] = 1;
-					}
-				}
+//				if ($obj_gl->data["num_trans"])
+//				{
+//					if (!$obj_gl->verify_valid_trans())
+//					{
+//					}
+//				}
 			
 				/*
 					Update Database

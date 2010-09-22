@@ -119,8 +119,35 @@ $(document).ready(function()
 	{
 		checkSubmenusComplete($(this));
 	});
-});
 
+	$("td.include input[name^=transaction]").each( function(index, element) {
+		//$(elem).parents("td").css('border', '1px solid red');
+		parent_element = $(element).parents("td.include");
+
+		parent_row = $(parent_element).parents("tr.transaction_row");
+		if($(element).val() == 'false') {
+			$("td", parent_row).css("font-style", "italic").fadeTo("fast", 0.5);
+			$(".dropdown select", parent_row).attr("disabled", "disabled");
+			
+			$('img', parent_element).attr("src", "images/icons/plus.gif");
+			$('input', parent_element).attr("value", "false");
+			
+			$(parent_element).removeClass("remove").addClass("add");
+			$(".done", parent_row).children().fadeOut("fast");
+			$(".dropdown", parent_row).children("div:not('.assign')").fadeOut("fast");
+		}
+		else 
+		{
+			if ($(".dropdown .assign", parent_row).children().val() != "")
+			{
+				toggleSubMenus($(".dropdown .assign", parent_row).children());
+			}
+		}
+	});
+	
+
+	
+});
 
 
 
@@ -130,30 +157,32 @@ $(document).ready(function()
 // Toggle italics, opacity, image, tick mark, and drop down menus when a transaction is added or removed
 function toggleIncludeTransaction(elem)
 {
+	elem_parent = $(elem).parents("tr.transaction_row");
 	if($(elem).hasClass("remove"))
 	{
-		$(elem).siblings().css("font-style", "italic").fadeTo("fast", 0.5);
-		$(elem).siblings(".dropdown").children().attr("disabled", "disabled");
+
+		$("td", elem_parent).css("font-style", "italic").fadeTo("fast", 0.5);
+		$(".dropdown select", elem_parent).attr("disabled", "disabled");
 		
 		$('img', elem).attr("src", "images/icons/plus.gif");
 		$('input', elem).attr("value", "false");
 		
 		$(elem).removeClass("remove").addClass("add");
-		$(elem).siblings(".done").children().fadeOut("fast");
-		$(elem).siblings(".dropdown").children("div:not('.assign')").fadeOut("fast");
+		$(".done", elem_parent).children().fadeOut("fast");
+		$(".dropdown", elem_parent).children("div:not('.assign')").fadeOut("fast");
 	}
 	else
 	{
-		$(elem).siblings().css("font-style", "normal").fadeTo("fast", 1);
-		$(elem).siblings(".dropdown").children().removeAttr("disabled", "disabled");
+		$("td", elem_parent).css("font-style", "normal").fadeTo("fast", 1);
+		$(".dropdown select", elem_parent).removeAttr("disabled");
 		
 		$('img', elem).attr("src", "images/icons/minus.gif");
 		$('input', elem).attr("value", "true");
 		
 		$(elem).removeClass("add").addClass("remove");
-		if ($(elem).siblings(".dropdown").children(".assign").children().val() != "")
+		if ($(".dropdown .assign", elem_parent).children().val() != "")
 		{
-			toggleSubMenus($(elem).siblings(".dropdown").children(".assign").children());
+			toggleSubMenus($(".dropdown .assign", elem_parent).children());
 		}
 	}
 }
