@@ -199,27 +199,27 @@ if (user_permissions_get("accounts_import_statement"))
 				
 				
 				
-				$j = 0; 
-				$obj_gl->data["trans"][$j]["account"]		= $account['destination'];
-				$obj_gl->data["trans"][$j]["debit"]			= $data["amount"];
-				$obj_gl->data["trans"][$j]["credit"]		= 0;
-				$obj_gl->data["trans"][$j]["source"]		= "";
-				$obj_gl->data["trans"][$j]["description"]	= $transaction_type;
-				
-				$j++;
+				$j = 1; 
 				$obj_gl->data["trans"][$j]["account"]		= $account['origin'];
 				$obj_gl->data["trans"][$j]["debit"]			= 0;
 				$obj_gl->data["trans"][$j]["credit"]		= $data["amount"];
 				$obj_gl->data["trans"][$j]["source"]		= "";
 				$obj_gl->data["trans"][$j]["description"]	= $transaction_type;
 				
+				$j++;
+				
+				$obj_gl->data["trans"][$j]["account"]		= $account['destination'];
+				$obj_gl->data["trans"][$j]["debit"]			= $data["amount"];
+				$obj_gl->data["trans"][$j]["credit"]		= 0;
+				$obj_gl->data["trans"][$j]["source"]		= "";
+				$obj_gl->data["trans"][$j]["description"]	= $transaction_type;
 				
 				
 				
 				// transaction rows
-				$obj_gl->data["num_trans"] = $j;
+				$obj_gl->data["num_trans"] = count($obj_gl->data["trans"]);
+
 				
-			
 				// make sure we don't choose a transaction code number that is already in use
 				if ($obj_gl->data["code_gl"])
 				{
@@ -232,12 +232,12 @@ if (user_permissions_get("accounts_import_statement"))
 			
 			
 				// verify transaction data
-//				if ($obj_gl->data["num_trans"])
-//				{
-//					if (!$obj_gl->verify_valid_trans())
-//					{
-//					}
-//				}
+				if ($obj_gl->data["num_trans"])
+				{
+					if (!$obj_gl->verify_valid_trans())
+					{
+					}
+				}
 			
 				/*
 					Update Database

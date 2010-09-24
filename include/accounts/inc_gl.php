@@ -282,7 +282,6 @@ class gl_transaction
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
 
-
 		/*
 			If no ID exists, create a new transaction first
 		*/
@@ -300,7 +299,7 @@ class gl_transaction
 			$mode = "update";
 		}
 
-
+ 
 		/*
 			Update GL Transaction
 		*/
@@ -479,7 +478,7 @@ class gl_transaction
 		*/
 
 		// run through all transactions
-		for ($i = 0; $i < $this->data["num_trans"]; $i++)
+		for ($i = 0; $i <= $this->data["num_trans"]; $i++)
 		{
 			// if enabled, overwrite any description fields of transactions with the master one
 			if ($this->data["description_useall"] == "on")
