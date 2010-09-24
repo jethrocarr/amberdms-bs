@@ -82,3 +82,24 @@ function filter_dropdown(dropdown_name, filter_string)
 		$("select[name='" + dropdown_name + "']").html("<option value=\"\">--no matches--</option>").attr("disabled", "disabled");
 	}
 }
+
+
+/*
+	Debug function
+	Using this function rather than console.log() will first check if there is a console present, then print to the console only if it exists
+	Will take any number of arguments, however these will be printed one per line in the console.
+	NOTE: This does NOT cover the full range of functionalities 
+*/
+function log_debug()
+{
+	//check if 
+	if (typeof(console) !== 'undefined')
+	{
+
+		for (i=0; i<log_debug.arguments.length; i++)
+		{
+			console.log(log_debug.arguments[i]);			
+		}
+
+	}
+}
