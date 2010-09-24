@@ -18,8 +18,11 @@ require("../include/customers/inc_customers.php");
 if (user_permissions_get('customers_write'))
 {
 	$obj_customer = New customer;
+	$num_del_contacts = 0;
+	$num_del_records = array();
 
-
+	log_debug("inc_customers", "SESSION TRACK - beginning of edit-process -0" . $_SESSION["error"]["contact_0"]);
+	log_debug("inc_customers", "SESSION TRACK - beginning of edit-process - 1 " . $_SESSION["error"]["contact_1"]);
 	/*
 		Load POST data
 	*/
@@ -28,11 +31,7 @@ if (user_permissions_get('customers_write'))
 	
 	$obj_customer->data["code_customer"]		= @security_form_input_predefined("any", "code_customer", 0, "");
 	$obj_customer->data["name_customer"]		= @security_form_input_predefined("any", "name_customer", 1, "");
-	$obj_customer->data["name_contact"]		= @security_form_input_predefined("any", "name_contact", 0, "");
-	
-	$obj_customer->data["contact_phone"]		= @security_form_input_predefined("any", "contact_phone", 0, "");
-	$obj_customer->data["contact_fax"]		= @security_form_input_predefined("any", "contact_fax", 0, "");
-	$obj_customer->data["contact_email"]		= @security_form_input_predefined("email", "contact_email", 0, "");
+
 	$obj_customer->data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
 	$obj_customer->data["date_end"]			= @security_form_input_predefined("date", "date_end", 0, "");
 
@@ -63,6 +62,55 @@ if (user_permissions_get('customers_write'))
 		$obj_customer->data["address2_zipcode"]		= @security_form_input_predefined("any", "address2_zipcode", 0, "");
 	}
 	
+	
+	//contacts
+	$num_contacts	= @security_form_input_predefined("int", "num_contacts", 0, "");
+	$obj_customer->data["num_contacts"]	= $num_contacts;
+	
+	for ($i=0; $i < $num_contacts; $i++)
+	{	
+		$obj_customer->data["contacts"][$i]["contact_id"]	= @security_form_input_predefined("int", "contact_id_$i", 0, "");
+		$obj_customer->data["contacts"][$i]["delete_contact"]	= @security_form_input_predefined("any", "delete_contact_$i", 0, "");
+		$obj_customer->data["contacts"][$i]["contact"]		= @security_form_input_predefined("any", "contact_" .$i, 0, "");
+		$obj_customer->data["contacts"][$i]["description"]	= @security_form_input_predefined("any", "description_$i", 0, "");
+		
+		//keep track of deleted contacts to ensure things display correctly after processing
+		if ($obj_customer->data["contacts"][$i]["delete_contact"] == "true")
+		{
+			$num_del_contacts++;
+		}
+		
+		//contact records
+		$num_records	= @security_form_input_predefined("int", "num_records_$i", 0, "");
+		$obj_customer->data["contacts"][$i]["num_records"]	= $num_records;
+		
+		$num_del_records[$i] = 0;
+		
+		for ($j=0; $j < $num_records; $j++)
+		{
+			$obj_customer->data["contacts"][$i]["records"][$j]["record_id"]	= @security_form_input_predefined("int", "contact_" .$i. "_record_id_" .$j, 0, "");
+			$obj_customer->data["contacts"][$i]["records"][$j]["delete"]	= @security_form_input_predefined("any", "contact_" .$i. "_delete_" .$j, 0, "");
+			$obj_customer->data["contacts"][$i]["records"][$j]["type"]	= @security_form_input_predefined("any", "contact_" .$i. "_type_" .$j, 0, "");
+			$obj_customer->data["contacts"][$i]["records"][$j]["label"]	= @security_form_input_predefined("any", "contact_" .$i. "_label_" .$j, 0, "");
+			
+			if ($obj_customer->data["contacts"][$i]["records"][$j]["delete"] == "true")
+			{
+				$num_del_records[$i]++;
+			}
+			
+			if ($obj_customer->data["contacts"][$i]["records"][$j]["type"] == "email")
+			{
+				$obj_customer->data["contacts"][$i]["records"][$j]["detail"]	= @security_form_input_predefined("email", "contact_" .$i. "_detail_" .$j, 0, "");
+			}
+			else
+			{
+				$obj_customer->data["contacts"][$i]["records"][$j]["detail"]	= @security_form_input_predefined("any", "contact_" .$i. "_detail_" .$j, 0, "");
+			}
+		}
+	}
+
+	
+	//taxes	
 	$obj_customer->data["tax_number"]		= @security_form_input_predefined("any", "tax_number", 0, "");
 	$obj_customer->data["discount"]			= @security_form_input_predefined("float", "discount", 0, "");
 
@@ -125,9 +173,35 @@ if (user_permissions_get('customers_write'))
 		log_write("error", "process", "You can not close this customer, as there are still active services on this account");
 		$_SESSION["error"]["date_end-error"] = 1;
 	}
+	
+	
+	//make sure each contact has a name	
+	for ($i=0; $i < $num_contacts; $i++)
+	{
+		if (!$obj_customer->verify_name_contact($i))
+		{
+			log_write("error", "process", "Each contact must be given a name - please ensure each contact has been assigned a unique name");
+			error_flag_field("contact_" .$i);
+			log_debug("edit-process", "NO NAME ERROR FLAG: contact_" .$i);
+		}
+	}	
+	
+	
+	//make sure each contact name is unique
+	for ($i=0; $i < ($num_contacts); $i++)
+	{
+		$uniqueness = $obj_customer->verify_uniqueness_contact($i);
+		
+		if ($uniqueness != "unique")
+		{
+			log_write("error", "process", "You have assigned the same name to two or more contacts - please choose unique names");
+			error_flag_field("contact_" .$i);
+			error_flag_field("contact_" .$uniqueness);
+		}
+	}
+	
 
-
-	// return to input page if any errors occured
+	// return to input page if any errors occurred
 	if ($_SESSION["error"]["message"])
 	{
 		if ($obj_customer->id)
@@ -163,7 +237,14 @@ if (user_permissions_get('customers_write'))
 		$sql_obj->trans_rollback();
 	}
 	else
-	{
+	{	
+		//if successful, change the number of contacts if there were some deleted
+		for ($i=0; $i<$num_contacts; $i++)
+		{
+			$_SESSION["error"]["num_records_$i"] = $_SESSION["error"]["num_records_$i"] - $num_del_records[$i];
+		}
+		
+		$_SESSION["error"]["num_contacts"] = $_SESSION["error"]["num_contacts"] - $num_del_contacts;
 		$sql_obj->trans_commit();
 	}
 

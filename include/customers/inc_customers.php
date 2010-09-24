@@ -19,6 +19,8 @@ class customer
 	var $id;		// holds customer ID
 	var $data;		// holds values of record fields
 
+	
+
 
 
 	/*
@@ -33,6 +35,7 @@ class customer
 
 	function verify_id()
 	{
+	log_debug("inc_customers", "SESSION TRACK" . $_SESSION["error"]["contact_0"]);
 		log_debug("inc_customers", "Executing verify_id()");
 
 		if ($this->id)
@@ -84,6 +87,67 @@ class customer
 		return 1;
 
 	} // end of verify_name_customer
+
+
+
+	
+	
+	/*
+		verify_uniqueness_contact
+
+		Checks that each contact has a unique name
+
+		Results
+		$j [index of dup]	Failure - name has been assigned to two contacts
+		unique			Success - contact name is unique
+	*/
+	function verify_uniqueness_contact ($index)
+	{
+		$unique = "unique";
+		if ($this->data["contacts"][$index]["delete_contact"] == "true")
+		{
+			$unique = "unique";
+		}
+		else
+		{
+			$name = $this->data["contacts"][$index]["contact"];
+			for ($j=($this->data["num_contacts"]-1); $j > $index; $j--)
+			{
+				if ($this->data["contacts"][$j]["contact"] == $name && $this->data["contacts"][$j]["delete_contact"] == "false")
+				{
+					$unique = $j;
+				}
+			}
+		}
+		
+		return $unique;
+	}
+	
+	
+	/*
+		verify_name_contact
+
+		Checks that each contact is assigned a name
+
+		Results
+		0	Failure - name field is empty
+		1	Success - contact has been named
+	*/
+	function verify_name_contact ($index)
+	{
+		if ($this->data["contacts"][$index]["delete_contact"] == "true")
+		{
+			return 1;
+		}
+		else if (empty($this->data["contacts"][$index]["contact"]))
+		{
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
+	}
 
 
 
@@ -292,7 +356,6 @@ class customer
 	function action_update()
 	{
 		log_debug("inc_customers", "Executing action_update()");
-
 		/*
 			Start Transaction
 		*/
@@ -334,10 +397,6 @@ class customer
 		$sql_obj->string	= "UPDATE `customers` SET "
 						."code_customer='". $this->data["code_customer"] ."', "
 						."name_customer='". $this->data["name_customer"] ."', "
-						."name_contact='". $this->data["name_contact"] ."', "
-						."contact_phone='". $this->data["contact_phone"] ."', "
-						."contact_email='". $this->data["contact_email"] ."', "
-						."contact_fax='". $this->data["contact_fax"] ."', "
 						."date_start='". $this->data["date_start"] ."', "
 						."date_end='". $this->data["date_end"] ."', "
 						."tax_number='". $this->data["tax_number"] ."', "
@@ -357,6 +416,27 @@ class customer
 		$sql_obj->execute();
 
 		
+		for ($i=0; $i < $this->data["num_contacts"]; $i++)
+		{
+			if (empty($this->data["contacts"][$i]["contact_id"]) && 
+				$this->data["contacts"][$i]["delete_contact"] == "false" &&
+				!empty($this->data["contacts"][$i]["contact"]) &&
+				!empty($this->data["contacts"][$i]["description"]))
+			{
+				//create new contact
+				$this->action_create_contact($i);
+			}
+			else if ($this->data["contacts"][$i]["delete_contact"] == "true")
+			{
+				//delete contact
+				$this->action_delete_contact($i);
+			}
+			else
+			{
+				//update contact
+				$this->action_update_contact($i);
+			}
+		}
 
 		/*
 			Update the journal
@@ -381,7 +461,7 @@ class customer
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "inc_customers", "An error occured when updating customer details.");
+			log_write("error", "inc_customers", "An error occurred when updating customer details.");
 
 			return 0;
 		}
@@ -402,8 +482,136 @@ class customer
 		}
 
 	} // end of action_update
+	
+	
+	
+	/*
+	  	action_update_contact($index)
+	 
+	 	Updates the contact
+	 */
+	function action_update_contact($index)
+	{	
+		$sql_obj = New sql_query;
+	
+		$sql_obj->string	= "UPDATE customer_contacts SET
+						contact = '" .$this->data["contacts"][$index]["contact"]. "', 
+						description = '" .$this->data["contacts"][$index]["description"]. "' 
+						WHERE id = '" .$this->data["contacts"][$index]["contact_id"]. "'";		
+		$sql_obj->execute();
+		
+		//create records
+		for ($i=0; $i<$this->data["contacts"][$index]["num_records"]; $i++)
+		{
+			if (empty($this->data["contacts"][$index]["records"][$i]["record_id"]) && $this->data["contacts"][$index]["records"][$i]["delete"] == "false")
+			{
+				$this->action_create_record($index, $i);
+			}
+			else if ($this->data["contacts"][$index]["records"][$i]["delete"] == "true")
+			{
+				$this->action_delete_record($index, $i);
+			}
+			else
+			{
+				$this->action_update_record($index, $i);
+			}
+		}
+	}
+	
+	
+	
+	/*
+	  	action_create_contact($index)
+	 
+	 	Creates a new contact
+	 */
+	function action_create_contact($index)
+	{
+		$sql_obj = New sql_query;		
+		$sql_obj->string	= "INSERT INTO customer_contacts(customer_id, contact, description)
+						VALUES ('" .$this->id. "', '" .$this->data["contacts"][$index]["contact"]. "', '" .$this->data["contacts"][$index]["description"]. "')";
+		$sql_obj->execute();
+		
+		$this->data["contacts"][$index]["contact_id"] = $sql_obj->fetch_insert_id();
+		
+		for ($i=0; $i<$this->data["contacts"][$index]["num_records"]; $i++)
+		{
+			if ($this->data["contacts"][$index]["records"][$i]["delete"] == "false")
+			{
+				$this->action_create_record($index, $i);
+			}
+		}
+	}
+	
+	
+	
+	/*
+	 	action_delete_contact($index)
+	 	
+	 	Deletes a contact
+	 */
+	function action_delete_contact($index)
+	{
+		$sql_obj = New sql_query;		
+		$sql_obj->string	= "DELETE FROM customer_contacts WHERE id ='" .$this->data["contacts"][$index]["contact_id"]. "'";
+		$sql_obj->execute();
+		
+		$sql_obj->string	= "DELETE FROM customer_contact_records WHERE contact_id ='" .$this->data["contacts"][$index]["contact_id"]. "'";
+		$sql_obj->execute();
+		
+		$this->num_deleted_contacts++;
+	}
+	
+	
+	
+	/*
+	 	action_update_record($contact_index, $record_index)
+	 	
+	 	Updates an existing contact record
+	 */
+	function action_update_record($contact_index, $record_index)
+	{
+		$sql_obj 	= New sql_query;
+		
+		$sql_obj->string	= "UPDATE customer_contact_records SET
+						detail = '" .$this->data["contacts"][$contact_index]["records"][$record_index]["detail"]. "'
+						WHERE id = '" .$this->data["contacts"][$contact_index]["records"][$record_index]["record_id"]. "'";
+		$sql_obj->execute();
+	}
+	
+	
+	/*
+	 	action_create_record($contact_index, $record_index)
+	 	
+	 	Creates a new contact record
+	 */
+	function action_create_record($contact_index, $record_index)
+	{
+		$sql_obj = New sql_query;
+		$sql_obj->string	= "INSERT INTO customer_contact_records(contact_id, type, label, detail)
+						VALUES('" .$this->data["contacts"][$contact_index]["contact_id"]. "', '"
+						.$this->data["contacts"][$contact_index]["records"][$record_index]["type"]. "', '"
+						.$this->data["contacts"][$contact_index]["records"][$record_index]["label"]. "', '"
+						.$this->data["contacts"][$contact_index]["records"][$record_index]["detail"]. "')";
+		$sql_obj->execute();
+	}
+	
+	
+	
+	/*
+	 	action_delete_record($contact_index, $record_index)
+	 	
+	 	Deletes a record
+	 */
+	function action_delete_record($contact_index, $record_index)
+	{
+		$sql_obj = New sql_query;		
+		$sql_obj->string	= "DELETE FROM customer_contact_records WHERE id='" .$this->data["contacts"][$contact_index]["records"][$record_index]["record_id"]. "'";
+		$sql_obj->execute();
+	}
 
 
+	
 	/*
 		action_update_taxes
 

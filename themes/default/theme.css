@@ -381,3 +381,16 @@ a.button_export
 	background-color:	#e7e7e7;
 }
 
+/*customer details*/
+.contact_box
+{
+	border-style: 	dashed;
+	border-color:	#374893;
+	border-width: 	thin;
+}
+
+.error_box
+{
+	background-color: #ffeda4;
+}
+

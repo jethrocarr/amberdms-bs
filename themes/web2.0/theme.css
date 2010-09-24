@@ -409,7 +409,7 @@ a.button_export
 {
 	background-color:	#00903c;
 	border:			1px #40885E outset;
-		-moz-border-radius: 7px;
+	-moz-border-radius: 7px;
 	-khtml-border-radius: 7px;
 	-webkit-border-radius: 7px;
 	border-radius: 7px;
@@ -445,4 +445,22 @@ a.button_export
 .available_templates_row
 {
 	background-color:	#e7e7e7;
+}
+
+/*customer details*/
+.contact_box
+{
+	border-style: 	dashed;
+	border-color:	#AB9597;
+	border-width: 	thin;
+	
+	-moz-border-radius: 7px;
+	-khtml-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	border-radius: 7px;
+}
+
+.error_box
+{
+	background-color: #ffeda4;
 }
