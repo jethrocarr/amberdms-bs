@@ -216,7 +216,7 @@ class page_output
 					print "<td align=\"right\" nowrap >";
 						print "<a class=\"button_small\" href=\"index.php?page=customers/view.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("details"). "</a>";
 						print "<a class=\"button_small\" href=\"index.php?page=customers/invoices.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("invoices"). "</a>";
-						print "<a class=\"button_small\" href=\"index.php?page=customers/attributes.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("tbl_lnk_attributes"). "</a>";
+						print "<a class=\"button_small\" href=\"index.php?page=customers/attributes.php&id_customer=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("tbl_lnk_attributes"). "</a>";
 						print "<a class=\"button_small\" href=\"index.php?page=customers/services.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("services"). "</a>";						
 					print "</td>";
 				print "</tr>";
