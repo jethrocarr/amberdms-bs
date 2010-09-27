@@ -1,5 +1,8 @@
 $(document).ready(function()
 {
+	
+//	console.log("testing", 1, 2, );
+	
 	//disable a link
 	$(".disabled_link").live("click", function()
 	{

@@ -107,7 +107,6 @@ class page_output
 		$this->obj_table->load_data_sql();
 
 		
-		
 		//establish new form object
 		$this->obj_form = New form_input;
 		$this->obj_form->formname = "invoice-bulk-payments-ar";
@@ -175,7 +174,6 @@ class page_output
 
 	function render_html()
 	{
-
 		// heading
 		print "<h3>BULK PAYMENTS ON ACCOUNTS RECEIVABLES INVOICES</h3><br><br>";
 		print "<p>This page allows you to make payments against multiple invoices at one time.</p><br />";

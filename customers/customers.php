@@ -40,10 +40,11 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table_list->add_column("standard", "code_customer", "");
 		$this->obj_table_list->add_column("standard", "name_customer", "");
-		$this->obj_table_list->add_column("standard", "name_contact", "");
-		$this->obj_table_list->add_column("standard", "contact_phone", "");
-		$this->obj_table_list->add_column("standard", "contact_email", "");
-		$this->obj_table_list->add_column("standard", "contact_fax", "");
+		$this->obj_table_list->add_column("standard", "name_contact", "NONE");
+		$this->obj_table_list->add_column("standard", "contact_phone", "NONE");
+		$this->obj_table_list->add_column("standard", "contact_mobile", "NONE");
+		$this->obj_table_list->add_column("standard", "contact_email", "NONE");
+		$this->obj_table_list->add_column("standard", "contact_fax", "NONE");
 		$this->obj_table_list->add_column("date", "date_start", "");
 		$this->obj_table_list->add_column("date", "date_end", "");
 		$this->obj_table_list->add_column("standard", "tax_number", "");
@@ -54,7 +55,7 @@ class page_output
 		// defaults
 		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
 		$this->obj_table_list->columns_order		= array("name_customer");
-		$this->obj_table_list->columns_order_options	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
+		$this->obj_table_list->columns_order_options	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_mobile", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
 
 		// define SQL structure
 		$this->obj_table_list->sql_obj->prepare_sql_settable("customers");
@@ -104,6 +105,7 @@ class page_output
 	*/
 	function render_html()
 	{
+
 		// heading
 		print "<h3>CUSTOMER LIST</h3><br><br>";
 
@@ -116,35 +118,111 @@ class page_output
 		{
 			format_msgbox("important", "<p>Please select some valid options to display.</p>");
 		}
-		elseif (!$this->obj_table_list->data_num_rows)
+		else if (!$this->obj_table_list->data_num_rows)
 		{
 			format_msgbox("info", "<p>You currently have no customers in your database.</p>");
 		}
 		else
 		{
-			// details link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table_list->add_link("details", "customers/view.php", $structure);
+			// calculate all the totals and prepare processed values
+			$this->obj_table_list->render_table_prepare();
 
-			// invoices link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table_list->add_link("invoices", "customers/invoices.php", $structure);
-
-			// credit
-			$structure = NULL;
-			$structure["id_customer"]["column"]	= "id";
-			$this->obj_table_list->add_link("tbl_lnk_attributes", "customers/attributes.php", $structure);
-
-			// services link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table_list->add_link("services", "customers/services.php", $structure);
-
-
-			// display the table
-			$this->obj_table_list->render_table_html();
+			// display header row
+			print "<table class=\"table_content\" cellspacing=\"0\" width=\"100%\">";	
+					
+			print "<tr>";
+				foreach ($this->obj_table_list->columns as $column)
+				{
+					print "<td class=\"header\"><b>". $this->obj_table_list->render_columns[$column] ."</b></td>";
+				}
+				
+				//placeholder for links
+				print "<td class=\"header\">&nbsp;</td>";				
+				
+			print "</tr>";
+			
+			// display data
+			for ($i=0; $i < $this->obj_table_list->data_num_rows; $i++)
+			{
+				print "<tr>";
+				foreach ($this->obj_table_list->columns as $columns)
+				{
+					print "<td valign=\"top\">";
+						$content = $this->obj_table->data_render[$i][$columns];
+						
+						//contact name
+						if ($columns == "name_contact")
+						{
+							print lang_trans("accounts");
+							print $contact_id;
+							print $value;
+						}
+						
+						//contact phone
+						else if ($columns == "contact_phone")
+						{
+							$value = sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$contact_id. "' AND type = 'phone' LIMIT 1");
+							if ($value)
+							{
+								print $value;
+							}
+						}
+						//contact mobile
+						else if ($columns == "contact_mobile")
+						{
+							$value = sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'mobile' LIMIT 1");
+							if ($value)
+							{
+								print $value;
+							}
+						}
+						
+						//contact email
+						else if ($columns == "contact_email")
+						{
+							$value = sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'email' LIMIT 1");
+							if ($value)
+							{
+								print $value;
+							}
+						}
+						
+						//contact fax
+						else if ($columns == "contact_fax")
+						{
+							$value = sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'fax' LIMIT 1");
+							if ($value)
+							{
+								print $value;
+							}
+						}
+						
+						//all other columns
+						else
+						{
+							if ($this->obj_table_list->data_render[$i][$columns])
+							{
+								print $this->obj_table_list->data_render[$i][$columns];
+							}
+							else
+							{
+								print "&nbsp;";
+							}
+						}
+					print "</td>";
+				}
+				
+					//links
+					print "<td align=\"right\" nowrap >";
+						print "<a class=\"button_small\" href=\"index.php?page=customers/view.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("details"). "</a>";
+						print "<a class=\"button_small\" href=\"index.php?page=customers/invoices.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("invoices"). "</a>";
+						print "<a class=\"button_small\" href=\"index.php?page=customers/attributes.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("tbl_lnk_attributes"). "</a>";
+						print "<a class=\"button_small\" href=\"index.php?page=customers/services.php&id=" .$this->obj_table_list->data[$i]["id"]. "\">" .lang_trans("services"). "</a>";						
+					print "</td>";
+				print "</tr>";
+			}
+			print "</table>";
+			print "<br />";
 
 			// display CSV/PDF download link
 			print "<p align=\"right\"><a class=\"button_export\" style=\"font-weight: normal;\"  href=\"index-export.php?mode=csv&page=customers/customers.php\">Export as CSV</a></p>";
