@@ -29,6 +29,9 @@ class page_output
 		$this->obj_menu_nav->add_item("User's Permissions", "page=user/user-permissions.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("User's Staff Access Rights", "page=user/user-staffaccess.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Delete User", "page=user/user-delete.php&id=". $this->id ."");
+		
+		//required pages
+		$this->requires["javascript"][]		= "include/user/javascript/user-permissions.js";
 	}
 
 
@@ -72,36 +75,76 @@ class page_output
 		$this->obj_form->method = "post";
 
 
-		$sql_perms_obj		= New sql_query;
-		$sql_perms_obj->string	= "SELECT * FROM `permissions` ORDER BY value='disabled' DESC, value='admin' DESC, value";
-		$sql_perms_obj->execute();
-		$sql_perms_obj->fetch_array();
+		$sql_perms_groups_obj		= New sql_query;
+		$sql_perms_groups_obj->string	= "SELECT * FROM `permissions_groups` ORDER BY id ASC";
+		$sql_perms_groups_obj->execute();
+		$sql_perms_groups_obj->fetch_array();
 		
-		foreach ($sql_perms_obj->data as $data_perms)
+		foreach ($sql_perms_groups_obj->data as $data_perms_groups)
 		{
-			// define the checkbox
+			$sql_perms_obj		= New sql_query;
+			$sql_perms_obj->string	= "SELECT * FROM permissions WHERE group_id = '" .$data_perms_groups["id"]. "' ORDER BY id DESC";
+			$sql_perms_obj->execute();
+			$sql_perms_obj->fetch_array();
+			
 			$structure = NULL;
-			$structure["fieldname"]				= $data_perms["value"];
+			$structure["fieldname"]				= "check_all_in_" .$data_perms_groups["group_name"];
 			$structure["type"]				= "checkbox";
-			$structure["options"]["label"]			= $data_perms["description"];
-			$structure["options"]["no_translate_fieldname"]	= "yes";
-
-			// check if the user has this permission
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='". $this->id ."' AND permid='". $data_perms["id"] ."'";
-			$sql_obj->execute();
-
-			if ($sql_obj->num_rows())
-			{
-				$structure["defaultvalue"] = "on";
-			}
-
-			// add checkbox
+			$structure["options"]["label"]			= "Select / Deselect all permissions in the " .$data_perms_groups["group_name"]. " group";
+			$structure["options"]["css_field_class"]	= "select_all";
 			$this->obj_form->add_input($structure);
+			$this->obj_form->subforms[$data_perms_groups["group_name"]][] = "check_all_in_" .$data_perms_groups["group_name"];
 
-			// add checkbox to subforms
-			$this->obj_form->subforms["user_permissions"][] = $data_perms["value"];
+			$num_permissions = 0;
+			$num_ticked = 0;
+			foreach ($sql_perms_obj->data as $data_perms)
+			{
+				//define checkbox
+				$structure = NULL;
+				$structure["fieldname"]				= $data_perms["value"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= $data_perms["description"];
+				$structure["options"]["no_translate_fieldname"]	= "yes";
+				$structure["options"]["css_field_class"]	= "perm_group_" .$data_perms_groups["group_name"];
+				
+				$num_permissions++;
+				
+				// check if the user has this permission
+				$sql_obj		= New sql_query;
+				$sql_obj->string	= "SELECT id FROM `users_permissions` WHERE userid='". $this->id ."' AND permid='". $data_perms["id"] ."'";
+				$sql_obj->execute();
+	
+				if ($sql_obj->num_rows())
+				{
+					$structure["defaultvalue"] = "on";
+					$num_ticked++;
+				}
+				
+				// add checkbox
+				$this->obj_form->add_input($structure);
 
+				// add checkbox to subforms
+				$this->obj_form->subforms[$data_perms_groups["group_name"]][] = $data_perms["value"];
+			}
+			
+			$structure = NULL;
+			$structure["fieldname"]		= "num_perms_in_" .$data_perms_groups["group_name"];
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $num_permissions;
+			$this->obj_form->add_input($structure);
+			$this->obj_form->subforms["hidden"][] = "num_perms_in_" .$data_perms_groups["group_name"];
+			
+			$structure = NULL;
+			$structure["fieldname"]		= "num_ticked_in_" .$data_perms_groups["group_name"];
+			$structure["type"]		= "hidden";
+			$structure["defaultvalue"]	= $num_ticked;
+			$this->obj_form->add_input($structure);
+			$this->obj_form->subforms["hidden"][] = "num_ticked_in_" .$data_perms_groups["group_name"];
+			
+			if ($num_permissions == $num_ticked)
+			{
+				$this->obj_form->structure["check_all_in_" .$data_perms_groups["group_name"]]["defaultvalue"] = "on";
+			}
 		}
 	
 		// user ID (hidden field)
@@ -120,7 +163,7 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["hidden"]		= array("id_user");
+		$this->obj_form->subforms["hidden"][]		= "id_user";
 		$this->obj_form->subforms["submit"]		= array("submit");
 
 		
