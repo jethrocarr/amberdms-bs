@@ -229,6 +229,8 @@ $(document).ready(function()
 		$("#add_record_link_" + c_id).show();
 		$("#add_record_form_" + c_id).hide();
 		$("#insert_record_" + c_id).addClass("disabled_link");
+		
+		return false;
 	});
 	
 	

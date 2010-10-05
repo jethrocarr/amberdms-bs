@@ -610,7 +610,7 @@ class page_output
 								print "<td>Detail</td>";
 								print "<td><input name=\"new_record_detail_$i\" /></td>";
 							print "</tr><tr>";
-								print "<td colspan=2 class=\"insert_new_record\"><a class=\"disabled_link button_small\" id=\"insert_record_$i\">Insert</a></td></tr>";
+								print "<td colspan=2 class=\"insert_new_record\"><a href=\"\" class=\"disabled_link button_small\" id=\"insert_record_$i\">Insert</a></td></tr>";
 							print "</table>";
 						print "</div>";
 						print "</div>";
