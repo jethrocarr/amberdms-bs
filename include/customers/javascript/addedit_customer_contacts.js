@@ -58,6 +58,7 @@ $(document).ready(function()
 	//delete contact
 	$("a[id^='delete_contact_']").live("click", function()
 	{
+
 		id = this.id.substr(15);
 
 		if ($("input[name='delete_contact_" + id + "']").val() == "false")
@@ -71,7 +72,7 @@ $(document).ready(function()
 			$("#change_contact_" + id).addClass("disabled_link");
 			$("input[id^='contact_" + id + "_detail_']").attr("disabled", "disabled");
 			$("#contact_" + id).attr("disabled", "disabled");
-			$("select[name=role_" + id + "']").attr("disabled", "disabled");
+			$("select[name='role_" + id + "']").attr("disabled", "disabled");
 			$("textarea[name^='description_" + id + "']").attr("disabled", "disabled");
 		}
 		
@@ -86,7 +87,7 @@ $(document).ready(function()
 			$("#change_contact_" + id).removeClass("disabled_link");
 			$("input[id^='contact_" + id + "_detail_']").removeAttr("disabled");
 			$("#contact_" + id).removeAttr("disabled");
-			$("select[name=role_" + id + "']").removeAttr("disabled");
+			$("select[name='role_" + id + "']").removeAttr("disabled");
 			$("textarea[name^='description_" + id + "']").removeAttr("disabled");
 		}
 		
