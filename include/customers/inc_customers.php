@@ -496,7 +496,8 @@ class customer
 	
 		$sql_obj->string	= "UPDATE customer_contacts SET
 						contact = '" .$this->data["contacts"][$index]["contact"]. "', 
-						description = '" .$this->data["contacts"][$index]["description"]. "' 
+						description = '" .$this->data["contacts"][$index]["description"]. "', 
+						role = '" .$this->data["contacts"][$index]["role"]. "'
 						WHERE id = '" .$this->data["contacts"][$index]["contact_id"]. "'";		
 		$sql_obj->execute();
 		
@@ -528,8 +529,8 @@ class customer
 	function action_create_contact($index)
 	{
 		$sql_obj = New sql_query;		
-		$sql_obj->string	= "INSERT INTO customer_contacts(customer_id, contact, description)
-						VALUES ('" .$this->id. "', '" .$this->data["contacts"][$index]["contact"]. "', '" .$this->data["contacts"][$index]["description"]. "')";
+		$sql_obj->string	= "INSERT INTO customer_contacts(customer_id, contact, description, role)
+						VALUES ('" .$this->id. "', '" .$this->data["contacts"][$index]["contact"]. "', '" .$this->data["contacts"][$index]["description"]. "', '" .$this->data["contacts"][$index]["role"]. "')";
 		$sql_obj->execute();
 		
 		$this->data["contacts"][$index]["contact_id"] = $sql_obj->fetch_insert_id();

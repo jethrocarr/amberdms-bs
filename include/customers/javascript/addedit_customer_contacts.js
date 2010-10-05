@@ -1,8 +1,6 @@
 $(document).ready(function()
 {
-	
-//	console.log("testing", 1, 2, );
-	
+
 	//disable a link
 	$(".disabled_link").live("click", function()
 	{
@@ -15,6 +13,7 @@ $(document).ready(function()
 	{
 		$("input").removeAttr("disabled");
 		$("textarea").removeAttr("disabled");
+		$("select").removeAttr("disabled");
 	});
 	
 	
@@ -31,6 +30,7 @@ $(document).ready(function()
 			$("#add_record_" + id).addClass("disabled_link");
 			$("#change_contact_" + id).addClass("disabled_link");
 			$("input[id^='contact_" + id + "_detail_']").attr("disabled", "disabled");
+			$("select[name=role_" + id + "']").attr("disabled", "disabled");
 			$("#contact_" + id).attr("disabled", "disabled");
 			$("textarea[name^='description_" + id + "']").attr("disabled", "disabled");
 		}
@@ -71,6 +71,7 @@ $(document).ready(function()
 			$("#change_contact_" + id).addClass("disabled_link");
 			$("input[id^='contact_" + id + "_detail_']").attr("disabled", "disabled");
 			$("#contact_" + id).attr("disabled", "disabled");
+			$("select[name=role_" + id + "']").attr("disabled", "disabled");
 			$("textarea[name^='description_" + id + "']").attr("disabled", "disabled");
 		}
 		
@@ -85,6 +86,7 @@ $(document).ready(function()
 			$("#change_contact_" + id).removeClass("disabled_link");
 			$("input[id^='contact_" + id + "_detail_']").removeAttr("disabled");
 			$("#contact_" + id).removeAttr("disabled");
+			$("select[name=role_" + id + "']").removeAttr("disabled");
 			$("textarea[name^='description_" + id + "']").removeAttr("disabled");
 		}
 		
@@ -130,7 +132,11 @@ $(document).ready(function()
 			$("#contact_text_" + id).hide();
 			$("#description_text_" + id).hide();
 			$("input[name='contact_" + id + "']").show();
-			$("textarea[name='description_" + id + "']").show();			
+			$("label[for='contact_" + id + "']").parent("span").show();
+			$("textarea[name='description_" + id + "']").show();
+			$("label[for='description_" + id + "']").parent("span").show();
+			$("select[name='role_" + id + "']").show();
+			$("label[for='role_" + id + "']").parent("span").show();
 			$("input[name='change_contact_" + id + "']").val("open");
 			$("#change_contact_" + id).text("done");
 		}
@@ -139,11 +145,16 @@ $(document).ready(function()
 		{
 			contact = $("input[name='contact_" + id + "']").val();
 			description = $("textarea[name='description_" + id + "']").val();
+			role = $("select[name='role_" + id + "']").val()
 			
-			$("#contact_text_" + id).html("<b>" + contact + "</b>").show();
+			$("#contact_text_" + id).html("<b>" + contact + "</b><br />(" + role + ")").show();
 			$("#description_text_" + id).text(description).show();
 			$("input[name='contact_" + id + "']").hide();
-			$("textarea[name='description_" + id + "']").hide();			
+			$("label[for='contact_" + id + "']").parent("span").hide();
+			$("textarea[name='description_" + id + "']").hide();
+			$("label[for='role_" + id + "']").parent("span").hide();
+			$("select[name='role_" + id + "']").hide();
+			$("label[for='description_" + id + "']").parent("span").hide();
 			$("input[name='change_contact_" + id + "']").val("closed");
 			$("#change_contact_" + id).text("change...");
 		}
@@ -233,10 +244,21 @@ $(document).ready(function()
 						
 						"<tr><td width=\"25%\">" +
 							"<input type=\"hidden\" value=\"\" name=\"contact_id_" + c_id + "\">" +
-							"<input id=\"contact_" + c_id + "\" class=\"hidden_form_field new_field\" style=\"width:200px;\" value=\"Enter new contact name\" name=\"contact_" + c_id + "\">" +
+							"<span class=\"hidden_text\">" +
+								"<label for=\"contact_" + c_id + "\">Name: </label><br />" +
+							"</span>" +
+							"<input id=\"contact_" + c_id + "\" class=\"hidden_form_field new_field\" style=\"width:200px;\" value=\"\" name=\"contact_" + c_id + "\">" +
+							"<span class=\"hidden_text\">" +
+								"<br /><label for=\"role_" + c_id + "\">Role: </label><br />" +
+							"</span>" +
+							"<select class=\"hidden_form_field\" style=\"width: 205px;\" name=\"role_" + c_id + "\">" +
+								"<option value=\"other\" selected=\"\">other</option>" +
+							"</select>" +
 							"<input type=\"hidden\" value=\"0\" name=\"num_records_" + c_id + "\">" +
 							"<div id=\"contact_text_" + c_id + "\">" +
 								"<b>&nbsp;</b>" +
+								"<br />" +
+								"(other)" +
 							"</div>" +
 							
 						"</td><td class=\"delete_contact_cell\" width=\"75%\">" +
@@ -245,7 +267,10 @@ $(document).ready(function()
 						"</td></tr><tr>" +
 						
 						"<td class=\"description_cell\" width=\"25%\">" +
-							"<textarea class=\"hidden_form_field new_field\" style=\"width:205px;\" name=\"description_" + c_id + "\">Enter new contact description</textarea>" +
+							"<span class=\"hidden_text\">" +
+								"<label for=\"description_" + c_id + "\">Description: </label><br />" +
+							"</span>" +
+							"<textarea class=\"hidden_form_field new_field\" style=\"width:205px;\" name=\"description_" + c_id + "\"></textarea>" +
 							"<p id=\"description_text_" + c_id + "\" class=\"contact_description\">&nbsp;</p>" +
 							"<p class=\"change_contact\">" +
 								"<a id=\"change_contact_" + c_id + "\" href=\"\">done</a>" +
@@ -308,10 +333,14 @@ $(document).ready(function()
 		$("#contact_text_" + c_id).hide();
 		$("#description_text_" + c_id).hide();		
 		$("input[name='contact_" + c_id + "']").show();
-		$("textarea[name='description_" + c_id + "']").show();		
+		$("label[for='contact_" + c_id + "']").parent("span").show();
+		$("textarea[name='description_" + c_id + "']").show();
+		$("label[for='description_" + c_id + "']").parent("span").show();
+		$("select[name='role_" + c_id + "']").show();
+		$("label[for='role_" + c_id + "']").parent("span").show();
 		$("#add_record_link_" + c_id).hide();
 		$("#add_record_form_" + c_id).show();
-		
+				
 		return false;
 	});
 	
@@ -339,31 +368,6 @@ $(document).ready(function()
 		}			
 	});
 	
-	
-	//edit description of contact (for default contact - where name cannot be edited)
-	$("a[id^='change_description_']").live("click", function()
-	{
-		id = this.id.substr(19);
-		
-		if ($("input[name='change_contact_" + id + "']").val() == "closed")
-		{
-			$("#description_text_" + id).hide();
-			$("textarea[name='description_" + id + "']").show();			
-			$("input[name='change_contact_" + id + "']").val("open");
-			$("#change_description_" + id).text("done");
-		}
-		
-		else if ($("input[name='change_contact_" + id + "']").val() == "open")
-		{
-			description = $("textarea[name='description_" + id + "']").val();
-			$("#description_text_" + id).text(description).show();
-			$("textarea[name='description_" + id + "']").hide();			
-			$("input[name='change_contact_" + id + "']").val("closed");
-			$("#change_description_" + id).text("change...");
-		}
-		
-		return false;
-	});
 	
 	
 	//show insert record form in add customer if fresh form

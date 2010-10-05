@@ -55,31 +55,6 @@ class page_output
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
-		
-//		$structure = NULL;
-//		$structure["fieldname"] = "name_contact";
-//		$structure["type"]	= "input";
-//		$this->obj_form->add_input($structure);
-//
-//		$structure = NULL;
-//		$structure["fieldname"] = "name_contact";
-//		$structure["type"]	= "input";
-//		$this->obj_form->add_input($structure);
-//
-//		$structure = NULL;
-//		$structure["fieldname"] = "contact_email";
-//		$structure["type"]	= "input";
-//		$this->obj_form->add_input($structure);
-//
-//		$structure = NULL;
-//		$structure["fieldname"] = "contact_phone";
-//		$structure["type"]	= "input";
-//		$this->obj_form->add_input($structure);
-//
-//		$structure = NULL;
-//		$structure["fieldname"] = "contact_fax";
-//		$structure["type"]	= "input";
-//		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"]		= "date_start";
@@ -92,8 +67,6 @@ class page_output
 		$structure["fieldname"] = "date_end";
 		$structure["type"]	= "date";
 		$this->obj_form->add_input($structure);
-
-//		$this->obj_form->subforms["customer_view"]	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_fax", "contact_email", "date_start", "date_end");
 
 		
 		//contacts
@@ -129,11 +102,11 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "contact_" .$i;
 			$structure["type"]		= "input";
-			if ($i == 0)
+			if ($_SESSION["error"]["contact_" .$i. "-error"])
 			{
-				$structure["defaultvalue"]	= "accounts";
+				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
-			if ($_SESSION["error"]["contact_" .$i. "-error"] && $i != 0)
+			else if (empty($_SESSION["error"]) && $i == 0)
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -144,17 +117,48 @@ class page_output
 			$structure["options"]["width"]			= "200";
 			$this->obj_form->add_input($structure);
 			
+			
 			$structure = NULL;
-			$structure["fieldname"]		= "description_" .$i;
-			$structure["type"]		= "textarea";
-			$structure["defaultvalue"]	= "Default contact";
-			if ($_SESSION["error"]["contact_" .$i. "-error"] && $i != 0)
+			$structure["fieldname"]		= "role_" .$i;
+			$structure["type"]		= "dropdown";
+			$structure["options"]["width"]	= "205";
+			if ($i == 0)
+			{
+				$structure["values"]			= array("accounts");
+				$structure["options"]["autoselect"]	= "yes";
+				$structure["options"]["disabled"]	= "yes";
+			}
+			else
+			{
+				$structure["values"]			= array("other");
+				$structure["options"]["autoselect"]	= "yes";
+			}
+			if ($_SESSION["error"]["contact_" .$i. "-error"])
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
-			else if (empty($_SESSION["error"]))
+			else if (empty($_SESSION["error"]) && $i == 0)
 			{
-				$structure["options"]["css_field_class"]	= "new_field";
+				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
+			}
+			else
+			{
+				$structure["options"]["css_field_class"]	= "hidden_form_field";
+			}			
+			$this->obj_form->add_input($structure);
+			
+			
+			
+			$structure = NULL;
+			$structure["fieldname"]		= "description_" .$i;
+			$structure["type"]		= "textarea";
+			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			{
+				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
+			}
+			else if (empty($_SESSION["error"]) && $i == 0)
+			{
+				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
 			else
 			{
@@ -398,10 +402,46 @@ class page_output
 					//contact name
 					print "<td width=\"25%\">";
 						$this->obj_form->render_field("contact_id_$i");
+						
+						if (empty($_SESSION["error"]) && $i == 0)
+						{
+							print "<span>";
+						}
+						else if ($_SESSION["error"]["contact_" .$i. "-error"])
+						{
+							print "<span>";
+						}
+						else
+						{
+							print "<span class=\"hidden_text\">";
+						}
+						print "<label for=\"contact_$i\" >Name: </label><br />";
+						print "</span>";
 						$this->obj_form->render_field("contact_$i");
+						
+						if (empty($_SESSION["error"]) && $i == 0)
+						{
+							print "<span>";
+						}
+						else if ($_SESSION["error"]["contact_" .$i. "-error"])
+						{
+							print "<span>";
+						}
+						else
+						{
+							print "<span class=\"hidden_text\">";
+						}
+						print "<label for=\"role_$i\">Role: </label><br />";
+						print "</span>";
+						$this->obj_form->render_field("role_$i");
+						
 						$this->obj_form->render_field("num_records_$i");
 						print "<div ";
-							if($_SESSION["error"]["contact_" .$i. "-error"] && $i != 0)
+							if($_SESSION["error"]["contact_" .$i. "-error"])
+							{
+								print "class=\"hidden_text\" ";
+							}
+							else if (empty($_SESSION["error"]) && $i == 0)
 							{
 								print "class=\"hidden_text\" ";
 							}
@@ -426,9 +466,24 @@ class page_output
 					print "<tr>";
 					//contact description
 					print "<td width=\"25%\" class=\"description_cell\">";
+					
+					if (empty($_SESSION["error"]) && $i == 0)
+					{
+						print "<span>";
+					}
+					else if ($_SESSION["error"]["contact_" .$i. "-error"])
+					{
+						print "<span>";
+					}
+					else
+					{
+						print "<span class=\"hidden_text\">";
+					}
+						print "<label for=\"description_$i\">Description: </label><br />";
+						print "</span>";
 						$this->obj_form->render_field("description_$i");
 						print "<p class=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"] && $i != 0)
+							if($_SESSION["error"]["contact_" .$i. "-error"])
 							{
 								print "hidden_text ";
 							}
@@ -446,11 +501,7 @@ class page_output
 						}
 						else if (empty($_SESSION["error"]) && $i == 0)
 						{
-							print "<p class=\"change_contact\"><a id=\"change_description_$i\" href=\"\" >done</a></p>";
-						}
-						else if ($i == 0)
-						{
-							print "<p class=\"change_contact\"><a id=\"change_description_$i\" href=\"\" >change...</a></p>";
+							print "<p class=\"change_contact\"><a id=\"change_contact_$i\" href=\"\" >done</a></p>";
 						}
 						else
 						{
@@ -458,7 +509,7 @@ class page_output
 						}
 												
 						print "<input type=\"hidden\" name=\"change_contact_$i\" value=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"] && $i != 0)
+							if($_SESSION["error"]["contact_" .$i. "-error"])
 							{
 								print "open\" />";
 							}

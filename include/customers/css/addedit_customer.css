@@ -20,6 +20,7 @@
 .delete_contact_cell
 {
 	text-align: 	right;
+	vertical-align: top;
 }
 
 .contact_description

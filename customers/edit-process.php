@@ -21,8 +21,6 @@ if (user_permissions_get('customers_write'))
 	$num_del_contacts = 0;
 	$num_del_records = array();
 
-	log_debug("inc_customers", "SESSION TRACK - beginning of edit-process -0" . $_SESSION["error"]["contact_0"]);
-	log_debug("inc_customers", "SESSION TRACK - beginning of edit-process - 1 " . $_SESSION["error"]["contact_1"]);
 	/*
 		Load POST data
 	*/
@@ -71,6 +69,7 @@ if (user_permissions_get('customers_write'))
 	{	
 		$obj_customer->data["contacts"][$i]["contact_id"]	= @security_form_input_predefined("int", "contact_id_$i", 0, "");
 		$obj_customer->data["contacts"][$i]["delete_contact"]	= @security_form_input_predefined("any", "delete_contact_$i", 0, "");
+		$obj_customer->data["contacts"][$i]["role"]		= @security_form_input_predefined("any", "role_$i", 0, "");
 		$obj_customer->data["contacts"][$i]["contact"]		= @security_form_input_predefined("any", "contact_" .$i, 0, "");
 		$obj_customer->data["contacts"][$i]["description"]	= @security_form_input_predefined("any", "description_$i", 0, "");
 		

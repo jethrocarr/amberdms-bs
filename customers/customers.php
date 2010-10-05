@@ -105,7 +105,6 @@ class page_output
 	*/
 	function render_html()
 	{
-
 		// heading
 		print "<h3>CUSTOMER LIST</h3><br><br>";
 
@@ -144,18 +143,20 @@ class page_output
 			// display data
 			for ($i=0; $i < $this->obj_table_list->data_num_rows; $i++)
 			{
+				$customer_id = $this->obj_table_list->data[$i]["id"];
+				$contact_id = sql_get_singlevalue("SELECT id AS value FROM customer_contacts WHERE customer_id = '" .$customer_id. "' AND role = 'accounts' LIMIT 1");
 				print "<tr>";
 				foreach ($this->obj_table_list->columns as $columns)
 				{
-					print "<td valign=\"top\">";
-						$content = $this->obj_table->data_render[$i][$columns];
-						
+					print "<td valign=\"top\">";						
 						//contact name
 						if ($columns == "name_contact")
 						{
-							print lang_trans("accounts");
-							print $contact_id;
-							print $value;
+							$value = sql_get_singlevalue("SELECT contact AS value FROM customer_contacts WHERE id = '" .$contact_id. "' LIMIT 1");
+							if ($value)
+							{
+								print $value;
+							}
 						}
 						
 						//contact phone
@@ -167,6 +168,7 @@ class page_output
 								print $value;
 							}
 						}
+						
 						//contact mobile
 						else if ($columns == "contact_mobile")
 						{
@@ -202,6 +204,7 @@ class page_output
 						{
 							if ($this->obj_table_list->data_render[$i][$columns])
 							{
+//								print $columns;
 								print $this->obj_table_list->data_render[$i][$columns];
 							}
 							else

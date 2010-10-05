@@ -304,8 +304,13 @@ class invoice_form_export
 		/*
 			Fetch basic customer information
 		*/
+		$obj_sql_contact		= New sql_query;
+		$obj_sql_contact->string	= "SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$obj_sql_invoice->data[0]["customerid"]. "' AND role = 'accounts'";
+		$obj_sql_contact->execute();
+		$obj_sql_contact->fetch_array();
+		
 		$obj_sql_customer		= New sql_query;
-		$obj_sql_customer->string	= "SELECT contact_email FROM customers WHERE id='". $obj_sql_invoice->data[0]["customerid"] ."' LIMIT 1";
+		$obj_sql_customer->string	= "SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'email' LIMIT 1";
 		$obj_sql_customer->execute();
 		$obj_sql_customer->fetch_array();
 
@@ -342,11 +347,8 @@ class invoice_form_export
 		}
 		
 		
-		//echo $email_message;
 		$email_message = str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $email_message);
 		
-		//echo "<pre>".print_r($email_message, true)."</pre>";
-
 
 		/*
 			Define email form

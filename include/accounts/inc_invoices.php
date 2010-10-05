@@ -366,7 +366,7 @@ class invoice
 
 		// fetch customer data
 		$sql_customer_obj		= New sql_query;
-		$sql_customer_obj->string	= "SELECT code_customer, name_contact, name_customer, tax_number, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
+		$sql_customer_obj->string	= "SELECT code_customer, name_customer, tax_number, address1_street, address1_city, address1_state, address1_country, address1_zipcode FROM customers WHERE id='". $this->data["customerid"] ."' LIMIT 1";
 		$sql_customer_obj->execute(); 
 		$sql_customer_obj->fetch_array(); 
 
@@ -374,7 +374,7 @@ class invoice
 		// customer fields
 		$this->invoice_fields["code_customer"] = $sql_customer_obj->data[0]["code_customer"]; 
 		$this->invoice_fields["customer_name"] = $sql_customer_obj->data[0]["name_customer"]; 
-		$this->invoice_fields["customer_contact"] = $sql_customer_obj->data[0]["name_contact"]; 
+		$this->invoice_fields["customer_contact"] = sql_get_singlevalue("SELECT contact AS value FROM customer_contacts WHERE customer_id = '" .$this->data["customerid"]. "' AND role = 'accounts'");
 		$this->invoice_fields["customer_address1_street"] = $sql_customer_obj->data[0]["address1_street"]; 
 		$this->invoice_fields["customer_address1_city"] = $sql_customer_obj->data[0]["address1_city"]; 
 		$this->invoice_fields["customer_address1_state"] = $sql_customer_obj->data[0]["address1_state"]; 
