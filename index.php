@@ -168,6 +168,7 @@ $theme_path = "themes/".$folder."/";
 <script type="text/javascript" src="external/jquery/jquery-1.4.2.js"></script>
 <script type="text/javascript" src="external/jquery-ui/jquery-ui-1.8.2.js"></script>
 <script type="text/javascript" src="include/javascript/javascript.js"></script>
+<script type="text/javascript" src="include/language/javascript/translate_ui.js"></script>
 
 
 <?php
@@ -191,6 +192,20 @@ if (isset($page_obj->requires["javascript"]))
 
 <body>
 
+<?php
+
+/*
+	If installed, include the translation tools
+
+	(the translation tools have their own functions for processing the request)
+*/
+if (file_exists("language/translate.php"));
+{
+	include_once("language/translate.php");
+}
+
+?>
+
 
 <!-- Main Structure Table -->
 <table id="table_main_struct">
@@ -212,7 +227,7 @@ if (isset($page_obj->requires["javascript"]))
 				//if in translation mode, print short explanation and button to form
 				if (isset($_SESSION["user"]["translation"]) && ($_SESSION["user"]["translation"]=="show_all_translatable_fields" || $_SESSION["user"]["translation"]=="show_only_non-translated_fields"))
 				{
-					print "<p> <strong><a href=\"javascript:openPopup('popup.php?page=popup/translation_form.php')\"><img src=\"images/buttons/translate_app.gif\" alt=\"Translate App\" border=\"0\"></a></strong> </p>";
+					print "<p> <strong><a href=\"#\" id=\"trans_popup_activate\"><img src=\"images/buttons/translate_app.gif\" alt=\"Translate App\" border=\"0\"></a></strong> </p>";
 				}
 			}
 

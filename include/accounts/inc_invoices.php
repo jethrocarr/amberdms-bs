@@ -1443,6 +1443,7 @@ class invoice
 		// prepare headers
 		$mail_headers = array(
 				'From'   	=> $email_sender,
+				'Return-Path'	=> $email_sender,
 				'Subject'	=> $email_subject,
 				'Cc'		=> $email_cc,
 				'Bcc'		=> $email_bcc

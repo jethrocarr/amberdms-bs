@@ -145,7 +145,7 @@ if (user_online())
 		}
 		
 		//translate options
-		if(user_permissions_get("translation_edit") || user_permissions_get("translation_add_new"))
+		if (user_permissions_get("devel_translate"))
 		{
 			$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'translation', '". $data["option_translation"] ."')";
 			$sql_obj->execute();
