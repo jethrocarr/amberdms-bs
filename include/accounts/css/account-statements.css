@@ -2,10 +2,18 @@
  	Formatting for accounts/ar/account-statements.php
  */
 
+.table_highlight_bubble
+{
+	float: right;
+}
 
- #submit_button
- {
- 	text-align: right;
- }
+#submit_form
+{
+	text-align: left;
+}
 
+#submit_button
+{
+	text-align: right;
+}
 

@@ -12,12 +12,15 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 // custom includes
-//require("../../include/accounts/inc_invoices.php");
 require("../../include/accounts/inc_invoices_process.php");
 
 
 if (user_permissions_get('accounts_ar_write'))
 {
+	//array to hold errors when no customer email is set
+	//set error messages at end of process to ensure other emails are sent
+	$error_array = array();
+	
 	//get num records
 	$num_records = @security_form_input_predefined("int", "num_records", 0, "");
 	
@@ -51,10 +54,9 @@ if (user_permissions_get('accounts_ar_write'))
 			
 			//fetch email to address, set error if no address is set
 			$to = sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'email' LIMIT 1");
-			
 			if (!$to)
 			{
-				$_SESSION["error"]["message"][] = "Reminder for Invoice " .$obj_sql_invoice->data[0]["code_invoice"]. " was not sent as no email is set for the customer's default account.";
+				$error_array[] = $obj_sql_invoice->data[0]["code_invoice"];
 				continue;
 			}
 						
@@ -68,7 +70,7 @@ if (user_permissions_get('accounts_ar_write'))
 			$obj_invoice->load_data_export();
 			
 			
-			//create email message
+			//get templating keys and values
 			$invoice_data = $obj_invoice->invoice_fields;		
 			$invoice_data_parts['keys'] =  array_keys($invoice_data);
 			$invoice_data_parts['values'] = array_values($invoice_data);
@@ -86,28 +88,44 @@ if (user_permissions_get('accounts_ar_write'))
 			$invoice_data_parts['values'][]	= trim($days_overdue);
 		
 			
-			$email_message	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_REMINDER_EMAIL') LIMIT 1");		
+			//create email message
+			$email_message	= @security_form_input_predefined("any", "email_message", 0, "");		
 			$email_message 	= str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $email_message);
 			
+			//create subject
+			$subject	= @security_form_input_predefined("any", "subject", 0, "");
+			$subject 	= str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $subject);
 			
-			//other email details
-			$from	 	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
-			$subject	= "Overdue Notice: Invoice ". $obj_sql_invoice->data[0]["code_invoice"];
+			
+			//sender
+			$from = @security_form_input_predefined("any", "sender", 0, "");
+			
+			if ($from == "user")
+			{
+				$from = user_information("contact_email");
+			}
+			else
+			{
+				$from = sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+			}
+			
 
-			
+			log_debug("EMAIL", "avout to send" .$i);
 			// send email
 			$obj_invoice->email_invoice($from, $to, "", "", $subject, $email_message);
 			
 			$_SESSION["notification"]["message"][] = "Reminder email for Invoice " .$obj_sql_invoice->data[0]["code_invoice"]. "was sent successfully.";
-//			print "hi";
 		}
 	}
 	
-//	header("Location: index.php?page=accounts/ar/account-statements.php");
-//	/development/amberdms/oss-amberdms-bs/trunk/accounts/index.php 
+	//set error messages for emails that couldn't be sent
+	for ($i = 0; $i < count($error_array); $i++)
+	{
+		$_SESSION["error"]["message"][] = "Reminder for Invoice " .$error_array[$i]. " was not sent as no email is set for the customer's default account.";
+	}
+	
 	header("Location: ../../index.php?page=accounts/ar/account-statements.php");
 	exit(0);
-//print "yoyo";
 }
 else
 {

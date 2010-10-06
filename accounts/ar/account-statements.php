@@ -142,6 +142,31 @@ class page_output
 			$this->obj_form->add_input($structure);
 		}
 		
+		//form fields for email options
+		$structure = NULL;
+		$structure["fieldname"] 	= "sender";
+		$structure["type"]		= "radio";
+		$structure["defaultvalue"]	= "system";		
+		$structure["values"]		= array("system", "user");
+		$structure["translations"]["system"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." &lt;". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") ."&gt;";
+		$structure["translations"]["user"]	= user_information("realname") . " &lt;". user_information("contact_email") ."&gt;";		
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "subject";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= "Overdue Notice: Invoice (code_invoice)";
+		$structure["options"]["width"]	= "600";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_message";
+		$structure["type"]		= "textarea";
+		$structure["defaultvalue"] = sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_REMINDER_EMAIL') LIMIT 1");
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
+		$this->obj_form->add_input($structure);
+		
 		$structure = NULL;
 		$structure["fieldname"]		= "num_records";
 		$structure["type"]		= "hidden";
@@ -152,7 +177,8 @@ class page_output
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Send Reminders";
-		$this->obj_form->add_input($structure);		
+		$this->obj_form->add_input($structure);	
+
 		
 		//load any error data
 		$this->obj_form->load_data();
@@ -294,9 +320,22 @@ class page_output
 			$this->obj_form->render_field("num_records");
 			print "<br />";
 
+			print "<table class=\"table_highlight_bubble\"><tr><td id=\"email_form\">";
+			print "<div id=\"submit_form\">";
+			print "<div>";
+				print "<table>";
+				print "<col class=\"table_labels\" />";
+				print "<col class=\"table_fields\" />";
+				$this->obj_form->render_row("sender");
+				$this->obj_form->render_row("subject");
+				$this->obj_form->render_row("email_message");
+				print "</table>";
+			print "</div>";
 			print "<div id=\"submit_button\">";
+				print "<br />";
 				$this->obj_form->render_field("submit");
 			print "</div>";
+			print "</div></td></tr></table>";
 			print "</form>";
 		}
 	}
