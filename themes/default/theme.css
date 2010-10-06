@@ -394,3 +394,24 @@ a.button_export
 	background-color: #ffeda4;
 }
 
+
+/*account statements*/
+ .overdue_30
+ {
+ 	background-color: #ff9393;
+ }
+
+ .overdue_60
+ {
+ 	background-color: #ff4141;
+ }
+ 
+ .overdue_90
+ {
+ 	background-color: #ee0000;
+ }
+
+ .last_sent_30
+ {
+ 	background-color: #ff4500;
+ }
