@@ -1344,7 +1344,7 @@ class form_input
 	
 		if (!$this->action || !$this->method)
 		{
-			print "Warning: No form action or method defined for form class<br>";
+			log_write("warning", "inc_form", "No form action or method defined for form class");
 		}
 
 
