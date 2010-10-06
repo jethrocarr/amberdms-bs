@@ -76,24 +76,27 @@ class page_output
 
 
 		$sql_perms_groups_obj		= New sql_query;
-		$sql_perms_groups_obj->string	= "SELECT * FROM `permissions_groups` ORDER BY id ASC";
+		$sql_perms_groups_obj->string	= "SELECT * FROM `permissions_groups` ORDER BY priority ASC";
 		$sql_perms_groups_obj->execute();
 		$sql_perms_groups_obj->fetch_array();
 		
 		foreach ($sql_perms_groups_obj->data as $data_perms_groups)
 		{
 			$sql_perms_obj		= New sql_query;
-			$sql_perms_obj->string	= "SELECT * FROM permissions WHERE group_id = '" .$data_perms_groups["id"]. "' ORDER BY id DESC";
+			$sql_perms_obj->string	= "SELECT * FROM permissions WHERE group_id = '" .$data_perms_groups["id"]. "' ORDER BY id ASC";
 			$sql_perms_obj->execute();
 			$sql_perms_obj->fetch_array();
-			
-			$structure = NULL;
-			$structure["fieldname"]				= "check_all_in_" .$data_perms_groups["group_name"];
-			$structure["type"]				= "checkbox";
-			$structure["options"]["label"]			= "Select / Deselect all permissions in the " .$data_perms_groups["group_name"]. " group";
-			$structure["options"]["css_field_class"]	= "select_all";
-			$this->obj_form->add_input($structure);
-			$this->obj_form->subforms[$data_perms_groups["group_name"]][] = "check_all_in_" .$data_perms_groups["group_name"];
+		
+			if ($data_perms_groups["group_name"] != "general")
+			{
+				$structure = NULL;
+				$structure["fieldname"]				= "check_all_in_" .$data_perms_groups["group_name"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= "Select / Deselect all permissions in the " .$data_perms_groups["group_name"]. " group";
+				$structure["options"]["css_field_class"]	= "select_all";
+				$this->obj_form->add_input($structure);
+				$this->obj_form->subforms[$data_perms_groups["group_name"]][] = "check_all_in_" .$data_perms_groups["group_name"];
+			}
 
 			$num_permissions = 0;
 			$num_ticked = 0;
