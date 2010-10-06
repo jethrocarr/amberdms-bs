@@ -44,18 +44,6 @@ my $name_base		= "amberdms-bs";
 my $name_withversion	= "amberdms-bs-$version";
 
 
-# update CVS tag?
-print "Would you like to CVS tag the current source with tag of \"v_$version\"? (y/n)\n";
-$input = get_question('^[y|n]$');
-
-if ($input eq "y")
-{
-	print "Please enter CVS module name:\n";
-	$input = get_question('^\S*$');
-	system("cvs rtag v_$version $input");
-}
-
-
 # make sure destination data does not exist.
 if (-e "/tmp/$name_withversion" || -e "/tmp/$name_withversion.tar.bz2")
 {
@@ -78,8 +66,9 @@ system("cp -avr * /tmp/$name_withversion/");
 # we have finished with the orignal source
 chdir("/tmp");
 
-# remove CVS stuff
+# remove CVS/SVN stuff
 system("find $name_withversion/* -type d | grep CVS | sed \"s/^/rm -rf /\" | sh");
+system("find $name_withversion/* -type d | grep .svn | sed \"s/^/rm -rf /\" | sh");
 
 # remove a config file if one exists
 system("rm -f $name_withversion/include/config-settings.php");
