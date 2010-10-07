@@ -35,7 +35,6 @@ class customer
 
 	function verify_id()
 	{
-	log_debug("inc_customers", "SESSION TRACK" . $_SESSION["error"]["contact_0"]);
 		log_debug("inc_customers", "Executing verify_id()");
 
 		if ($this->id)
@@ -103,6 +102,8 @@ class customer
 	*/
 	function verify_uniqueness_contact ($index)
 	{
+		log_debug("inc_customers", "Executing verify_uniqueness_contact($index)");
+
 		$unique = "unique";
 		if ($this->data["contacts"][$index]["delete_contact"] == "true")
 		{
@@ -135,6 +136,8 @@ class customer
 	*/
 	function verify_name_contact ($index)
 	{
+		log_debug("inc_customers", "Executing verify_name_contact($index)");
+
 		if ($this->data["contacts"][$index]["delete_contact"] == "true")
 		{
 			return 1;
@@ -420,20 +423,19 @@ class customer
 		{
 			if (empty($this->data["contacts"][$i]["contact_id"]) && 
 				$this->data["contacts"][$i]["delete_contact"] == "false" &&
-				!empty($this->data["contacts"][$i]["contact"]) &&
-				!empty($this->data["contacts"][$i]["description"]))
+				!empty($this->data["contacts"][$i]["contact"]))
 			{
-				//create new contact
+				// create new contact
 				$this->action_create_contact($i);
 			}
 			else if ($this->data["contacts"][$i]["delete_contact"] == "true")
 			{
-				//delete contact
+				// delete contact
 				$this->action_delete_contact($i);
 			}
 			else
 			{
-				//update contact
+				// update contact
 				$this->action_update_contact($i);
 			}
 		}
@@ -491,7 +493,10 @@ class customer
 	 	Updates the contact
 	 */
 	function action_update_contact($index)
-	{	
+	{
+		log_debug("inc_customers", "Executing action_update_contact($index)");
+
+
 		$sql_obj = New sql_query;
 	
 		$sql_obj->string	= "UPDATE customer_contacts SET
@@ -528,6 +533,9 @@ class customer
 	 */
 	function action_create_contact($index)
 	{
+		log_debug("inc_customers", "Executing action_create_contact($index)");
+
+
 		$sql_obj = New sql_query;		
 		$sql_obj->string	= "INSERT INTO customer_contacts(customer_id, contact, description, role)
 						VALUES ('" .$this->id. "', '" .$this->data["contacts"][$index]["contact"]. "', '" .$this->data["contacts"][$index]["description"]. "', '" .$this->data["contacts"][$index]["role"]. "')";
@@ -553,6 +561,8 @@ class customer
 	 */
 	function action_delete_contact($index)
 	{
+		log_debug("inc_customers", "Executing action_delete_contact($index)");
+
 		$sql_obj = New sql_query;		
 		$sql_obj->string	= "DELETE FROM customer_contacts WHERE id ='" .$this->data["contacts"][$index]["contact_id"]. "'";
 		$sql_obj->execute();
@@ -572,6 +582,8 @@ class customer
 	 */
 	function action_update_record($contact_index, $record_index)
 	{
+		log_debug("inc_customers", "Executing action_update_record($contact_index, $record_index)");
+
 		$sql_obj 	= New sql_query;
 		
 		$sql_obj->string	= "UPDATE customer_contact_records SET
@@ -923,6 +935,7 @@ class customer_services extends customer
 		}	
 	}
 
+
 	/*
 		service_check_delete_lock
 
@@ -998,7 +1011,6 @@ class customer_services extends customer
 	function service_add($date_period_start)
 	{
 		log_debug("debug", "inc_services", "Executing service_add($date_period_start)");
-
 
 
 
