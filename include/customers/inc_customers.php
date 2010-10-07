@@ -725,7 +725,23 @@ class customer
 		
 		$sql_obj->string	= "DELETE FROM customers_taxes WHERE customerid='". $this->id ."'";
 		$sql_obj->execute();
-
+		
+		/*
+		 	Delete customer contacts and records
+		 */
+		
+		$sql_obj->string	= "SELECT id from customer_contacts WHERE id='" .$this->id. "'";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();		
+		foreach ($sql_obj->data as $data)
+		{
+			$sql_obj->string	= "DELETE FROM customer_contact_records WHERE contact_id='" .$data["id"]. "'";
+			$sql_obj->execute();
+		}
+		
+		$sql_obj->string	= "DELETE FROM customer_contacts WHERE id='" .$this->id. "'";
+		$sql_obj->execute();
+		
 
 		/*
 			Delete Journal
