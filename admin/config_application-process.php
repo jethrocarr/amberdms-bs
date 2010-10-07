@@ -19,16 +19,16 @@ if (user_permissions_get("admin"))
 		Load Data
 	*/
 
-	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "ACCOUNTS_AP_INVOICENUM", 1, "");
-	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "ACCOUNTS_AR_INVOICENUM", 1, "");
-	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "ACCOUNTS_GL_TRANSNUM", 1, "");
-	$data["ACCOUNTS_QUOTES_NUM"]		= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "ACCOUNTS_QUOTES_NUM", 1, "");
-	$data["CODE_ACCOUNT"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_ACCOUNT", 1, "");
-	$data["CODE_CUSTOMER"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_CUSTOMER", 1, "");
-	$data["CODE_VENDOR"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_VENDOR", 1, "");
-	$data["CODE_PRODUCT"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_PRODUCT", 1, "");
-	$data["CODE_PROJECT"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_PROJECT", 1, "");
-	$data["CODE_STAFF"]			= @security_form_input("/^[A-Za-z_-]*[0-9]*$/", "CODE_STAFF", 1, "");
+	$data["ACCOUNTS_AP_INVOICENUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_AP_INVOICENUM", 1, "");
+	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_AR_INVOICENUM", 1, "");
+	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_GL_TRANSNUM", 1, "");
+	$data["ACCOUNTS_QUOTES_NUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_QUOTES_NUM", 1, "");
+	$data["CODE_ACCOUNT"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_ACCOUNT", 1, "");
+	$data["CODE_CUSTOMER"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_CUSTOMER", 1, "");
+	$data["CODE_VENDOR"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_VENDOR", 1, "");
+	$data["CODE_PRODUCT"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_PRODUCT", 1, "");
+	$data["CODE_PROJECT"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_PROJECT", 1, "");
+	$data["CODE_STAFF"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_STAFF", 1, "");
 
 	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");

@@ -60,16 +60,14 @@ function config_generate_uniqueid($config_name, $check_sql)
 	// first set the uniqueid prefix to an empty string, in case the following tests fail	
 	$uniqueid_prefix = '';
 	
-	if(!is_numeric($uniqueid))
+	if (!is_numeric($uniqueid))
 	{
-		preg_match("/([a-zA-Z]+)*(\d+){1}/", $uniqueid, $matches);
-		// Check to see if the second item is a number, if not, we have a slight problem 
+		preg_match("/^(\S*?)([0-9]*)$/", $uniqueid, $matches);
 
-		$uniqueid_prefix = $matches[1];
-		$uniqueid = (int)$matches[2];
-
+		$uniqueid_prefix	= $matches[1];
+		$uniqueid		= (int)$matches[2];
 	}
-		
+	
 
 	if ($check_sql)
 	{
