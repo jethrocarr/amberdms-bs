@@ -1090,8 +1090,59 @@ class form_input
 				// set default size
 				if (!isset($this->structure[$fieldname]["options"]["width"]))
 					$this->structure[$fieldname]["options"]["width"] = 250;
+					
 			
+				// create value array if the SQL has not been executed yet
+				if (is_string($this->structure[$fieldname]["values"]))
+				{
+					if(!empty($this->structure[$fieldname]["defaultvalue"]))
+					{
+						$query = str_replace("CURRENTID", $this->structure[$fieldname]["defaultvalue"], $this->structure[$fieldname]["values"]);
+					}
+					else
+					{
+						$query = str_replace("CURRENTID", "0", $this->structure[$fieldname]["values"]);
+					}
+					
+					$this->structure[$fieldname]["values"] = array();
+					
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= $query;
+					$sql_obj->execute();
+					
+					if ($sql_obj->num_rows())
+					{
+						$sql_obj->fetch_array();
+						foreach ($sql_obj->data as $data)
+						{
+							// merge multiple labels into a single label
+							$label = $data["label"];
 
+							for ($i=0; $i < count(array_keys($data)); $i++)
+							{
+								if (!empty($data["label$i"]))
+								{
+									$label .= " -- ". $data["label$i"];
+								}
+							}				
+
+							// only add an option if there is an id and label for it
+							if ($data["id"] && $label)
+							{
+								$this->structure[$fieldname]["values"][]			= $data["id"];
+								$this->structure[$fieldname]["translations"][ $data["id"] ]	= $label;
+							}
+						}
+					}
+					else
+					{
+						print "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+						print "<input type=\"hidden\" name=\"$fieldname\" value=\"". "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable." ."\">";
+						break;
+					}
+				}
+				
+				
 				if (isset($this->structure[$fieldname]["translations"]))
 				{
 					$translations = $this->structure[$fieldname]["translations"];
@@ -1130,7 +1181,7 @@ class form_input
 				}			
 					
 				print "> ";
-
+				
 
 				// if there is only 1 option avaliable, see if we should auto-select it.
 				if (!empty($this->structure[$fieldname]["options"]["noselectoption"]))
@@ -1424,6 +1475,46 @@ class form_input
 /*
 	Standalone Functions
 */
+
+/*
+ 	form_helper_prepare_dropdownfromobj($fieldname, $sql_obj)
+
+	The function generates the relevant structure needed to add a drop down
+	to a form (or the option form for a table based on the values provided from
+	the SQL object.
+	
+	Sets a flag to prevent SQL from being queried until render time, so that
+	default values can be accounted for.
+	
+	Will replace the key CURRENTID with the default value at render time.
+	
+	Returns the structure array, which can then be passed directly to form::add_input
+ */
+
+function form_helper_prepare_dropdownfromobj($fieldname, $sql_obj)
+{
+	log_debug("form", "Executing form_helper_prepare_dropdownfromdb($fieldname, sql_obj)");
+	
+	$sql_obj->generate_sql();
+	
+	//if CURRENTID key doesn't exist, proceed as usual
+	if (strpos($sql_obj->string, "CURRENTID") === FALSE)
+	{
+		$structure = form_helper_prepare_valuesfromdb($sql_obj->string);
+	}
+	
+	//otherwise, set as string so query is executed at render time
+	else
+	{
+		$structure["values"]		= $sql_obj->string;
+	}
+	
+	$structure["fieldname"]		= $fieldname;
+	$structure["type"]		= "dropdown";
+
+	return $structure;
+}
+
 
 
 /*
