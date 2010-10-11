@@ -31,8 +31,6 @@ if (user_permissions_get("accounts_import_statement"))
 		//check if enabled
 		$enabled = @security_form_input_predefined("any", $name."-enabled", 1, "");
 		
-		
-		
 		if ($enabled == "true")
 		{
 			$data = array();
@@ -45,9 +43,6 @@ if (user_permissions_get("accounts_import_statement"))
 			$particulars		= @security_form_input_predefined("any", $name."-particulars", 0, "");
 			$other_party		= @security_form_input_predefined("any", $name."-other_party", 0, "");
 			$transaction_type	= @security_form_input_predefined("any", $name."-transaction_type", 0, "");
-			
-			
-			
 			
 			//echo $enabled." ".$type."<br />";
 		

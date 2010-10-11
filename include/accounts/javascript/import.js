@@ -2,6 +2,8 @@ $(document).ready(function()
 {
 	// functions for the bankstatment-csv page
 	
+	
+	
 	$('div.input_structure input.selected_structure').change( function()
 	{
 		$('div.input_structure .custom_structure').css('display', 'none');
@@ -17,8 +19,8 @@ $(document).ready(function()
 			$("input[name=name]", custom_structure).val('');
 			$("input[name=description]", custom_structure).val('');
 
-			$("option", custom_structure).removeAttr('selected');
-			$("option[value=]", custom_structure).attr('selected', 'selected');
+			$("option[name^=column]", custom_structure).removeAttr('selected');
+			$("option[name^=column][value=]", custom_structure).attr('selected', 'selected');
 
 			// append and display the custom structure form fields.
 			$(this_input_structure).append(custom_structure);
@@ -27,6 +29,8 @@ $(document).ready(function()
 		
 		
 	});
+	
+	
 	
 	$("div.input_structure a.edit_item_link").click( function() {
 		this_input_structure = $(this).parents('div.input_structure');
@@ -45,6 +49,13 @@ $(document).ready(function()
 					$("input[name=name]", custom_structure).val(json['name']);
 					$("input[name=description]", custom_structure).val(json['description']);
 					
+					
+					// wipe all the selected options
+					$("option", custom_structure).removeAttr('selected');
+					
+					$('div.column_format', custom_structure).css('display', 'none');
+					$('div.column_format select', custom_structure).attr('disabled', 'disabled');
+					
 					// loop though the items, javascript substitute for a foreach loop
 					for(var i in json['items'])
 					{
@@ -53,10 +64,19 @@ $(document).ready(function()
 
 						// grab the target form element and store it so we don't keep having to grab it. 
 						target_select = $("select[name=column"+row['field_src']+"]", custom_structure);
+						// get the format container too
+						column_format = $(target_select).siblings('div.column_format');
 
 						// deselect all options, then select the correct one.
-						$("option", target_select).removeAttr('selected');
 						$("option[value="+row['field_dest']+"]", target_select).attr('selected', 'selected');
+
+						// Enable, select the right option of and display the date format, if applicable.
+						if(row['field_dest'] == 'date')
+						{
+							$('select',column_format).removeAttr('disabled');
+							$("select option[value="+row['data_format']+"]",column_format).attr('selected', 'selected');
+							$(column_format).css('display', 'block');
+						}
 					}
 					// use the structure ID to get the container of the item we are working on
 					this_input_structure = $("div.structure_"+json['id']);
@@ -98,8 +118,28 @@ $(document).ready(function()
 			);
 		}
 	});
-		
-		
+
+	
+	$("div.custom_structure select.column_selection").change( function() {
+		column_format = $(this).siblings('div.column_format');
+		switch($(this).val())
+		{
+			case 'date':
+				$(column_format).css('display', 'block');
+				$('select',column_format).removeAttr('disabled');
+			break;
+			
+			default:
+				$(column_format).css('display', 'none');
+				$('select',column_format).attr('disabled', 'disabled');
+			break;
+			
+		}
+	});
+	
+	
+	
+	
 	
 	// functions for the bankstatment-assign page
 	//on remove/add click

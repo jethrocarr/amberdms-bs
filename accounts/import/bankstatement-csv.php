@@ -47,9 +47,14 @@ class page_output
 		$sql_trans_obj->fetch_array();
 		$this->input_structures = $sql_trans_obj->data;
 	
-	
-		$this->num_col	= count($_SESSION["csv_array"][0]);
-		$values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "date");
+		// Sometimes the top row has less items than normal, grabbing a row from the middle is better		
+		$middle_row_index = floor(count($_SESSION["csv_array"])/2);
+		$this->num_col	= count($_SESSION["csv_array"][$middle_row_index]);
+		
+		$column_values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "amount_credit", "amount_debit", "date");
+		$date_values_array	= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		
+		$selected_format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
 		
 		$this->obj_form			= New form_input;
 		$this->obj_form->formname	= "bankstatement_csv";
@@ -61,11 +66,22 @@ class page_output
 			$structure 			= NULL;
 			$structure["fieldname"]		= $name;
 			$structure["type"]		= "dropdown";
-			$structure["values"]		= $values_array;
-
+			$structure["values"]		= $column_values_array;
+			$structure["options"]["css_field_class"] = "column_selection";
+			$this->obj_form->add_input($structure);
+			
+			
+			$name	= "format".$i;
+			$structure 			= NULL;
+			$structure["fieldname"]		= $name;
+			$structure["type"]		= "dropdown";
+			$structure["values"]		= $date_values_array;
+			$structure["defaultvalue"]	= $selected_format;
+			$structure["options"]["disabled"] = "yes";
 			$this->obj_form->add_input($structure);
 		}
 
+			//echo "<pre>".print_r($this->obj_form,true)."</pre>";
 		// name
 		$structure			= NULL;
 		$structure["fieldname"]		= "name";
@@ -212,6 +228,7 @@ class page_output
 							{
 								$name = "column".$i;
 								$name_error = $name."-error";
+								$format_name = "format".$i;
 								if (isset($_SESSION["error"][$name_error]))
 								{
 									print "<tr class=\"form_error\">";
@@ -228,6 +245,12 @@ class page_output
 								print "</td>";
 								print "<td>";
 								$this->obj_form->render_field($name);
+									
+									print "<div class='column_format'>";
+										print "<label> Date Format: ";
+										$this->obj_form->render_field($format_name);
+										print "</label>";
+									print "</div>";
 								print "</td>";
 								print "</tr>";
 							}

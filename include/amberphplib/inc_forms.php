@@ -1197,27 +1197,25 @@ class form_input
 						$autoselect = 1;
 					}
 				}
-				
 
 				// if there is no current entry, add a select entry as default
 				if ((!isset($this->structure[$fieldname]["defaultname"]) || ($this->structure[$fieldname]["defaultname"] == null)) && (!isset($autoselect) || ($autoselect == null)))
 				{
-					print "<option selected value=\"\">-- select --</option>";
+					print "<option value=\"\">-- select --</option>";
 				}
 		
 
-			
+				//echo "</select>";			
 				// add all the options
 				foreach ($this->structure[$fieldname]["values"] as $value)
 				{
+					
+					print "<option ";
+					
 					// is the current row, the one that is in use? If so, add the 'selected' tag to it
 					if (isset($this->structure[$fieldname]["defaultvalue"]) && ($value == $this->structure[$fieldname]["defaultvalue"]))
 					{
-						print "<option selected ";
-					}
-					else
-					{
-						print "<option ";
+						print "selected='selected' ";
 					}
 					
 					print "value=\"$value\">" . $translations[$value] ."</option>";

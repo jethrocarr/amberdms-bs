@@ -65,7 +65,7 @@ if (user_permissions_get("accounts_import_statement"))
 			case 'get-data':
 			default:
 				
-				$sql_obj->string = "SELECT field_src, field_dest FROM `input_structure_items` WHERE id_structure='". $id ."'";
+				$sql_obj->string = "SELECT field_src, field_dest, data_format FROM `input_structure_items` WHERE id_structure='". $id ."'";
 				$sql_obj->execute();
 				$sql_obj->fetch_array();
 				

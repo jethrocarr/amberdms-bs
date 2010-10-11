@@ -39,3 +39,8 @@ div.input_structure .custom_structure
 	display: none;
 	padding-left: 1em;
 }
+
+div.column_format
+{
+	display: none;
+}

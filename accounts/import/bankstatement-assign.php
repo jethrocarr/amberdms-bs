@@ -46,17 +46,57 @@ class page_output
 		$this->obj_form			= New form_input;
 		$this->obj_form->formname	= "bankstatement_assign";
 		
-		
 		$i=1;
 		foreach ($this->statement_array as $transaction=>$data)
 		{
 			$name 			= "transaction".$i;
+			$row_assignment = null;
+			if($data["amount"] > 0) {
+			 
+				$row_assignment = 'ar';
+			}
+			
+			$lowercased_strings = strtolower($data['other_party'])." ".
+			strtolower($data['transaction_type'])." ".
+			strtolower($data['particulars'])." ".
+			strtolower($data['code']);
+			
+			$search_regex ="/(interest|transfer|fee|tax|account\smaintenance){1}/";
+			
+			
+			preg_match($search_regex, $lowercased_strings, $matches);
+			
+			
+			switch($matches[1]) 
+			{
+				case 'tax':
+				case 'transfer':
+				$row_assignment = 'transfer';
+				break;
+				
+				case 'interest':
+				$row_assignment = 'interest';
+				break;
+				
+				case 'fee':
+				case 'account maintenance':
+				$row_assignment = 'bank_fee';
+				break;
+				
+				default:
+				if($row_assignment == null)
+				{
+					$row_assignment = 'ap';
+				}
+				break;
+			}
 
 			//assignment drop down
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-assign";
 			$structure["type"]		= "dropdown";
 			$structure["values"]		= $values_array;
+			$structure["defaultvalue"] = $row_assignment;
 			$this->obj_form->add_input($structure);
 			
 			//hidden date field
@@ -127,22 +167,77 @@ class page_output
 			//customer drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-customer", "SELECT id, code_customer AS label, name_customer AS label1 FROM customers ORDER BY code_customer ASC");
+			
+			$search_values = array();			
+			$search_values[] = preg_quote($data['other_party']);
+			if($data["reference"] != null)
+			{
+				$search_values[] = preg_quote($data['reference']);
+			}
+			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+			$matching_entry_keys = array_keys($matching_entries);
+			
+			$structure["defaultvalue"] = $matching_entry_keys[0];
 			$this->obj_form->add_input($structure);
+			
+			
+		//	echo "<pre>".print_r($data, true)."</pre>";
+			 
 			
 			//AR invoice drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-arinvoice", "SELECT id, code_invoice AS label, amount_total AS label1 FROM account_ar WHERE amount_paid < amount_total ORDER BY code_invoice ASC");
+			
+			$search_values = array();	
+			$search_values[] = preg_quote(str_replace("-", '', " ".$data['amount']));
+			if($data["reference"] != null)
+			{
+				$search_values[] = preg_quote($data['reference']);
+			}
+			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+			$matching_entry_keys = array_keys($matching_entries);
+			
+			$structure["defaultvalue"] = $matching_entry_keys[0];
 			$this->obj_form->add_input($structure);
+			
+			
+			
+			
 			
 			//vendors drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-vendor", "SELECT id, code_vendor AS label, name_vendor AS label1 FROM vendors ORDER BY code_vendor ASC");
+			$search_values = array();			
+			$search_values[] = preg_quote($data['other_party']);
+			if($data["reference"] != null)
+			{
+				$search_values[] = preg_quote($data['reference']);
+			}
+			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+			$matching_entry_keys = array_keys($matching_entries);
+			
+			$structure["defaultvalue"] = $matching_entry_keys[0];
 			$this->obj_form->add_input($structure);
+			
+			
 			
 			//AP invoice drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-apinvoice", "SELECT id, code_invoice AS label, amount_total AS label1 FROM account_ap WHERE amount_paid < amount_total ORDER BY code_invoice ASC");
+			
+			$search_values = array();	
+			$search_values[] = preg_quote(str_replace("-", '', " ".$data['amount']));
+			if($data["reference"] != null)
+			{
+				$search_values[] = preg_quote($data['reference']);
+			}
+			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+			$matching_entry_keys = array_keys($matching_entries);
+			
+			$structure["defaultvalue"] = $matching_entry_keys[0];
 			$this->obj_form->add_input($structure);
+			
+			
 			
 			//Bank fees expense account drop down
 			$structure			= NULL;
