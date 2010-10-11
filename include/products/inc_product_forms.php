@@ -196,7 +196,6 @@ class products_form_details
 		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
 		
 		$structure = form_helper_prepare_dropdownfromobj("vendorid", $sql_struct_obj);
-//		$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, name_vendor as label FROM vendors");
 		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
 		

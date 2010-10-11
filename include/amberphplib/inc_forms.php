@@ -1091,12 +1091,10 @@ class form_input
 				if (!isset($this->structure[$fieldname]["options"]["width"]))
 					$this->structure[$fieldname]["options"]["width"] = 250;
 					
-				log_debug("dropdown from obj- in dropdown", $this->structure[$fieldname]["values"]);
 			
 				// create value array if the SQL has not been executed yet
 				if (is_string($this->structure[$fieldname]["values"]))
 				{
-				log_debug("dropdown from obj- in dropdown", "is string");
 					if(!empty($this->structure[$fieldname]["defaultvalue"]))
 					{
 						$query = str_replace("CURRENTID", $this->structure[$fieldname]["defaultvalue"], $this->structure[$fieldname]["values"]);
@@ -1105,7 +1103,6 @@ class form_input
 					{
 						$query = str_replace("CURRENTID", "0", $this->structure[$fieldname]["values"]);
 					}
-					log_debug("dropdown from obj", $query);
 					$this->structure[$fieldname]["values"] = array();
 					
 					$sql_obj		= New sql_query;
@@ -1499,21 +1496,17 @@ function form_helper_prepare_dropdownfromobj($fieldname, $sql_obj)
 	
 	$sql_obj->generate_sql();
 	
-	log_debug("dropdown from obj", $sql_obj->string);
 	
 	//if CURRENTID key doesn't exist, proceed as usual
 	if (strpos($sql_obj->string, "CURRENTID") === FALSE)
 	{
 		$structure = form_helper_prepare_valuesfromdb($sql_obj->string);
-		log_debug("dropdown from obj", "currid is false");
 	}
 	
 	//otherwise, set as string so query is executed at render time
 	else
 	{
 		$structure["values"]		= $sql_obj->string;
-		log_debug("dropdown from obj", "currid is true");
-		log_debug("dropdown from obj", $structure["values"]);
 	}
 	
 	$structure["fieldname"]		= $fieldname;

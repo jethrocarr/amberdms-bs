@@ -70,7 +70,6 @@ class quote_form_details
 		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
 		
 		$structure = form_helper_prepare_dropdownfromobj("customerid", $sql_struct_obj);
-//		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["options"]["req"]	= "yes";
 		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
@@ -84,7 +83,6 @@ class quote_form_details
 		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
 		
 		$structure = form_helper_prepare_dropdownfromobj("employeeid", $sql_struct_obj);	
-//		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";

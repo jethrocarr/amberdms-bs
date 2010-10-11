@@ -242,7 +242,6 @@ class page_output
 		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
 		
 		$structure = form_helper_prepare_dropdownfromobj("projectid", $sql_struct_obj);
-//		$structure = form_helper_prepare_dropdownfromdb("projectid", "SELECT code_project AS label, name_project AS label1, id AS id FROM projects ORDER BY name_project");
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
 		$structure["options"]["search_filter"]	= "yes";
