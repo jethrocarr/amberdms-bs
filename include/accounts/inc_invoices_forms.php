@@ -20,7 +20,7 @@ class invoice_form_details
 {
 	var $type;		// Either "ar" or "ap"
 	var $invoiceid;		// ID of the invoice to edit (if any)
-	var $customer_id;		// customer ID (if any)
+	var $customer_id;	// customer ID (if any)
 	var $vendor_id;		// vendor ID (if any)
 	var $processpage;	// Page to submit the form to
 
@@ -86,7 +86,15 @@ class invoice_form_details
 		// basic details
 		if ($this->type == "ap")
 		{
-			$structure = form_helper_prepare_dropdownfromdb("vendorid", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
+			$sql_struct_obj	= New sql_query;
+			$sql_struct_obj->prepare_sql_settable("vendors");
+			$sql_struct_obj->prepare_sql_addfield("id", "vendors.id");
+			$sql_struct_obj->prepare_sql_addfield("label", "vendors.code_vendor");
+			$sql_struct_obj->prepare_sql_addfield("label1", "vendors.name_vendor");
+			$sql_struct_obj->prepare_sql_addorderby("code_vendor");
+			$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+			
+			$structure = form_helper_prepare_dropdownfromobj("vendorid", $sql_struct_obj);
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["width"]		= "600";
 			$structure["options"]["search_filter"]	= "enabled";
@@ -96,15 +104,32 @@ class invoice_form_details
 		else
 		{
 			// load customer dropdown
-			$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
+			
+			$sql_struct_obj	= New sql_query;
+			$sql_struct_obj->prepare_sql_settable("customers");
+			$sql_struct_obj->prepare_sql_addfield("id", "customers.id");
+			$sql_struct_obj->prepare_sql_addfield("label", "customers.code_customer");
+			$sql_struct_obj->prepare_sql_addfield("label1", "customers.name_customer");
+			$sql_struct_obj->prepare_sql_addorderby("code_customer");
+			$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+			
+			$structure = form_helper_prepare_dropdownfromobj("customerid", $sql_struct_obj);
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["width"]		= "600";
 			$structure["options"]["search_filter"]	= "enabled";
 			$structure["defaultvalue"]		= $this->customer_id;
 			$this->obj_form->add_input($structure);
 		}
-			
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+
+		$sql_struct_obj	= New sql_query;
+		$sql_struct_obj->prepare_sql_settable("staff");
+		$sql_struct_obj->prepare_sql_addfield("id", "staff.id");
+		$sql_struct_obj->prepare_sql_addfield("label", "staff.staff_code");
+		$sql_struct_obj->prepare_sql_addfield("label1", "staff.name_staff");
+		$sql_struct_obj->prepare_sql_addorderby("staff_code");
+		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+		
+		$structure = form_helper_prepare_dropdownfromobj("employeeid", $sql_struct_obj);
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";

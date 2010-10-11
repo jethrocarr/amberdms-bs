@@ -1066,7 +1066,15 @@ class invoice_form_item
 
 
 				// product id
-				$structure 				= form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products ORDER BY name_product");
+				$sql_struct_obj	= New sql_query;
+				$sql_struct_obj->prepare_sql_settable("products");
+				$sql_struct_obj->prepare_sql_addfield("id", "products.id");
+				$sql_struct_obj->prepare_sql_addfield("label", "products.code_product");
+				$sql_struct_obj->prepare_sql_addfield("label1", "products.name_product");
+				$sql_struct_obj->prepare_sql_addorderby("code_product");
+				$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+				
+				$structure = form_helper_prepare_dropdownfromobj("productid", $sql_struct_obj);
 				$structure["options"]["search_filter"]	= "enabled";
 				$structure["options"]["width"]		= "600";
 				$form->add_input($structure);
@@ -1181,7 +1189,15 @@ class invoice_form_item
 					$form->add_input($structure);
 
 					// product id
-					$structure = form_helper_prepare_dropdownfromdb("productid", "SELECT id, code_product as label, name_product as label1 FROM products");
+					$sql_struct_obj	= New sql_query;
+					$sql_struct_obj->prepare_sql_settable("products");
+					$sql_struct_obj->prepare_sql_addfield("id", "products.id");
+					$sql_struct_obj->prepare_sql_addfield("label", "products.code_product");
+					$sql_struct_obj->prepare_sql_addfield("label1", "products.name_product");
+					$sql_struct_obj->prepare_sql_addorderby("code_product");
+					$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+					
+					$structure = form_helper_prepare_dropdownfromobj("productid", $sql_struct_obj);
 					$structure["options"]["width"]		= "600";
 					$structure["options"]["search_filter"]	= "enabled";
 					$form->add_input($structure);

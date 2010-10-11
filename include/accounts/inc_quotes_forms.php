@@ -61,13 +61,30 @@ class quote_form_details
 		*/
 		
 		// basic details
-		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
+		$sql_struct_obj	= New sql_query;
+		$sql_struct_obj->prepare_sql_settable("customers");
+		$sql_struct_obj->prepare_sql_addfield("id", "customers.id");
+		$sql_struct_obj->prepare_sql_addfield("label", "customers.code_customer");
+		$sql_struct_obj->prepare_sql_addfield("label1", "customers.name_customer");
+		$sql_struct_obj->prepare_sql_addorderby("code_customer");
+		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+		
+		$structure = form_helper_prepare_dropdownfromobj("customerid", $sql_struct_obj);
+//		$structure = form_helper_prepare_dropdownfromdb("customerid", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
 		$structure["options"]["req"]	= "yes";
 		$structure["options"]["width"]	= "600";
 		$this->obj_form->add_input($structure);
 		
-			
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+		$sql_struct_obj	= New sql_query;
+		$sql_struct_obj->prepare_sql_settable("staff");
+		$sql_struct_obj->prepare_sql_addfield("id", "staff.id");
+		$sql_struct_obj->prepare_sql_addfield("label", "staff.staff_code");
+		$sql_struct_obj->prepare_sql_addfield("label1", "staff.name_staff");
+		$sql_struct_obj->prepare_sql_addorderby("staff_code");
+		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+		
+		$structure = form_helper_prepare_dropdownfromobj("employeeid", $sql_struct_obj);	
+//		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";

@@ -233,7 +233,16 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		//project dropdown
-		$structure = form_helper_prepare_dropdownfromdb("projectid", "SELECT code_project AS label, name_project AS label1, id AS id FROM projects ORDER BY name_project");
+		$sql_struct_obj	= New sql_query;
+		$sql_struct_obj->prepare_sql_settable("projects");
+		$sql_struct_obj->prepare_sql_addfield("id", "projects.id");
+		$sql_struct_obj->prepare_sql_addfield("label", "projects.code_project");
+		$sql_struct_obj->prepare_sql_addfield("label1", "projects.name_project");
+		$sql_struct_obj->prepare_sql_addorderby("code_project");
+		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+		
+		$structure = form_helper_prepare_dropdownfromobj("projectid", $sql_struct_obj);
+//		$structure = form_helper_prepare_dropdownfromdb("projectid", "SELECT code_project AS label, name_project AS label1, id AS id FROM projects ORDER BY name_project");
 		$structure["options"]["autoselect"]	= "on";
 		$structure["options"]["width"]		= "600";
 		$structure["options"]["search_filter"]	= "yes";

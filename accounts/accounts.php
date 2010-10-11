@@ -36,7 +36,7 @@ class page_output
 			$this->obj_form_cust->formname	= "customer_invoice_quickselect";
 			$this->obj_form_cust->language	= $_SESSION["user"]["lang"];
 
-			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_customer as label, name_customer as label1 FROM customers ORDER BY name_customer");
+			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_customer as label, name_customer as label1 FROM customers WHERE date_end = '0000-00-00' ORDER BY code_customer");
 
 			if (@count($structure["values"]) == 0)
 			{
@@ -134,7 +134,7 @@ class page_output
 			$this->obj_form_vend->formname	= "vendor_invoice_quickselect";
 			$this->obj_form_vend->language	= $_SESSION["user"]["lang"];
 
-			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors ORDER BY name_vendor");
+			$structure = form_helper_prepare_dropdownfromdb("id", "SELECT id, code_vendor as label, name_vendor as label1 FROM vendors WHERE date_end = '0000-00-00' ORDER BY code_vendor");
 
 			if (@count($structure["values"]) == 0)
 			{

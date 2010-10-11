@@ -597,6 +597,7 @@ class sql_query
 		for ($i=0; $i < $num_values; $i++)
 		{
 			$fieldname = $this->sql_structure["fields"][$i];
+			
 
 			if (isset($this->sql_structure["field_dbnames"][$fieldname]))
 			{
@@ -738,6 +739,7 @@ class sql_query
 		
 		$this->sql_structure["fields"][] = "$fieldname";
 	}
+	
 
 	/*
 		prepare_sql_addjoin($joinquery)

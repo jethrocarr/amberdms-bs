@@ -52,7 +52,7 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
-		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
+		$structure = form_helper_prepare_dropdownfromdb("employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff WHERE date_end = '0000-00-00' ORDER BY staff_code");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["width"]		= "600";
 		$structure["options"]["search_filter"]	= "enabled";
