@@ -1,0 +1,73 @@
+/*
+ 	Style sheet to determine the layout for vendor detail forms
+ */
+
+.contact_box
+{
+	width:		50%;
+}
+
+.hidden_text
+{
+	display:	none;
+}
+
+.hidden_form_field
+{
+	display: 	none;
+}
+
+.delete_contact_cell
+{
+	text-align: 	right;
+	vertical-align: top;
+}
+
+.contact_description
+{
+	padding: 	0 10px 0 15px;
+}
+
+.change_contact
+{
+	text-align: 	right;
+}
+
+.records_table td
+{
+	padding: 	5px;
+}
+
+.add_record
+{
+	text-align : 	right;
+}
+
+
+.insert_new_record
+{
+	text-align: 	right;
+}
+
+.add_record_form
+{
+	display: 	none;
+	float: 		right;
+	text-align: 	left;
+}
+
+.description_cell
+{
+	vertical-align:	top;
+}
+
+.add_contact_div
+{
+	width: 		50%; 
+	text-align: 	right;	
+}
+
+.disabled_link
+{
+	opacity:	0.5;
+}
