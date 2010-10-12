@@ -168,7 +168,7 @@ class page_output
 		
 		print "<div class='input_structures'>";
 		
-			foreach($this->input_structures as $input_structure) 
+			foreach((array)$this->input_structures as $input_structure) 
 			{
 				$input_structure['id'] = (int)$input_structure['id'];
 				$input_structure['name'] = htmlentities($input_structure['name'], ENT_QUOTES, 'UTF-8');

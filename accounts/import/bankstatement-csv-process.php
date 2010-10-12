@@ -146,7 +146,8 @@ if (user_permissions_get("accounts_import_statement"))
 		
 	
 		//exit($paired_value_state);
-		if (($values_count != count($values_required)) || ($value_multi_requirement < 1) || (count((array)$values_paired) != $paired_value_count))
+		if (($values_count != count($values_required)) || ($value_multi_requirement < 1) ||
+		 	((count((array)$values_paired) != $paired_value_count) && ($paired_value_count > 0)))
 		{	
 			log_write("error", "page_output", "Make sure you have selected all the required column types (". format_arraytocommastring($values_required) .")");
 		}
