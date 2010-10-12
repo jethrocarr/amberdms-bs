@@ -290,12 +290,12 @@ function add_group()
 			$(".hidden_move").removeClass("hidden_move");
 			
 			//clone top group rows to create new group
-			new_header = $(".form_table tr:eq(0)").clone();
-			new_sub_header = $(".form_table tr:eq(1)").clone();
-			new_blank_one = $(".form_table tr:eq(2)").clone();
-			new_row_one = $(".form_table tr:eq(3)").clone();
-			new_row_two = $(".form_table tr:eq(3)").clone();
-			new_blank_two = $(".form_table tr:eq(2)").clone();
+			new_header = $("#attributes_table tr:eq(0)").clone();
+			new_sub_header = $("#attributes_table tr:eq(1)").clone();
+			new_blank_one = $("#attributes_table tr:eq(2)").clone();
+			new_row_one = $("#attributes_table tr:eq(3)").clone();
+			new_row_two = $("#attributes_table tr:eq(3)").clone();
+			new_blank_two = $("#attributes_table tr:eq(2)").clone();
 
 			//update header details
 			$(new_header).attr("id", "group_row_" + id).removeClass("show_attributes").addClass("hide_attributes");
@@ -364,7 +364,7 @@ function add_group()
 			$(new_blank_two).removeAttr("class");
 			
 			//insert elements and ensure they are displayed
-			$(".form_table tr:eq(0)").before(new_header).before(new_sub_header).before(new_blank_one).before(new_row_one).before(new_row_two).before(new_blank_two);			
+			$("#attributes_table tr:eq(0)").before(new_header).before(new_sub_header).before(new_blank_one).before(new_row_one).before(new_row_two).before(new_blank_two);			
 			$(new_sub_header).show();
 			$(new_blank_one).show();
 			$(new_row_one).show();
@@ -390,7 +390,7 @@ function add_group()
 			
 			//create variable to hold list of attributes
 			attribute_list = attr_one_num + "," + attr_two_num + ",";
-			$(".form_table").after("<input type=\"hidden\" name=\"group_" + id + "_attribute_list\" value=\"" + attribute_list + "\" />");
+			$("#attributes_table").after("<input type=\"hidden\" name=\"group_" + id + "_attribute_list\" value=\"" + attribute_list + "\" />");
 			
 			//update all move attribute dropdowns
 			$("select[id^='select_group_attr_']").each(function()

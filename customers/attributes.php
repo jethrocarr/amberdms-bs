@@ -373,7 +373,7 @@ class page_output
 		
 		// start form/table structure
 		print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\" class=\"form_standard\">";
-		print "<table class=\"form_table\" width=\"100%\">";
+		print "<table id=\"attributes_table\" class=\"form_table\" width=\"100%\">";
 
 		// display all the rows
 		foreach	($this->group_arrays as $group_id => $attributes)
