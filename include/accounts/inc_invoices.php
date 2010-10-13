@@ -1368,7 +1368,12 @@ class invoice
 
 
 		// external dependency of Mail_Mime
-		@include('Mail.php');
+		if (!@include('Mail.php'))
+		{
+			log_write("error", "invoice", "Unable to find Mail module required for sending email");
+			return 0;
+		}
+		
 		if (!@include('Mail/mime.php'))
 		{
 			log_write("error", "invoice", "Unable to find Mail::Mime module required for sending email");
