@@ -65,6 +65,12 @@ class page_output
 
 		format_linkbox("default", "index.php?page=admin/config_services.php", "<p><b>Services Configuration</b></p>
 			<p>Service billing configuration features and options.</p>");
+		
+		
+		print "<br>";
+
+		format_linkbox("default", "index.php?page=admin/config_dependencies.php", "<p><b>Dependency Check</b></p>
+			<p>Check for presence of necessary external modules - useful for debugging system faults.</p>");
 
 
 
