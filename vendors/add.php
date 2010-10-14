@@ -238,7 +238,7 @@ class page_output
 
 		// list all the taxes so the user can enable or disable the taxes
 		$sql_tax_obj		= New sql_query;
-		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->string	= "SELECT id, name_tax, description, default_vendors FROM account_taxes ORDER BY name_tax";
 		$sql_tax_obj->execute();
 
 		if ($sql_tax_obj->num_rows())
@@ -250,7 +250,6 @@ class page_output
 			$structure["defaultvalue"]		= "<p>Select all the taxes below which apply to this vendor. Any taxes not selected, will not be added to invoices for this customer.</p>";
 			$this->obj_form->add_input($structure);
 				
-			$this->obj_form->subforms["vendor_taxes"][] = "tax_message";
 
 
 			// run through all the taxes
@@ -264,9 +263,15 @@ class page_output
 				$structure["type"]			= "checkbox";
 				$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
 				$structure["options"]["no_fieldname"]	= "enable";
+				
+				if ($data_tax["default_vendors"])
+				{
+					$structure["defaultvalue"]	= "on";
+				}
 
 				// add to form
 				$this->obj_form->add_input($structure);
+				$this->tax_array[] = "tax_". $data_tax["id"];
 			}
 		}
 

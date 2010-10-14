@@ -848,7 +848,39 @@ class tax
 
 
 		/*
-			Create customer/vendor tax selection mappings if requested
+		 	Set default taxes if requested
+		 */
+		
+		if ($this->data["setdefault_tax_customers"] == "on")
+		{
+			$sql_obj->string		= "UPDATE account_taxes SET default_customers = '1' WHERE id = '". $this->id. "'";
+			$sql_obj->execute();
+		}
+
+		if ($this->data["setdefault_tax_vendors"] == "on")
+		{
+			$sql_obj->string		= "UPDATE account_taxes SET default_vendors = '1' WHERE id = '". $this->id. "'";
+			$sql_obj->execute();
+		}
+		
+		
+		if ($this->data["setdefault_tax_products"] == "on")
+		{
+			//set requested default
+			$sql_obj->string		= "UPDATE account_taxes SET default_products = '1' WHERE id = '". $this->id. "'";
+			$sql_obj->execute();
+		}
+		
+		
+		if ($this->data["setdefault_tax_services"] == "on")
+		{
+			$sql_obj->string		= "UPDATE account_taxes SET default_services = '1' WHERE id = '". $this->id. "'";
+			$sql_obj->execute();
+		}
+		
+		
+		/*
+			Create customer/vendor/product/service tax selection mappings if requested
 		*/
 		if ($this->data["autoenable_tax_customers"] == "on")
 		{
@@ -872,7 +904,7 @@ class tax
 
 		if ($this->data["autoenable_tax_vendors"] == "on")
 		{
-			// loop through customers
+			// loop through vendors
 			$sql_vendor_obj			= New sql_query;
 			$sql_vendor_obj->string		= "SELECT id FROM vendors";
 			$sql_vendor_obj->execute();
@@ -885,6 +917,48 @@ class tax
 				{
 					// insert tax assignment for this vendor
 					$sql_obj->string	= "INSERT INTO vendors_taxes (vendorid, taxid) VALUES ('". $data_vendor["id"] ."', '". $this->id ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
+		
+		
+		if ($this->data["autoenable_tax_products"] == "on")
+		{
+			// loop through products
+			$sql_product_obj		= New sql_query;
+			$sql_product_obj->string	= "SELECT id FROM products";
+			$sql_product_obj->execute();
+
+			if ($sql_product_obj->num_rows())
+			{
+				$sql_product_obj->fetch_array();
+
+				foreach ($sql_product_obj->data as $data_product)
+				{
+					// insert tax assignment for this product
+					$sql_obj->string	= "INSERT INTO products_taxes (productid, taxid) VALUES ('". $data_product["id"] ."', '". $this->id ."')";
+					$sql_obj->execute();
+				}
+			}
+		}
+		
+		
+		if ($this->data["autoenable_tax_services"] == "on")
+		{
+			// loop through services
+			$sql_service_obj		= New sql_query;
+			$sql_service_obj->string	= "SELECT id FROM services";
+			$sql_service_obj->execute();
+
+			if ($sql_service_obj->num_rows())
+			{
+				$sql_service_obj->fetch_array();
+
+				foreach ($sql_service_obj->data as $data_service)
+				{
+					// insert tax assignment for this service
+					$sql_obj->string	= "INSERT INTO services_taxes (serviceid, taxid) VALUES ('". $data_service["id"] ."', '". $this->id ."')";
 					$sql_obj->execute();
 				}
 			}
@@ -961,7 +1035,7 @@ class tax
 
 
 		/*
-			Delete tax from any products it is assigned to
+			Delete tax from any services it is assigned to
 		*/
 
 		$sql_obj->string	= "DELETE FROM products_taxes WHERE taxid='". $this->id ."'";

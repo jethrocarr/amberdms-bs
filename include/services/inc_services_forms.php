@@ -244,7 +244,7 @@ class services_form_details
 		*/
 
 		$sql_tax_obj		= New sql_query;
-		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->string	= "SELECT id, name_tax, description, default_services FROM account_taxes ORDER BY name_tax";
 		$sql_tax_obj->execute();
 
 		if ($sql_tax_obj->num_rows())
@@ -279,6 +279,13 @@ class services_form_details
 					$sql_obj->execute();
 
 					if ($sql_obj->num_rows())
+					{
+						$structure["defaultvalue"] = "on";
+					}
+				}
+				else
+				{
+					if ($data_tax["default_services"])
 					{
 						$structure["defaultvalue"] = "on";
 					}

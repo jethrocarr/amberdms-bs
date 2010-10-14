@@ -12,6 +12,7 @@ class page_output
 {
 	var $obj_form;	// page form
 	var $num_contacts;
+	var $tax_array = array();
 
 	function page_output()
 	{
@@ -231,7 +232,7 @@ class page_output
 
 		// list all the taxes so the user can enable or disable the taxes
 		$sql_tax_obj		= New sql_query;
-		$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+		$sql_tax_obj->string	= "SELECT id, name_tax, description, default_customers FROM account_taxes ORDER BY name_tax";
 		$sql_tax_obj->execute();
 
 		if ($sql_tax_obj->num_rows())
@@ -255,10 +256,16 @@ class page_output
 				$structure["type"]			= "checkbox";
 				$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
 				$structure["options"]["no_fieldname"]	= "enable";
+				
+				//check if tax is set as a default
+				if ($data_tax["default_customers"])
+				{
+					$structure["defaultvalue"]	= "on";
+				}
 
 				// add to form
 				$this->obj_form->add_input($structure);
-				$this->obj_form->subforms["customer_taxes"][] = "tax_". $data_tax["id"];
+				$this->tax_array[] = "tax_". $data_tax["id"];
 			}
 		}
 

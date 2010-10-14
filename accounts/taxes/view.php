@@ -122,6 +122,40 @@ class page_output
 			$structure["defaultvalue"]	= "<b>You need to add some tax accounts for this tax to belong to, before you can use this tax</b>";
 		}
 		$this->obj_form->add_input($structure);
+		
+		
+		//set defaults
+		$structure = NULL;
+		$structure["fieldname"] 		= "setdefault_tax_customers";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all customers by default";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 		= "setdefault_tax_vendors";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all vendors by default";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 		= "setdefault_tax_products";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all products by default";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 		= "setdefault_tax_services";
+		$structure["type"]			= "checkbox";
+		$structure["options"]["no_fieldname"]	= "yes";
+		$structure["options"]["label"]		= "Enable this tax for all services by default";
+		$structure["defaultvalue"]		= "on";
+		$this->obj_form->add_input($structure);
 
 
 		// hidden
@@ -142,6 +176,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["tax_details"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
+		$this->obj_form->subforms["tax_set_default"]	= array("setdefault_tax_customers", "setdefault_tax_vendors", "setdefault_tax_products", "setdefault_tax_services");
 		$this->obj_form->subforms["hidden"]		= array("id_tax");
 		
 		if (user_permissions_get("accounts_taxes_write"))
