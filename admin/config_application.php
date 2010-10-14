@@ -169,6 +169,13 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$structure["options"]["label"]			= " Bytes. Server maximum is ". ini_get('upload_max_filesize') .", to increase server limit, you must edit php.ini";
 		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"]				= "API_URL";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["label"]			= " This URL will be used in namespace and soap address URLS in the WSDL files.";
+		$this->obj_form->add_input($structure);
 	
 
 		// contributions
@@ -261,7 +268,7 @@ class page_output
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_contributions"]	= array("PHONE_HOME");
 		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
-		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES");
+		$this->obj_form->subforms["config_misc"]			= array("UPLOAD_MAXBYTES", "API_URL");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{

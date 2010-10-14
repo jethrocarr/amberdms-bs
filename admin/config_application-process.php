@@ -45,6 +45,8 @@ if (user_permissions_get("admin"))
 	$data["BLACKLIST_LIMIT"]		= @security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
 	
 	$data["UPLOAD_MAXBYTES"]		= @security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
+	$data["API_URL"]		= @security_form_input_predefined("any", "API_URL", 0, "");
+	
 
 	$data["PHONE_HOME"]			= @security_form_input_predefined("any", "PHONE_HOME", 0, "");
 	

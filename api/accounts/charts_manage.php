@@ -476,11 +476,16 @@ class accounts_charts_manage_soap
 
 
 
-// define server
-$server = new SoapServer("charts_manage.wsdl");
-$server->setClass("accounts_charts_manage_soap");
-$server->handle();
+if(isset($_GET['wsdl']))
+{
+	//application/wsdl+xml	
 
-
-
+}
+else 
+{
+	// define server
+	$server = new SoapServer("charts_manage.wsdl");
+	$server->setClass("accounts_charts_manage_soap");
+	$server->handle();
+}
 ?>
