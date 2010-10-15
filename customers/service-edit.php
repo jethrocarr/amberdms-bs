@@ -20,11 +20,19 @@ class page_output
 	
 	var $obj_menu_nav;
 	var $obj_form;
+	
+	var $num_ddi_rows;
 
 	
 
 	function page_output()
 	{
+	
+		// define page dependencies
+		$this->requires["javascript"][]		= "include/customers/javascript/service-edit.js";
+		$this->requires["css"][]		= "include/customers/css/service-edit.css";
+		
+		
 		$this->obj_customer				= New customer_services;
 
 
@@ -372,11 +380,109 @@ class page_output
 
 				case "phone_trunk":
 
+					//create html string to input into message field to show DDIs
+					$html_string = "<div id=\"ddi_form\"><table id=\"ddi_table\"  cellspacing=\"0\"><tr class=\"table_highlight\">
+								<td><b>" .lang_trans("ddi_start"). "</b></td>
+								<td><b>" .lang_trans("ddi_finish"). "</b></td>
+								<td><b>" .lang_trans("description"). "</b></td>
+								<td>&nbsp;</td></tr>";
+					
+					//work out the number of DDI rows needed
+					if (!isset($_SESSION["error"]["form"][$this->obj_form->formname]))
+					{
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "SELECT * FROM services_customers_ddi WHERE id_service_customer = '" .$this->obj_customer->id_service_customer. "'";
+						$sql_obj->execute();
+				
+						if ($sql_obj->num_rows())
+						{
+							$sql_obj->fetch_array();
+					
+							if ($sql_obj->data_num_rows < 2)
+							{
+								$this->num_ddi_rows = 2;
+							}
+							else
+							{
+								$this->num_ddi_rows = $sql_obj->data_num_rows+1;
+							}
+						}
+					}
+					else
+					{
+						$this->num_ddi_rows = @security_script_input('/^[0-9]*$/', $_SESSION["error"]["num_ddi_rows"])+1;
+					}
+					
+					$structure = NULL;
+					$structure["fieldname"]		= "num_ddi_rows";
+					$structure["type"]		= "hidden";
+					$structure["defaultvalue"]	= $this->num_ddi_rows;
+					$this->obj_form->add_input($structure);
+					$this->obj_form->subforms["hidden"][] = "num_ddi_rows";
+					
+					for ($i= 0; $i < $this->num_ddi_rows; $i++)
+					{
+						$html_string .= "<tr class=\"table_highlight\">
+									<td><input type=\"text\" name=\"ddi_start_$i\" ";
+						if (isset($sql_obj->data[$i]["ddi_start"]))
+						{
+							$html_string .= " value=\"" .$sql_obj->data[$i]["ddi_start"]. "\" /></td>";
+						}
+						else
+						{
+							$html_string .= " value=\"\" /></td>";
+						}
+						
+						$html_string .= "<td><input type=\"text\" name=\"ddi_finish_$i\" ";
+						if (isset($sql_obj->data[$i]["ddi_finish"]))
+						{
+							$html_string .= " value=\"" .$sql_obj->data[$i]["ddi_finish"]. "\" /></td>";
+						}
+						else
+						{
+							$html_string .= " value=\"\" /></td>";
+						}
+						
+						$html_string .= "<td><textarea name=\"description_$i\">";
+						if (isset($sql_obj->data[$i]["description"]))
+						{
+							$html_string .= $sql_obj->data[$i]["description"]. "</textarea></td>";
+						}
+						else
+						{
+							$html_string .= "</textarea></td>";
+						}
+						
+						$html_string .= "<td><input type=\"hidden\" name=\"delete_$i\" ";
+						if (isset($_SESSION["error"]["form"][$this->obj_form->formname]))
+						{
+							$html_string .= " value=\"" .security_script_input_predefined("any",$_SESSION["error"]["delete_$i"]). "\" />";
+						}
+						else
+						{
+							$html_string .= " value=\"false\" />";
+						}
+						$html_string .= "<input type=\"hidden\" name=\"id_$i\" ";
+						if (isset($_SESSION["error"]["form"][$this->obj_form->formname]))
+						{
+							$html_string .= " value=\"" .security_script_input_predefined("any",$_SESSION["error"]["id_$i"]). "\" />";
+						}
+						else
+						{
+							$html_string .= " value=\"\" />";
+						}
+						$html_string .= "<a href=\"\" id=\"delete_link_$i\">delete</a></td></tr>";
+					}
+					
+					$html_string .= "</table></div>";
+			
+				
 					// DDI options
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_ddi_info";
 					$structure["type"]		= "message";
-					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
+//					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
+					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br>" .$html_string. "</p>";
 					$this->obj_form->add_input($structure);
 
 					// trunk options
@@ -528,7 +634,7 @@ class page_output
 
 
 		// define base subforms	
-		$this->obj_form->subforms["hidden"] = array("id_customer");
+		$this->obj_form->subforms["hidden"][] = "id_customer";
 
 
 		if (user_permissions_get("customers_write"))
