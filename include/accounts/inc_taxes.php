@@ -841,48 +841,20 @@ class tax
 						."taxrate='". $this->data["taxrate"] ."', "
 						."chartid='". $this->data["chartid"] ."', "
 						."taxnumber='". $this->data["taxnumber"] ."', "
-						."description='". $this->data["description"] ."' "
+						."description='". $this->data["description"] ."', "
+						."default_customers='". $this->data["default_customers"] ."', "
+						."default_vendors='". $this->data["default_vendors"] ."', "
+						."default_products='". $this->data["default_products"] ."', "
+						."default_services='". $this->data["default_services"] ."' "
 						."WHERE id='$this->id'";
 
 		$sql_obj->execute();
 
-
-		/*
-		 	Set default taxes if requested
-		 */
-		
-		if ($this->data["setdefault_tax_customers"] == "on")
-		{
-			$sql_obj->string		= "UPDATE account_taxes SET default_customers = '1' WHERE id = '". $this->id. "'";
-			$sql_obj->execute();
-		}
-
-		if ($this->data["setdefault_tax_vendors"] == "on")
-		{
-			$sql_obj->string		= "UPDATE account_taxes SET default_vendors = '1' WHERE id = '". $this->id. "'";
-			$sql_obj->execute();
-		}
-		
-		
-		if ($this->data["setdefault_tax_products"] == "on")
-		{
-			//set requested default
-			$sql_obj->string		= "UPDATE account_taxes SET default_products = '1' WHERE id = '". $this->id. "'";
-			$sql_obj->execute();
-		}
-		
-		
-		if ($this->data["setdefault_tax_services"] == "on")
-		{
-			$sql_obj->string		= "UPDATE account_taxes SET default_services = '1' WHERE id = '". $this->id. "'";
-			$sql_obj->execute();
-		}
-		
 		
 		/*
 			Create customer/vendor/product/service tax selection mappings if requested
 		*/
-		if ($this->data["autoenable_tax_customers"] == "on")
+		if (!empty($this->data["autoenable_tax_customers"]))
 		{
 			// loop through customers
 			$sql_cust_obj			= New sql_query;
@@ -902,7 +874,7 @@ class tax
 			}
 		}
 
-		if ($this->data["autoenable_tax_vendors"] == "on")
+		if (!empty($this->data["autoenable_tax_vendors"]))
 		{
 			// loop through vendors
 			$sql_vendor_obj			= New sql_query;
@@ -923,7 +895,7 @@ class tax
 		}
 		
 		
-		if ($this->data["autoenable_tax_products"] == "on")
+		if (!empty($this->data["autoenable_tax_products"]))
 		{
 			// loop through products
 			$sql_product_obj		= New sql_query;
@@ -944,7 +916,7 @@ class tax
 		}
 		
 		
-		if ($this->data["autoenable_tax_services"] == "on")
+		if (!empty($this->data["autoenable_tax_services"]))
 		{
 			// loop through services
 			$sql_service_obj		= New sql_query;

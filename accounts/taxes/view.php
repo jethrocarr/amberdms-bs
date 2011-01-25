@@ -126,7 +126,7 @@ class page_output
 		
 		//set defaults
 		$structure = NULL;
-		$structure["fieldname"] 		= "setdefault_tax_customers";
+		$structure["fieldname"] 		= "default_customers";
 		$structure["type"]			= "checkbox";
 		$structure["options"]["no_fieldname"]	= "yes";
 		$structure["options"]["label"]		= "Enable this tax for all customers by default";
@@ -134,7 +134,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] 		= "setdefault_tax_vendors";
+		$structure["fieldname"] 		= "default_vendors";
 		$structure["type"]			= "checkbox";
 		$structure["options"]["no_fieldname"]	= "yes";
 		$structure["options"]["label"]		= "Enable this tax for all vendors by default";
@@ -142,7 +142,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"] 		= "setdefault_tax_products";
+		$structure["fieldname"] 		= "default_products";
 		$structure["type"]			= "checkbox";
 		$structure["options"]["no_fieldname"]	= "yes";
 		$structure["options"]["label"]		= "Enable this tax for all products by default";
@@ -150,7 +150,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] 		= "setdefault_tax_services";
+		$structure["fieldname"] 		= "default_services";
 		$structure["type"]			= "checkbox";
 		$structure["options"]["no_fieldname"]	= "yes";
 		$structure["options"]["label"]		= "Enable this tax for all services by default";
@@ -176,7 +176,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["tax_details"]	= array("name_tax", "chartid", "taxrate", "taxnumber", "description");
-		$this->obj_form->subforms["tax_set_default"]	= array("setdefault_tax_customers", "setdefault_tax_vendors", "setdefault_tax_products", "setdefault_tax_services");
+		$this->obj_form->subforms["tax_set_default"]	= array("default_customers", "default_vendors", "default_products", "default_services");
 		$this->obj_form->subforms["hidden"]		= array("id_tax");
 		
 		if (user_permissions_get("accounts_taxes_write"))

@@ -72,6 +72,25 @@ INSERT INTO vendor_contact_records( contact_id, type , label, detail ) SELECT id
 ALTER TABLE `vendors` DROP `contact_email` , DROP `contact_phone` , DROP `contact_fax` , DROP `name_contact` ;
 
 
+
+-- New Tax functionality
+--
+ALTER TABLE `account_taxes` ADD `default_customers` BOOLEAN NOT NULL DEFAULT '0',
+ADD `default_vendors` BOOLEAN NOT NULL DEFAULT '0',
+ADD `default_services` BOOLEAN NOT NULL DEFAULT '0',
+ADD `default_products` BOOLEAN NOT NULL DEFAULT '0';
+
+INSERT INTO `language` (
+`id` ,
+`language` ,
+`label` ,
+`translation`
+)
+VALUES 
+(NULL , 'en_us', 'tax_set_default', 'Set Default Taxes'),
+(NULL , 'en_us', 'tax_auto_enable', 'Auto Enable Taxes');
+
+
 --
 -- Set Schema Version
 --
