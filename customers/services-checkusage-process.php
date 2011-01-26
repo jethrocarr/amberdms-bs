@@ -14,6 +14,7 @@ include_once("../include/amberphplib/main.php");
 // custom includes
 include_once("../include/accounts/inc_ledger.php");
 include_once("../include/accounts/inc_invoices.php");
+include_once("../include/services/inc_services.php");
 include_once("../include/services/inc_services_usage.php");
 
 
@@ -21,8 +22,8 @@ if (user_permissions_get('customers_write'))
 {
 	/////////////////////////
 
-	$id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
-	$id_service_customer		= @security_script_input('/^[0-9]*$/', $_GET["serviceid"]);
+	$id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+	$id_service_customer		= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
 	
 	
 	// make sure the customer actually exists
