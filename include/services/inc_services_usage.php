@@ -261,12 +261,22 @@ function service_usage_alerts_generate($customerid = NULL)
 			$sql_service_obj->string	= "SELECT * FROM services WHERE id='". $customer_data["serviceid"] . "' LIMIT 1";
 			$sql_service_obj->execute();
 			$sql_service_obj->fetch_array();
-
+			
+			
+			
+			
+			
+			
 			// fetch customer details
-			$sql_customer_obj		= New sql_query;
-			$sql_customer_obj->string	= "SELECT name_customer, name_contact, contact_email FROM customers WHERE id='". $customer_data["customerid"] ."' LIMIT 1";
-			$sql_customer_obj->execute();
-			$sql_customer_obj->fetch_array();
+			
+			$sql_customer_obj = sql_get_singlerow("SELECT name_customer FROM customers WHERE id='". $customer_data["customerid"] ."' LIMIT 1");			
+			$arr_sql_contact = sql_get_singlerow("SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$customer_data["customerid"]. "' AND role = 'accounts' LIMIT 1");
+			$arr_sql_contact_details = sql_get_singlerow("SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$arr_sql_contact["id"]. "' AND type = 'email' LIMIT 1");
+	
+			// place the contact details into the customer details array.			
+			$sql_customer_obj["name_contact"] = $arr_sql_contact["contact"];			
+			$sql_customer_obj["contact_email"] = $arr_sql_contact_details["contact_email"];
+			
 
 
 			// check the service type
@@ -441,15 +451,15 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 								// send email
-								if ($sql_customer_obj->data[0]["contact_email"])
+								if ($sql_customer_obj["contact_email"])
 								{
 									$headers = "From: $email_sender\r\n";
 
-									mail($sql_customer_obj->data[0]["name_contact"] ."<". $sql_customer_obj->data[0]["contact_email"] .">", "Excess usage notification", $message, $headers);
+									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "Excess usage notification", $message, $headers);
 								}
 								else
 								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj->data[0]["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 								}
 							}
 						}
@@ -500,15 +510,15 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 								// send email
-								if ($sql_customer_obj->data[0]["contact_email"])
+								if ($sql_customer_obj["contact_email"])
 								{
 									$headers = "From: $email_sender\r\n";
 
-									mail($sql_customer_obj->data[0]["name_contact"] ."<". $sql_customer_obj->data[0]["contact_email"] .">", "100% usage notification", $message, $headers);
+									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "100% usage notification", $message, $headers);
 								}
 								else
 								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj->data[0]["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 								}
 							}
 						}
@@ -551,15 +561,15 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 								// send email
-								if ($sql_customer_obj->data[0]["contact_email"])
+								if ($sql_customer_obj["contact_email"])
 								{
 									$headers = "From: $email_sender\r\n";
 
-									mail($sql_customer_obj->data[0]["name_contact"] ."<". $sql_customer_obj->data[0]["contact_email"] .">", "80% usage notification", $message, $headers);
+									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "80% usage notification", $message, $headers);
 								}
 								else
 								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj->data[0]["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 								}
 							}
 

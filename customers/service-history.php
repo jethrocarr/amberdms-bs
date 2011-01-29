@@ -24,7 +24,7 @@ class page_output
 
 
 		// fetch variables
-		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer->id				= @security_script_input('/^[0-9]*$/', $_GET["customerid"]);
 		$this->obj_customer->id_service_customer	= @security_script_input('/^[0-9]*$/', $_GET["id_service_customer"]);
 
 		// load service data
