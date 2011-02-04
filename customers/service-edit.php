@@ -212,6 +212,12 @@ class page_output
 			$structure["type"]			= "money";
 			$structure["options"]["req"]		= "yes";
 			$this->obj_form->add_input($structure);
+		
+			$structure = NULL;
+			$structure["fieldname"] 	= "price_setup";
+			$structure["type"]		= "money";
+			$structure["options"]["req"]	= "yes";
+			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
 			$structure["fieldname"] 		= "discount";
@@ -221,7 +227,7 @@ class page_output
 			$structure["options"]["max_length"]	= "6";
 			$this->obj_form->add_input($structure);
 
-			$this->obj_form->subforms["service_price"]	= array("price", "discount");
+			$this->obj_form->subforms["service_price"]	= array("price", "price_setup", "discount");
 
 
 

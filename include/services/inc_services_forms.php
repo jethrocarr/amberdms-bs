@@ -439,6 +439,12 @@ class services_form_plan
 		$structure["type"]		= "money";
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
+		
+		$structure = NULL;
+		$structure["fieldname"] 	= "price_setup";
+		$structure["type"]		= "money";
+		$structure["options"]["req"]	= "yes";
+		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 		= "discount";
@@ -532,7 +538,7 @@ class services_form_plan
 
 
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "units", "included_units", "price_extraunits", "usage_mode");
 				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 		
@@ -585,7 +591,7 @@ class services_form_plan
 
 				
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
 			break;
 
@@ -657,7 +663,7 @@ class services_form_plan
 													
 				
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_custom"] 	= array("plan_information", "units", "included_units", "price_extraunits");
 				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 
@@ -683,7 +689,7 @@ class services_form_plan
 
 			
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 			break;
 
 
@@ -769,7 +775,7 @@ class services_form_plan
 
 
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 				$this->obj_form->subforms["service_plan_cdr"]		= array("cdr_information", "id_rate_table");
 				
 				if ($sql_plan_obj->data[0]["name"] == "phone_trunk")
@@ -805,7 +811,7 @@ class services_form_plan
 
 			
 				// subforms
-				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "discount", "billing_cycle", "billing_mode");
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
 			break;
 		}
 
