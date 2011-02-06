@@ -422,14 +422,7 @@ function security_script_input ($expression, $value)
 	// if the input matches the regex, all is good, otherwise set to "error".
 	if (preg_match($expression, $value))
 	{
-	        // check if magic quotes is on or off and process the input correctly.
-	        //
-	        // this prevents SQL injections, by backslashing -- " ' ` \ -- etc.
-	        //
-		if (get_magic_quotes_gpc() == 0)
-		{
-			$value = addslashes($value);
-		}
+		$value = addslashes($value);
 
 		return $value;
 	}
