@@ -215,6 +215,7 @@ class products_manage_soap
 	{
 		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
 
+
 		if (user_permissions_get("products_write"))
 		{
 			$obj_product = New product;

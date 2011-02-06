@@ -33,42 +33,40 @@ class authenticate
 		// $account is only used by Amberdms's hosted billing system - for single instance configurations
 		// it is unused, and simply exists to ensure a standard API across all product versions
 
-		if ($result = user_login($account, $username, $password))
+		$result = user_login($account, $username, $password);
+
+		switch ($result)
 		{
-			// authenticated - return the session string
-			$sid = session_name() ."=". session_id();
-			return $sid;
-		}
-		else
-		{
-			// failed authentication - use SoapFault to gracefully return an error which the client app can process
-			switch ($result)
-			{
-				case "-5":
-					throw new SoapFault("Sender", "USER_DISABLED");
-				break;
+			case "-5":
+				throw new SoapFault("Sender", "DATABASE_VERSION_MISMATCH");
+			break;
 
-				case "-4":
-					throw new SoapFault("Sender", "USER_DISABLED");
-				break;
+			case "-4":
+				throw new SoapFault("Sender", "USER_DISABLED");
+			break;
 
-				case "-3":
-					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
-				break;
+			case "-3":
+				throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+			break;
 
-				case "-2":
-					throw new SoapFault("Sender", "USER_DISABLED");
-				break;
+			case "-2":
+				throw new SoapFault("Sender", "USER_DISABLED");
+			break;
 
-				case "-1":
-					throw new SoapFault("Sender", "BLACKLISTED");
-				break;
+			case "-1":
+				throw new SoapFault("Sender", "BLACKLISTED");
+			break;
 
-				case "0":
-				default:
-					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
-				break;
-			}
+			case "0":
+			default:
+				throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
+			break;
+
+			case "1":
+				// successful authentication
+				$sid = session_name() ."=". session_id();
+				return $sid;
+			break;
 		}
 	}
 }
