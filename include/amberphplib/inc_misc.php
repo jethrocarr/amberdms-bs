@@ -510,6 +510,63 @@ function time_date_to_timestamp($date)
 
 
 /*
+	time_bind_to_seconds($bindtime)
+
+	Converts bind formatted time strings into seconds.
+
+	Values
+	bindtime	Format of:
+			#S == seconds
+			#M == minutes	60 seconds
+			#H == Hours	3600 seconds
+			#D == Days	86400 seconds
+			#W == Weeks	604800 seconds
+
+	Returns
+	int		number of seconds
+*/
+
+function time_bind_to_seconds($bindtime)
+{
+	log_write("debug", "misc", "Executing time_bind_to_seconds($bindtime)");
+
+	$bindtime = strtoupper($bindtime);
+
+	// this works by multiplying by the appropate amount and converting
+	// to an integer to strip the alpha characters.
+	//
+	switch (substr($bindtime, -1))
+	{
+		case "M":
+			$bindtime = intval($bindtime) * 60;
+		break;
+
+		case "H":
+			$bindtime = intval($bindtime) * 3600;
+		break;
+
+		case "D":
+			$bindtime = intval($bindtime) * 86400;
+		break;
+
+		case "W":
+			$bindtime = intval($bindtime) * 604800;
+		break;
+
+		case "S":
+		default:
+			intval($bindtime);
+		break;
+	}
+
+	return $bindtime;
+
+} // end of time_bind_to_seconds
+
+
+
+
+/*
 	time_format_hourmins($seconds)
 	
 	returns the number of hours, and the number of minutes in the form of H:MM
@@ -599,6 +656,7 @@ function time_format_humandate($date = NULL)
 		break;
 	}
 }
+
 
 
 /*
@@ -1287,6 +1345,35 @@ function ipv4_subnet_members($address_with_cidr, $include_network = FALSE)
 	return $return;
 
 } // end of ipv4_subnet_members
+
+
+
+
+/*
+	ipv4_convert_arpa
+
+	Converts the provided IPv4 address into the arpa format typically
+	used for reverse DNS.
+
+	Fields
+	ipaddress
+
+	Returns
+	0		Invalid IP address
+	string		apra format eg 0.168.192.in-addr.arpa
+*/
+
+function ipv4_convert_arpa( $ipaddress )
+{
+	log_write("debug", "inc_misc", "Executing ipv4_convert_arpa( $ipaddress )");
+
+	$tmp_network = explode(".", $ipaddress);
+
+	$result = $tmp_network[2] .".". $tmp_network[1] .".". $tmp_network[0] .".in-addr.arpa";
+
+	return $result;
+
+} // end of ipv4_convert_arpa
 
 
 

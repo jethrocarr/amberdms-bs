@@ -23,6 +23,7 @@ class form_input
 	var $sql_query;			// SQL query used to fetch data
 	
 	var $subforms;			// associative array of sub form titles and contents
+	var $subforms_grouped;		// grouped subform items
 	var $structure;			// array structure of all variables and options
 	var $actions;			// array structure of javascript actions
 
@@ -519,7 +520,8 @@ class form_input
 											(note: by default, table rows have their ID set to the name of the fieldname)
 						["css_field_class"]		Set the CSS class of a field
 						["search_filter"]		Enable/disable the optional text box to allow search/ filtering of a dropdown
-						["disabled"]			Set to yes to disable the field.
+ 						["help"]			In-field help message for input and textarea types. Is ignored if defaultvalue is set.
+ 						["disabled"]			Disables the field if set to yes
 						["autocomplete"]		Autocomplete option for input fields, it will display a dropdown that filters
 											as the user types, using the Jquery Autocomplete UI functions. Options are
 											currenly "sql" to use a SQL query set in ["options"]["autocomplete_sql"] and 
@@ -534,6 +536,8 @@ class form_input
 	function render_field ($fieldname)
 	{
 		log_debug("form", "Executing render_field($fieldname)");
+		
+		$helpmessagestatus = "false";
 		
 		switch ($this->structure[$fieldname]["type"])
 		{
@@ -557,7 +561,13 @@ class form_input
 				{
 					print "value=\"". htmlentities($this->structure[$fieldname]["defaultvalue"], ENT_QUOTES, "UTF-8") ."\" ";
 				}
-				
+ 				elseif (isset($this->structure[$fieldname]["options"]["help"]))
+ 				{
+ 					print "class=\"helpmessage\" ";
+ 					print "value=\"". $this->structure[$fieldname]["options"]["help"] ."\" ";
+ 					$helpmessagestatus = "true";
+ 				}
+			
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
 				{
 					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
@@ -577,6 +587,7 @@ class form_input
 					print $this->structure[$fieldname]["options"]["label"];
 				}
 
+				print "<input type=\"hidden\" name=\"".$fieldname."_helpmessagestatus\" value=\"".$helpmessagestatus."\">";
 			break;
 
 
@@ -610,7 +621,13 @@ class form_input
 				{	
 					print "value=\"". format_money($this->structure[$fieldname]["defaultvalue"], 1) ."\" ";
 				}
-
+ 				elseif (isset($this->structure[$fieldname]["options"]["help"]))
+ 				{
+ 					print "class=\"helpmessage\" ";
+ 					print "value=\"". $this->structure[$fieldname]["options"]["help"] ."\" ";
+ 					$helpmessagestatus = "true";
+ 				}
+ 
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
 					
@@ -638,6 +655,8 @@ class form_input
 				{
 					print $this->structure[$fieldname]["options"]["label"];
 				}
+				
+				print "<input type=\"hidden\" name=\"".$fieldname."_helpmessagestatus\" value=\"".$helpmessagestatus."\">";
 			break;
 
 
@@ -749,7 +768,6 @@ class form_input
 				{
 					print $this->structure[$fieldname]["options"]["label"];
 				}
-
 			break;
 
 			case "date":
@@ -980,6 +998,9 @@ class form_input
 					}			
 						
 					
+					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+						print "disabled=\"disabled\" ";
+					
 					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\" id=\"". $fieldname ."_". $value ."\">";
 					print "<label for=\"". $fieldname ."_". $value ."\">". $translations[$value] ."</label><br>";
 				}
@@ -1047,6 +1068,9 @@ class form_input
 				}			
 					
 
+				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+					print "disabled=\"disabled\" ";
+					
 				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\" id=\"". $fieldname ."\">";
 
 
@@ -1234,10 +1258,21 @@ class form_input
 			case "submit":
 				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
 
-				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\">";
+				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\"";
+				
+				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+					print "disabled=\"disabled\" ";
+					
+				print ">";
 			break;
 
 			case "message":
+
+				// sometimes message data is coming directly out of the SQL database, we should run HTML entities
+				// conversion on it.
+				$this->structure[$fieldname]["defaultvalue"]	= nl2br($this->structure[$fieldname]["defaultvalue"]);
+				//$this->structure[$fieldname]["defaultvalue"]	= htmlentities($this->structure[$fieldname]["defaultvalue"]);
+
 				print $this->structure[$fieldname]["defaultvalue"];
 			break;
 
@@ -1419,6 +1454,8 @@ class form_input
 		
 		foreach (array_keys($this->subforms) as $form_label)
 		{
+			log_write("debug", "inc_form", "Processing subform: $form_label");
+
 			$count++;
 			
 			if ($form_label == "hidden")
@@ -1441,10 +1478,135 @@ class form_input
 				print "<td colspan=\"2\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
 				print "</tr>";
 
-				// display all the rows
-				foreach ($this->subforms[$form_label] as $fieldname)
+
+				// standard vs grouped subform
+				if ($this->subforms_grouped[$form_label])
 				{
-					$this->render_row($fieldname);
+					log_write("debug", "inc_form", "Subform $form_logic is grouped - running additional logic");
+
+					/*
+						Grouped subforms add additional logic to Amberphplib - a subform can be defined as normal
+						with a placeholder fieldname.
+
+						This placeholder then matches to a subforms_grouped configuration that defines that fields
+						should belong to that group - once added, when the form is drawn, any fields that are grouped
+						will be drawn on a single row.
+
+						This feature is ideal for drawing complex charts/table-like forms without having to write
+						custom rendering code every time.
+
+						eg:
+						$obj_form->subforms["example"] 				= array("group1", "group2", "notgrouped");
+						$obj_form->subforms_grouped["example"]["group1"] 	= array("standard_field1", "standard_field2");
+						$obj_form->subforms_grouped["example"]["group2"] 	= array("standard_field3", "standard_field4");
+					*/
+
+
+					$grouped_counter = 0;
+
+					foreach ($this->subforms[$form_label] as $fieldname)
+					{
+
+						if (isset($this->subforms_grouped[$form_label][$fieldname]))
+						{
+							/*
+								We have determined that $fieldname is a grouped field - from here, we
+								now loop through and put grouped fields together.
+								
+								We track the table status with $grouped_counter, if we run into a regular
+								field, we close the table, process that field and then restume the table for
+								the next block of grouped fields.
+
+								eg:
+										/---------------------\
+									group1: |  field1  |  field2  |
+									group2: |  field1  |  field2  |
+										\---------------------/
+
+										/---------------------\
+										| normal_field ...... |
+										\---------------------/
+									
+										/---------------------\
+									group3: |  field4  |  field5  |
+										\---------------------/
+
+
+								TODO: There is a limitation to be cautious of, the logic here does not count
+									the number of columns to make sure all groups in the subform are the
+									same length.
+
+									General rule: don't mess with the number of columns - OR make sure there
+									is a regular field between them to cause the table to be re-drawn.
+							*/
+
+							log_write("debug", "inc_form", "Processing field $fieldname as a group field");
+
+							// container table
+							if ($grouped_counter == 0)
+							{
+								print "<tr>";
+								print "<td colspan=\"2\">";
+								print "<table class=\"table_highlight\">";
+
+								$grouped_counter = 1;
+							}
+
+							// grouped field
+							$num_fields = count ($this->subforms_grouped["domain_records"][$fieldname]);
+
+
+							// run through group members
+							print "<tr>";
+
+							foreach ($this->subforms_grouped["domain_records"][$fieldname] as $fieldname2)
+							{
+								// render field
+								print "<td>";
+								$this->render_field($fieldname2);
+								print "</td>";
+							}
+
+							print "</tr>";
+
+						}
+						else
+						{
+							if ($grouped_counter == 1)
+							{
+								// close container table
+								print "</table>";
+								print "</td></tr>";
+
+								$grouped_counter = 0;
+							}
+
+							// display row as normal
+							log_write("debug", "inc_form", "Processing field $fieldname as a regular field");
+
+							$this->render_row($fieldname);
+						}
+
+					}
+
+					if ($grouped_counter == 1)
+					{
+						// close container table
+						print "</table>";
+						print "</td></tr>";
+
+						$grouped_counter = 0;
+					}
+				}
+				else
+				{
+					log_write("debug", "inc_form", "Form subgroup $form_label is not grouped");
+
+					// display all the rows
+					foreach ($this->subforms[$form_label] as $fieldname)
+					{
+						$this->render_row($fieldname);
+					}
 				}
 
 				// end table
