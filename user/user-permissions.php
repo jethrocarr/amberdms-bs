@@ -92,8 +92,10 @@ class page_output
 				$structure = NULL;
 				$structure["fieldname"]				= "check_all_in_" .$data_perms_groups["group_name"];
 				$structure["type"]				= "checkbox";
-				$structure["options"]["label"]			= "Select / Deselect all permissions in the " .$data_perms_groups["group_name"]. " group";
+				$structure["options"]["label"]			= "<i>Select / Deselect all permissions in the " .$data_perms_groups["group_name"]. " group</i>";
 				$structure["options"]["css_field_class"]	= "select_all";
+				$structure["options"]["no_fieldname"]		= "1";
+				$structure["options"]["no_shift"]		= "1";
 				$this->obj_form->add_input($structure);
 				$this->obj_form->subforms[$data_perms_groups["group_name"]][] = "check_all_in_" .$data_perms_groups["group_name"];
 			}
