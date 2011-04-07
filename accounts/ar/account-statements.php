@@ -73,10 +73,11 @@ class page_output
 
 		// acceptable filter options
 		$structure = NULL;
-		$structure["fieldname"] = "days_overdue";
-		$structure["type"]	= "input";
-		$structure["sql"]	= "DATEDIFF(CURDATE(), account_ar.date_due) >= 'value'";
+		$structure["fieldname"] 	= "days_overdue";
+		$structure["type"]		= "input";
+		$structure["sql"]		= "DATEDIFF(CURDATE(), account_ar.date_due) >= 'value'";
 		$structure["options"]["width"]	= 30;
+		$structure["defaultvalue"]	= $GLOBALS["config"]["ACCOUNTS_TERMS_DAYS"];
 		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
@@ -104,6 +105,12 @@ class page_output
 
 		// load options
 		$this->obj_table->load_options_form();
+
+		// minimum of 1 days overdue
+		if ($this->obj_table->filter["filter_days_overdue"]["defaultvalue"] < 1)
+		{
+			$this->obj_table->filter["filter_days_overdue"]["defaultvalue"] = 1;
+		}
 
 
 		// fetch all the chart information

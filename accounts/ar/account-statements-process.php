@@ -114,7 +114,7 @@ if (user_permissions_get('accounts_ar_write'))
 			// send email
 			$obj_invoice->email_invoice($from, $to, "", "", $subject, $email_message);
 			
-			$_SESSION["notification"]["message"][] = "Reminder email for Invoice " .$obj_sql_invoice->data[0]["code_invoice"]. "was sent successfully.";
+			$_SESSION["notification"]["message"][] = "Reminder email for Invoice " .$obj_sql_invoice->data[0]["code_invoice"]. " was sent successfully.";
 		}
 	}
 	
