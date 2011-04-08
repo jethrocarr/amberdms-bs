@@ -39,6 +39,35 @@ $(document).ready(function()
 		this.select();
 	})
 
+	// help functions
+	$(".helpmessage").live("click", function()
+	{
+		var message = $(this).val();
+		$(this).siblings("input[name$='helpmessagestatus']").val(message);
+		$(this).val("").removeClass("helpmessage").blur(function()
+		{
+			if ($(this).val().length == 0)
+			{
+				$(this).addClass("helpmessage").val(message);
+				$(this).siblings("input[name$='helpmessagestatus']").val("true");
+			}
+		});
+	});
+	
+	$(".helpmessage").live("focusin", function()
+	{
+		var message = $(this).val();
+		$(this).siblings("input[name$='helpmessagestatus']").val(message);
+		$(this).val("").removeClass("helpmessage").blur(function()
+		{
+			if ($(this).val().length == 0)
+			{
+				$(this).addClass("helpmessage").val(message);
+				$(this).siblings("input[name$='helpmessagestatus']").val("true");
+			}
+		});
+	});
+
 });
 
 function obj_hide(obj)
