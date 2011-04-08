@@ -187,13 +187,13 @@ class services_form_details
 
 
 		// service grouping
-		$structure = form_helper_prepare_dropdownfromdb("id_service_group", "SELECT id, group_name as label FROM service_groups");
+		$structure = form_helper_prepare_dropdownfromgroup("id_service_group", "SELECT id as value_id, group_name as value_key, id_parent as value_parent FROM service_groups");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["search_filter"]	= "yes";
 		$structure["options"]["width"]		= "400";
 		$this->obj_form->add_input($structure);
 
-		$structure = form_helper_prepare_dropdownfromdb("id_service_group_usage", "SELECT id, group_name as label FROM service_groups");
+		$structure = form_helper_prepare_dropdownfromgroup("id_service_group_usage", "SELECT id as value_id, group_name as value_key, id_parent as value_parent FROM service_groups");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["search_filter"]	= "yes";
 		$structure["options"]["width"]		= "400";

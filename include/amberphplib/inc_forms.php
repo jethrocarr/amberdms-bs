@@ -1839,6 +1839,83 @@ function form_helper_prepare_valuesfromdb($sqlquery)
 
 
 
+
+
+/*
+	form_helper_prepare_valuesfromgroup($sqlquery)
+
+	Passes the provided query to the sql_get_grouped_structure query, then takes the provided information and generates
+	a form dropdown object, saving the developer from having to write lots of unnessacary information.
+
+	Refer to the documentation in amberphplib/inc_sql.php relating to the sql_get_grouped_structure for information on
+	the appropiate way to structure the SQL query.
+
+	Fields
+	fieldname		Field to query
+	sqlquery		SQL Query to execute
+				eg: "SELECT id as value_id, group_name as value_key, id_parent as value_parent FROM object_groups"
+
+	Returns the structure
+	array			Form object structure
+*/
+
+function form_helper_prepare_dropdownfromgroup($fieldname, $sqlquery)
+{
+	log_debug("form", "Executing form_helper_prepare_dropdownfromgroup($fieldname, $sqlquery)");
+	
+	// start object
+	$structure = array();
+
+
+	// fetch from cache (if it exists)
+	if (isset($GLOBALS["cache"]["form_sql"][$sqlquery]))
+	{
+		log_write("debug", "form", "Fetching form DB results from cache");
+
+		$data = $GLOBALS["cache"]["form_sql"][$sqlquery];
+	}
+	else
+	{
+		// execute query
+		$data = sql_get_grouped_structure($sqlquery);
+	}
+
+	// import data into form structure
+	if (is_array($data))
+	{
+		foreach ($data as $data_row)
+		{
+			$structure["values"][]				= $data_row["id"];
+			$structure["translations"][ $data_row["id"] ]	= $data_row["key_formatted"];
+		}
+	}
+	
+	// set type and any error messaes
+	if (!$structure)
+	{
+		// no valid data found
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "text";
+		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+	}
+	else
+	{
+		// valid dropdown
+		$structure["fieldname"] 	= $fieldname;
+		$structure["type"]		= "dropdown";
+	}
+
+	
+	// return the structure
+	return $structure;
+
+} // end of form_helper_prepare_dropdownfromgroup()
+
+
+
+
+
+
 /*
 	form_helper_prepare_timezonedropdown($fieldname)
 

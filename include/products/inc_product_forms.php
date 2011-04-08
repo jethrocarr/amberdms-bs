@@ -49,7 +49,7 @@ class products_form_details
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
-		$structure = form_helper_prepare_dropdownfromdb("id_product_group", "SELECT id, group_name as label FROM product_groups");
+		$structure = form_helper_prepare_dropdownfromgroup("id_product_group", "SELECT id as value_id, group_name as value_key, id_parent as value_parent FROM product_groups");
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["search_filter"]	= "yes";
 		$this->obj_form->add_input($structure);
