@@ -326,53 +326,18 @@ class invoice_form_export
 		$obj_sql_invoice->fetch_array();
 
 
+
 		/*
-			Fetch basic customer information
+			Generate Email
+
+			This function call provides us with all the email fields we can use to complete the form with.
 		*/
-		$obj_sql_contact		= New sql_query;
-		$obj_sql_contact->string	= "SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$obj_sql_invoice->data[0]["customerid"]. "' AND role = 'accounts'";
-		$obj_sql_contact->execute();
-		$obj_sql_contact->fetch_array();
-		
-		$obj_sql_customer		= New sql_query;
-		$obj_sql_customer->string	= "SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'email' LIMIT 1";
-		$obj_sql_customer->execute();
-		$obj_sql_customer->fetch_array();
-
-
 			
-		$obj_invoice	= New invoice;
+		$obj_invoice		= New invoice;
 		$obj_invoice->type	= $this->type;
-		$obj_invoice->id = $this->invoiceid;
-		
-		$obj_invoice->load_data();
-		$obj_invoice->load_data_export();
-		$invoice_data = $obj_invoice->invoice_fields;
-		
-		$invoice_data_parts['keys'] =  array_keys($invoice_data);
-		$invoice_data_parts['values'] = array_values($invoice_data);
-		
-		foreach($invoice_data_parts['keys'] as $index => $key)
-		{
-			$invoice_data_parts['keys'][$index] = "(".$key.")";
-		} 	
-		foreach($invoice_data_parts['values'] as $index => $value)
-		{
-			$invoice_data_parts['values'][$index] = trim($value);
-		} 
-		
-		
-		if ($this->type == "ar")
-		{
-			$email_message	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_EMAIL') LIMIT 1");
-		}
-		else
-		{
-			$email_message	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
-		}
-		
-		
-		$email_message = str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $email_message);
+		$obj_invoice->id	= $this->invoiceid;
+
+		$email = $obj_invoice->generate_email();
 		
 
 		/*
@@ -390,8 +355,7 @@ class invoice_form_export
 		$structure = NULL;
 		$structure["fieldname"] 	= "sender";
 		$structure["type"]		= "radio";
-		$structure["defaultvalue"]	= "system";
-		
+		$structure["defaultvalue"]	= $email["sender"];
 		$structure["values"]		= array("system", "user");
 		
 		$structure["translations"]["system"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_NAME'") ." &lt;". sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'") ."&gt;";
@@ -405,44 +369,35 @@ class invoice_form_export
 		$structure = NULL;
 		$structure["fieldname"] 	= "subject";
 		$structure["type"]		= "input";
-
-		if ($this->type == "ar")
-		{
-			$structure["defaultvalue"]	= "Invoice ". $obj_sql_invoice->data[0]["code_invoice"];
-		}
-		else
-		{
-			$structure["defaultvalue"]	= "Quote ". $obj_sql_invoice->data[0]["code_quote"];
-		}
-		
+		$structure["defaultvalue"]	= $email["subject"];
 		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_to";
 		$structure["type"]		= "input";
-		$structure["defaultvalue"]	= $obj_sql_customer->data[0]["contact_email"];
+		$structure["defaultvalue"]	= $email["to"];
 		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_cc";
 		$structure["type"]		= "input";
-		$structure["defaultvalue"]	= "";
+		$structure["defaultvalue"]	= $email["cc"];
 		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 			
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_bcc";
 		$structure["type"]		= "input";
-		$structure["defaultvalue"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+		$structure["defaultvalue"]	= $email["bcc"];
 		$structure["options"]["width"]	= "600";
 		$this->obj_form_email->add_input($structure);
 	
 		$structure = NULL;
 		$structure["fieldname"] 	= "email_message";
 		$structure["type"]		= "textarea";
-		$structure["defaultvalue"] = $email_message;
+		$structure["defaultvalue"] 	= $email["message"];
 
 		$structure["options"]["width"]	= "600";
 		$structure["options"]["height"]	= "100";

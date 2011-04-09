@@ -1488,24 +1488,20 @@ function service_invoices_generate($customerid = NULL)
 						$invoice	= New invoice;
 						$invoice->id	= $invoiceid;
 						$invoice->type	= "ar";
+
 						$invoice->load_data();
+						$invoice->load_data_export();
 
 						if ($invoice->data["amount_total"] > 0)
 						{
-							// load customer information
-							$arr_sql_contact		= sql_get_singlerow("SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$customer_data["customerid"]. "' AND role = 'accounts' LIMIT 1");
-							$arr_sql_contact_details	= sql_get_singlerow("SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$arr_sql_contact["id"]. "' AND type = 'email' LIMIT 1");
-		
-							// place the contact details into the customer details array.			
-							$customer_data["name_contact"]	= $arr_sql_contact["contact"];			
-							$customer_data["contact_email"] = $arr_sql_contact_details["contact_email"];
-
+							// generate an email
+							$email = $invoice->generate_email();
 
 							// send email
-							$invoice->email_invoice("system", $customer_data["name_contact"] ."<". $customer_data["contact_email"] .">", "", "", "Invoice $invoicecode", "Please see attached invoice in PDF format.");
+							$invoice->email_invoice("system", $email["to"], $email["cc"], $email["bcc"], $email["subject"], $email["message"]);
 
 							// complete
-							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $customer_data["contact_email"] .")");
+							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $email["to"] .")");
 						}
 						else
 						{

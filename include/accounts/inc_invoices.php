@@ -357,7 +357,8 @@ class invoice
 	*/
 	function load_data_export()
 	{
-	
+		log_debug("invoice", "Executing load_data_export()");
+
 
 		/*
 			Customer Data
@@ -370,11 +371,22 @@ class invoice
 		$sql_customer_obj->execute(); 
 		$sql_customer_obj->fetch_array(); 
 
+		$obj_sql_contact		= New sql_query;
+		$obj_sql_contact->string	= "SELECT id, contact FROM customer_contacts WHERE customer_id = '". $this->data["customerid"] ."' AND role = 'accounts'";
+		$obj_sql_contact->execute();
+		$obj_sql_contact->fetch_array();
+		
+
 
 		// customer fields
 		$this->invoice_fields["code_customer"] = $sql_customer_obj->data[0]["code_customer"]; 
 		$this->invoice_fields["customer_name"] = $sql_customer_obj->data[0]["name_customer"]; 
-		$this->invoice_fields["customer_contact"] = sql_get_singlevalue("SELECT contact AS value FROM customer_contacts WHERE customer_id = '" .$this->data["customerid"]. "' AND role = 'accounts'");
+
+		$this->invoice_fields["customer_contact"]	= $obj_sql_contact->data[0]["contact"];
+		$this->invoice_fields["customer_contact_email"]	= sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'email' LIMIT 1");
+		$this->invoice_fields["customer_contact_phone"]	= sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'phone' LIMIT 1");
+		$this->invoice_fields["customer_contact_fax"]	= sql_get_singlevalue("SELECT detail AS value FROM customer_contact_records WHERE contact_id = '" .$obj_sql_contact->data[0]["id"]. "' AND type = 'fax' LIMIT 1");
+
 		$this->invoice_fields["customer_address1_street"] = $sql_customer_obj->data[0]["address1_street"]; 
 		$this->invoice_fields["customer_address1_city"] = $sql_customer_obj->data[0]["address1_city"]; 
 		$this->invoice_fields["customer_address1_state"] = $sql_customer_obj->data[0]["address1_state"]; 
@@ -855,9 +867,13 @@ class invoice
 		log_debug("invoice", "Executing generate_pdf()");
 	
 
-		$this->load_data();	
-		$this->load_data_export();
-		
+		// load data if required
+		if (!is_array($this->invoice_fields))
+		{
+			$this->load_data();	
+			$this->load_data_export();
+		}
+
 		
 		
 		// start the PDF object
@@ -1342,6 +1358,92 @@ class invoice
 
 	} // end of generate_pdf
 
+
+
+	/*
+		generate_email
+
+		Generates all the fields needed for an invoice email - this function fetches the text template, fills
+		in all the details and returns a structured array.
+
+		This function is used by the UI and the backend.
+
+		Returns
+		0		Failure
+		array		Email Data
+	*/
+
+	function generate_email()
+	{
+		log_write("debug", "inc_invoice", "Executing generate_email()");
+
+
+		// load data if required
+		if (!is_array($this->invoice_fields))
+		{
+			$this->load_data();	
+			$this->load_data_export();
+		}
+
+
+		/*
+			restructure the invoice data into a form we can handle
+		*/
+
+		$invoice_data_parts['keys']	= array_keys($this->invoice_fields);
+		$invoice_data_parts['values']	= array_values($this->invoice_fields);
+		
+		foreach($invoice_data_parts['keys'] as $index => $key)
+		{
+			$invoice_data_parts['keys'][$index] = "(".$key.")";
+		} 	
+		foreach($invoice_data_parts['values'] as $index => $value)
+		{
+			$invoice_data_parts['values'][$index] = trim($value);
+		}
+
+
+
+		/*
+			Assemble the message data
+		*/
+
+		$email = array();
+
+
+		// default to system rather than user
+		$email["sender"]	= "system";
+	
+		// email to the accounts user
+		$email["to"]		= $this->invoice_fields["customer_contact"] ." <". $this->invoice_fields["customer_contact_email"] .">";
+
+		// default cc
+		$email["cc"]		= "";
+
+		// default bcc
+		$email["bcc"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+
+
+		// type specific
+		if ($this->type == "ar")
+		{
+			$email["subject"]	= "Invoice ". $this->invoice_fields["code_invoice"];
+			$email["message"]	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_INVOICE_EMAIL') LIMIT 1");
+		}
+		else
+		{
+			$email["subject"]	= "Quote ". $this->invoice_fields["code_quote"];
+			$email["message"]	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
+		}
+		
+
+		// replace fields in the template
+		$email["message"]		= str_replace($invoice_data_parts['keys'], $invoice_data_parts['values'], $email["message"]);
+
+
+		return $email;
+
+	} // end of generate_email
 
 
 	/*
