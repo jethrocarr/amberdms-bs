@@ -150,6 +150,110 @@ if (user_permissions_get("admin"))
 	} // end of if service types
 
 
+	/*
+		Billing Cycle Configuration
+	*/
+	$data_cycles		= array();
+
+	$obj_sql		= New sql_query;
+	$obj_sql->string	= "SELECT id, name FROM billing_cycles ORDER BY priority";
+	$obj_sql->execute();
+
+	if ($obj_sql->num_rows())
+	{
+		$obj_sql->fetch_array();
+
+		foreach ($obj_sql->data as $data_row)
+		{
+			$data_cycles[ $data_row["id"] ]			= @security_form_input_predefined("checkbox", "billing_cycle_". $data_row["id"], 0, "");
+
+			// if marked inactive, check if it's inuse
+			if ($data_cycles [ $data_row["id"] ] == 0)
+			{
+				// we need to make sure this usage cycle is not in use, since if it is, disabling
+				// it would cause weird borkage.
+			
+				$obj_sql_check		= New sql_query;
+				$obj_sql_check->string	= "SELECT name_service FROM services WHERE billing_cycle='". $data_row["id"] ."'";
+				$obj_sql_check->execute();
+
+				if ($obj_sql_check->num_rows())
+				{
+					$obj_sql_check->fetch_array();
+
+					$service_list = array();
+
+					foreach ($obj_sql_check->data as $data_check)
+					{
+						$service_list[] = $data_check["name_service"];
+					}
+
+					// cycle is in use
+					log_write("error", "process", "Unable to disable cycle ". $data_row["name"] ." due to it being used by service \"". format_arraytocommastring($service_list) ."\".");
+					error_flag_field("billing_cycle_". $data_row["id"]);
+
+				} // end if service cycle in use
+
+			} // end if disabled
+
+		} // end of service cycle loop
+
+	} // end of if service cycles
+
+
+
+	/*
+		Billing Mode Configuration
+	*/
+	$data_modes		= array();
+
+	$obj_sql		= New sql_query;
+	$obj_sql->string	= "SELECT id, name FROM billing_modes";
+	$obj_sql->execute();
+
+	if ($obj_sql->num_rows())
+	{
+		$obj_sql->fetch_array();
+
+		foreach ($obj_sql->data as $data_row)
+		{
+			$data_modes[ $data_row["id"] ]			= @security_form_input_predefined("checkbox", "billing_mode_". $data_row["id"], 0, "");
+
+			// if marked inactive, check if it's inuse
+			if ($data_modes [ $data_row["id"] ] == 0)
+			{
+				// we need to make sure this usage mode is not in use, since if it is, disabling
+				// it would cause weird borkage.
+			
+				$obj_sql_check		= New sql_query;
+				$obj_sql_check->string	= "SELECT name_service FROM services WHERE billing_mode='". $data_row["id"] ."'";
+				$obj_sql_check->execute();
+
+				if ($obj_sql_check->num_rows())
+				{
+					$obj_sql_check->fetch_array();
+
+					$service_list = array();
+
+					foreach ($obj_sql_check->data as $data_check)
+					{
+						$service_list[] = $data_check["name_service"];
+					}
+
+					// mode is in use
+					log_write("error", "process", "Unable to disable mode ". $data_row["name"] ." due to it being used by service \"". format_arraytocommastring($service_list) ."\".");
+					error_flag_field("billing_mode_". $data_row["id"]);
+
+				} // end if service mode in use
+
+			} // end if disabled
+
+		} // end of service mode loop
+
+	} // end of if service modes
+
+
+
 
 	/*
 		Test Traffic Database
@@ -261,6 +365,29 @@ if (user_permissions_get("admin"))
 			$sql_obj->string = "UPDATE service_types SET active='". $data_types[ $id_type ] ."' WHERE id='". $id_type ."' LIMIT 1";
 			$sql_obj->execute();
 		}
+
+
+		/*
+			Update billing cycles
+		*/
+
+		foreach (array_keys($data_cycles) as $id_cycle)
+		{
+			$sql_obj->string = "UPDATE billing_cycles SET active='". $data_cycles[ $id_cycle ] ."' WHERE id='". $id_cycle ."' LIMIT 1";
+			$sql_obj->execute();
+		}
+
+
+		/*
+			Update billing mode
+		*/
+
+		foreach (array_keys($data_modes) as $id_mode)
+		{
+			$sql_obj->string = "UPDATE billing_modes SET active='". $data_modes[ $id_mode ] ."' WHERE id='". $id_mode ."' LIMIT 1";
+			$sql_obj->execute();
+		}
+
 
 
 

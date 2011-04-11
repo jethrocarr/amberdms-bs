@@ -84,6 +84,102 @@ class page_output
 
 
 
+		/*
+			Configure service billing cycles
+
+			We provide the ability to enable/disable service billing cycles in the UI to make things easier
+			for the users.
+		*/
+
+		$structure = NULL;
+		$structure["fieldname"]					= "billing_cycle_enabled";
+		$structure["type"]					= "text";
+		$structure["defaultvalue"]				= "<p>". lang_trans("billing_cycle_selection_help") ."</p>";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["config_billing_cycle"]	= array("billing_cycle_enabled");
+
+
+		$obj_sql		= New sql_query;
+		$obj_sql->string	= "SELECT id, name, description, active FROM billing_cycles ORDER BY priority";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			$obj_sql->fetch_array();
+
+			foreach ($obj_sql->data as $data_row)
+			{
+				$structure = NULL;
+				$structure["fieldname"]				= "billing_cycle_". $data_row["id"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= $data_row["name"] ." -- ". $data_row["description"];
+				$structure["options"]["no_fieldname"]		= 1;
+				$structure["options"]["no_shift"]		= 1;
+
+				if ($data_row["active"])
+				{
+					$structure["defaultvalue"]		= 1;
+				}
+
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["config_billing_cycle"][] = "billing_cycle_". $data_row["id"];
+			}
+		}
+
+		unset($obj_sql);
+
+
+
+		/*
+			Configure service billing modes
+
+			We provide the ability to enable/disable service billing modes in the UI to make things easier
+			for the users.
+		*/
+
+		$structure = NULL;
+		$structure["fieldname"]					= "billing_mode_enabled";
+		$structure["type"]					= "text";
+		$structure["defaultvalue"]				= "<p>". lang_trans("billing_mode_selection_help") ."</p>";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["config_billing_mode"]	= array("billing_mode_enabled");
+
+
+		$obj_sql		= New sql_query;
+		$obj_sql->string	= "SELECT id, name, description, active FROM billing_modes ORDER BY id";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			$obj_sql->fetch_array();
+
+			foreach ($obj_sql->data as $data_row)
+			{
+				$structure = NULL;
+				$structure["fieldname"]				= "billing_mode_". $data_row["id"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= $data_row["name"] ." -- ". $data_row["description"];
+				$structure["options"]["no_fieldname"]		= 1;
+				$structure["options"]["no_shift"]		= 1;
+
+				if ($data_row["active"])
+				{
+					$structure["defaultvalue"]		= 1;
+				}
+
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["config_billing_mode"][] = "billing_mode_". $data_row["id"];
+			}
+		}
+
+		unset($obj_sql);
+
+
+
 
 		/*
 			Configure service usage unit options

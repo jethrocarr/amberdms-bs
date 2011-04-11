@@ -437,7 +437,7 @@ class services_form_plan
 		$this->obj_form->add_input($structure);
 
 
-		$structure = form_helper_prepare_radiofromdb("billing_cycle", "SELECT id, name as label, description as label1 FROM billing_cycles ORDER BY priority");
+		$structure = form_helper_prepare_radiofromdb("billing_cycle", "SELECT id, name as label, description as label1 FROM billing_cycles WHERE active='1' ORDER BY priority");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
@@ -509,7 +509,7 @@ class services_form_plan
 
 
 				// general
-				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE active='1' AND name NOT LIKE '%advance%'");
 				$structure["options"]["req"]		= "yes";
 
 				// replace all the -- joiners with <br> for clarity
@@ -583,7 +583,7 @@ class services_form_plan
 
 				
 				// general
-				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%telco%'");
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE active='1' AND name NOT LIKE '%telco%'");
 				$structure["options"]["req"]		= "yes";
 				
 				// replace all the -- joiners with <br> for clarity
@@ -599,7 +599,7 @@ class services_form_plan
 				
 				// subforms
 				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
-				$this->obj_form->subforms["service_plan_custom"] = array("plan_information", "units", "included_units", "price_extraunits");
+				$this->obj_form->subforms["service_plan_custom"]	= array("plan_information", "units", "included_units", "price_extraunits");
 			break;
 
 
@@ -635,7 +635,7 @@ class services_form_plan
 				$this->obj_form->add_input($structure);
 				
 				// general
-				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE name NOT LIKE '%advance%'");
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE active='1' AND name NOT LIKE '%advance%'");
 				$structure["options"]["req"]		= "yes";
 
 				// replace all the -- joiners with <br> for clarity
@@ -867,6 +867,13 @@ class services_form_plan
 			$this->obj_form->structure["units"]["type"]			= "text";
 			$this->obj_form->structure["units"]["defaultvalue"]		= "error_no_units_available";
 		}
+
+		if (empty($this->obj_form->structure["billing_cycle"]["values"]))
+		{
+			$this->obj_form->structure["billing_cycle"]["type"]			= "text";
+			$this->obj_form->structure["billing_cycle"]["defaultvalue"]		= "error_no_billing_cycles_available";
+		}
+
 
 		// load options data
 		$sql_obj		= New sql_query;
