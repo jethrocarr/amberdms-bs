@@ -164,7 +164,7 @@ class services_form_details
 		// the service type can only be set at creation time.
 		if ($this->mode == "add")
 		{
-			$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label, description as label1 FROM service_types ORDER BY name");
+			$structure = form_helper_prepare_radiofromdb("typeid", "SELECT id, name as label, description as label1 FROM service_types WHERE active='1' ORDER BY name");
 			$structure["options"]["req"]	= "yes";
 
 			// replace all the -- joiners with <br> for clarity
@@ -172,6 +172,13 @@ class services_form_details
 			{
 				$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
 				$structure["translations"][ $structure["values"][$i] ] .= "</i><br>";
+			}
+
+			// handle misconfiguration gracefully
+			if (empty($this->obj_form->structure["typeid"]["values"]))
+			{
+				$this->obj_form->structure["typeid"]["type"]			= "text";
+				$this->obj_form->structure["typeid"]["defaultvalue"]		= "error_no_types_available";
 			}
 
 			$this->obj_form->add_input($structure);

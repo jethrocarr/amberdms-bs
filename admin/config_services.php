@@ -135,6 +135,52 @@ class page_output
 
 
 		/*
+			Configure Service Types & Labels
+		*/
+
+		$structure = NULL;
+		$structure["fieldname"]					= "service_types_enabled";
+		$structure["type"]					= "text";
+		$structure["defaultvalue"]				= "<p>". lang_trans("service_types_selection_help") ."</p>";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["config_service_types"]	= array("service_types_enabled");
+
+
+		$obj_sql		= New sql_query;
+		$obj_sql->string	= "SELECT id, name, description, active FROM service_types ORDER BY name";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			$obj_sql->fetch_array();
+
+			foreach ($obj_sql->data as $data_row)
+			{
+				$structure = NULL;
+				$structure["fieldname"]				= "service_type_". $data_row["id"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= $data_row["name"] ." -- ". $data_row["description"];
+				$structure["options"]["no_fieldname"]		= 1;
+				$structure["options"]["no_shift"]		= 1;
+
+				if ($data_row["active"])
+				{
+					$structure["defaultvalue"]		= 1;
+				}
+
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["config_service_types"][] = "service_type_". $data_row["id"];
+			}
+		}
+
+		unset($obj_sql);
+
+
+
+
+		/*
 			Configure service usage unit options
 
 			We allow the administor to enable/disable service units from being displayed as options (primarily 
