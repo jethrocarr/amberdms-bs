@@ -47,6 +47,57 @@ if (user_permissions_get("admin"))
 	}
 
 
+	/*
+		Service Usage Unit Options
+	*/
+	$data_units		= array();
+
+	$obj_sql		= New sql_query;
+	$obj_sql->string	= "SELECT id, name FROM service_units ORDER BY typeid, name";
+	$obj_sql->execute();
+
+	if ($obj_sql->num_rows())
+	{
+		$obj_sql->fetch_array();
+
+		foreach ($obj_sql->data as $data_row)
+		{
+			$data_units[ $data_row["id"] ]			= @security_form_input_predefined("checkbox", "service_unit_". $data_row["id"], 0, "");
+
+			// if marked inactive, check if it's inuse
+			if ($data_units [ $data_row["id"] ] == 0)
+			{
+				// we need to make sure this usage unit is not in use, since if it is, disabling
+				// it would cause weird borkage.
+			
+				$obj_sql_check		= New sql_query;
+				$obj_sql_check->string	= "SELECT name_service FROM services WHERE units='". $data_row["id"] ."'";
+				$obj_sql_check->execute();
+
+				if ($obj_sql_check->num_rows())
+				{
+					$obj_sql_check->fetch_array();
+
+					$service_list = array();
+
+					foreach ($obj_sql_check->data as $data_check)
+					{
+						$service_list[] = $data_check["name_service"];
+					}
+
+					// unit is in use
+					log_write("error", "process", "Unable to disable unit ". $data_row["name"] ." due to it being used by service \"". format_arraytocommastring($service_list) ."\".");
+					error_flag_field("service_unit_". $data_row["id"]);
+
+				} // end if service unit in use
+
+			} // end if disabled
+
+		} // end of service unit loop
+
+	} // end of if service units
+
+
 
 	/*
 		Test Traffic Database
@@ -137,6 +188,16 @@ if (user_permissions_get("admin"))
 			$sql_obj->execute();
 		}
 
+
+		/*
+			Update service units
+		*/
+
+		foreach (array_keys($data_units) as $id_unit)
+		{
+			$sql_obj->string = "UPDATE service_units SET active='". $data_units[ $id_unit ] ."' WHERE id='". $id_unit ."' LIMIT 1";
+			$sql_obj->execute();
+		}
 
 
 		/*

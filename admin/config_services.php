@@ -101,7 +101,7 @@ class page_output
 			$this->obj_form->add_action("SERVICE_TRAFFIC_MODE", "external", "SERVICE_TRAFFIC_DB_NAME", "show");
 			$this->obj_form->add_action("SERVICE_TRAFFIC_MODE", "external", "SERVICE_TRAFFIC_DB_USERNAME", "show");
 			$this->obj_form->add_action("SERVICE_TRAFFIC_MODE", "external", "SERVICE_TRAFFIC_DB_PASSWORD", "show");
-		
+	
 
 			// add subform
 			$this->obj_form->subforms["config_usage_traffic"]	= array("SERVICE_TRAFFIC_MODE", "SERVICE_TRAFFIC_DB_TYPE", "SERVICE_TRAFFIC_DB_HOST", "SERVICE_TRAFFIC_DB_NAME", "SERVICE_TRAFFIC_DB_USERNAME", "SERVICE_TRAFFIC_DB_PASSWORD");
@@ -131,6 +131,54 @@ class page_output
 
 			$this->obj_form->subforms["config_usage_traffic"]	= array("SERVICE_TRAFFIC_MSG");
 		}
+
+
+
+		/*
+			Configure service usage unit options
+
+			We allow the administor to enable/disable service units from being displayed as options (primarily 
+			to prevent staff confusion.
+		*/
+
+		$structure = NULL;
+		$structure["fieldname"]					= "service_units_enabled";
+		$structure["type"]					= "text";
+		$structure["defaultvalue"]				= "<p>". lang_trans("service_unit_selection_help") ."</p>";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["config_usage_units"]		= array("service_units_enabled");
+
+
+		$obj_sql		= New sql_query;
+		$obj_sql->string	= "SELECT id, name, description, active FROM service_units ORDER BY typeid, name";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			$obj_sql->fetch_array();
+
+			foreach ($obj_sql->data as $data_row)
+			{
+				$structure = NULL;
+				$structure["fieldname"]				= "service_unit_". $data_row["id"];
+				$structure["type"]				= "checkbox";
+				$structure["options"]["label"]			= $data_row["name"] ." -- ". $data_row["description"];
+				$structure["options"]["no_fieldname"]		= 1;
+				$structure["options"]["no_shift"]		= 1;
+
+				if ($data_row["active"])
+				{
+					$structure["defaultvalue"]		= 1;
+				}
+
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["config_usage_units"][] = "service_unit_". $data_row["id"];
+			}
+		}
+
+		unset($obj_sql);
 
 
 

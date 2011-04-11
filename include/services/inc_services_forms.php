@@ -610,7 +610,7 @@ class services_form_plan
 				$structure["defaultvalue"]	= "<i>This section is where you define what units you wish to bill in, along with the cost of excess units. It is acceptable to leave the price for extra units set to 0.00 if you have some other method of handling excess usage (eg: rate shaping rather than billing). If you wish to create an uncapped/unlimited usage service, set both the price for extra units and the included units to 0.</i>";
 				$this->obj_form->add_input($structure);
 
-				$structure = form_helper_prepare_radiofromdb("units", "SELECT id, name as label, description as label1 FROM service_units WHERE typeid='". $sql_plan_obj->data[0]["typeid"] ."' ORDER BY name");
+				$structure = form_helper_prepare_radiofromdb("units", "SELECT id, name as label, description as label1 FROM service_units WHERE typeid='". $sql_plan_obj->data[0]["typeid"] ."' AND active='1' ORDER BY name");
 				$structure["options"]["req"]		= "yes";
 				$structure["options"]["autoselect"]	= "yes";
 				$this->obj_form->add_input($structure);
@@ -853,6 +853,13 @@ class services_form_plan
 		// load service details
 		$this->obj_form->sql_query = "SELECT * FROM `services` WHERE id='". $this->serviceid ."' LIMIT 1";
 		$this->obj_form->load_data();
+
+		// handle misconfiguration gracefully
+		if (empty($this->obj_form->structure["units"]["values"]))
+		{
+			$this->obj_form->structure["units"]["type"]			= "text";
+			$this->obj_form->structure["units"]["defaultvalue"]		= "error_no_units_available";
+		}
 
 		// load options data
 		$sql_obj		= New sql_query;
