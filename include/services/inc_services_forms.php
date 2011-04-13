@@ -156,8 +156,10 @@ class services_form_details
 		$this->obj_form->add_input($structure);	
 
 		$structure = NULL;
-		$structure["fieldname"] 	= "description";
-		$structure["type"]		= "textarea";
+		$structure["fieldname"] 		= "description";
+		$structure["type"]			= "textarea";
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["height"]		= "100";
 		$this->obj_form->add_input($structure);
 
 
@@ -306,6 +308,42 @@ class services_form_details
 
 
 
+		/*
+			Upstream Vendor Information
+
+			These fields are purely for users notes/record keeping purposes.
+		*/
+
+		$structure = NULL;
+		$structure["fieldname"]			= "upstream_help_message";
+		$structure["type"]			= "message";
+		$structure["defaultvalue"]		= "<p>". lang_trans("upstream_help_message") ."</p>";
+		$this->obj_form->add_input($structure);
+
+		$sql_struct_obj	= New sql_query;
+		$sql_struct_obj->prepare_sql_settable("vendors");
+		$sql_struct_obj->prepare_sql_addfield("id", "vendors.id");
+		$sql_struct_obj->prepare_sql_addfield("label", "vendors.code_vendor");
+		$sql_struct_obj->prepare_sql_addfield("label1", "vendors.name_vendor");
+		$sql_struct_obj->prepare_sql_addorderby("code_vendor");
+		$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+			
+		$structure = form_helper_prepare_dropdownfromobj("upstream_id", $sql_struct_obj);
+		$structure["options"]["search_filter"]	= "yes";
+		$structure["options"]["width"]		= "400";
+		$this->obj_form->add_input($structure);	
+
+		$structure = NULL;
+		$structure["fieldname"] 		= "upstream_notes";
+		$structure["type"]			= "textarea";
+		$structure["options"]["width"]		= "600";
+		$structure["options"]["height"]		= "100";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["service_upstream"]	= array("upstream_help_message", "upstream_id", "upstream_notes");
+
+
+
 		// define subforms	
 		if (user_permissions_get("services_write"))
 		{
@@ -367,7 +405,9 @@ class services_form_details
 								services.id_service_group,
 								services.id_service_group_usage,
 								services.description, 
-								service_types.name as typeid
+								service_types.name as typeid,
+								services.upstream_id as upstream_id,
+								services.upstream_notes as upstream_notes
 							FROM `services`
 							LEFT JOIN service_types ON service_types.id = services.typeid
 							WHERE services.id='". $this->serviceid ."' LIMIT 1";

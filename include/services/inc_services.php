@@ -191,6 +191,7 @@ class service
 			$this->data["billing_cycle_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_cycles WHERE id='". $this->data["billing_cycle"] ."' LIMIT 1");
 			$this->data["billing_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $this->data["billing_mode"] ."' LIMIT 1");
 			$this->data["usage_mode_string"]	= sql_get_singlevalue("SELECT name as value FROM service_usage_modes WHERE id='". $this->data["usage_mode"] ."' LIMIT 1");
+			$this->data["upstream_id_string"]	= sql_get_singlevalue("SELECT name as value FROM vendors WHERE id='". $this->data["upstream_id"] ."' LIMIT 1");
 		
 
 			// fetch additional service attributes stored in the options table

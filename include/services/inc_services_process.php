@@ -44,6 +44,8 @@ function service_form_details_process()
 	$data["chartid"]			= @security_form_input_predefined("int", "chartid", 1, "");
 	$data["id_service_group"]		= @security_form_input_predefined("int", "id_service_group", 1, "");
 	$data["description"]			= @security_form_input_predefined("any", "description", 0, "");
+	$data["upstream_id"]			= @security_form_input_predefined("any", "upstream_id", 0, "");
+	$data["upstream_notes"]			= @security_form_input_predefined("any", "upstream_notes", 0, "");
 
 
 
@@ -186,7 +188,9 @@ function service_form_details_process()
 						."chartid='". $data["chartid"] ."', "
 						."id_service_group='". $data["id_service_group"] ."', "
 						."id_service_group_usage='". $data["id_service_group_usage"] ."', "
-						."description='". $data["description"] ."' "
+						."description='". $data["description"] ."', "
+						."upstream_id='". $data["upstream_id"] ."', "
+						."upstream_notes='". $data["upstream_notes"] ."' "
 						."WHERE id='$id' LIMIT 1";
 			
 			$sql_obj->execute();
