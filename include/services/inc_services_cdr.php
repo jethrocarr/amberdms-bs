@@ -1497,6 +1497,8 @@ class service_usage_cdr extends service_usage
 		if ($GLOBALS["config"]["SERVICE_CDR_MODE"] == "internal")
 		{
 			log_write("error", "service_usage_cdr", "Internal CDR records not yet implemented.");
+
+			// TODO: implement internal CDR handling
 		}
 		else
 		{

@@ -44,7 +44,7 @@ if (user_permissions_get('customers_write'))
 	/// if there was an error, go back to the entry page
 	if ($_SESSION["error"]["message"])
 	{	
-		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&id_service_customer=$id_service_customer");
+		header("Location: ../index.php?page=customers/service-history.php&id_customer=$id&id_service_customer=$id_service_customer");
 		exit(0);
 	}
 	else
@@ -58,7 +58,7 @@ if (user_permissions_get('customers_write'))
 
 	
 		// display updated details
-		header("Location: ../index.php?page=customers/service-history.php&customerid=$id&id_service_customer=$id_service_customer");
+		header("Location: ../index.php?page=customers/service-history.php&id_customer=$id&id_service_customer=$id_service_customer");
 		exit(0);
 	}
 

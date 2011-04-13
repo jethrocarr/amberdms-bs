@@ -352,16 +352,16 @@ class service_usage_traffic extends service_usage
 	/*
 		load_data_ipv4
 
-		Fetches an array of all the customer's IPv4 addresses into the $this->data value and returns the number of DDIs assigned.
+		Fetches an array of all the customer's IPv4 addresses into the $this->data value and returns the number of addresses assigned.
 
 		Returns
-		0		No DDIs / An error occured
-		#		Number of DDIs belonging to the customer.
+		0		No addresses / An error occured
+		#		Number of IPv4 addresses belonging to the customer.
 	*/
 
 	function load_data_ipv4()
 	{
-		log_write("debug", "service_usage_traffic", "Executing load_data_ddi()");
+		log_write("debug", "service_usage_traffic", "Executing load_data_ipv4()");
 
 
 		// fetch all the DDIs for this service-customer
@@ -418,7 +418,8 @@ class service_usage_traffic extends service_usage
 	/*
 		fetch_usage_ipv4
 
-		// TODO: potential place for IP address allocation charging
+		// TODO: potential place for IP address allocation charging, where the cost of each IP address will be calculated
+			 and then billed for accordingly.
 
 	*/
 
@@ -456,6 +457,8 @@ class service_usage_traffic extends service_usage
 		if ($GLOBALS["config"]["SERVICE_TRAFFIC_MODE"] == "internal")
 		{
 			log_write("error", "service_usage_traffic", "Internal traffic records not yet implemented.");
+
+			// TODO: implement internal IPv4 traffic record handling code.
 		}
 		else
 		{
@@ -504,6 +507,8 @@ class service_usage_traffic extends service_usage
 
 			foreach ($this->data_ipv4 as $ipv4)
 			{
+				// TODO: working here on data traffic charging logic
+
 
 				/*
 					Fetch Data
