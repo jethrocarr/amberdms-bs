@@ -386,6 +386,11 @@ class page_output
 
 				case "phone_trunk":
 
+/*
+	
+	TODO: Javascript-based DDI Configuration
+
+
 					//create html string to input into message field to show DDIs
 					$html_string = "<div id=\"ddi_form\"><table id=\"ddi_table\"  cellspacing=\"0\"><tr class=\"table_highlight\">
 								<td><b>" .lang_trans("ddi_start"). "</b></td>
@@ -481,14 +486,14 @@ class page_output
 					}
 					
 					$html_string .= "</table></div>";
-			
+*/
 				
 					// DDI options
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_ddi_info";
 					$structure["type"]		= "message";
-//					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
-					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br>" .$html_string. "</p>";
+					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br><a class=\"button_small\" href=\"index.php?page=customers/service-ddi.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">Configure Customer's DDIs</a></p>";
+//					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br>" .$html_string. "</p>";
 					$this->obj_form->add_input($structure);
 
 					// trunk options
