@@ -31,6 +31,8 @@ function service_periods_generate($customerid = NULL)
 {
 	log_debug("inc_services_invoicegen", "Executing service_periods_generate($customerid)");
 
+
+
 	/*
 		Fetch configuration Options
 	*/
@@ -268,6 +270,7 @@ function service_periods_add($id_service_customer, $billing_mode)
 	log_debug("inc_services_invoicegen", "Executing service_periods_add($id_service_customer, $billing_mode)");
 
 
+
 	/*
 		Fetch required information from services_customers (service-customer assignment table)
 	*/
@@ -286,12 +289,6 @@ function service_periods_add($id_service_customer, $billing_mode)
 		Handle new services
 
 		If the service has not been billed before, the date_period_first value will have been set, but not the date_period_next value.
-
-		For periodend, periodadvance, periodtelco billing modes, we just want to start from this date. However, for the monthend, monthadvance & monthtelco modes
-		we need to bill from the first till the end of the month. Our current solution is to treat these services the same as periodend/periodadvance/periodtelco which
-		causes the first invoice to include a full month + a partial month.
-
-		A possible enhancement would be to either generate a seporate invoice for an inital partial month or not, depending on when in the month the service starts.
 	*/
 
 	if ($sql_custserv_obj->data[0]["date_period_next"] == "0000-00-00")
@@ -376,25 +373,60 @@ function service_periods_add($id_service_customer, $billing_mode)
 
 			if (time_calculate_daynum($date_period_start) != "01")
 			{
-				log_debug("inc_services_invoicegen", "Note: generating extra long period due to new service.");
+				log_debug("inc_services_invoicegen", "Note: This period is the first period for this service. Performing partial/long period handling.");
 
-				// the service is starting not on the first day of the month - the most likely cause is that this
-				// is the first time a new service is being billed for a customer.
-				//
-				// we need to generate a period end date for the end of the next month, so that the first period is one
-				// whole month + the extra number of days.
-				//
+				/*
+					The service is starting not on the first day of the month - the most likely cause is that this
+				 	is the first time a new service is being billed for a customer.
 
+					For periodend, periodadvance, periodtelco billing modes, we just want to start from this 
+					date. 
+					
+					However, for the monthend, monthadvance & monthtelco modes we need to bill from the first 
+					till the end of the month - we handle the irregular time by either creating a smaller-than-usual
+					period or by creating a larger than usual.
+				*/
 
-				// Add time to the date_period_start date.
-				$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
+				if ($GLOBALS["config"]["SERVICE_PARTPERIOD_MODE"] == "seporate")
+				{
+					log_debug("inc_services_invoicegen", "Executing SERVICE_PARTPERIOD_MODE == seporate");
 
-				// fetch the end of the month date
-				$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_end') as value");
+					// SEPORATE
+					//
+					// we need to generate a partital period invoice for the first part of the billing month
+					//
+					//	eg:	14-02-2010 -> 28-02-2010
+					//		01-03-2010 -> 31-03-2010
+					//
 
-				// fetch the next period's start date (the first of the next month)
-				$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+					// fetch the end of the month date
+					$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_start') as value");
 
+					// fetch the next period's start date (the first of the next month)
+					$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+
+				}
+				else
+				{
+					log_debug("inc_services_invoicegen", "Executing SERVICE_PARTPERIOD_MODE == merge");
+
+					// MERGE
+					//
+					// we need to generate a period end date for the end of the next month, so that the first period is one
+					// whole month + the extra number of days.
+					//
+					//	eg:	14-02-2010 -> 31-03-2010
+					//
+
+					// Add time to the date_period_start date.
+					$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string ) as value");
+
+					// fetch the end of the month date
+					$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_end') as value");
+
+					// fetch the next period's start date (the first of the next month)
+					$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
+				}
 			}
 			else
 			{
@@ -524,6 +556,7 @@ function service_periods_add($id_service_customer, $billing_mode)
 function service_invoices_generate($customerid = NULL)
 {
 	log_debug("inc_services_invoicegen", "Executing service_invoices_generate($customerid)");
+
 
 
 
@@ -682,40 +715,80 @@ function service_invoices_generate($customerid = NULL)
 						/*
 							Handle monthly billing
 
-							Normally, monthly billing is easy, however the very first billing period is special, as it may span a more than 1 month.
+							Normally, monthly billing is easy, however the very first billing period is special, as it may span a more than 1 month, or
+							consist of less than the full month, depending on the operational mode.
 
-							Eg: if a service is started on 2008-01-09, the end of the billing period will be 2008-02-29, which is 1 month + 21 day.
+							SERVICE_PARTPERIOD_MODE == seporate
 
-							To handle this, we increase the base costs and included units by the following method:
+								If a service is started on 2008-01-09, the end date of the billing period will be 2008-01-31, which is less
+								than one month - 22 days.
+
+								We can calculate with:
+
+								( standard_cost / normal_month_num_days ) * num_days_in_partial_month == total_amount
+
+
+							SERVICE_PARTPERIOD_MODE == merge
+
+								If a service is started on 2008-01-09, the end of the billing period will be 2008-02-29, which is 1 month + 21 day.
+
+								We can calculate with:
 
 								( standard_cost / normal_month_num_days ) * num_days_in_partial_month == extra_amount
-
 								total_amount = (extra_amount + normal_amount)
-
 
 							Note: we do not increase included units for licenses service types, since these need to remain fixed and do not
 							scale with the month.
 						*/
 
-						// check if the period is the very first period - the start and end dates will be in different months.
-						if (time_calculate_monthnum($period_data["date_start"]) != time_calculate_monthnum($period_data["date_end"]))
+						// check if the period start date is not the first of the month - this means that the period
+						// is an inital partial period.
+
+						if (time_calculate_daynum($period_data["date_start"]) != "01")
 						{
 							// very first billing month
-							log_debug("services_invoicegen", "Very first billing month - adjusting prices/included units to suit the extra time included.");
+							log_write("debug", "services_invoicegen", "First billing month for this service, adjusting pricing to suit days.");
+							
+							if ($GLOBALS["config"]["SERVICE_PARTPERIOD_MODE"] == "seporate")
+							{
+								log_write("debug", "services_invoicegen", "Adjusting for partial month period (SERVICE_PARTPERIOD_MODE == seporate)");
 
-							// work out the number of days extra
-							$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
-							$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_data["date_start"]);
 
-							log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
+								// work out the total number of days
+								$short_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
+								$short_month_days_short	= $short_month_days_total - time_calculate_daynum($period_data["date_start"]);
 
-							// calculate correct base fee
-							$obj_service->data["price"] = ( ($obj_service->data["price"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["price"];
+								log_write("debug", "services_invoicegen", "Short initial billing period of $short_month_days_short days");
 
-							// calculate number of included units - round up to nearest full unit
-							if ($obj_service->data["typeid_string"] != "licenses")
-							{	
-								$obj_service->data["included_units"] = sprintf("%d", ( ($obj_service->data["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["included_units"] );
+
+								// calculate correct base fee
+								$obj_service->data["price"] = ($obj_service->data["price"] / $short_month_days_total) * $short_month_days_short;
+
+								// calculate number of included units - round up to nearest full unit
+								if ($obj_service->data["typeid_string"] != "licenses")
+								{	
+									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] / $short_month_days_total) * $short_month_days_short );
+								}
+
+							}
+							else
+							{
+								log_write("debug", "services_invoicegen", "Adjusting for extended month period (SERVICE_PARTPERIOD_MODE == merge");
+							
+								// work out the number of days extra
+								$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
+								$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_data["date_start"]);
+
+								log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
+
+								// calculate correct base fee
+								$obj_service->data["price"] = ( ($obj_service->data["price"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["price"];
+
+								// calculate number of included units - round up to nearest full unit
+								if ($obj_service->data["typeid_string"] != "licenses")
+								{	
+									$obj_service->data["included_units"] = sprintf("%d", ( ($obj_service->data["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["included_units"] );
+								}
 							}
 						}
 					}
@@ -735,6 +808,8 @@ function service_invoices_generate($customerid = NULL)
 					if (time_date_to_timestamp($period_data["date_period_first"]) < time_date_to_timestamp($period_data["date_end"]))
 					{
 						// date of the period is newer than the start date
+						log_write("debug", "inc_service_invoicegen", "Generating base plan item for period ". $period_data["date_start"] ." to ". $period_data["date_end"] ."");
+
 
 						// start the item
 						$invoice_item				= New invoice_items;
@@ -829,6 +904,10 @@ function service_invoices_generate($customerid = NULL)
 
 						unset($invoice_item);
 					}
+					else
+					{
+						log_write("debug", "inc_service_invoicegen", "Skipping base plan item generation, due to migration mode operation");
+					}
 
 
 
@@ -850,19 +929,15 @@ function service_invoices_generate($customerid = NULL)
 
 					if ($obj_service->data["billing_mode_string"] == "periodtelco" || $obj_service->data["billing_mode_string"] == "monthtelco")
 					{
-						log_write("debug", "service_invoicegen", "Determining previous period for telco-style usage billing");
+						log_write("debug", "service_invoicegen", "Determining previous period for telco-style usage billing (if any)");
 
 						// fetch previous period (if any) - we can determine the previous by subtracting one day from the current period start date.
-						// TODO: here
-
-
-						// generate period end date
 						$tmp_date			= explode("-", $period_data["date_start"]);
 
 						$period_usage_data["date_end"]	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] - 1), $tmp_date[0]));
 
 
-						// fetch period data
+						// fetch period data to confirm previous period
 						$sql_obj		= New sql_query;
 						$sql_obj->string	= "SELECT id, date_start, date_end FROM services_customers_periods WHERE id_service_customer='". $period_data["id_service_customer"] ."' AND date_end='". $period_usage_data["date_end"] ."' LIMIT 1";
 						$sql_obj->execute();
@@ -912,6 +987,8 @@ function service_invoices_generate($customerid = NULL)
 					*/
 					if ($period_usage_data["active"])
 					{
+						log_write("debug", "service_invoicegen", "Creating usage items due to active usage period");
+
 						switch ($obj_service->data["typeid_string"])
 						{
 							case "generic_with_usage":
@@ -921,6 +998,8 @@ function service_invoices_generate($customerid = NULL)
 									This service is to be used for any non-traffic, non-time accounting service that needs to track usage. Examples of this
 									could be counting the number of API requests, size of disk usage on a vhost, etc.
 								*/
+
+								log_write("debug", "service_invoicegen", "Processing usage items for generic_with_usage");
 
 
 
@@ -1030,6 +1109,8 @@ function service_invoices_generate($customerid = NULL)
 									No data usage, but there is a quantity field for the customer's account to specify the
 									quantity of licenses that they have.
 								*/
+								
+								log_write("debug", "service_invoicegen", "Processing usage items for licenses");
 
 
 								/*
@@ -1100,6 +1181,8 @@ function service_invoices_generate($customerid = NULL)
 									Simular to the generic usage type, but instead of units being a text field, units
 									is an ID to the service_units table.
 								*/
+
+								log_write("debug", "service_invoicegen", "Processing usage items for time/data_traffic");
 
 
 
@@ -1213,6 +1296,9 @@ function service_invoices_generate($customerid = NULL)
 									There are also multiple items for the call charges, grouped into one
 									item for each DDI.
 								*/
+
+								log_write("debug", "service_invoicegen", "Processing usage items for phone_single/phone_tollfree/phone_trunk");
+
 
 
 								// setup usage object
@@ -1386,11 +1472,21 @@ function service_invoices_generate($customerid = NULL)
 							break;
 
 
+							default:
+								// we should always match all service types, even if we don't need to do anything
+								// in particular for that type.
+
+								die("Unable to process unknown service type: ". $obj_service->data["typeid_string"] ."");
+							break;
 						} // end of processing usage			
 
 
 
 					} // end if service has a valid data period
+					else
+					{
+						log_write("debug", "service_invoicegen", "Not billing for current usage, as this appears to be the first plan period so no usage can exist yet");
+					}
 
 
 
@@ -1405,11 +1501,14 @@ function service_invoices_generate($customerid = NULL)
 					$sql_obj->execute();
 
 					// set for usage period, if it differs
-					if ($period_usage_data["id"] != $period_data["id"])
+					if ($period_usage_data["active"])
 					{
-						$sql_obj		= New sql_query;
-						$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid_usage='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
-						$sql_obj->execute();
+						if ($period_usage_data["id"] != $period_data["id"])
+						{
+							$sql_obj		= New sql_query;
+							$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid_usage='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
+							$sql_obj->execute();
+						}
 					}
 				
 
