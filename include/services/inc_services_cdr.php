@@ -1489,6 +1489,14 @@ class service_usage_cdr extends service_usage
 		$obj_cdr_rate_table->load_data_rate_all_override();
 
 
+		/*
+			We need a list of the DDIs for this customer.
+		*/
+		if (!$this->data_ddi)
+		{
+			$this->load_data_ddi();
+		}
+
 
 		/*
 			Query Call Records
@@ -1496,10 +1504,106 @@ class service_usage_cdr extends service_usage
 
 		if ($GLOBALS["config"]["SERVICE_CDR_MODE"] == "internal")
 		{
-			log_write("error", "service_usage_cdr", "Internal CDR records not yet implemented.");
+			log_write("debug", "service_usage_cdr", "Fetching call records from internal ABS database..");
 
-			// TODO: implement internal CDR handling
-		}
+
+			/*
+				Whilst for large datasets, Amberdms recommends using an external CDR database, it may be
+				desirable to use the internal ABS call data database for record billing, such as when importing from
+				another system via the API.
+
+				when using the internal database, the service_usage_records table is used:
+
+				date		Date of Call
+				price		Price of call
+				usage1		Source DDI
+				usage2		Destination DDI
+				usage3		Billable call seconds
+
+
+				Note that we don't need to loop through the DDIs here, since anyone using the internal database has already matched the DDIs to
+				the id_service_customer via the API usage upload.
+
+
+				The way the internal database is used will vary depending on the information provided - if a price is already set, this
+				price will be used for the total call cost.
+
+				If no price is set, the costs will be looked up in the rate table.
+
+				This behaviour allows charged call rates to be imported from another platform and not having to be re-calculated against
+				ABS's own rate table.
+			*/
+
+
+			// calculate end date to be the first date of the next period - failure to do so would mean we would
+			// miss the last day of the billing period in the query;
+
+			$date_start		= $this->date_start;
+
+			$tmp_date		= explode("-", $this->date_end);
+			$date_end		= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] +1), $tmp_date[0]));
+
+
+			/*
+				Fetch Data
+
+				Just a simple query here, however if this is a TOLLFREE service, then we need to reverse
+				the query to charge for inbound calls rather than outbound.
+			*/
+
+			log_write("debug", "service_usage_cdr", "Fetching usage records FOR $ddi FROM $date_start TO $date_end");
+
+			$obj_cdr_sql		= New sql_query;
+
+			if ($this->obj_service->data["typeid_string"] == "phone_tollfree")
+			{
+
+				log_write("debug", "service_usage_cdr", "Billing for tollfree service on $ddi");
+
+				// NOTE! for toll-free services, we reverse src and dst for reverse billing calculations
+				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as dst, usage2 as src, usage3 as billsec FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
+				$obj_cdr_sql->execute();
+			}
+			else
+			{
+				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as src, usage2 as dst, usage3 as billsec FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
+				$obj_cdr_sql->execute();
+			}
+
+
+			/*
+				Calculate costs of calls
+			*/
+			if ($obj_cdr_sql->num_rows())
+			{
+				$obj_cdr_sql->fetch_array();
+
+				foreach ($obj_cdr_sql->data as $data_cdr)
+				{
+					// determine price
+					if ($data_cdr["price"] != "0.00")
+					{
+						// a price has already been set - make use of that
+						$charges = $data_cdr["price"];
+					}
+					else
+					{
+						$charges = $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+
+						// update the charges in the records
+						$sql_obj			= New sql_query;
+						$sql_obj->string		= "UPDATE service_usage_records SET price='$charges' WHERE id='". $data_cdr["id"] ."'";
+						$sql_obj->execute();
+					}
+
+					// add to structure - we use the SRC as the DDI
+					$this->data[ $data_cdr["src"] ]["charges"]	+= $charges;
+
+					// TODO: this won't catch issues where the DDIs configured don't match the SRC DDI (although it should always!)
+				}
+			}
+
+		} // end of internal DB
 		else
 		{
 			/*
@@ -1519,11 +1623,6 @@ class service_usage_cdr extends service_usage
 				We fetch the call records by looping through all the DDIs for this customer, fetching all the records
 				for those DDIs and then calculating the cost for each call
 			*/
-
-			if (!$this->data_ddi)
-			{
-				$this->load_data_ddi();
-			}
 
 			foreach ($this->data_ddi as $ddi)
 			{
