@@ -448,6 +448,7 @@ function service_periods_add($id_service_customer, $billing_mode)
 	/*
 		Calculate date to bill the period on
 	*/
+
 	switch ($billing_mode)
 	{
 		case "periodadvance":
@@ -467,7 +468,7 @@ function service_periods_add($id_service_customer, $billing_mode)
 			//
 			// With Telco periods, we need to bill on the first day of the new period.
 
-			$date_period_billing = $data_period_start;
+			$date_period_billing = $date_period_start;
 
 		break;
 			
@@ -483,6 +484,7 @@ function service_periods_add($id_service_customer, $billing_mode)
 		break;
 	}
 
+	log_write("debug", "inc_customers", "Calculated billing date of \"". $date_period_billing ."\" for service billing mode of \"". $billing_mode ."\"");
 
 
 

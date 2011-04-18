@@ -103,7 +103,7 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date_start", "");
 		$this->obj_table->add_column("date", "date_end", "");
-		$this->obj_table->add_column("date", "invoice_gen_date", "date_sent");
+		$this->obj_table->add_column("date", "invoice_gen_date", "date_billed");
 		$this->obj_table->add_column("standard", "usage_summary", "");
 		$this->obj_table->add_column("bool_tick", "invoiced", "invoiceid");
 		$this->obj_table->add_column("bool_tick", "paid", "NONE");
