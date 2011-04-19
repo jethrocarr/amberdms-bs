@@ -178,7 +178,72 @@ class form_input
 	
 		return 1;
 	}
+
+
+	/*
+		load_data_object
+		
+		Imports data from the provided associative array, mapping $array[ fieldname ] to the names of
+		the form fields.
+
+		Fields
+		associative_array
+
+		Returns
+		0	Failure
+		1	Success
+	*/
+	function load_data_object($array)
+	{
+		log_debug("form", "Executing load_data_object()");
 	
+		
+		foreach (array_keys($this->structure) as $fieldname)
+		{
+			/*
+				We now import the data returned by the field for any editable fields
+				and also for any text/message/hidden fields which have recieved data
+				from the form.
+
+				If the field is a text/submit/message/hidden field with no data returned, we
+				just ignore it.
+
+				We always ignore submit buttons.
+			*/
+
+			switch ($this->structure[$fieldname]["type"])
+			{
+				case "submit":
+					// do nothing for submit buttons
+				break;
+
+				case "message":
+				case "text":
+				case "hidden":
+
+					// only set the field if a value has been provided - ie: don't set to blank for any reason
+					if (isset($array["$fieldname"]) && ($array["$fieldname"] != ''))
+					{
+						$this->structure[$fieldname]["defaultvalue"] = stripslashes($array[$fieldname]);
+					}
+				
+				break;
+
+				default:
+					// set the default value
+					if (isset($array["$fieldname"]))
+					{
+						$this->structure[$fieldname]["defaultvalue"] = stripslashes($array[$fieldname]);
+					}
+				break;
+			}
+		}
+
+		return 1;
+
+	} // end of load_data_object
+	
+
 	/*
 		load_data_session()
 
