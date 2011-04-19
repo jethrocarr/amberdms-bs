@@ -13,6 +13,7 @@ require("../include/amberphplib/main.php");
 
 require("../include/customers/inc_customers.php");
 require("../include/services/inc_services.php");
+require("../include/services/inc_services_invoicegen.php");
 
 
 
@@ -223,6 +224,10 @@ if (user_permissions_get('customers_write'))
 				{
 					// service has been enabled
 					$obj_customer->service_enable();
+
+					// generate service period - this won't invoice, but allows us to get a date
+					// for when the invoice will be generated
+					service_periods_generate($obj_customer->id);
 				}
 				else
 				{

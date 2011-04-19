@@ -12,7 +12,7 @@ require("../../include/amberphplib/main.php");
 require("../../include/products/inc_products.php");
 
 
-if (user_permissions_get("products_view") || user_permissions_get("accounts_ar_write") || user_permissions_get("accounts_ap_write") || user_permissions_get("accounts_quotes_write"))
+if (user_permissions_get("products_view") || user_permissions_get("accounts_ar_write") || user_permissions_get("accounts_ap_write") || user_permissions_get("accounts_quotes_write") || user_permissions_get("customer_orders"))
 {
 	$obj_product		= New product;
 

@@ -1631,6 +1631,577 @@ class customer_services extends customer
 
 
 
+/*
+	CLASS customer_orders
+
+	Functions for handling orders made against a customer.
+*/
+class customer_orders extends customer
+{
+	var $id_order;		// ID of the order item made
+	var $data_order;	// Order Data
+
+	/*
+		Constructor
+	*/
+	function customer_orders()
+	{
+		log_write("debug", "customer_orders", "Executing customer_orders()");
+
+		// nothing todo
+
+	}
+
+
+	/*
+		verify_id_order
+
+		Verifies that the provided order item specified both exists and is assigned to the current customer.
+
+		Results
+		0	Failure to find the ID
+		1	Success
+	*/
+
+	function verify_id_order()
+	{
+		log_debug("customer_orders", "Executing verify_id_order()");
+
+		if ($this->id_order)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id, id_customer FROM `customers_orders` WHERE id='". $this->id_order ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				if ($this->id)
+				{
+					if ($sql_obj->data[0]["id_customer"] == $this->id)
+					{
+						return 1;
+					}
+					else
+					{
+						log_write("error", "customer_orders", "The selected customer order (". $this->id_order .") does not match the selected customer (". $this->id .").");
+						return 0;
+					}
+				}
+				else
+				{
+					$this->id = $sql_obj->data[0]["id_customer"];
+					return 1;
+				}
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id_order
+
+
+
+	/*
+		load_data_order
+
+		Loads the data for the selected order item into $this->data_orders.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function load_data_order()
+	{
+		log_write("debug", "customer_orders", "Executing load_data_order()");
+
+		$this->data_orders = array();
+
+		$obj_sql		= New sql_query;
+		$obj_sql->string	= "SELECT * FROM customers_orders WHERE id='". $this->id_order ."' LIMIT 1";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			$obj_sql->fetch_array();
+
+			$this->data_orders = $obj_sql->data[0];
+
+			return 1;
+		}
+
+		return 0;
+
+	} // end of load_data_order()
+	
+
+
+	/*
+		action_create_orders
+
+		Creates a new order item. This function is typically called by action_update automatically
+		when required.
+
+		Results
+		0	Failure
+		#	Success - return ID of order
+	*/
+	function action_create_orders()
+	{
+		log_debug("inc_customers", "Executing action_create_orders()");
+
+		// create a new customer
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO `customers_orders` (id_customer) VALUES ('". $this->id. "')";
+		$sql_obj->execute();
+
+		$this->id_order = $sql_obj->fetch_insert_id();
+
+		return $this->id_order;
+
+	} // end of action_create_orders
+
+
+
+
+	/*
+		action_update_orders
+
+		Update the order with information in $this->data_orders, if no order ID exists, it will first call
+		the action_create function.
+
+		Returns
+		0	failure
+		#	success - returns the ID
+	*/
+	function action_update_orders()
+	{
+		log_debug("inc_customers", "Executing action_update_orders()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID supplied, create a new order first
+		*/
+		if (!$this->id_order)
+		{
+			$mode = "create";
+
+			if (!$this->action_create_orders())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			$mode = "update";
+		}
+
+
+		/*
+			Calculate the amount from the price
+		*/
+
+		$this->data_orders["amount"]	= $this->data_orders["price"] * $this->data_orders["quantity"];
+
+
+		/*
+			Update Order Details
+		*/
+
+		$sql_obj->string	= "UPDATE `customers_orders` SET "
+						."date_ordered='". $this->data_orders["date_ordered"] ."', "
+						."type='". $this->data_orders["type"] ."', "
+						."customid='". $this->data_orders["customid"] ."', "
+						."quantity='". $this->data_orders["quantity"] ."', "
+						."units='". $this->data_orders["units"] ."', "
+						."amount='". $this->data_orders["amount"] ."', "
+						."price='". $this->data_orders["price"] ."', "
+						."description='". $this->data_orders["description"] ."' "
+						."WHERE id='". $this->id_order ."' LIMIT 1";
+		$sql_obj->execute();
+
+
+
+		/*
+			Update the journal
+		*/
+
+		if ($mode == "update")
+		{
+			journal_quickadd_event("customers", $this->id, "Customer order item adjusted.");
+		}
+		else
+		{
+			journal_quickadd_event("customers", $this->id, "Order item added to customer.");
+		}
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_customers", "An error occurred when updating customer order.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "inc_customers", "Customer order successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "inc_customers", "Customer order created.");
+			}
+			
+			return $this->id;
+		}
+
+	} // end of action_update_orders
+	
+
+
+	/*
+		action_delete_orders
+
+		Deletes the selected order.
+	*/
+
+	function action_delete_orders()
+	{
+		log_write("debug", "inc_customers", "Executing action_delete_orders()");
+		
+		$sql_obj		= New sql_query;		
+		$sql_obj->string	= "DELETE FROM `customers_orders` WHERE id='" .$this->id_order ."'";
+		$sql_obj->execute();
+
+		return 1;
+
+	} // end of action_delete_orders
+
+
+
+
+	/*
+		invoice_date_calc
+
+		Calculates the next invoicing date which will bill for the current orders - it can be one of:
+		* Next service bill to be generated (as per ORDERS_BILL_ONSERVICE configuration option)
+		* End of the calender month (as per ORDERS_BILL_ENDOFMONTH)
+		* No automatic invoice date, manually only
+
+
+		Returns
+		date		YYYY-MM-DD format string
+	*/
+
+	function invoice_date_calc()
+	{
+		log_write("debug", "inc_customers", "Executing invoice_date_calc()");
+	
+
+		// we add all the dates to the array and choose the latest date
+		$dates = array();
+
+
+		// next service billing date
+		if ($GLOBALS["config"]["ORDERS_BILL_ONSERVICE"] == 1)
+		{
+			log_write("debug", "inc_customers", "Fetching latest service billing dates for  customer ". $this->id ."");
+
+			// check the next service billing date
+			$service_ids = sql_get_singlecol("SELECT id as col FROM services_customers WHERE customerid='". $this->id ."'");
+
+			if (is_array($service_ids))
+			{
+				foreach ($service_ids as $serviceid)
+				{
+					$obj_sql		= New sql_query;
+					$obj_sql->string	= "SELECT date_billed FROM services_customers_periods WHERE id_service_customer='". $serviceid ."' ORDER BY id DESC LIMIT 1";
+					$obj_sql->execute();
+
+					if ($obj_sql->num_rows())
+					{
+						$obj_sql->fetch_array();
+						
+						$dates[] = $obj_sql->data[0]["date_billed"];
+					}
+
+					log_write("debug", "inc_customers", "No periods exist for id_service_customer of ". $serviceid .", perhaps this service has yet to be activated");
+				}
+			}
+		}
+
+
+		// end of month date
+		if ($GLOBALS["config"]["ORDERS_BILL_ENDOFMONTH"] == 1)
+		{
+			log_write("debug", "inc_customers", "Fetching end of month date");
+
+			$dates[] = time_calculate_monthdate_last(date("Y-m-d"));
+		}
+
+
+		// determine the latest date
+		$timestamp_today	= time_date_to_timestamp(date("Y-m-d"));		// we use this to avoid hours/mins
+		$timestamp_nextbill;
+
+		foreach ($dates as $date)
+		{
+			$date_t = explode("-", $date);
+			$date_t = mktime(0, 0, 0, $date_t[1], $date_t[2] , $date_t[0]);
+			
+			if ($date_t >= $timestamp_today)
+			{
+				// future date
+				if (empty($timestamp_nextbill))
+				{
+					$timestamp_nextbill = $date_t;
+				}
+				else
+				{
+					if ($date_t < $timestamp_nextbill)
+					{
+						// closer than current date
+						$timestamp_nextbill = $date_t;
+					}
+				}
+			}
+		}
+
+		if (empty($timestamp_nextbill))
+		{
+			$date = "Manual Invoice Only";
+		}
+		else
+		{
+			$date = date("Y-m-d", $timestamp_nextbill);
+		}
+	
+		log_write("debug", "inc_customers", "Calculated next billing date for customer orders to be \"$date\"");
+
+		return $date;
+
+	} // end of invoice_date_calc()
+
+
+
+	/*
+		invoice_generate
+
+		Converts all current orders belonging to the selected customer into an invoice and returns
+		the ID of the invoice.
+
+		values
+		invoiceid	[optional] ID of the invoice to add orders to, or blank to create a new one
+
+		Return codes
+		0		failure
+		#		success - returns invoiceid
+	*/
+	
+	function invoice_generate($invoiceid = NULL)
+	{
+		log_write("debug", "inc_customers", "Executing invoice_generate()");
+
+		// we don't need to worry about checking if this is the appropiate date, that logic is handled by
+		// other functions before calling this one.
+
+
+		// initatiate SQL
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		// do we need to create an invoice?
+		if (!$invoiceid)
+		{
+			$obj_invoice		= New invoice;
+
+			$obj_invoice->type			= "ar";
+			$obj_invoice->data["customerid"]	= $this->id;
+			$obj_invoice->data["employeeid"]	= 1;
+			$obj_invoice->data["notes"]		= "Invoice generated from customer orders page.";
+
+			$obj_invoice->action_create();
+
+			$invoiceid	= $obj_invoice->id;
+
+			log_write("debug", "inc_customers", "Creating a new invoice with ID of $invoiceid");
+		}
+		else
+		{
+			// reuse existing
+			log_write("debug", "inc_customers", "Using specified invoice $invoiceid for orders invoicing");
+		}
+
+
+		// run through the items and add to the invoice
+		$obj_orders_sql			= New sql_query;
+		$obj_orders_sql->string		= "SELECT * FROM customers_orders WHERE id_customer='". $this->id ."'";
+		$obj_orders_sql->execute();
+
+		if ($obj_orders_sql->num_rows())
+		{
+			$obj_orders_sql->fetch_array();
+
+			foreach ($obj_orders_sql->data as $data_order)
+			{
+				log_write("debug", "inc_customers", "Adding order item ". $data_order["id"] ." to invoice ". $invoiceid ." for customer ". $this->id ."");
+
+
+				// Add each order as an item on the invoice.
+				$obj_item = New invoice_items;
+
+				$obj_item->id_invoice		= $invoiceid;
+				$obj_item->type_invoice		= "ar";
+				$obj_item->type_item		= "product";
+
+				$obj_item->prepare_data($data_order);
+
+				$obj_item->action_create();
+				$obj_item->action_update();
+
+
+				// delete the item now that it's been added
+				// TODO: implement
+			}
+
+			// update invoice summary information
+			$obj_item->action_update_tax();
+			$obj_item->action_update_total();
+			$obj_item->action_update_ledger();
+
+		
+		} // end if order items.
+
+
+
+		// save changes
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_customers", "An error occurred whilst attempting to generate an invoice.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "inc_customers", "Successfully generate invoice ". $obj_invoice->data["code_invoice"] ." for customer ". $this->data["name_customer"] ."");
+		
+			return $invoiceid;
+		}
+
+
+	} // end of invoice_generate()
+
+
+
+	/*
+		order_render_summarybox()
+
+		Displays a summary box of information relating to customer orders - total amount invoiced
+		and next expected automated invoicing date.
+
+		Return Codes
+		0	failure
+		1	sucess
+	*/
+	function order_render_summarybox()
+	{
+		log_debug("inc_customers", "Executing order_render_summarybox");
+
+
+		// load customer details if we haven't already
+		if (empty($this->data))
+		{
+			$this->load_data();
+		}
+
+
+		// are there orders outstanding?
+		$obj_sql 		= New sql_query;
+		$obj_sql->string	= "SELECT id FROM `customers_orders` WHERE id_customer='". $this->id ."'";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+
+			// fetch general details
+			$order_total_amount	= sql_get_singlevalue("SELECT SUM(amount) as value FROM customers_orders WHERE id_customer='". $this->id ."'");
+			$order_invoice_date	= $this->invoice_date_calc();
+
+			// display orders summary information
+			print "<table width=\"100%\" class=\"table_highlight_open\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has unbilled order items.</b>";
+		
+				print "<table cellpadding=\"4\">";
+						
+					print "<tr>";
+						print "<td>Total Amount:</td>";
+						print "<td>". format_money($order_total_amount) ." [exc sales tax]</td>";
+					print "</tr>";
+
+					print "<tr>";
+						print "<td>Next Invoice Date:</td>";
+						print "<td>". $order_invoice_date ."</td>";
+					print "</tr>";
+						
+				print "</table>";
+
+				print "</td>";
+
+			print "</tr>";
+			print "</table>";
+		}
+		else
+		{
+			// no current orders
+			print "<table width=\"100%\" class=\"table_highlight_info\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has no currently ordered items.</b>";
+				print "<p>The customer currently has no order items to bill. Use the \"<a href=\"index.php?page=customers/orders-view.php&id_customer=". $this->id ."\">create order</a>\" page to start preparing a customer order.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+
+
+} // end of class: customer_orders
+
+
+
+
+
+
+
 
 /*
 	CLASS: customer_portal

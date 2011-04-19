@@ -33,6 +33,11 @@ if (user_permissions_get("admin"))
 	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
 	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= @security_form_input_predefined("any", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
+
+
+	$data["ORDERS_BILL_ONSERVICE"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ONSERVICE", 0, "");
+	$data["ORDERS_BILL_ENDOFMONTH"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ENDOFMONTH", 0, "");
+
 	
 	$data["TIMESHEET_BOOKTOFUTURE"]		= @security_form_input_predefined("any", "TIMESHEET_BOOKTOFUTURE", 0, "");
 	

@@ -123,6 +123,23 @@ class page_output
 
 
 
+		// orders options
+		$structure = NULL;
+		$structure["fieldname"]				= "ORDERS_BILL_ONSERVICE";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Automatically bill customer orders when the next service bill is generated.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "ORDERS_BILL_ENDOFMONTH";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Automatically bill customer orders at the end of the calender month.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+
+
 		// timesheet options
 		$structure = NULL;
 		$structure["fieldname"]				= "TIMESHEET_BOOKTOFUTURE";
@@ -264,6 +281,7 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
 		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_INVOICE_AUTOEMAIL");
+		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_contributions"]	= array("PHONE_HOME");
