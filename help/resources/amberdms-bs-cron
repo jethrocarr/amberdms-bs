@@ -9,3 +9,6 @@
 # run invoice processing every day
 45 01 * * * apache cd /usr/share/amberdms/billing_system/include/cron/; php -q index.php services.php
 
+# run order processing every day
+01 03 * * * apache cd /usr/share/amberdms/billing_system/include/cron/; php -q index.php orders.php
+
