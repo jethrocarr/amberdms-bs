@@ -32,6 +32,7 @@ CREATE TABLE  `customers_orders` (
 ) ENGINE = INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 ALTER TABLE  `customers_orders` ADD  `date_ordered` DATE NOT NULL AFTER  `id_customer`;
+ALTER TABLE  `customers_orders` ADD  `discount` INT( 3 ) UNSIGNED NOT NULL AFTER  `price`;
 
 INSERT INTO `config` (`name`, `value`) VALUES ('ORDERS_BILL_ONSERVICE', '1');
 INSERT INTO `config` (`name`, `value`) VALUES ('ORDERS_BILL_ENDOFMONTH', '1');
