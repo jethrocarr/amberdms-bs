@@ -2103,7 +2103,11 @@ class customer_orders extends customer
 
 
 				// delete the item now that it's been added
-				// TODO: implement
+				$obj_delete_sql			= New sql_query;
+				$obj_delete_sql->string		= "DELETE FROM customers_orders WHERE id='". $data_order["id"] ."' LIMIT 1";
+				$obj_delete_sql->execute();
+
+				unset($obj_delete_sql);
 			}
 
 			// update invoice summary information
@@ -2111,6 +2115,8 @@ class customer_orders extends customer
 			$obj_item->action_update_total();
 			$obj_item->action_update_ledger();
 
+
+			unset($obj_item);
 		
 		} // end if order items.
 

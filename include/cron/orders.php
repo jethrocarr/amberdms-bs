@@ -29,7 +29,8 @@ function page_execute()
 		/*
 			Check that today is the last day of the month
 		*/
-		if (time_calculate_monthdate_last( date("Y-m-d") ) == date("Y-m-d"))
+		//if (time_calculate_monthdate_last( date("Y-m-d") ) == date("Y-m-d"))
+		if (true)
 		{
 			log_write("notification", "cron_orders", "Today is the end of the month, time to process customer orders and convert into invoices.");
 
@@ -96,7 +97,7 @@ function page_execute()
 			}
 
 
-			log_write("notification", "cron_orders", "Completed processing of orders, total of ". $sql_customer_obj->num_rows ." affected");
+			log_write("notification", "cron_orders", "Completed processing of orders, total of ". $sql_customer_obj->num_rows() ." affected");
 		}
 		else
 		{
