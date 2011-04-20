@@ -41,6 +41,10 @@ $instances = array();
 
 if ($GLOBALS["config"]["instance"] == "hosted")
 {
+	// backup the original globals
+	$GLOBALS["config_orig"]		= $GLOBALS["config"];
+
+	// query the hosted DB
 	$sql_instance_obj		= New sql_query;
 	$sql_instance_obj->string	= "SELECT instanceid, db_hostname FROM instances WHERE active=1";
 	$sql_instance_obj->execute();
@@ -63,7 +67,8 @@ if ($GLOBALS["config"]["instance"] == "hosted")
 			all instances the cache can survive.
 		*/
 
-		$GLOBALS["cache"] = array();
+		$GLOBALS["cache"] 		= array();
+		$GLOBALS["config"]		= $GLOBALS["config_orig"];	// restore original globals
 
 
 		// if the hostname is blank, default to the current
@@ -105,6 +110,26 @@ if ($GLOBALS["config"]["instance"] == "hosted")
 
 		$GLOBALS["cache"]["database_default_link"]	= $link;
 		$GLOBALS["cache"]["database_default_type"]	= "mysql";
+
+
+		/*
+			Load correct global settings
+		*/
+
+		log_debug("start", "Loading configuration from database for hosted DB");
+
+		$sql_config_obj			= New sql_query;
+		$sql_config_obj->string		= "SELECT name, value FROM config ORDER BY name";
+		$sql_config_obj->execute();
+		$sql_config_obj->fetch_array();
+
+		foreach ($sql_config_obj->data as $data_config)
+		{
+			$GLOBALS["config"][ $data_config["name"] ] = $data_config["value"];
+		}
+
+		unset($sql_config_obj);
+
 
 
 		// execute the page functions
