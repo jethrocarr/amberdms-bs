@@ -1518,6 +1518,32 @@ function service_invoices_generate($customerid = NULL)
 
 
 				/*
+					Process any customer orders
+				*/
+
+				if ($GLOBALS["config"]["ORDERS_BILL_ONSERVICE"])
+				{
+					log_write("debug", "inc_service_invoicegen", "Checking for customer orders to add to service invoice");
+
+					$obj_customer_orders 		= New customer_orders;
+					$obj_customer_orders->id	= $customer_data["id"];
+
+					if ($obj_customer_orders->check_orders_num())
+					{
+						log_write("debug", "inc_service_invoicegen", "Order items exist, adding them to service invoice");
+
+						$obj_customer_orders->invoice_generate($invoiceid);
+					}
+				}
+				else
+				{
+					log_write("debug", "inc_service_invoicegen", "Not checking for customer orders, ORDERS_BILL_ONSERVICE is disabled currently");
+				}
+
+
+
+
+				/*
 					Update the invoice details + Ledger
 
 					Processes:

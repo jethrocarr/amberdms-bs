@@ -1654,6 +1654,28 @@ class customer_orders extends customer
 
 
 	/*
+		check_orders_num
+
+		Returns the number of order items.
+
+		Returns
+		#		Number of order items.
+	*/
+
+	function check_orders_num()
+	{
+		log_write("debug", "customer_orders", "Executing check_orders_num()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `customers_orders` WHERE id_customer='". $this->id ."'";
+		$sql_obj->execute();
+
+		return $sql_obj->num_rows();
+
+	} // end of check_orders_num
+
+
+	/*
 		verify_id_order
 
 		Verifies that the provided order item specified both exists and is assigned to the current customer.

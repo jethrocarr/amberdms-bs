@@ -14,6 +14,7 @@ include_once("../include/config.php");
 include_once("../include/amberphplib/main.php");
 
 // custom includes
+include_once("../include/customers/inc_customers.php");
 include_once("../include/accounts/inc_ledger.php");
 include_once("../include/accounts/inc_invoices.php");
 include_once("../include/services/inc_services.php");
