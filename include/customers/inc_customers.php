@@ -276,6 +276,19 @@ class customer
 		unset($sql_obj);
 
 
+		// make sue the customer has no orders - orders need to be removed before deleting the account.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM customers_orders WHERE id_customer='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 1;
+		}
+
+		unset($sql_obj);
+
+
 
 		// unlocked
 		return 0;

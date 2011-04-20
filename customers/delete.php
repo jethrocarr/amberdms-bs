@@ -155,7 +155,7 @@ class page_output
 		
 		if ($this->locked)
 		{
-			format_msgbox("locked", "<p>This customer can not be removed because their account has either subscribed services, invoices or time groups belonging to it.</p><p>If you wish to close this customer's account, use the Customer Details page and set the End Date field or remove the records preventing deletion.</p>");
+			format_msgbox("locked", "<p>This customer can not be removed because their account has either subscribed services, orders, invoices or time groups belonging to it.</p><p>If you wish to close this customer's account, use the Customer Details page and set the End Date field or remove the records preventing deletion.</p>");
 		}
 	}
 
