@@ -925,9 +925,15 @@ class invoice
 		{
 			$this->obj_pdf->prepare_load_template("../../$template_file"); 
 		}
-		else
+		elseif (file_exists("../$template_file"))
 		{
 			$this->obj_pdf->prepare_load_template("../$template_file");
+		}
+		else
+		{
+			// if we can't find the template file, then something is rather wrong.
+			log_write("error", "invoice", "Unable to find template file $template_file, currently running in directory ". getcwd() .", fatal error.");
+			return 0;
 		}
 
 		
