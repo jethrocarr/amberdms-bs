@@ -729,7 +729,9 @@ class template_engine_latex extends template_engine
 		//
 
 		mkdir($tmp_filename ."_texlive", 0700);
-																								
+		
+		// get the current directory so that we can change back after switching to the tmp directory
+		$run_directory = getcwd();
 
 		// process with pdflatex
 		$app_pdflatex = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_PDFLATEX' LIMIT 1");
@@ -738,8 +740,8 @@ class template_engine_latex extends template_engine
 		{
 			log_write("error", "process", "You have selected a template that requires the pdflatex application, however $app_pdflatex does not exist or is not executable by your webserver process");
 		}
-	
-		chdir("/tmp");
+
+		chdir("/tmp"); // TODO: this should be a configurable value, as it will break on non-NIX platforms
 		exec("HOME=/tmp/ $app_pdflatex $tmp_filename.tex", $output);
 		
 		foreach ($output as $line)
@@ -766,11 +768,18 @@ class template_engine_latex extends template_engine
 			// cleanup texlive home directory
 			system("rm -rf ". $tmp_filename ."_texlive");
 
+			// return back to original directory
+			chdir($run_directory);
+
 			return 1;
 		}
 		else
 		{
 			log_write("error", "template_engine_latex", "Unable to use pdflatex ($app_pdflatex) to generate PDF file");
+			
+			// return back to original directory
+			chdir($run_directory);
+			
 			return 0;
 		}
 		
@@ -1041,6 +1050,10 @@ class template_engine_htmltopdf extends template_engine
 			Note: In future, this may be extended to support alternative HTML to PDF rendering engines
 		*/
 
+		// get the current directory so that we can change back after switching to the tmp directory
+		$run_directory = getcwd();
+
+
 		$app_wkhtmltopdf = sql_get_singlevalue("SELECT value FROM config WHERE name='APP_WKHTMLTOPDF' LIMIT 1");
 
 		if (!is_executable($app_wkhtmltopdf))
@@ -1049,7 +1062,7 @@ class template_engine_htmltopdf extends template_engine
 			return 0;
 		}
 	
-		chdir("/tmp");
+		chdir("/tmp");		// TODO: fix this to be a configurable value
 		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf", $output);
 
 		foreach ($output as $line)
@@ -1080,11 +1093,18 @@ class template_engine_htmltopdf extends template_engine
 			// cleanup texlive home directory
 			system("rm -rf ". $tmp_filename ."_html_data");
 
+			// return back to original directory
+			chdir($run_directory);
+
 			return 1;
 		}
 		else
 		{
 			log_write("error", "template_engine_htmltopdf", "Unable to use wkhtmltopdf ($app_wkhtmltopdf) to generate PDF file");
+
+			// return back to original directory
+			chdir($run_directory);
+
 			return 0;
 		}
 		
