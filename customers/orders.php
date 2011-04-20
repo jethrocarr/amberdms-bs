@@ -90,10 +90,11 @@ class page_output
 		$this->obj_table->add_column("standard", "units", "");
 		$this->obj_table->add_column("money", "amount", "");
 		$this->obj_table->add_column("money", "price", "");
+		$this->obj_table->add_column("percentage", "discount", "");
 		$this->obj_table->add_column("standard", "description", "");
 
 		// defaults
-		$this->obj_table->columns = array("date_ordered", "type", "item", "quantity", "units", "amount", "price", "description");
+		$this->obj_table->columns = array("date_ordered", "type", "item", "quantity", "units", "price", "discount", "amount", "description");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("customers_orders");

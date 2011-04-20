@@ -1832,7 +1832,18 @@ class customer_orders extends customer
 			Calculate the amount from the price
 		*/
 
+		// total amount
 		$this->data_orders["amount"]	= $this->data_orders["price"] * $this->data_orders["quantity"];
+
+		// discount
+		if ($this->data_orders["discount"])
+		{
+			$discount_calc			= $this->data_orders["discount"] / 100;
+			$discount_calc			= $this->data_orders["amount"] * $discount_calc;
+
+			$this->data_orders["amount"]	= $this->data_orders["amount"] - $discount_calc;
+		}
+
 
 
 		/*
@@ -1847,6 +1858,7 @@ class customer_orders extends customer
 						."units='". $this->data_orders["units"] ."', "
 						."amount='". $this->data_orders["amount"] ."', "
 						."price='". $this->data_orders["price"] ."', "
+						."discount='". $this->data_orders["discount"] ."', "
 						."description='". $this->data_orders["description"] ."' "
 						."WHERE id='". $this->id_order ."' LIMIT 1";
 		$sql_obj->execute();
