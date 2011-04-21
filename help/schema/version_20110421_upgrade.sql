@@ -19,6 +19,7 @@ TRUNCATE TABLE `users_sessions`;
 -- Customer Orders Setup Fee
 
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'service_setup', 'Service Setup Charges');
+INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'discount_setup', 'Setup Charge Discount');
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'info_setup_help', 'If you set a setup fee below, it will be charged once the service is activated and added to the customer orders page.');
 
 --
