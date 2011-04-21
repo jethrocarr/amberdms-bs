@@ -214,12 +214,6 @@ class page_output
 			$this->obj_form->add_input($structure);
 		
 			$structure = NULL;
-			$structure["fieldname"] 	= "price_setup";
-			$structure["type"]		= "money";
-			$structure["options"]["req"]	= "yes";
-			$this->obj_form->add_input($structure);
-
-			$structure = NULL;
 			$structure["fieldname"] 		= "discount";
 			$structure["type"]			= "input";
 			$structure["options"]["width"]		= 50;
@@ -227,8 +221,45 @@ class page_output
 			$structure["options"]["max_length"]	= "6";
 			$this->obj_form->add_input($structure);
 
-			$this->obj_form->subforms["service_price"]	= array("price", "price_setup", "discount");
+			$this->obj_form->subforms["service_price"]	= array("price", "discount");
 
+
+			// setup charges - only display if the service is inactive
+			if (!sql_get_singlevalue("SELECT active as value FROM services_customers WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1"))
+			{
+				$structure = NULL;
+				$structure["fieldname"]			= "info_setup_help";
+				$structure["type"]			= "message";
+				$structure["defaultvalue"]		= "<p>". lang_trans("info_setup_help") ."</p>";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "price_setup";
+				$structure["type"]			= "money";
+				$structure["options"]["req"]		= "yes";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "discount_setup";
+				$structure["type"]			= "input";
+				$structure["options"]["width"]		= 50;
+				$structure["options"]["label"]		= " %";
+				$structure["options"]["max_length"]	= "6";
+				$structure["defaultvalue"]		= $this->obj_customer->obj_service->data["discount"];
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["service_setup"]	= array("info_setup_help", "price_setup", "discount_setup");
+			}
+			else
+			{
+				$structure = NULL;
+				$structure["fieldname"]			= "info_setup_help";
+				$structure["type"]			= "message";
+				$structure["defaultvalue"]		= "<p>A setup fee of ". format_money($this->obj_customer->obj_service->data["price_setup"]) ." was charged for this service.</p>";
+				$this->obj_form->add_input($structure);
+				
+				$this->obj_form->subforms["service_setup"]	= array("info_setup_help");
+			}
 
 
 			// service-type specific sections
@@ -591,6 +622,8 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 			$this->obj_form->subforms["service_add"]	= array("serviceid", "date_period_first", "description");
+
+
 
 
 			// migration mode options - these allow some nifty tricks like creating

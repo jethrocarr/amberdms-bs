@@ -35,10 +35,9 @@ if (user_permissions_get('customers_write'))
 
 		// standard fields
 		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
-		$data["name_service"]	= @security_form_input_predefined("any", "name_service", 0, "");
-		$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
+		$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
+		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 		$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
-		$data["price_setup"]	= @security_form_input_predefined("money", "price_setup", 0, "");
 		$data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
 
 		// options
@@ -47,6 +46,10 @@ if (user_permissions_get('customers_write'))
 		if (!$data["quantity"])
 			$data["quantity"] = 1;	// all services must have at least 1
 
+
+		// setup fees
+		$data["price_setup"]	= @security_form_input_predefined("money", "price_setup", 0, "");
+		$data["discount_setup"]	= @security_form_input_predefined("float", "discount_setup", 0, "");
 
 
 		/*
@@ -244,9 +247,15 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data["description"]		= $data["description"];
 			$obj_customer->obj_service->data["name_service"]	= $data["name_service"];
 
-			$obj_customer->obj_service->data["price"]			= $data["price"];
-			$obj_customer->obj_service->data["price_setup"]		= $data["price_setup"];
+			$obj_customer->obj_service->data["price"]		= $data["price"];
 			$obj_customer->obj_service->data["discount"]		= $data["discount"];
+
+		
+			if ($data["price_setup"] != "0.00")
+			{
+				$obj_customer->obj_service->data["price_setup"]		= $data["price_setup"];
+				$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];
+			}
 
 			$obj_customer->obj_service->data["phone_ddi_single"]		= $data["phone_ddi_single"];
 			$obj_customer->obj_service->data["phone_trunk_included_units"]	= $data["phone_trunk_included_units"];
@@ -254,6 +263,31 @@ if (user_permissions_get('customers_write'))
 
 			$obj_customer->obj_service->action_update_options();
 
+
+			// do we need to generate a setup fee?
+			if ($data["price_setup"] != "0.00" && $data["active"] == 1)
+			{
+				$obj_customer_order		= New customer_orders;
+				$obj_customer_order->id		= $obj_customer->id;
+				$obj_customer_order->load_data();
+
+				$obj_customer_order->data_orders["date_ordered"]	= date("Y-m-d");
+				$obj_customer_order->data_orders["type"]		= "service";
+				$obj_customer_order->data_orders["customid"]		= $obj_customer->obj_service->id;
+				$obj_customer_order->data_orders["quantity"]		= "1";
+				$obj_customer_order->data_orders["price"]		= $data["price_setup"];
+				$obj_customer_order->data_orders["discount"]		= $data["discount_setup"];
+				$obj_customer_order->data_orders["description"]		= "Setup Fee: ". $data["name_service"] ."";
+
+				if (!$obj_customer_order->action_update_orders())
+				{
+					log_write("error", "process", "An unexpected error occured whilst attempting to add an order item to the customer");
+				}
+				else
+				{
+					log_write("notification", "process", "Added setup fee of ". format_money($obj_customer_order->data_orders["amount"]) ." to customer orders, this will then be billed automatically.");
+				}
+			}
 
 		}
 

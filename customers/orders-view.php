@@ -146,13 +146,13 @@ class page_output
 			case "product":
 			
 				// price
-				$structure = NULL;
+				$structure = null;
 				$structure["fieldname"] 	= "price";
 				$structure["type"]		= "money";
 				$this->obj_form->add_input($structure);
 
 				// quantity
-				$structure = NULL;
+				$structure = null;
 				$structure["fieldname"] 	= "quantity";
 				$structure["type"]		= "input";
 				$structure["options"]["width"]	= 50;
@@ -160,7 +160,7 @@ class page_output
 
 
 				// units
-				$structure = NULL;
+				$structure = null;
 				$structure["fieldname"] 		= "units";
 				$structure["type"]			= "input";
 				$structure["options"]["width"]		= 50;
@@ -170,13 +170,13 @@ class page_output
 
 
 				// product id
-				$sql_struct_obj	= New sql_query;
+				$sql_struct_obj	= new sql_query;
 				$sql_struct_obj->prepare_sql_settable("products");
 				$sql_struct_obj->prepare_sql_addfield("id", "products.id");
 				$sql_struct_obj->prepare_sql_addfield("label", "products.code_product");
 				$sql_struct_obj->prepare_sql_addfield("label1", "products.name_product");
 				$sql_struct_obj->prepare_sql_addorderby("code_product");
-				$sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+				$sql_struct_obj->prepare_sql_addwhere("id = 'currentid' or date_end = '0000-00-00'");
 				
 				$structure = form_helper_prepare_dropdownfromobj("productid", $sql_struct_obj);
 				$structure["options"]["search_filter"]	= "enabled";
@@ -185,7 +185,7 @@ class page_output
 
 
 				// description
-				$structure = NULL;
+				$structure = null;
 				$structure["fieldname"] 		= "description";
 				$structure["type"]			= "textarea";
 				$structure["options"]["height"]		= "50";
@@ -193,7 +193,7 @@ class page_output
 				$this->obj_form->add_input($structure);
 
 				// discount
-				$structure = NULL;
+				$structure = null;
 				$structure["fieldname"] 		= "discount";
 				$structure["type"]			= "input";
 				$structure["options"]["width"]		= 50;
@@ -210,7 +210,48 @@ class page_output
 
 
 			case "service":
-				// TODO: handle service fees here
+
+				// price
+				$structure = null;
+				$structure["fieldname"] 	= "price";
+				$structure["type"]		= "money";
+				$this->obj_form->add_input($structure);
+
+				// discount
+				$structure = null;
+				$structure["fieldname"] 		= "discount";
+				$structure["type"]			= "input";
+				$structure["options"]["width"]		= 50;
+				$structure["options"]["label"]		= " %";
+				$structure["options"]["max_length"]	= "2";
+				$this->obj_form->add_input($structure);
+
+
+				// service id
+				$sql_struct_obj	= new sql_query;
+				$sql_struct_obj->prepare_sql_settable("services");
+				$sql_struct_obj->prepare_sql_addfield("id", "services.id");
+				$sql_struct_obj->prepare_sql_addfield("label", "services.name_service");
+				$sql_struct_obj->prepare_sql_addorderby("name_service");
+				
+				$structure = form_helper_prepare_dropdownfromobj("serviceid", $sql_struct_obj);
+				$structure["options"]["search_filter"]	= "enabled";
+				$structure["options"]["width"]		= "600";
+				$this->obj_form->add_input($structure);
+
+
+				// description
+				$structure = null;
+				$structure["fieldname"] 		= "description";
+				$structure["type"]			= "textarea";
+				$structure["options"]["height"]		= "50";
+				$structure["options"]["width"]		= 500;
+				$this->obj_form->add_input($structure);
+
+				// subform
+				$this->obj_form->subforms["order_serice"]	= array("serviceid", "price", "discount", "description");
+
+
 			break;
 
 		} // end of type
@@ -229,7 +270,8 @@ class page_output
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->obj_customer->id_order;
 		$this->obj_form->add_input($structure);
-			
+		
+
 
 		// submit button
 		$structure = NULL;
@@ -241,7 +283,7 @@ class page_output
 
 
 		// define base subforms	
-		$this->obj_form->subforms["hidden"]		= array("id_customer");
+		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_order");
 
 
 		if (user_permissions_get("customers_orders"))
@@ -261,6 +303,7 @@ class page_output
 			// we need to fetch each order item detail.
 
 			$this->obj_customer->data_orders["productid"] = $this->obj_customer->data_orders["customid"];
+			$this->obj_customer->data_orders["serviceid"] = $this->obj_customer->data_orders["customid"];
 
 			$this->obj_form->load_data_object($this->obj_customer->data_orders);
 

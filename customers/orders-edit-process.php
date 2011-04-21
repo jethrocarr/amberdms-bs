@@ -43,19 +43,23 @@ if (user_permissions_get('customers_orders'))
 			$data["customid"]		= @security_form_input_predefined("int", "productid", 1, "");
 			$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 			$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
-			$data["price_setup"]		= @security_form_input_predefined("money", "price_setup", 0, "");
 			$data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
 
 			// options
 			$data["quantity"]		= @security_form_input_predefined("int", "quantity", 0, "");
 
 			if (!$data["quantity"])
-				$data["quantity"] = 1;	// all services must have at least 1
+				$data["quantity"] = 1;	// all products must have at least 1
 		break;
 
 
 		case "service":
-			// TODO: stuff here?
+			$data["customid"]		= @security_form_input_predefined("int", "serviceid", 1, "");
+			$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
+			$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
+			$data["discount"]		= @security_form_input_predefined("float", "discount", 0, "");
+			$data["quantity"]		= 1;	// all services must have at least 1
+
 		break;
 
 
@@ -116,6 +120,24 @@ if (user_permissions_get('customers_orders'))
 			unset($sql_product_obj);
 
 		break;
+
+
+		case "service":
+
+			// verify the service ID is valid
+			$sql_service_obj		= New sql_query;
+			$sql_service_obj->string	= "SELECT id FROM services WHERE id='". $data["customid"] ."' LIMIT 1";
+			$sql_service_obj->execute();
+
+			if (!$sql_service_obj->num_rows())
+			{
+				log_write("error", "process", "Unable to find the service with ID of ". $data["customid"] ."");
+			}
+
+			unset($sql_service_obj);
+
+		break;
+
 	}
 
 

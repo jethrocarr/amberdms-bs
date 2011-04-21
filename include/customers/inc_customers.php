@@ -2119,7 +2119,7 @@ class customer_orders extends customer
 
 				$obj_item->id_invoice		= $invoiceid;
 				$obj_item->type_invoice		= "ar";
-				$obj_item->type_item		= "product";
+				$obj_item->type_item		= $data_order["type"];
 
 				$obj_item->prepare_data($data_order);
 

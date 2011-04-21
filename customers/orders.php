@@ -110,9 +110,17 @@ class page_output
 		// load service item data and optiosn
 		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 		{
-			if ($this->obj_table->data[$i]["type"] == "product")
+			switch ($this->obj_table->data[$i]["type"])
 			{
-				$this->obj_table->data[$i]["item"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ',code_product,name_product) AS value FROM products WHERE id='". $this->obj_table->data[$i]["customid"] ."'");
+				case "product":	
+					// lookup product code + name
+					$this->obj_table->data[$i]["item"] = sql_get_singlevalue("SELECT CONCAT_WS(' -- ',code_product,name_product) AS value FROM products WHERE id='". $this->obj_table->data[$i]["customid"] ."'");
+				break;
+
+				case "service":
+					// lookup service name
+					$this->obj_table->data[$i]["item"] = sql_get_singlevalue("SELECT name_service AS value FROM services WHERE id='". $this->obj_table->data[$i]["customid"] ."'");
+				break;
 			}
 		}
 
