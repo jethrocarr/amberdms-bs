@@ -22,6 +22,12 @@ INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'discount_setup', 'Setup Charge Discount');
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'info_setup_help', 'If you set a setup fee below, it will be charged once the service is activated and added to the customer orders page.');
 
+
+-- Adjusted usage summary field for better traffic reporting
+
+ALTER TABLE  `services_customers_periods` CHANGE  `usage_summary`  `usage_summary` DECIMAL( 20, 2 ) NOT NULL;
+
+
 --
 -- Set Schema Version
 --
