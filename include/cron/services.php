@@ -18,6 +18,7 @@ require("../accounts/inc_invoices.php");
 // custom service includes
 require("../services/inc_services.php");
 require("../services/inc_services_invoicegen.php");
+require("../services/inc_services_generic.php");
 require("../services/inc_services_cdr.php");
 require("../services/inc_services_traffic.php");
 require("../services/inc_services_usage.php");

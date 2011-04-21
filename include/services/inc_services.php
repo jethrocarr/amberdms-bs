@@ -2,7 +2,16 @@
 /*
 	services/inc_services.php
 
-	Provides classes for managing services
+	Provides fundamental classes for managing services in ABS, such as adjusting plan
+	information and the basic service_usage class.
+
+	More advanced services are split into seporate files:
+	* inc_services_cdr.php		CDR/phone services
+	* inc_services_traffic.php	IP traffic billing services
+	* inc_services_generic.php	Generic services
+
+	The main usage calcution and alert functions are located in:
+	* inc_services_usage.php
 */
 
 

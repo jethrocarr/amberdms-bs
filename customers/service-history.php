@@ -150,6 +150,12 @@ class page_output
 		}
 		else
 		{
+			// get the unit name if applicable
+			if (preg_match("/^[0-9]*$/", $this->obj_customer->obj_service->data["units"]))
+			{
+				$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $this->obj_customer->obj_service->data["units"] ."'");
+			}
+
 			// run through all the data rows to make custom changes
 			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 			{
@@ -186,10 +192,15 @@ class page_output
 					case "data_traffic":
 					case "generic_with_usage":
 
-						// if this is the most recent period, then add a check link next to the usage amount
 						if ($i == ($this->obj_table->data_num_rows - 1))
 						{
-							$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." <a href=\"customers/services-checkusage-process.php?id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">(get latest)</a>";
+							// if this is the most recent period, then add a check link next to the usage amount
+							$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." $unitname <a href=\"customers/services-checkusage-process.php?id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."\">(get latest)</a>";
+						}
+						else
+						{
+							// displau usage amount
+							$this->obj_table->data[$i]["usage_summary"] = $this->obj_table->data[$i]["usage_summary"] ." $unitname";
 						}
 					break;
 				} // end of service type

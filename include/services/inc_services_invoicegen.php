@@ -1174,17 +1174,15 @@ function service_invoices_generate($customerid = NULL)
 							break;
 
 
-							
 							case "time":
-							case "data_traffic":
 								/*
-									TIME or DATA_TRAFFIC
+									TIME
 
 									Simular to the generic usage type, but instead of units being a text field, units
 									is an ID to the service_units table.
 								*/
 
-								log_write("debug", "service_invoicegen", "Processing usage items for time/data_traffic");
+								log_write("debug", "service_invoicegen", "Processing usage items for time traffic");
 
 
 
@@ -1229,6 +1227,108 @@ function service_invoices_generate($customerid = NULL)
 									{
 										$usage = $usage_obj->data["total"];
 									}
+								}
+								
+								unset($usage_obj);
+
+								
+								
+
+								/*
+									Charge for the usage in units
+								*/
+
+								$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
+
+								if ($usage > $obj_service->data["included_units"])
+								{
+									// there is excess usage that we can bill for.
+									$usage_excess = $usage - $obj_service->data["included_units"];
+
+									// set item attributes
+									$itemdata["price"]	= $obj_service->data["price_extraunits"];
+									$itemdata["quantity"]	= $usage_excess;
+									$itemdata["units"]	= $unitname;
+
+									// description example:		Used 120 GB out of 50 GB included in plan
+									//				Excess usage of 70 GB charged at $5.00 per GB
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
+									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
+								}
+								else
+								{
+									// description example:		Used 10 out of 50 included units
+									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
+								}
+
+
+								/*
+									Add the item to the invoice
+								*/
+
+								$invoice_item->prepare_data($itemdata);
+								$invoice_item->action_update();
+
+								unset($invoice_item);
+
+
+								/*
+									Update usage value for period - this summary value is visable on the service
+									history page and saves having to query lots of records to generate period totals.
+								*/
+								$sql_obj		= New sql_query;
+								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
+								$sql_obj->execute();
+
+							break;
+
+							
+							case "data_traffic":
+								/*
+									DATA_TRAFFIC
+
+									We make use of the service_usage_traffic logic to determine the usage across all IP
+									addressess assigned to this customer and then bill accordingly.
+								*/
+
+								log_write("debug", "service_invoicegen", "Processing usage items for time/data_traffic");
+
+
+
+								/*
+									Usage Item Basics
+								*/
+
+								// start the item
+								$invoice_item				= New invoice_items;
+							
+								$invoice_item->id_invoice		= $invoiceid;
+							
+								$invoice_item->type_invoice		= "ar";
+								$invoice_item->type_item		= "service_usage";
+							
+								$itemdata = array();
+
+								$itemdata["chartid"]		= $obj_service->data["chartid"];
+								$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+								$itemdata["customid"]		= $obj_service->id;
+
+
+
+								/*
+									Fetch usage amount
+								*/
+								
+								$usage_obj					= New service_usage_traffic;
+								$usage_obj->id_service_customer			= $period_usage_data["id_service_customer"];
+								$usage_obj->date_start				= $period_usage_data["date_start"];
+								$usage_obj->date_end				= $period_usage_data["date_end"];
+								
+								if ($usage_obj->load_data_service())
+								{
+									$usage_obj->fetch_usage_traffic();
+
+									$usage = $usage_obj->data["total_byunits"];
 								}
 								
 								unset($usage_obj);

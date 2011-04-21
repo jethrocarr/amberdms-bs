@@ -16,6 +16,9 @@ include_once("../include/accounts/inc_ledger.php");
 include_once("../include/accounts/inc_invoices.php");
 include_once("../include/services/inc_services.php");
 include_once("../include/services/inc_services_usage.php");
+include_once("../include/services/inc_services_generic.php");
+include_once("../include/services/inc_services_traffic.php");
+include_once("../include/services/inc_services_cdr.php");
 
 
 if (user_permissions_get('customers_write'))

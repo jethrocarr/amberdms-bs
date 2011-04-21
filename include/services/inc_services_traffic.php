@@ -437,9 +437,6 @@ class service_usage_traffic extends service_usage
 
 		Fetching data traffic from database and returns total usage amount.
 
-		TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
-			allow different charging for certain networks, such as domestic or within the data center.
-
 		Returns
 		0		failure
 		1		success
@@ -451,111 +448,269 @@ class service_usage_traffic extends service_usage
 
 
 		/*
-			Query Call Records
+			Fetch raw usage data from DB
 		*/
 
 		if ($GLOBALS["config"]["SERVICE_TRAFFIC_MODE"] == "internal")
 		{
-			log_write("error", "service_usage_traffic", "Internal traffic records not yet implemented.");
+			/*
+				Internal Database
 
-			// TODO: implement internal IPv4 traffic record handling code.
+				Use the internal database - this stores the usage information for upload/download mapped against the customer's
+				IP address.
+			*/
+
+			log_write("debug", "service_usage_traffic", "Fetching traffic records from internal database");
+
+			// fetch upload/download stats
+			$sql_obj			= New sql_query;
+			$sql_obj->string		= "SELECT SUM(usage1) as usage1, SUM(usage2) as usage2 FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date>='". $this->date_start ."' AND date<='". $this->date_end ."'";
+			$sql_obj->execute();
+			$sql_obj->fetch_array();
+
+			$this->data["usage1"]	= $sql_obj->data[0]["usage1"];
+			$this->data["usage2"]	= $sql_obj->data[0]["usage2"];
+
+
+			// create a total of both usage columns
+			$sql_obj			= New sql_query;
+			$sql_obj->string		= "SELECT '". $this->data["usage1"] ."' + '". $this->data["usage2"] ."' as totalusage";
+			$sql_obj->execute();
+			$sql_obj->fetch_array();
+	
+			$this->data["total"] 	= $sql_obj->data[0]["totalusage"];
+
+
+			// we now have the raw usage
+			log_write("debug", "service_usage_traffic", "Total raw traffic usage for ". $this->date_start ." until ". $this->date_end ." is ". $this->data["total"] ." bytes");
 		}
 		else
 		{
 			/*
 				Connect to External SQL database
 
-				Mode: mysql_netflow_daily
-
-				In this mode, there are netflow tables for each day which we need to read through and aggregate data from.
+				External DBs are common with larger teleco providers since it allows easier storage, splicing and archiving of usage information
+				for data traffic services.
 			*/
 
-			$obj_traffic_db_sql = New sql_query;
 
-			if (!$obj_traffic_db_sql->session_init("mysql", $GLOBALS["config"]["SERVICE_TRAFFIC_DB_HOST"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_NAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_USERNAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_PASSWORD"]))
+			switch ($GLOBALS["config"]["SERVICE_TRAFFIC_DB_TYPE"])
 			{
-				return 0;
-			}
+				case "mysql_netflow_daily":
+					/*
+						MODE: mysql_netflow_daily
 
+						In this mode, there are netflow tables for each day which we need to read through and aggregate data from, typically
+						this is done so that busy ISPs don't end up with massive monthly/yearly tables.
 
-			/*
-				Workout the data range, since we need to query a different table for each day
-			*/
+						eg:
+						traffic_20110420
+						traffic_20110421
+						traffic_20110422
 
-			$date_tmp		= $this->date_start;
-			$date_range		= array();
+					*/
 
-			$date_range[]		= $this->date_start;
-
-			while ($tmp_date != $this->date_end)
-			{
-				$tmp_date	= explode("-", $tmp_date);
-				$tmp_date 	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] +1), $tmp_date[0]));
-			}
+					log_write("debug", "service_usage_traffic", "Processing external database mysql_netflow_daily");
 
 
 
-			/*
-				We work out the usage by fetching the totals for each IPv4 address belonging to this
-				service and aggregating the total.
-			*/
+					/*
+						Connect to external database
+					*/
 
-			if (!$this->data_ipv4)
-			{
-				$this->load_data_ipv4();
-			}
+					$obj_traffic_db_sql = New sql_query;
 
-			foreach ($this->data_ipv4 as $ipv4)
-			{
-				// TODO: working here on data traffic charging logic
-
-
-				/*
-					Fetch Data
-				*/
-				log_write("debug", "service_usage_traffic", "Fetching usage records FOR $ipv4 FROM $date_start TO $date_end");
-
-					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, src, dst FROM cdr WHERE disposition='ANSWERED' AND src='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
-					$obj_cdr_db_sql->execute();
-
-
-				/*
-					Calculate costs of calls
-				*/
-				if ($obj_cdr_db_sql->num_rows())
-				{
-					$obj_cdr_db_sql->fetch_array();
-
-					foreach ($obj_cdr_db_sql->data as $data_cdr)
+					if (!$obj_traffic_db_sql->session_init("mysql", $GLOBALS["config"]["SERVICE_TRAFFIC_DB_HOST"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_NAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_USERNAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_PASSWORD"]))
 					{
-						// determine price
-						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+						log_write("error", "service_usage_traffic", "Unable to establish a connection to the external traffic DB, unable to run data usage processing.");
 
-						// create local usage record for record keeping purposes
-						$sql_obj			= New sql_query;
-						$sql_obj->string		= "INSERT INTO service_usage_records (id_service_customer, date, price, usage1, usage2, usage3) VALUES ('". $this->id_service_customer ."', '". $data_cdr["calldate"] ."', '". $charges ."', '". $data_cdr["src"] ."', '". $data_cdr["dst"] ."', '". $data_cdr["billsec"] ."')";
-						$sql_obj->execute();
-
-						// add to structure
-						$this->data[ $ddi ]["charges"]	+= $charges;
+						return 0;
 					}
-				}
-
-			} // end of DDI loop
 
 
 
-			/*
-				Disconnect from database
-			*/
+					/*
+						Workout the date range, since we need to query a different table for each day
 
-			$obj_cdr_db_sql->session_terminate();
+						TODO: this would be nice as a generic function?
+					*/
+
+
+					$tmp_date		= $this->date_start;
+					$date_range		= array();
+
+					$date_range[]		= $this->date_start;
+
+					while ($tmp_date != $this->date_end)
+					{
+						$tmp_date	= explode("-", $tmp_date);
+						$tmp_date 	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] +1), $tmp_date[0]));
+
+						$date_range[]	= $tmp_date;
+					}
+
+					for ($i=0; $i < count($date_range); $i++)
+					{
+						// strip "-" charactor
+						$date_range[$i] = str_replace("-", "", $date_range[$i]);
+					}
+
+
+					/*
+						We work out the usage by fetching the totals for each IPv4 address belonging to this
+						service and aggregating the total.
+					*/
+
+					// make sure we have the array of IPv4 addresses
+					if (!$this->data_ipv4)
+					{
+						$this->load_data_ipv4();
+					}
+
+					// blank current total
+					$this->data["total"] = 0;
+
+					// verify IPv4 address have been configured
+					if (!is_array($this->data_ipv4))
+					{
+						log_write("warning", "service_usage_traffic", "Note: No IPv4 addresses have been configured for this customer");
+
+						return 0;
+					}
+
+
+					// run through each IP
+					foreach ($this->data_ipv4 as $ipv4)
+					{
+						/*
+							Fetch Data
+
+							We run through each IP and for each IP, we fetch the total from all the daily tables. Note that
+							we make the assumption that daily tables might not exist if there's nothing to be processed for that
+							day, so the code is written accordingly.
+
+							Note that we use the SQL database for *ALL* calculations, this is due to the SQL DB being able
+							to handle 64bit integers, whereas PHP will vary depending on the host platform.
+						*/
+
+						log_write("debug", "service_usage_traffic", "Fetching usage records FOR address $ipv4 FOR date ". $this->date_start ." to ". $this->date_end ."");
+
+
+						// run through the dates
+						foreach ($date_range as $date)
+						{
+							// check that the table exists
+							$obj_traffic_db_sql->string		= "SHOW TABLES LIKE 'traffic_$date'";
+							$obj_traffic_db_sql->execute();
+
+							if ($obj_traffic_db_sql->num_rows())
+							{
+								// query the current date for the current IP
+								$obj_traffic_db_sql->string		= "SELECT SUM(bytes) as total FROM traffic_$date WHERE ip_src='$ipv4' OR ip_dst='$ipv4'";
+								$obj_traffic_db_sql->execute();
+
+								$obj_traffic_db_sql->fetch_array();
+
+								if (!empty($obj_traffic_db_sql->data[0]["total"]))
+								{
+									// add to running total
+									$sql_obj			= New sql_query;
+									$sql_obj->string		= "SELECT '". $this->data["total"] ."' + '". $obj_traffic_db_sql->data[0]["total"] ."' as totalusage";
+									$sql_obj->execute();
+									$sql_obj->fetch_array();
+
+									$this->data["total"] 	= $sql_obj->data[0]["totalusage"];
+
+								} // end if traffic exists
+
+							} // end if table exists/query succeeds
+							else
+							{
+								log_write("warning", "service_usage_traffic", "SQL database table traffic_$date does not exist");
+							}
+
+						} // end foreach date
+
+						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ."");
+
+					} // end foreach ipv4
+					
+					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ."");
+
+
+
+					/*
+						TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
+						allow different charging for certain networks, such as domestic or within the data center.
+
+						We do not currently need to worry about rating the traffic differently depending on
+						who the packets are going to, we just need a total for the service for that customer.
+					*/
+
+
+					/*
+						Disconnect from database
+					*/
+	
+					$obj_traffic_db_sql->session_terminate();
+
+
+				break;
+
+
+				default:
+					/*
+						Unknown DB type, we should fail.
+					*/
+					log_write("error", "debug", "External DB type ". $GLOBALS["config"]["SERVICE_TRAFFIC_DB_TYPE"] ." is not supported.");
+					return 0;
+				break;
+
+			} // end of switch between DB types
 
 		} // end of external data source
 
-	} // end of fetch_usage_calls
 
-} // end of class: service_usage_cdr
+
+		/*
+			Generate formatted usage
+
+			We have the number of raw units, we now need to generate the number of human readable/formatted units
+			from this figure.
+		*/
+
+		log_write("debug", "service_usage_traffic", "Generating formatted usage totals");
+
+		$this->data["numrawunits"] = sql_get_singlevalue("SELECT numrawunits as value FROM service_units WHERE id='". $this->obj_service->data["units"] ."' LIMIT 1");
+
+		if (!$this->data["numrawunits"])
+		{
+			log_debug("service_usage_traffic", "Error: Unable to fetch number of raw units for the units type");
+			return 0;
+		}
+			
+		// calculate
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT '". $this->data["total"] ."' / '". $this->data["numrawunits"] ."' as value";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+
+		$this->data["total_byunits"]	= $sql_obj->data[0]["value"];
+
+		
+		log_write("debug", "service_usage_traffic", "Total traffic usage for period is ". $this->data["total_byunits"] ."");
+
+
+
+		/*
+			Complete
+		*/
+
+		return 1;
+
+	} // end of fetch_usage_traffic
+
+} // end of class: service_usage_traffic
 
 
 
