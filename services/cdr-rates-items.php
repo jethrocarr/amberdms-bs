@@ -84,7 +84,7 @@ class page_output
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("cdr_rate_tables_values");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "id");
-		$this->obj_table->sql_obj->prepare_sql_addfield("id_rate_table='". $this->rate_table->id ."'");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("id_rate_table='". $this->obj_rate_table->id ."'");
 
 
 		// acceptable filter options
