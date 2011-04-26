@@ -465,7 +465,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 		log_write("debug", "cdr_rate_table", "Executing verify_rate_prefix()");
 
 		$sql_obj			= New sql_query;
-		$sql_obj->string		= "SELECT id FROM `cdr_rate_tables_values` WHERE rate_prefix='". $this->data_rate["rate_prefix"] ."' ";
+		$sql_obj->string		= "SELECT id FROM `cdr_rate_tables_values` WHERE rate_prefix='". $this->data_rate["rate_prefix"] ."' AND id_rate_table='". $this->id. "'";
 
 		if ($this->id_rate)
 			$sql_obj->string	.= " AND id!='". $this->id_rate ."'";
@@ -1845,7 +1845,7 @@ class cdr_customer_service_ddi
 		log_write("debug", "cdr_customer_services_ddi", "Executing load_data_ddi()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT ddi_start, ddi_finish, description FROM services_customers_ddi WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT ddi_start, ddi_finish, local_prefix, description FROM services_customers_ddi WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -1936,6 +1936,7 @@ class cdr_customer_service_ddi
 		$sql_obj->string	= "UPDATE `services_customers_ddi` SET "
 						."ddi_start='". $this->data["ddi_start"] ."', "
 						."ddi_finish='". $this->data["ddi_finish"] ."', "
+						."local_prefix='". $this->data["local_prefix"] ."', "
 						."description='". $this->data["description"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();

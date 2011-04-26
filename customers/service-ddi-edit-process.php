@@ -41,6 +41,7 @@ if (user_permissions_get('customers_write'))
 
 	$obj_ddi->data["ddi_start"]				= @security_form_input_predefined("int", "ddi_start", 1, "");
 	$obj_ddi->data["ddi_finish"]				= @security_form_input_predefined("int", "ddi_finish", 1, "");
+	$obj_ddi->data["local_prefix"]				= @security_form_input_predefined("int", "phone_local_prefix", 1, "");
 	$obj_ddi->data["description"]				= @security_form_input_predefined("any", "description", 0, "");
 
 

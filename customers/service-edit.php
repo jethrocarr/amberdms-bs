@@ -365,9 +365,19 @@ class page_output
 					$structure["fieldname"]		= "phone_ddi_single";
 					$structure["type"]		= "input";
 					$structure["options"]["req"]	= "yes";
+					$structure["options"]["help"]	= "eg: 6412345678";
 					$this->obj_form->add_input($structure);
 
-					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info", "phone_ddi_single");
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_local_prefix";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["options"]["help"]	= "eg: 64123";
+					$structure["options"]["label"]	= " Any calls to numbers matching this prefix will be charged at LOCAL rate.";
+					$this->obj_form->add_input($structure);
+
+
+					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info", "phone_ddi_single", "phone_local_prefix");
 
 				break;
 

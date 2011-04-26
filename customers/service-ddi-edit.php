@@ -157,12 +157,24 @@ class page_output
 		$structure["fieldname"] 	= "ddi_start";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["help"]	= "eg: 6412310010";
+		$structure["options"]["label"]	= " First number in allocated range (inclusive)";
 		$this->obj_form->add_input($structure);
 		
 		$structure = NULL;
 		$structure["fieldname"]		= "ddi_finish";
 		$structure["type"]		= "input";
 		$structure["options"]["req"]	= "yes";
+		$structure["options"]["help"]	= "eg: 6412310020";
+		$structure["options"]["label"]	= " Last number in allocated range (inclusive)";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]		= "phone_local_prefix";
+		$structure["type"]		= "input";
+		$structure["options"]["req"]	= "yes";
+		$structure["options"]["help"]	= "eg: 64123";
+		$structure["options"]["label"]	= " Any calls to numbers matching this prefix will be charged at LOCAL rate.";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -202,7 +214,7 @@ class page_output
 
 		// define subforms
 		$this->obj_form->subforms["service_details"]	= array("name_customer", "service_name");
-		$this->obj_form->subforms["ddi_details"]	= array("ddi_start", "ddi_finish", "description");
+		$this->obj_form->subforms["ddi_details"]	= array("ddi_start", "ddi_finish", "phone_local_prefix", "description");
 		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer", "id_ddi");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
@@ -227,6 +239,7 @@ class page_output
 
 			$this->obj_form->structure["ddi_start"]["defaultvalue"]			= $this->obj_ddi->data["ddi_start"];
 			$this->obj_form->structure["ddi_finish"]["defaultvalue"]		= $this->obj_ddi->data["ddi_finish"];
+			$this->obj_form->structure["phone_local_prefix"]["defaultvalue"]	= $this->obj_ddi->data["local_prefix"];
 			$this->obj_form->structure["description"]["defaultvalue"]		= $this->obj_ddi->data["description"];
 		}
 	}
