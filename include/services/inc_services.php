@@ -379,7 +379,7 @@ class service
 			$sql_obj->execute();
 
 			// set new value
-			$sql_obj->string	= "INSERT INTO services_customers_ddi (id_service_customer, ddi_start, ddi_finish, description) VALUES ('". $this->option_type_id ."', '". $data_changed["phone_ddi_single"] ."', '". $data_changed["phone_ddi_single"] ."', 'Automatically Created')";
+			$sql_obj->string	= "INSERT INTO services_customers_ddi (id_service_customer, ddi_start, ddi_finish, local_prefix, description) VALUES ('". $this->option_type_id ."', '". $data_changed["phone_ddi_single"] ."', '". $data_changed["phone_ddi_single"] ."', '". $data_changed["phone_local_prefix"] ."', 'Automatically Created')";
 			$sql_obj->execute();
 		}
 

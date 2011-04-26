@@ -779,15 +779,16 @@ class cdr_rate_table_rates extends cdr_rate_table
 		seconds		Number of BILLALBE seconds
 		src		Source phone number
 		dst		Destination phone number
+		local_prefix	Local prefix (optional)
 
 		Returns
 		-1		Failure
 		#		Price (float, no formatting, tax-exclusive)
 	*/
 
-	function calculate_charges($seconds, $src, $dst)
+	function calculate_charges($seconds, $src, $dst, $local_prefix = NULL)
 	{
-		log_write("debug", "cdr_rate_table_rates", "Executing calculate_charges($seconds, $src, $dst)");
+		log_write("debug", "cdr_rate_table_rates", "Executing calculate_charges($seconds, $src, $dst, $local_prefix)");
 
 
 		/*
@@ -797,7 +798,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 			First, determine the prefix to charge with:
 			* Use calculate_prefix to fetch the ID of the prefix that the src number belongs to
 			* Do the same for the dest number.
-			* Is it a local call (ie: same prefix?) If so, fetch LOCAL rate
+			* Is it a local call (ie: same prefix or within local_prefix zone) If so, fetch LOCAL rate
 			* Unknown? Then fetch the DEFAULT rate.
 			* Otherwise, use the rate that was supplied
 			
@@ -818,6 +819,9 @@ class cdr_rate_table_rates extends cdr_rate_table
 		$prefix_dst	= $this->calculate_prefix($dst);
 
 
+		/*
+			Check for Local Prefix
+		*/
 
 		/*
 			Determine charging rate
@@ -825,10 +829,19 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 		if ($prefix_src == $prefix_dst)
 		{
+			// local prefix
+			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+		}
+		elseif (!empty($local_prefix) && preg_match("/^$local_prefix/", $prefix_dst))
+		{
+			// local prefix - numbers might not be both in the same exact prefix, but
+			// the destination belongs to the local prefix option
+
 			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
 		}
 		else
 		{
+			// standard prefix
 			$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
 		}
 
@@ -1364,7 +1377,7 @@ class service_usage_cdr extends service_usage
 {
 
 	var $data_ddi;		// contains DDI information loaded by load_data_di
-
+	var $data_local;	// contains local calling region information
 
 
 	/*
@@ -1384,36 +1397,45 @@ class service_usage_cdr extends service_usage
 
 		// fetch all the DDIs for this service-customer
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT ddi_start, ddi_finish FROM services_customers_ddi WHERE id_service_customer='". $this->id_service_customer ."'";
+		$sql_obj->string	= "SELECT ddi_start, ddi_finish, local_prefix FROM services_customers_ddi WHERE id_service_customer='". $this->id_service_customer ."'";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
 		{
 			$sql_obj->fetch_array();
 
-			$this->data_ddi	= array();
+			$this->data_ddi		= array();
+			$this->data_local	= array();
 
 
 			// work out DDI ranges where nessacary.
 			foreach ($sql_obj->data as $data)
 			{
+				// ddis
 				if ($data["ddi_start"] == $data["ddi_finish"])
 				{
 					// single DDI, very easy
 					$this->data_ddi[] = $data["ddi_start"];
+
+					// local calling zone
+					$this->data_local[ $data["ddi_start"] ] = $data["local_prefix"];
 				}
 				else
 				{
 					// multiple DDIs, go and generate all the DDIs inbetween
 					for ($i=$data["ddi_start"]; $i < $data["ddi_finish"]; $i++)
 					{
-						$this->data_ddi[] = $i;
+						// add number
+						$this->data_ddi[]	= $i;
+				
+						// local calling zone
+						$this->data_local[$i]	= $data["local_prefix"];
 					}
 				}
+
 			}
 
-
-			// return the total number of DDIs
+			// return total number of DDIs
 			$total	= count($this->data_ddi);
 
 			log_write("debug", "service_usage_cdr", "Customer has ". $total ." DDIs on their service");
@@ -1588,7 +1610,7 @@ class service_usage_cdr extends service_usage
 					}
 					else
 					{
-						$charges = $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+						$charges = $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $data_cdr["src"] ]);
 
 						// update the charges in the records
 						$sql_obj			= New sql_query;
@@ -1668,7 +1690,7 @@ class service_usage_cdr extends service_usage
 					foreach ($obj_cdr_db_sql->data as $data_cdr)
 					{
 						// determine price
-						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"]);
+						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $ddi ]);
 
 						// create local usage record for record keeping purposes
 						$sql_obj			= New sql_query;
