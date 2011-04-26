@@ -67,7 +67,7 @@ if (user_permissions_get('services_write'))
 	*/
 	if (error_check())
 	{	
-		$_SESSION["error"]["form"]["cdr_rate_table_edit"] = "failed";
+		$_SESSION["error"]["form"]["cdr_rate_table_item_edit"] = "failed";
 		header("Location: ../index.php?page=services/cdr-rates-items-edit.php&id=". $obj_rate_table->id ."&id_rate=". $obj_rate_table->id_rate);
 		exit(0);
 	}

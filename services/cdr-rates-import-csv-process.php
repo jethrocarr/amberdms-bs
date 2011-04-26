@@ -151,24 +151,43 @@ if (user_permissions_get("services_write"))
 		// fetch or delete existing data
 		if ($data["cdr_rate_import_mode"] == "cdr_import_delete_existing")
 		{
+			log_write("debug", "process", "Deleting existing rates");
+
 			// delete all the current rates, except default
 			$sql_obj->string	= "DELETE FROM cdr_rate_tables_values WHERE id_rate_table='". $obj_rate_table->id ."' AND rate_prefix!='DEFAULT' AND rate_prefix!='LOCAL'";
 			$sql_obj->execute();
 		}
-/*		else
+		else
 		{
-			// import existing rate information
-			$sql_obj->string	= "SELECT rate_prefix, rate_description, rate_price_sale, rate_price_cost FROM cdr_rate_tables_values WHERE id_rate_table='". $obj_rate_table->id ."'";
-			$sql_obj->execute();
+			log_write("debug", "process", "Updating existing rates");
 
-			if ($sql_obj->num_rows())
+			// delete current rates that have the same prefix as any of the new rates - this causes the import to
+			// override existing rates, but not delete any other ones that aren't specified in the imported
+		
+			foreach ($import_array_raw as $import_row)
 			{
-				$sql_obj->fetch_array();
+				$prefixes = explode(",", $import_row["col_prefix"]);
 
-				// TODO: write me
-			}
+				foreach ($prefixes as $prefix)
+				{
+					// strip any junk from the file
+					$prefix = str_replace(' ', '', $prefix);
+					$prefix = str_replace('\n', '', $prefix);
+					$prefix = str_replace('\r', '', $prefix);
+
+					// verify valid prefix (integer only)
+					if (preg_match('/^[0-9][0-9]*$/', $prefix))
+					{
+						// delete current rate item
+						$sql_obj->string	= "DELETE FROM cdr_rate_tables_values WHERE id_rate_table='". $obj_rate_table->id ."' AND rate_prefix='". $prefix ."' LIMIT 1";
+						$sql_obj->execute();
+					}
+				}
+
+			} // end of loop through prefixes
+	
 		}
-*/
+
 
 		// track bad lines
 		$dud_lines = 0;

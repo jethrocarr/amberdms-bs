@@ -79,7 +79,7 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost");
 		$this->obj_table->columns_order		= array("rate_prefix");
-		//$this->obj_table->columns_order_options	= array("rate_prefix");
+		$this->obj_table->columns_order_options	= array("rate_prefix");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("cdr_rate_tables_values");
@@ -88,11 +88,18 @@ class page_output
 
 
 		// acceptable filter options
-		$structure["fieldname"] = "searchbox";
+		$structure["fieldname"] = "searchbox_prefix";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "(rate_prefix LIKE '%value%' OR rate_description LIKE '%value%')";
+		$structure["sql"]	= "rate_prefix LIKE 'value%'";
 		$this->obj_table->add_filter($structure);
 	
+		$structure["fieldname"] = "searchbox_desc";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "rate_description LIKE '%value%'";
+		$this->obj_table->add_filter($structure);
+
+		$this->obj_table->add_fixed_option("id", $this->obj_rate_table->id);
+
 
 		// load options
 		$this->obj_table->load_options_form();
@@ -110,8 +117,15 @@ class page_output
 		print "<p>Below is the full list of table rate items. Note the \"DEFAULT\" item which is used whenever a call doesn't match any other defined prefix in the rate table.</p>";
 
 
+		// add new entry link
+		if (user_permissions_get("services_write"))
+		{
+			print "<p><a class=\"button\" href=\"index.php?page=services/cdr-rates-items-edit.php&id=". $this->obj_rate_table->id ."\">Add Item to Rate Table</a></p>";
+		}
+
+
 		// display options form
-//		$this->obj_table->render_options_form();
+		$this->obj_table->render_options_form();
 
 
 		// display table
