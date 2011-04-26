@@ -1474,6 +1474,17 @@ class customer_services extends customer
 
 
 					/*
+						Delete the service DDI and IPv4 attributes (if any)
+					*/
+
+					$sql_obj->string	= "DELETE FROM services_customers_ddi WHERE id_service_customer='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+					$sql_obj->string	= "DELETE FROM services_customers_ipv4 WHERE id_service_customer='". $data_component["id"] ."'";
+					$sql_obj->execute();
+
+
+					/*
 						Update Journal
 					*/
 
