@@ -102,7 +102,7 @@ if (user_permissions_get("admin"))
 	/*
 		Service Type Options
 	*/
-	$data_units		= array();
+	$data_types		= array();
 
 	$obj_sql		= New sql_query;
 	$obj_sql->string	= "SELECT id, name FROM service_types ORDER BY name";
