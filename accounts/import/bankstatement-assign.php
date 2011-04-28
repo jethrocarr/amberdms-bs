@@ -495,11 +495,20 @@ class page_output
 			$i=1;
 			foreach ($this->statement_array as $transaction=>$data)
 			{
-				$name = "transaction".$i;
-				$name_error = $name."-error";
+				$name		= "transaction".$i;
+				$name_error	= $name."-error";
+
+				foreach (array_keys($_SESSION["error"]) as $error)
+				{
+					if (preg_match("/^$name\S*-error$/", $error))
+					{
+						$_SESSION["error"][$name_error] = 1;
+					}
+				}
+
 				if (isset($_SESSION["error"][$name_error]))
 				{
-					print "<tr class=\"form_error\">";
+					print "<tr id=\"".$name."\" class=\"form_error transaction_row\">";
 				}
 				else
 				{
