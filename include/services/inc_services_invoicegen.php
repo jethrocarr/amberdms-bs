@@ -1572,7 +1572,12 @@ function service_invoices_generate($customerid = NULL)
 								unset($usage_obj);
 
 							break;
-
+	
+							case "generic_no_usage":
+							case "bundle":
+								// nothing todo for these service types
+								log_write("debug", "service_invoicegen", "Not processing usage, this is a non-usage service type");
+							break;
 
 							default:
 								// we should always match all service types, even if we don't need to do anything
