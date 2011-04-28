@@ -86,18 +86,14 @@ function service_usage_alerts_generate($customerid = NULL)
 			
 			
 			
-			
-			
-			
 			// fetch customer details
-			
-			$sql_customer_obj = sql_get_singlerow("SELECT name_customer FROM customers WHERE id='". $customer_data["customerid"] ."' LIMIT 1");			
-			$arr_sql_contact = sql_get_singlerow("SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$customer_data["customerid"]. "' AND role = 'accounts' LIMIT 1");
-			$arr_sql_contact_details = sql_get_singlerow("SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$arr_sql_contact["id"]. "' AND type = 'email' LIMIT 1");
+			$sql_customer_obj		= sql_get_singlerow("SELECT name_customer FROM customers WHERE id='". $customer_data["customerid"] ."' LIMIT 1");			
+			$arr_sql_contact		= sql_get_singlerow("SELECT id, contact FROM customer_contacts WHERE customer_id = '" .$customer_data["customerid"]. "' AND role = 'accounts' LIMIT 1");
+			$arr_sql_contact_details	= sql_get_singlerow("SELECT detail AS contact_email FROM customer_contact_records WHERE contact_id = '" .$arr_sql_contact["id"]. "' AND type = 'email' LIMIT 1");
 	
 			// place the contact details into the customer details array.			
-			$sql_customer_obj["name_contact"] = $arr_sql_contact["contact"];			
-			$sql_customer_obj["contact_email"] = $arr_sql_contact_details["contact_email"];
+			$sql_customer_obj["name_contact"]	= $arr_sql_contact["contact"];			
+			$sql_customer_obj["contact_email"]	= $arr_sql_contact_details["contact_email"];
 			
 
 
@@ -251,183 +247,189 @@ function service_usage_alerts_generate($customerid = NULL)
 					/*
 						Send alerts if required
 					*/
-
-					$message = "";
-
-					if ($usage > $sql_service_obj->data[0]["included_units"])
+					
+					if ($GLOBALS["ACCOUNTS_INVOICE_AUTOEMAIL"] == "enabled")
 					{
-						// usage is over 100% - check if we should report this
-						log_debug("inc_service_usage", "Usage is over 100%");
+						$message = "";
 
-						if ($sql_service_obj->data[0]["alert_extraunits"])
+						if ($usage > $sql_service_obj->data[0]["included_units"])
 						{
-							// check at what usage amount we last reported, and if
-							// we have used alert_extraunits more usage since then, send
-							// an alert to the customer.
+							// usage is over 100% - check if we should report this
+							log_debug("inc_service_usage", "Usage is over 100%");
 
-							if (($usage - $period_data["usage_summary"]) > $sql_service_obj->data[0]["alert_extraunits"])
+							if ($sql_service_obj->data[0]["alert_extraunits"])
 							{
-								log_debug("inc_service_usage", "Sending excess usage notification (over 100%)");
+								// check at what usage amount we last reported, and if
+								// we have used alert_extraunits more usage since then, send
+								// an alert to the customer.
 
-								/*
-									Send excess usage notification (over 100%)
-
-									Message Example:
-									This email has been sent to advise you that you have gone over the
-									included usage on your plan.
-
-									You have now used 70 excess ZZ on your Example Service plan.
-
-									Used 120 ZZ out of 50 ZZ included in plan
-									Excess usage of 70 ZZ charged at $5.00 per ZZ (exc taxes)
-
-									Your current billing period ends on YYYY-MM-DD.
-
-								*/
-
-								// there is excess usage
-								$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
-
-								// prepare message
-								$message .= "This email has been sent to advise you that you have gone over the included usage on your plan\n";
-								$message .= "\n";
-								$message .= "You have now used $usage_excess excess $unitname on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
-								$message .= "\n";
-								$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-								$message .= "Excess usage of $usage_excess $unitname charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
-								$message .= "\n";
-								$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
-								$message .= "\n";
-
-
-								// send email
-								if ($sql_customer_obj["contact_email"])
+								if (($usage - $period_data["usage_summary"]) > $sql_service_obj->data[0]["alert_extraunits"])
 								{
-									$headers = "From: $email_sender\r\n";
+									log_write("notification", "inc_service_usage", "Sending excess usage notification (over 100%)");
 
-									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "Excess usage notification", $message, $headers);
-								}
-								else
-								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
-								}
-							}
-						}
+									/*
+										Send excess usage notification (over 100%)
 
-					}
-					else
-					{
-						// calculate 80% of the included usage
-						$included_usage_80pc = $sql_service_obj->data[0]["included_units"] * 0.80;
+										Message Example:
+										This email has been sent to advise you that you have gone over the
+										included usage on your plan.
 
+										You have now used 70 excess ZZ on your Example Service plan.
 
-						if ($usage == $sql_service_obj->data[0]["included_units"])
-						{
-							log_debug("inc_service_usage", "Usage is at 100%");
+										Used 120 ZZ out of 50 ZZ included in plan
+										Excess usage of 70 ZZ charged at $5.00 per ZZ (exc taxes)
 
-							// usage is at 100%
-							//
-							// make sure that:
-							// 1. 100% usage alerting is enabled
-							// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
-							//
-							if ($sql_service_obj->data[0]["alert_100pc"] && $period_data["usage_summary"] < $sql_service_obj->data[0]["included_units"])
-							{
-								log_debug("inc_service_usage", "Sending excess usage notification (100% reached)");
+										Your current billing period ends on YYYY-MM-DD.
 
-								/*
-									Send 100% usage notification
+									*/
 
-									Message Example:
-									This email has been sent to advise you that you have used 100% of
-									your included usage on your Example Service plan.
+									// there is excess usage
+									$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
 
-									Used 50 ZZ out of 50 ZZ included in plan
-
-									Any excess usage will be charged at $5.00 per ZZ (exc taxes)
-
-									Your current billing period ends on YYYY-MM-DD.
-								*/
-
-								// prepare message
-								$message .= "This email has been sent to advise you that you have used 100% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
-								$message .= "\n";
-								$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-								$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
-								$message .= "\n";
-								$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
-								$message .= "\n";
+									// prepare message
+									$message .= "This email has been sent to advise you that you have gone over the included usage on your plan\n";
+									$message .= "\n";
+									$message .= "You have now used $usage_excess excess $unitname on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+									$message .= "\n";
+									$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
+									$message .= "Excess usage of $usage_excess $unitname charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+									$message .= "\n";
+									$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
+									$message .= "\n";
 
 
-								// send email
-								if ($sql_customer_obj["contact_email"])
-								{
-									$headers = "From: $email_sender\r\n";
+									// send email
+									if ($sql_customer_obj["contact_email"])
+									{
+										$headers = "From: $email_sender\r\n";
 
-									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "100% usage notification", $message, $headers);
-								}
-								else
-								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
-								}
-							}
-						}
-						elseif ($usage > $included_usage_80pc)
-						{
-							log_debug("inc_service_usage", "Usage is between 80% & 100%");
-
-							// usage is between 80 and 100%
-							//
-							// make sure that:
-							// 1. 80% usage alerting is enabled
-							// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
-							//
-							if ($sql_service_obj->data[0]["alert_80pc"] && $period_data["usage_summary"] < $included_usage_80pc)
-							{
-								log_debug("inc_service_usage", "Sending excess usage notification (80% - 100%)");
-
-								/*
-									Send 80% usage notification
-
-									Message Example:
-									This email has been sent to advise you that you have used over 80% of
-									your included usage on your Example Service plan.
-
-									Used 50 ZZ out of 50 ZZ included in plan
-
-									Any excess usage will be charged at $5.00 per ZZ (exc taxes)
-
-									Your current billing period ends on YYYY-MM-DD.
-								*/
-
-								// prepare message
-								$message .= "This email has been sent to advise you that you have used over 80% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
-								$message .= "\n";
-								$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-								$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
-								$message .= "\n";
-								$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
-								$message .= "\n";
-
-
-								// send email
-								if ($sql_customer_obj["contact_email"])
-								{
-									$headers = "From: $email_sender\r\n";
-
-									mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "80% usage notification", $message, $headers);
-								}
-								else
-								{
-									log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
+										mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "Excess usage notification", $message, $headers);
+									}
+									else
+									{
+										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									}
 								}
 							}
 
 						}
-					}
+						else
+						{
+							// calculate 80% of the included usage
+							$included_usage_80pc = $sql_service_obj->data[0]["included_units"] * 0.80;
 
-				} // end if usage alerts required
 
+							if ($usage == $sql_service_obj->data[0]["included_units"])
+							{
+								log_debug("inc_service_usage", "Usage is at 100%");
+
+								// usage is at 100%
+								//
+								// make sure that:
+								// 1. 100% usage alerting is enabled
+								// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
+								//
+								if ($sql_service_obj->data[0]["alert_100pc"] && $period_data["usage_summary"] < $sql_service_obj->data[0]["included_units"])
+								{
+									log_write("notification", "inc_service_usage", "Sending excess usage notification (100% reached)");
+
+									/*
+										Send 100% usage notification
+
+										Message Example:
+										This email has been sent to advise you that you have used 100% of
+										your included usage on your Example Service plan.
+
+										Used 50 ZZ out of 50 ZZ included in plan
+
+										Any excess usage will be charged at $5.00 per ZZ (exc taxes)
+
+										Your current billing period ends on YYYY-MM-DD.
+									*/
+
+									// prepare message
+									$message .= "This email has been sent to advise you that you have used 100% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+									$message .= "\n";
+									$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
+									$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+									$message .= "\n";
+									$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
+									$message .= "\n";
+
+
+									// send email
+									if ($sql_customer_obj["contact_email"])
+									{
+										$headers = "From: $email_sender\r\n";
+
+										mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "100% usage notification", $message, $headers);
+									}
+									else
+									{
+										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									}
+								}
+							}
+							elseif ($usage > $included_usage_80pc)
+							{
+								log_debug("inc_service_usage", "Usage is between 80% & 100%");
+
+								// usage is between 80 and 100%
+								//
+								// make sure that:
+								// 1. 80% usage alerting is enabled
+								// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
+								//
+								if ($sql_service_obj->data[0]["alert_80pc"] && $period_data["usage_summary"] < $included_usage_80pc)
+								{
+									log_write("notification", "inc_service_usage", "Sending excess usage notification (80% - 100%)");
+
+									/*
+										Send 80% usage notification
+
+										Message Example:
+										This email has been sent to advise you that you have used over 80% of
+										your included usage on your Example Service plan.
+
+										Used 50 ZZ out of 50 ZZ included in plan
+
+										Any excess usage will be charged at $5.00 per ZZ (exc taxes)
+
+										Your current billing period ends on YYYY-MM-DD.
+									*/
+
+									// prepare message
+									$message .= "This email has been sent to advise you that you have used over 80% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+									$message .= "\n";
+									$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
+									$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+									$message .= "\n";
+									$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
+									$message .= "\n";
+
+
+									// fetch email
+
+
+									// send email
+									if ($sql_customer_obj["contact_email"])
+									{
+										$headers = "From: $email_sender\r\n";
+
+										mail($sql_customer_obj["name_contact"] ."<". $sql_customer_obj["contact_email"] .">", "80% usage notification", $message, $headers);
+									}
+									else
+									{
+										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
+									}
+								}
+
+							}
+						}
+
+					} // end if usage alerts required
+
+				} // end if alerts enabled
 
 
 				/*

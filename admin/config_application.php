@@ -117,7 +117,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]				= "ACCOUNTS_INVOICE_AUTOEMAIL";
 		$structure["type"]				= "checkbox";
-		$structure["options"]["label"]			= "Tick to have service invoices automatically emailed to customers when created.";
+		$structure["options"]["label"]			= "Tick to have service invoices, usage alerts and order invoices automatically emailed to customers when created.";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
