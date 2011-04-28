@@ -6,6 +6,7 @@
 
 	Modifies array with new column names
 */
+
 include_once("../../include/config.php");
 include_once("../../include/amberphplib/main.php");
 
@@ -145,7 +146,6 @@ if (user_permissions_get("accounts_import_statement"))
 		}
 		
 	
-		//exit($paired_value_state);
 		if (($values_count != count($values_required)) || ($value_multi_requirement < 1) ||
 		 	((count((array)$values_paired) != $paired_value_count) && ($paired_value_count > 0)))
 		{	
@@ -320,22 +320,22 @@ if (user_permissions_get("accounts_import_statement"))
 						    	$sorted_date_values = array();
 							    switch($format)
 							    {
-								    case 'dd-mm-yyyy':
-										$sorted_date_values['day'] = $date_values[0];
-										$sorted_date_values['month'] = $date_values[1];
-										$sorted_date_values['year'] = $date_values[2];
+								case 'dd-mm-yyyy':
+									$sorted_date_values['day']	= $date_values[0];
+									$sorted_date_values['month']	= $date_values[1];
+									$sorted_date_values['year']	= $date_values[2];
 							    	break;
 								    
-								    case 'mm-dd-yyyy':
-										$sorted_date_values['day'] = $date_values[1];
-										$sorted_date_values['month'] = $date_values[0];
-										$sorted_date_values['year'] = $date_values[2];
+								case 'mm-dd-yyyy':
+									$sorted_date_values['day']	= $date_values[1];
+									$sorted_date_values['month']	= $date_values[0];
+									$sorted_date_values['year']	= $date_values[2];
 							    	break;
 							    	
-								    case 'yyyy-mm-dd':
-										$sorted_date_values['day'] = $date_values[2];
-										$sorted_date_values['month'] = $date_values[1];
-										$sorted_date_values['year'] = $date_values[0];
+								case 'yyyy-mm-dd':
+									$sorted_date_values['day']	= $date_values[2];
+									$sorted_date_values['month']	= $date_values[1];
+									$sorted_date_values['year']	= $date_values[0];
 							    	break;
 							    }
 							    
@@ -349,6 +349,19 @@ if (user_permissions_get("accounts_import_statement"))
 								    	$sorted_date_values['month'] = $month_numeric;
 								    						    	
 							    	}
+
+								if (strlen($sorted_date_values["year"]) != 4)
+								{
+									// 2-int date. (who the hell still does this?!?1)
+									if ($sorted_date_values["year"] > 70)
+									{
+										$sorted_date_values["year"]	= $sorted_date_values["year"] + 1900;
+									}
+									else
+									{
+										$sorted_date_values["year"]	= $sorted_date_values["year"] + 2000;
+									}
+								}
 							    	
 							    	$new_date = $sorted_date_values['year']."-".$sorted_date_values['month']."-".$sorted_date_values['day'];
 							    }
@@ -370,11 +383,12 @@ if (user_permissions_get("accounts_import_statement"))
 								if( $matches[1] != null )
 								{
 									$formatted_string = $matches[1];
-							    	// if this is a amount_debit column, multiply it by negative 1 before sticking it in the amount column
-							    	if(($col_name == 'amount_debit'))
-							    	{
-							    		$formatted_string *= -1;
-							    	}
+
+								    	// if this is a amount_debit column, multiply it by negative 1 before sticking it in the amount column
+								    	if(($col_name == 'amount_debit'))
+								    	{
+								    		$formatted_string *= -1;
+								    	}
 							    	
 									$formatted_string = sprintf("%0.2f", $formatted_string);
 							    	$col_name = 'amount';
@@ -394,11 +408,28 @@ if (user_permissions_get("accounts_import_statement"))
 	}
 	
 	//exit("<pre>".print_r($statement_array, true)."</pre>");
-	$_SESSION["statement_array"] = $statement_array;
 
 
-	header("Location: ../../index.php?page=accounts/import/bankstatement-assign.php");
-	exit(0);
+
+	/*
+		Error Check and Continue
+	*/
+	if (error_check())
+	{
+		// unexpected failure
+		$_SESSION["error"]["form"]["bankstatement_csv"] = "failed";
+
+		header("Location: ../../index.php?page=accounts/import/bankstatement-csv.php");
+		exit(0);
+	}
+	else
+	{
+		// success
+		$_SESSION["statement_array"] = $statement_array;
+
+		header("Location: ../../index.php?page=accounts/import/bankstatement-assign.php");
+		exit(0);
+	}
 }
 else
 {

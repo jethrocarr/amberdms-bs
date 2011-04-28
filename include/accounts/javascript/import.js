@@ -1,9 +1,12 @@
+/*
+	include/accounts/javascript/import.js
+
+	Provides key UI logic for handling the Javascript import page, including
+	the CSV handling logic and the row assignement logic.
+*/
+
 $(document).ready(function()
 {
-	// functions for the bankstatment-csv page
-	
-	
-	
 	$('div.input_structure input.selected_structure').change( function()
 	{
 		$('div.input_structure .custom_structure').css('display', 'none');

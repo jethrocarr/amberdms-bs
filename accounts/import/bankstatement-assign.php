@@ -6,7 +6,10 @@
 		accounts_import_statement
 
 	Takes the session data of an imported bank statement and allows the user to do assignments
-	to different transaction types.
+	to different transaction types. Some level of automatic matching takes place here, such as
+	matching payments to customers and invoices automatically.
+
+	See the associated javascript import file for important sections of the page processing logic.
 */
 
 class page_output
@@ -40,19 +43,31 @@ class page_output
 	*/
 	function execute()
 	{
-		$this->statement_array = $_SESSION["statement_array"];
-		$values_array = array("ar", "ap", "transfer", "bank_fee", "interest");
+		$this->statement_array	= $_SESSION["statement_array"];
+		$values_array		= array("ar", "ap", "transfer", "bank_fee", "interest");
 		
 		$this->obj_form			= New form_input;
 		$this->obj_form->formname	= "bankstatement_assign";
 		
 		$i=1;
+
 		foreach ($this->statement_array as $transaction=>$data)
 		{
 			$name 			= "transaction".$i;
-			$row_assignment = null;
-			if($data["amount"] > 0) {
-			 
+
+
+			/*
+				1. DETERMINE TRANSACTION TYPE
+
+				Determine what type of row this bank statement line item is. We do this
+				by keyword matching and checking for information such as amount being
+				positive/negative.
+			*/
+
+			$row_assignment		= null;
+
+			if ($data["amount"] > 0)
+			{ 
 				$row_assignment = 'ar';
 			}
 			
@@ -91,7 +106,7 @@ class page_output
 				break;
 			}
 
-			//assignment drop down
+			// assignment drop down
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-assign";
 			$structure["type"]		= "dropdown";
@@ -99,14 +114,20 @@ class page_output
 			$structure["defaultvalue"] = $row_assignment;
 			$this->obj_form->add_input($structure);
 			
-			//hidden date field
+
+			
+			/*
+				2. HIDDEN ATTRIBUTES NEEDED FOR PROCESSING
+			*/
+
+			// hidden date field
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-date";
 			$structure["type"]		= "hidden";
 			$structure["defaultvalue"]	= date("Y-m-d", strtotime(str_replace("/", "-",$data["date"])));
 			$this->obj_form->add_input($structure);
 			
-			//hidden amount field
+			// hidden amount field
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-amount";
 			$structure["type"]		= "hidden";
@@ -164,59 +185,117 @@ class page_output
 				$this->obj_form->add_input($structure);
 			}
 			
-			//customer drop down
+
+
+			/*
+				3. AR TRANSACTION OPTIONS
+
+				We attempt to match the customer and/or the invoice here.
+			*/
+
+			// customer drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-customer", "SELECT id, code_customer AS label, name_customer AS label1 FROM customers ORDER BY code_customer ASC");
 			
-			$search_values = array();			
-			$search_values[] = preg_quote($data['other_party']);
-			if($data["reference"] != null)
+			$search_values		= array();			
+			$search_values[]	= strtolower(preg_quote($data['other_party'], "/"));
+
+			if ($data["reference"] != null)
 			{
-				$search_values[] = preg_quote($data['reference']);
+				$search_values[] = strtolower(preg_quote($data['reference'], "/"));
 			}
-			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
-			$matching_entry_keys = array_keys($matching_entries);
+
+			if ($data["code"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['code'], "/"));
+			}
+
+			if ($data["particulars"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['particulars'], "/"));
+			}
+
+			if (is_array($search_values) && is_array($structure["translations"]))
+			{
+				$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+				$matching_entry_keys = array_keys($matching_entries);
 			
-			$structure["defaultvalue"] = $matching_entry_keys[0];
+				$structure["defaultvalue"] = $matching_entry_keys[0];
+			}
 			$this->obj_form->add_input($structure);
+
 			
-			
-		//	echo "<pre>".print_r($data, true)."</pre>";
-			 
-			
-			//AR invoice drop down
+			// AR invoice drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-arinvoice", "SELECT id, code_invoice AS label, amount_total AS label1 FROM account_ar WHERE amount_paid < amount_total ORDER BY code_invoice ASC");
 			
-			$search_values = array();	
-			$search_values[] = preg_quote(str_replace("-", '', " ".$data['amount']));
-			if($data["reference"] != null)
+			$search_values		= array();	
+			$search_values[]	= strtolower(preg_quote(str_replace("-", '', " ".$data['amount']), "/"));
+
+			if ($data["reference"] != null)
 			{
-				$search_values[] = preg_quote($data['reference']);
+				$search_values[] = strtolower(preg_quote($data['reference'], "/"));
 			}
-			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
-			$matching_entry_keys = array_keys($matching_entries);
+
+			if ($data["code"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['code'], "/"));
+			}
+
+			if ($data["particulars"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['particulars'], "/"));
+			}
+
+			if (is_array($search_values) && is_array($structure["translations"]))
+			{
+				$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+				$matching_entry_keys = array_keys($matching_entries);
 			
-			$structure["defaultvalue"] = $matching_entry_keys[0];
+				$structure["defaultvalue"] = $matching_entry_keys[0];
+			}
 			$this->obj_form->add_input($structure);
 			
 			
 			
+
+			/*
+				4. AP TRANSACTION OPTIONS
+
+				We attempt to match the vendor and/or the invoice here.
+			*/
 			
 			
-			//vendors drop down
+			// vendors drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-vendor", "SELECT id, code_vendor AS label, name_vendor AS label1 FROM vendors ORDER BY code_vendor ASC");
-			$search_values = array();			
-			$search_values[] = preg_quote($data['other_party']);
-			if($data["reference"] != null)
+
+			$search_values		= array();			
+			$search_values[]	= strtolower(preg_quote($data['other_party'], "/"));
+
+			if ($data["reference"] != null)
 			{
-				$search_values[] = preg_quote($data['reference']);
+				$search_values[] = strtolower(preg_quote($data['reference'], "/"));
 			}
-			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
-			$matching_entry_keys = array_keys($matching_entries);
+
+			if ($data["code"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['code'], "/"));
+			}
+
+			if ($data["particulars"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['particulars'], "/"));
+			}
+
+			if (is_array($search_values) && is_array($structure["translations"]))
+			{
+				$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+				$matching_entry_keys = array_keys($matching_entries);
 			
-			$structure["defaultvalue"] = $matching_entry_keys[0];
+				$structure["defaultvalue"] = $matching_entry_keys[0];
+			}
+
 			$this->obj_form->add_input($structure);
 			
 			
@@ -225,19 +304,41 @@ class page_output
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-apinvoice", "SELECT id, code_invoice AS label, amount_total AS label1 FROM account_ap WHERE amount_paid < amount_total ORDER BY code_invoice ASC");
 			
-			$search_values = array();	
-			$search_values[] = preg_quote(str_replace("-", '', " ".$data['amount']));
-			if($data["reference"] != null)
+			$search_values		= array();	
+			$search_values[]	= strtolower(preg_quote(str_replace("-", '', " ".$data['amount']), "/"));
+
+			if ($data["reference"] != null)
 			{
-				$search_values[] = preg_quote($data['reference']);
+				$search_values[] = strtolower(preg_quote($data['reference'], "/"));
 			}
-			$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
-			$matching_entry_keys = array_keys($matching_entries);
+
+			if ($data["code"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['code'], "/"));
+			}
+
+			if ($data["particulars"] != null)
+			{
+				$search_values[] = strtolower(preg_quote($data['particulars'], "/"));
+			}
 			
-			$structure["defaultvalue"] = $matching_entry_keys[0];
+			if (is_array($search_values) && is_array($structure["translations"]))
+			{
+				$matching_entries = preg_grep("/".implode("|", $search_values)."/i", $structure['translations']);
+				$matching_entry_keys = array_keys($matching_entries);
+			
+				$structure["defaultvalue"] = $matching_entry_keys[0];
+			}
+
 			$this->obj_form->add_input($structure);
 			
 			
+
+			/*
+				5. BANK FEE/CHARGES
+
+				Bank charges are always going to be from the current asset account to an expense account.
+			*/
 			
 			//Bank fees expense account drop down
 			$structure			= NULL;
@@ -247,7 +348,17 @@ class page_output
 			//Bank fees asset account drop down
 			$structure			= NULL;
 			$structure			= form_helper_prepare_dropdownfromdb($name."-bankfeesasset", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id WHERE act.value = \"Asset\" ORDER BY ac.code_chart ASC");
+			
+			$structure["defaultvalue"]		= $_SESSION["dest_account"];
+
 			$this->obj_form->add_input($structure);
+
+
+
+
+			/*
+				6. INTEREST
+			*/
 			
 			//Interest asset account drop down
 			$structure			= NULL;
@@ -259,36 +370,82 @@ class page_output
 			$structure			= form_helper_prepare_dropdownfromdb($name."-interestincome", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id WHERE act.value = \"Income\" ORDER BY ac.code_chart ASC");
 			$this->obj_form->add_input($structure);
 			
-			//Transfer from account drop down
-			$structure			= NULL;
-			$structure			= form_helper_prepare_dropdownfromdb($name."-transferfrom", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
-			$this->obj_form->add_input($structure);
+
+			/*
+				7. GENERAL ACCOUNT TRANSFER
+
+				Not much to do for account transfers, but we can choose which account is selected for to/from based on
+				the default selected account.
+			*/
+
+			if ($data["amount"] > 0)
+			{
+				// Transfer INTO the selected account
+				//
+
+				// Transfer from account drop down
+				$structure			= NULL;
+				$structure			= form_helper_prepare_dropdownfromdb($name."-transferfrom", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
+				$this->obj_form->add_input($structure);
 			
-			//Transfer to account drop down
-			$structure			= NULL;
-			$structure			= form_helper_prepare_dropdownfromdb($name."-transferto", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
-			$this->obj_form->add_input($structure);
+				//Transfer to account drop down
+				$structure			= NULL;
+				$structure			= form_helper_prepare_dropdownfromdb($name."-transferto", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
 			
+				$structure["defaultvalue"]		= $_SESSION["dest_account"];
+
+				$this->obj_form->add_input($structure);
+			}
+			else
+			{
+				// Transfer FROM the selected account
+				//
+
+				// Transfer from account drop down
+				$structure			= NULL;
+				$structure			= form_helper_prepare_dropdownfromdb($name."-transferfrom", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
+				
+				$structure["defaultvalue"]		= $_SESSION["dest_account"];
+				
+				$this->obj_form->add_input($structure);
+				
+				//Transfer to account drop down
+				$structure			= NULL;
+				$structure			= form_helper_prepare_dropdownfromdb($name."-transferto", "SELECT ac.id, ac.code_chart AS label, ac.description AS label1 FROM account_charts ac JOIN account_chart_type act ON ac.chart_type = act.id ORDER BY ac.code_chart ASC");
+				$this->obj_form->add_input($structure);
+			}	
 			
+
+
+			/*
+				8. ENABLE/DISABLE FIELD
+
+				Users have the option of excluding rows that they don't want processed by unchecking them from the import.
+			*/
 			
-			//Hidden enabled field
+			// Hidden enabled field
 			$structure			= NULL;
 			$structure["fieldname"]		= $name."-enabled";
 			$structure["type"]		= "hidden";
 			
 			// if the amount is not a number, disable the row
-			if(!is_numeric($data["amount"])) {
+			if (!is_numeric($data["amount"]))
+			{
 				$structure["defaultvalue"]	= "false";
-			} else {
+			}
+			else
+			{
 				$structure["defaultvalue"]	= "true";
 			}
+
 			$this->obj_form->add_input($structure);
 			
 			
 			$i++;
 		}
 		
-		//hidden field for number of transactions
+
+		// hidden field for number of transactions
 		$structure			= NULL;
 		$structure["fieldname"]		= "num_trans";
 		$structure["type"]		= "hidden";
@@ -325,7 +482,7 @@ class page_output
 		print "<table class=\"form_table\" id=\"import_table\">";
 		
 			print "<tr class=\"header\">";
-				print "<td>&nbsp;</td>";
+				print "<td><b>Import</b></td>";
 				print "<td><b>Date</b></td>";
 				print "<td><b>Type</b></td>";
 				print "<td><b>Amount</b></td>";
@@ -433,9 +590,9 @@ class page_output
 					
 					//bank fee transactions
 					print "<div class=\" hide_element toggle_bank_fee\">";
-					print "From expense account: ";
+					print "Assign expense account: ";
 					$this->obj_form->render_field($name."-bankfeesexpense");
-					print " for asset account: ";
+					print " subtract from asset account: ";
 					$this->obj_form->render_field($name."-bankfeesasset");
 					print "</div>";
 					

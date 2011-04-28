@@ -42,7 +42,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 		
 		
-		$structure = charts_form_prepare_acccountdropdown("dest_account", "ap_summary_account");
+		$structure = charts_form_prepare_acccountdropdown("dest_account", "ar_payment");
 			
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";

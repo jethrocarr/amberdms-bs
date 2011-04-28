@@ -51,7 +51,7 @@ class page_output
 		$middle_row_index = floor(count($_SESSION["csv_array"])/2);
 		$this->num_col	= count($_SESSION["csv_array"][$middle_row_index]);
 		
-		$column_values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "amount_credit", "amount_debit", "date");
+		$column_values_array	= array("transaction_type", "other_party", "particulars", "code", "reference", "amount", "amount_credit", "amount_debit", "date", "");
 		$date_values_array	= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
 		
 		$selected_format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
@@ -68,6 +68,18 @@ class page_output
 			$structure["type"]		= "dropdown";
 			$structure["values"]		= $column_values_array;
 			$structure["options"]["css_field_class"] = "column_selection";
+
+			$structure["translations"]["transaction_type"]		= "Transaction Type (required)";
+			$structure["translations"]["other_party"]		= "Other Party (payer/payee)";
+			$structure["translations"]["particulars"]		= "Note (particulars)";
+			$structure["translations"]["code"]			= "Note (code)";
+			$structure["translations"]["reference"]			= "Note (reference)";
+			$structure["translations"]["amount"]			= "Amount (credit and/or debit)";
+			$structure["translations"]["amount_credit"]		= "Amount (credit trans only)";
+			$structure["translations"]["amount_debit"]		= "Amount (debit trans only)";
+			$structure["translations"]["date"]			= "Transaction Date";
+			$structure["translations"][""]				= "Ignore";
+
 			$this->obj_form->add_input($structure);
 			
 			
@@ -81,7 +93,6 @@ class page_output
 			$this->obj_form->add_input($structure);
 		}
 
-			//echo "<pre>".print_r($this->obj_form,true)."</pre>";
 		// name
 		$structure			= NULL;
 		$structure["fieldname"]		= "name";
