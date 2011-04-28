@@ -248,7 +248,7 @@ function service_usage_alerts_generate($customerid = NULL)
 						Send alerts if required
 					*/
 					
-					if ($GLOBALS["ACCOUNTS_INVOICE_AUTOEMAIL"] == "enabled")
+					if ($GLOBALS["config"]["ACCOUNTS_INVOICE_AUTOEMAIL"] == "enabled")
 					{
 						$message = "";
 
@@ -430,6 +430,10 @@ function service_usage_alerts_generate($customerid = NULL)
 					} // end if usage alerts required
 
 				} // end if alerts enabled
+				else
+				{
+					log_write("notification", "inc_service_usage", "Not sending usage notification/reminder due to ACCOUNTS_INVOICE_AUTOEMAIL being disabled");
+				}
 
 
 				/*
