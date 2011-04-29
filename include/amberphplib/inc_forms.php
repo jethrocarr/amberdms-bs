@@ -1612,7 +1612,7 @@ class form_input
 							{
 								print "<tr>";
 								print "<td colspan=\"2\">";
-								print "<table class=\"table_highlight\">";
+								print "<table class=\"table_highlight_grouped\">";
 
 								$grouped_counter = 1;
 							}
@@ -1620,9 +1620,28 @@ class form_input
 							// grouped field
 							$num_fields = count ($this->subforms_grouped[$form_label][$fieldname]);
 
+							// check for errors
+							$error = 0;
+
+							foreach ($this->subforms_grouped[$form_label][$fieldname] as $fieldname2)
+							{
+								if (isset($_SESSION["error"]["$fieldname2-error"]))
+								{
+									$error = 1;
+								}
+							}
+
 
 							// run through group members
-							print "<tr>";
+							if ($error)
+							{
+								print "<tr class=\"form_error\">";
+							}
+							else
+							{
+								print "<tr>";
+							}
+
 
 							foreach ($this->subforms_grouped[$form_label][$fieldname] as $fieldname2)
 							{

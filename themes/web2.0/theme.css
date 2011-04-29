@@ -136,6 +136,15 @@ a:active {
 	border-radius: 7px;
 }
 
+.table_highlight_grouped
+{
+	background-color: #e8e0ba;
+		-moz-border-radius: 7px;
+	-khtml-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	border-radius: 7px;
+}
+
 .table_highlight_important 
 {
 	background-color: #ff9d6b;

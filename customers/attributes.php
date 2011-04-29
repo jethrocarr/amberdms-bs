@@ -367,7 +367,7 @@ class page_output
 		//add new group field/ button
 		if (user_permissions_get("customers_write"))
 		{
-			print "<p id=\"show_add_group\"><strong><a href=\"\">Create New Group...</a></strong></p>";
+			print "<p id=\"show_add_group\"><strong><a href=\"\" class=\"button_small\">Create New Group...</a></strong></p>";
 			print "<p class=\"add_group\"><strong>Create New Group:</strong></p>";
 			print "<p class=\"add_group\">Name: <input type=\"text\" name=\"add_group\" /> &nbsp; <a href=\"\" class=\"button_small\" id=\"add_group\">Add</a> &nbsp; <a href=\"\" class=\"button_small\" id=\"close_add_group\">Cancel</a></p>";
 		}
@@ -390,14 +390,16 @@ class page_output
 			}
 				print "<td colspan=\"3\">";
 					print "<div class=\"group_name\" id=\"group_name_" .$group_id. "\"><b>". $attributes["name"] ."</b>";
-						if (user_permissions_get("customers_write"))
-						{ 
-							print "<br /><a href\"\" id=\"delete_group_" .$group_id. "\" class=\"delete_group\">delete...</a>";
-											print "&nbsp;&nbsp;";
-							print "<a href=\"\" class=\"show_change_group_name\" id=\"show_change_group_name_" .$group_id. "\">change name...</a>";
-							
-						}
 					print "</div>";
+
+					if (user_permissions_get("customers_write"))
+					{ 
+						print "<div class=\"group_links\">&nbsp;";
+						print "<a href\"\" id=\"delete_group_" .$igroup_id. "\" class=\"delete_group button_small\">delete</a>";
+						print "&nbsp;&nbsp;";
+						print "<a href=\"\" class=\"show_change_group_name button_small\" id=\"show_change_group_name_" .$group_id. "\">change name</a>";
+						print "&nbsp;</div>";
+					}
 					
 					print "<div class=\"change_group_name\" id=\"change_group_name_" .$group_id. "\"><input type=\"text\" value=\"" .$attributes["name"]. "\" name=\"change_group_name_" .$group_id. "\" /> &nbsp; <a href=\"\" class=\"button_small change_group_name_button\" id=\"change_group_name_button_" .$group_id. "\">Change</a> &nbsp; <a href=\"\" class=\"button_small close_change_group_name\" id=\"close_change_group_name_" .$group_id. "\">Cancel</a></div>";
 					

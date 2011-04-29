@@ -123,6 +123,11 @@ a:active {
 	background-color: #e7e7e7;
 }
 
+.table_highlight_grouped
+{
+	background-color: #e7e7e7;
+}
+
 .table_highlight_important 
 {
 	background-color: #ff933c;
