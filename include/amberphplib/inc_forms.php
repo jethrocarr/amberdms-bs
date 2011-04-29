@@ -1618,13 +1618,13 @@ class form_input
 							}
 
 							// grouped field
-							$num_fields = count ($this->subforms_grouped["domain_records"][$fieldname]);
+							$num_fields = count ($this->subforms_grouped[$form_label][$fieldname]);
 
 
 							// run through group members
 							print "<tr>";
 
-							foreach ($this->subforms_grouped["domain_records"][$fieldname] as $fieldname2)
+							foreach ($this->subforms_grouped[$form_label][$fieldname] as $fieldname2)
 							{
 								// render field
 								print "<td>";
