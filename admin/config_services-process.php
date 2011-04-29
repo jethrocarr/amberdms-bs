@@ -114,10 +114,11 @@ if (user_permissions_get("admin"))
 
 		foreach ($obj_sql->data as $data_row)
 		{
-			$data_types[ $data_row["id"] ]			= @security_form_input_predefined("checkbox", "service_type_". $data_row["id"], 0, "");
+			$data_types[ $data_row["id"] ]["active"]		= @security_form_input_predefined("checkbox", "service_type_". $data_row["id"] ."_enable", 0, "");
+			$data_types[ $data_row["id"] ]["description"]		= @security_form_input_predefined("any", "service_type_". $data_row["id"] ."_description", 0, "");
 
 			// if marked inactive, check if it's inuse
-			if ($data_types [ $data_row["id"] ] == 0)
+			if ($data_types [ $data_row["id"] ]["active"] == 0)
 			{
 				// we need to make sure this usage type is not in use, since if it is, disabling
 				// it would cause weird borkage.
@@ -139,7 +140,7 @@ if (user_permissions_get("admin"))
 
 					// type is in use
 					log_write("error", "process", "Unable to disable type ". $data_row["name"] ." due to it being used by service \"". format_arraytocommastring($service_list) ."\".");
-					error_flag_field("service_type_". $data_row["id"]);
+					error_flag_field("service_type_". $data_row["id"] ."_enable");
 
 				} // end if service type in use
 
@@ -362,7 +363,7 @@ if (user_permissions_get("admin"))
 
 		foreach (array_keys($data_types) as $id_type)
 		{
-			$sql_obj->string = "UPDATE service_types SET active='". $data_types[ $id_type ] ."' WHERE id='". $id_type ."' LIMIT 1";
+			$sql_obj->string = "UPDATE service_types SET active='". $data_types[ $id_type ]["active"] ."', description='". $data_types[ $id_type ]["description"] ."' WHERE id='". $id_type ."' LIMIT 1";
 			$sql_obj->execute();
 		}
 

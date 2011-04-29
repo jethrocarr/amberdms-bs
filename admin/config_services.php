@@ -62,12 +62,11 @@ class page_output
 
 			foreach ($obj_sql->data as $data_row)
 			{
+				// enable/disable
 				$structure = NULL;
-				$structure["fieldname"]				= "service_type_". $data_row["id"];
+				$structure["fieldname"]				= "service_type_". $data_row["id"] ."_enable";
 				$structure["type"]				= "checkbox";
-				$structure["options"]["label"]			= $data_row["name"] ." -- ". $data_row["description"];
-				$structure["options"]["no_fieldname"]		= 1;
-				$structure["options"]["no_shift"]		= 1;
+				$structure["options"]["label"]			= $data_row["name"];
 
 				if ($data_row["active"])
 				{
@@ -76,13 +75,32 @@ class page_output
 
 				$this->obj_form->add_input($structure);
 
+
+				// description
+				$structure = NULL;
+				$structure["fieldname"]				= "service_type_". $data_row["id"] ."_description";
+				$structure["type"]				= "input";
+				$structure["defaultvalue"]			= $data_row["description"];
+				$structure["options"]["width"]			= "800";
+
+				$this->obj_form->add_input($structure);
+
+
+
+
+				// grouping
 				$this->obj_form->subforms["config_service_types"][] = "service_type_". $data_row["id"];
+		
+				$this->obj_form->subforms_grouped["config_service_types"][ "service_type_". $data_row["id"] ][]	= "service_type_". $data_row["id"] ."_enable";
+				$this->obj_form->subforms_grouped["config_service_types"][ "service_type_". $data_row["id"] ][]	= "service_type_". $data_row["id"] ."_description";
 			}
 		}
 
 		unset($obj_sql);
 
 
+		
+		
 
 		/*
 			Configure service billing cycles
