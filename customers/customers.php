@@ -77,7 +77,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "(code_customer LIKE '%value%' OR name_customer LIKE '%value%' OR name_contact LIKE '%value%' OR contact_email LIKE '%value%' OR contact_phone LIKE '%value%' OR contact_fax LIKE '%fax%')";
+		$structure["sql"]	= "(code_customer LIKE '%value%' OR name_customer LIKE '%value%')";
 		$this->obj_table_list->add_filter($structure);
 		
 		$structure = NULL;
