@@ -263,7 +263,7 @@ function service_usage_alerts_generate($customerid = NULL)
 								// we have used alert_extraunits more usage since then, send
 								// an alert to the customer.
 
-								if (($usage - $period_data["usage_summary"]) > $sql_service_obj->data[0]["alert_extraunits"])
+								if (($usage - $period_data["usage_summary"]) >= $sql_service_obj->data[0]["alert_extraunits"])
 								{
 									log_write("notification", "inc_service_usage", "Sending excess usage notification (over 100%)");
 
