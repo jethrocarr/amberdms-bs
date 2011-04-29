@@ -206,60 +206,64 @@ class page_output
 
 
 
-			// price customisation
-			$structure = NULL;
-			$structure["fieldname"]		 	= "price";
-			$structure["type"]			= "money";
-			$structure["options"]["req"]		= "yes";
-			$this->obj_form->add_input($structure);
-		
-			$structure = NULL;
-			$structure["fieldname"] 		= "discount";
-			$structure["type"]			= "input";
-			$structure["options"]["width"]		= 50;
-			$structure["options"]["label"]		= " %";
-			$structure["options"]["max_length"]	= "6";
-			$this->obj_form->add_input($structure);
-
-			$this->obj_form->subforms["service_price"]	= array("price", "discount");
-
-
-			// setup charges - only display if the service is inactive
-			if (!sql_get_singlevalue("SELECT active as value FROM services_customers WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1"))
+			if (!$this->obj_customer->service_get_is_bundle_item())
 			{
+				// price customisation
 				$structure = NULL;
-				$structure["fieldname"]			= "info_setup_help";
-				$structure["type"]			= "message";
-				$structure["defaultvalue"]		= "<p>". lang_trans("info_setup_help") ."</p>";
-				$this->obj_form->add_input($structure);
-
-				$structure = NULL;
-				$structure["fieldname"] 		= "price_setup";
+				$structure["fieldname"]		 	= "price";
 				$structure["type"]			= "money";
 				$structure["options"]["req"]		= "yes";
 				$this->obj_form->add_input($structure);
-
+			
 				$structure = NULL;
-				$structure["fieldname"] 		= "discount_setup";
+				$structure["fieldname"] 		= "discount";
 				$structure["type"]			= "input";
 				$structure["options"]["width"]		= 50;
 				$structure["options"]["label"]		= " %";
 				$structure["options"]["max_length"]	= "6";
-				$structure["defaultvalue"]		= $this->obj_customer->obj_service->data["discount"];
 				$this->obj_form->add_input($structure);
 
-				$this->obj_form->subforms["service_setup"]	= array("info_setup_help", "price_setup", "discount_setup");
-			}
-			else
-			{
-				$structure = NULL;
-				$structure["fieldname"]			= "info_setup_help";
-				$structure["type"]			= "message";
-				$structure["defaultvalue"]		= "<p>A setup fee of ". format_money($this->obj_customer->obj_service->data["price_setup"]) ." was charged for this service.</p>";
-				$this->obj_form->add_input($structure);
-				
-				$this->obj_form->subforms["service_setup"]	= array("info_setup_help");
-			}
+				$this->obj_form->subforms["service_price"]	= array("price", "discount");
+
+
+				// setup charges - only display if the service is inactive
+				if (!sql_get_singlevalue("SELECT active as value FROM services_customers WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1"))
+				{
+					$structure = NULL;
+					$structure["fieldname"]			= "info_setup_help";
+					$structure["type"]			= "message";
+					$structure["defaultvalue"]		= "<p>". lang_trans("info_setup_help") ."</p>";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"] 		= "price_setup";
+					$structure["type"]			= "money";
+					$structure["options"]["req"]		= "yes";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"] 		= "discount_setup";
+					$structure["type"]			= "input";
+					$structure["options"]["width"]		= 50;
+					$structure["options"]["label"]		= " %";
+					$structure["options"]["max_length"]	= "6";
+					$structure["defaultvalue"]		= $this->obj_customer->obj_service->data["discount"];
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_setup"]	= array("info_setup_help", "price_setup", "discount_setup");
+				}
+				else
+				{
+					$structure = NULL;
+					$structure["fieldname"]			= "info_setup_help";
+					$structure["type"]			= "message";
+					$structure["defaultvalue"]		= "<p>A setup fee of ". format_money($this->obj_customer->obj_service->data["price_setup"]) ." was charged for this service.</p>";
+					$this->obj_form->add_input($structure);
+					
+					$this->obj_form->subforms["service_setup"]	= array("info_setup_help");
+				}
+
+			} // end if not bundle
 
 
 			// service-type specific sections
@@ -320,7 +324,7 @@ class page_output
 											."<td>Bundle Component: <b>". $obj_component->data["name_service"] ."</b></td>"
 											. $obj_component->active_status_string
 											."<td>". $obj_component->data["description"] ."</td>"
-											."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->obj_customer->id ."&serviceid=". $obj_component->option_type_id ."\">View Service</a></td>"
+											."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $obj_component->option_type_id ."\">View Service</a></td>"
 											."</tr>";
 						}
 					}
