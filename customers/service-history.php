@@ -105,12 +105,13 @@ class page_output
 		$this->obj_table->add_column("date", "date_end", "");
 		$this->obj_table->add_column("date", "invoice_gen_date", "date_billed");
 		$this->obj_table->add_column("standard", "usage_summary", "");
-		$this->obj_table->add_column("bool_tick", "invoiced", "invoiceid");
+		$this->obj_table->add_column("bool_tick", "invoiced_plan", "invoiceid");
+		$this->obj_table->add_column("bool_tick", "invoiced_usage", "invoiceid_usage");
 		$this->obj_table->add_column("bool_tick", "paid", "NONE");
 		$this->obj_table->add_column("standard", "code_invoice", "account_ar.code_invoice");
 
 		// defaults
-		$this->obj_table->columns		= array("date_start", "date_end", "invoice_gen_date", "usage_summary", "invoiced", "paid", "code_invoice");
+		$this->obj_table->columns		= array("date_start", "date_end", "invoice_gen_date", "usage_summary", "invoiced_plan", "invoiced_usage", "paid", "code_invoice");
 		$this->obj_table->columns_order		= array("date_start");
 
 		// define SQL structure
@@ -162,7 +163,7 @@ class page_output
 				// make the invoice number a hyperlink
 				if ($this->obj_table->data[$i]["code_invoice"] && user_permissions_get("accounts_ar_view"))
 				{
-					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["invoiced"] ."\">AR ". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["invoiced_plan"] ."\">AR ". $this->obj_table->data[$i]["code_invoice"] ."</a>";
 				}
 
 				// tick the paid column if the invoice has been paid off completely
