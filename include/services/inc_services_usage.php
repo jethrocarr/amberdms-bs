@@ -119,11 +119,12 @@ function service_usage_alerts_generate($customerid = NULL)
 									."id, "
 									."date_start, "
 									."date_end, "
-									."usage_summary "
+									."usage_summary, "
+									."usage_alerted "
 									."FROM services_customers_periods "
 									."WHERE "
 									."id_service_customer='". $customer_data["id"] ."' "
-									."AND invoiceid = '0' "
+									."AND invoiceid_usage = '0' "
 									."AND date_end >= '". date("Y-m-d")."' LIMIT 1";
 				$sql_periods_obj->execute();
 
@@ -247,7 +248,7 @@ function service_usage_alerts_generate($customerid = NULL)
 					/*
 						Send alerts if required
 					*/
-					
+
 					if ($GLOBALS["config"]["ACCOUNTS_INVOICE_AUTOEMAIL"] == "enabled")
 					{
 						$message = "";
@@ -263,7 +264,7 @@ function service_usage_alerts_generate($customerid = NULL)
 								// we have used alert_extraunits more usage since then, send
 								// an alert to the customer.
 
-								if (($usage - $period_data["usage_summary"]) >= $sql_service_obj->data[0]["alert_extraunits"])
+								if (($usage - $period_data["usage_alerted"]) >= $sql_service_obj->data[0]["alert_extraunits"])
 								{
 									log_write("notification", "inc_service_usage", "Sending excess usage notification (over 100%)");
 
@@ -309,6 +310,13 @@ function service_usage_alerts_generate($customerid = NULL)
 									{
 										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 									}
+
+
+									// update alerted amount
+									$sql_obj		= New sql_query;
+									$sql_obj->string	= "UPDATE services_customers_periods SET usage_alerted='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
+									$sql_obj->execute();
+
 								}
 							}
 
@@ -368,6 +376,12 @@ function service_usage_alerts_generate($customerid = NULL)
 									{
 										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 									}
+
+									// update alerted amount
+									$sql_obj		= New sql_query;
+									$sql_obj->string	= "UPDATE services_customers_periods SET usage_alerted='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
+									$sql_obj->execute();
+
 								}
 							}
 							elseif ($usage > $included_usage_80pc)
@@ -422,18 +436,25 @@ function service_usage_alerts_generate($customerid = NULL)
 									{
 										log_write("error", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." does not have an email address, unable to send usage notifications.");
 									}
+
+									// update alerted amount
+									$sql_obj		= New sql_query;
+									$sql_obj->string	= "UPDATE services_customers_periods SET usage_alerted='$usage' WHERE id='". $period_data["id"] ."' LIMIT 1";
+									$sql_obj->execute();
+
 								}
 
 							}
 						}
+	
+					} // end if alerts enabled
+					else
+					{
+						log_write("notification", "inc_service_usage", "Not sending usage notification/reminder due to ACCOUNTS_INVOICE_AUTOEMAIL being disabled");
+					}
+					
+				} // end if usage alerts required
 
-					} // end if usage alerts required
-
-				} // end if alerts enabled
-				else
-				{
-					log_write("notification", "inc_service_usage", "Not sending usage notification/reminder due to ACCOUNTS_INVOICE_AUTOEMAIL being disabled");
-				}
 
 
 				/*
