@@ -22,6 +22,7 @@ if (user_permissions_get("services_write"))
 
 	$obj_rate_table						= New cdr_rate_table;
 	$obj_rate_table->id					= @security_form_input_predefined("int", "id_rate_table", 1, "");
+	$cdr_import_mode					= @security_form_input_predefined("any", "cdr_rate_import_mode", 1, "");
 
 
 
@@ -57,6 +58,8 @@ if (user_permissions_get("services_write"))
 	}
 	else
 	{
+		error_clear();
+
 		/*
 			Load the file
 		*/
@@ -91,10 +94,20 @@ if (user_permissions_get("services_write"))
 		}
 
 		// save to session
-		$_SESSION["csv_array"] = $rate_table;
+		$_SESSION["csv_array"]	= $rate_table;
 		
-		header("Location: ../index.php?page=services/cdr-rates-import-csv.php&id=". $obj_rate_table->id );
-		exit(0);
+	
+		// refer to appropiate mode processing page
+		if ($cdr_import_mode == "cdr_import_mode_regular")
+		{
+			header("Location: ../index.php?page=services/cdr-rates-import-csv.php&id=". $obj_rate_table->id );
+			exit(0);
+		}
+		else
+		{
+			header("Location: ../index.php?page=services/cdr-rates-import-nad.php&id=". $obj_rate_table->id );
+			exit(0);
+		}
 	}
 }
 else

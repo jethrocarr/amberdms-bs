@@ -87,7 +87,7 @@ class page_output
 		$structure["fieldname"]			= "cdr_rate_import_mode";
 		$structure["type"]			= "radio";
 		$structure["values"]			= array("cdr_import_delete_existing", "cdr_import_update_existing");
-		$structure["defaultvalue"]		= "cdr_import_delete_existing";
+		$structure["defaultvalue"]		= "cdr_import_update_existing";
 		$this->obj_form->add_input($structure);
 
 		$structure 				= NULL;

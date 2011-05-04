@@ -76,6 +76,13 @@ class page_output
 		$structure["type"]			= "file";
 		$this->obj_form->add_input($structure);
 
+		$structure				= NULL;
+		$structure["fieldname"]			= "cdr_rate_import_mode";
+		$structure["type"]			= "radio";
+		$structure["values"]			= array("cdr_import_mode_regular", "cdr_import_mode_nz_NAD");
+		$this->obj_form->add_input($structure);
+
+
 		// hidden fields
 		$structure 				= NULL;
 		$structure["fieldname"]			= "id_rate_table";
@@ -93,7 +100,7 @@ class page_output
 		
 
 		// define subforms
-		$this->obj_form->subforms["cdr_upload"]	= array("cdr_rate_import_file");
+		$this->obj_form->subforms["cdr_upload"]	= array("cdr_rate_import_file", "cdr_rate_import_mode");
 		$this->obj_form->subforms["hidden"]	= array("id_rate_table");
 		$this->obj_form->subforms["import"]	= array("submit");
 
