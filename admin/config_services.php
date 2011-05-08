@@ -442,7 +442,17 @@ class page_output
 
 
 
+		// CDR optons
+		$structure = NULL;
+		$structure["fieldname"]				= "SERVICE_CDR_LOCAL";
+		$structure["type"]				= "radio";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["values"]				= array("prefix", "destination");
+		$structure["translations"]["prefix"]		= "Define local customer region by prefix (eg: \"64123\")";
+		$structure["translations"]["destination"]	= "Define local customer region by destination string (eg: \"Wellington\")";
+		$this->obj_form->add_input($structure);
 
+		$this->obj_form->subforms["config_options_cdr"]	= array("SERVICE_CDR_LOCAL");
 
 
 		// migration mode options

@@ -779,7 +779,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 		seconds		Number of BILLALBE seconds
 		src		Source phone number
 		dst		Destination phone number
-		local_prefix	Local prefix (optional)
+		local_prefix	Local prefix - either integer or a string (optional) 
 
 		Returns
 		-1		Failure
@@ -821,29 +821,109 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 		/*
 			Check for Local Prefix
+
+			Local prefix can be handled in two ways:
+			1. Integer	:: Local prefix is integer prefix, eg "64123"
+			2. String	:: Local prefix is a region/destination string, eg "Wellington"
+
+			We should cache this information to reduce the amount of processing, since this function is called
+			repeatedly, but at the same time, take care to make sure we do not cache across different services/
+			customers.
+
+			We cache in the local object, so that the cache only applies to one object and is cleared upon object
+			destruction, as well as allowing multiple objects to exist during a single execution without conflict.
 		*/
+
+		if (!empty($local_prefix))
+		{
+			if (!empty($this->cache[ $local_prefix ]))
+			{
+				// return local prefix from cache
+				$local_prefix = $this->cache[ $local_prefix ];
+			}
+			else
+			{
+				// determine local prefix(es)
+				if (preg_match("/^[0-9]*$/", $local_prefix))
+				{
+					// Integer Prefix - format as array only
+
+					$this->cache[ $local_prefix ]	= array($local_prefix);
+					$local_prefix			= array($local_prefix);
+				}
+				else
+				{
+					// String/Region Prefix - we need to lookup against the rate tables and fetch all prefixes
+					// that make up this region and create a numerical prefix array
+
+					log_write("debug", "inc_service_usage_cdr", "Resolving prefixes for local prefix $local_prefix");
+
+
+					$local_prefix_tmp = array();
+
+					foreach ($this->data["rates"] as $rate)
+					{
+						if ($rate["rate_destination"] == $local_prefix)
+						{
+							$local_prefix_tmp[] = $rate["rate_prefix"];
+						}
+
+					}
+
+
+					// update cache
+					$this->cache[ $local_prefix ]	= $local_prefix_tmp;
+
+					// adjust prefix for use.
+					$local_prefix			= $local_prefix_tmp;
+
+				} // end if string/region
+
+			} // end of from cache
+
+		} // end if local prefix defined
+
+
 
 		/*
 			Determine charging rate
 		*/
 
-		if ($prefix_src == $prefix_dst)
-		{
-			// local prefix
-			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
-		}
-		elseif (!empty($local_prefix) && preg_match("/^$local_prefix/", $prefix_dst))
-		{
-			// local prefix - numbers might not be both in the same exact prefix, but
-			// the destination belongs to the local prefix option
+		$billed = 0;
 
-			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
-		}
-		else
+
+		if (!$billed && $prefix_src == $prefix_dst)
 		{
-			// standard prefix
+			// inner prefix calling, this is always going to be local
+			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+
+			$billed = 1;
+		}
+
+		if (!$billed && is_array($local_prefix))
+		{
+			// local prefix has been set, if any apply, then bill
+
+			foreach ($local_prefix as $local_prefix_single)
+			{
+				if (preg_match("/^$local_prefix_single/", $prefix_dst))
+				{
+					// local prefix - numbers might not be both in the same exact prefix, but
+					// the destination belongs to the local prefix option
+
+					$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+
+					$billed = 1;
+				}
+			}
+		}
+
+		if (!$billed)
+		{
+			// default: fall back to standard prefix matching and billing
 			$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
 		}
+
 
 		$rate_second		= $rate_minute / 60;
 
