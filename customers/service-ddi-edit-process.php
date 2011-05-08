@@ -41,9 +41,18 @@ if (user_permissions_get('customers_write'))
 
 	$obj_ddi->data["ddi_start"]				= @security_form_input_predefined("int", "ddi_start", 1, "");
 	$obj_ddi->data["ddi_finish"]				= @security_form_input_predefined("int", "ddi_finish", 1, "");
-	$obj_ddi->data["local_prefix"]				= @security_form_input_predefined("int", "phone_local_prefix", 1, "");
 	$obj_ddi->data["description"]				= @security_form_input_predefined("any", "description", 0, "");
 
+	if ($GLOBALS["config"]["SERVICE_CDR_LOCAL"] == "prefix")
+	{
+		// prefix integer based
+		$obj_ddi->data["local_prefix"]			= @security_form_input_predefined("any", "phone_local_prefix", 1, "");
+	}
+	else
+	{
+		// string/region/destination based
+		$obj_ddi->data["local_prefix"]			= @security_form_input_predefined("any", "phone_local_prefix", 1, "");
+	}
 
 
 	/*

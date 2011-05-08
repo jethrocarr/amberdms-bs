@@ -59,12 +59,21 @@ if (user_permissions_get('customers_write'))
 		{
 			case "phone_single":
 				$data["phone_ddi_single"]		= @security_form_input_predefined("int", "phone_ddi_single", 1, "");
-				$data["phone_local_prefix"]		= @security_form_input_predefined("int", "phone_local_prefix", 1, "");
+				
+				if ($GLOBALS["config"]["SERVICE_CDR_LOCAL"] == "prefix")
+				{
+					// prefix integer based
+					$data["phone_local_prefix"]	= @security_form_input_predefined("int", "phone_local_prefix", 1, "");
+				}
+				else
+				{
+					// string/region/destination based
+					$data["phone_local_prefix"]	= @security_form_input_predefined("any", "phone_local_prefix", 1, "");
+				}
 			break;
 
 			case "phone_tollfree":
 				$data["phone_ddi_single"]		= @security_form_input_predefined("int", "phone_ddi_single", 1, "");
-				$data["phone_local_prefix"]		= @security_form_input_predefined("int", "phone_local_prefix", 1, "");
 
 				$data["phone_trunk_included_units"]	= @security_form_input_predefined("int", "phone_trunk_included_units", 0, "");		// only for error handling
 				$data["phone_trunk_quantity"]		= @security_form_input_predefined("int", "phone_trunk_quantity", 0, "");

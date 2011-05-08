@@ -169,13 +169,70 @@ class page_output
 		$structure["options"]["label"]	= " Last number in allocated range (inclusive)";
 		$this->obj_form->add_input($structure);
 
-		$structure = NULL;
-		$structure["fieldname"]		= "phone_local_prefix";
-		$structure["type"]		= "input";
-		$structure["options"]["req"]	= "yes";
-		$structure["options"]["help"]	= "eg: 64123";
-		$structure["options"]["label"]	= " Any calls to numbers matching this prefix will be charged at LOCAL rate.";
-		$this->obj_form->add_input($structure);
+		if ($GLOBALS["config"]["SERVICE_CDR_LOCAL"] == "prefix")
+		{
+			/*
+				Prefix-based local rates are easy, we define the prefix number and
+				from that we match when doing the rate billing.
+			*/
+			$structure = NULL;
+			$structure["fieldname"]		= "phone_local_prefix";
+			$structure["type"]		= "input";
+			$structure["options"]["req"]	= "yes";
+			$structure["options"]["help"]	= "eg: 64123";
+			$structure["options"]["label"]	= " Any calls to numbers matching this prefix will be charged at LOCAL rate.";
+			$this->obj_form->add_input($structure);
+		}
+		else
+		{
+			/*
+				Handling destination based local calling rates is complex, since we need to:
+				- fetch a list of all destinations
+					- include overrides for the service
+					- include overrides for the customer
+					- include base zones
+				- display the label instructing on use
+				- handle regions that have no destination/description
+			*/
+
+
+			// fetch all rates, including override rates
+			$obj_local_rates				= New cdr_rate_table_rates_override();
+
+			$obj_local_rates->id				= $this->obj_customer->obj_service->data["id_rate_table"];
+			$obj_local_rates->option_type			= "customer";
+			$obj_local_rates->option_type_id		= $this->obj_customer->id_service_customer;
+			$obj_local_rates->option_type_serviceid		= $this->obj_customer->obj_service->id;
+
+			$obj_local_rates->load_data_rate_all();
+			$obj_local_rates->load_data_rate_all_override();
+
+			// aggregate the destination
+			$cdr_destinations		= array();
+			$cdr_destinations["NONE"]	= 1;		// placeholder for no local region
+
+			foreach ($obj_local_rates->data["rates"] as $rate)
+			{
+				if (!empty($rate["rate_description"]))
+				{
+					$cdr_destinations[ $rate["rate_description"] ] = 1;
+				}
+			}
+
+			$cdr_destinations = array_keys($cdr_destinations);
+			sort($cdr_destinations);
+
+
+			// generate dropdown object
+			$structure = NULL;
+			$structure["fieldname"]		= "phone_local_prefix";
+			$structure["type"]		= "dropdown";
+			$structure["values"]		= $cdr_destinations;
+			$structure["options"]["req"]	= "yes";
+			$structure["options"]["label"]	= " Charge calls to any prefix in this region as \"LOCAL\" call rates.";
+			$this->obj_form->add_input($structure);
+		}
+
 
 		$structure = NULL;
 		$structure["fieldname"]		= "description";
