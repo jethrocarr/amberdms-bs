@@ -13,6 +13,6 @@ $(document).ready(function()
 	 */
 	$("input[type='submit']").click(function()
 	{
-		setTimeout("location.reload(true)", 2000);
+		setTimeout("location.reload(true)", 8000);
 	});
 });
