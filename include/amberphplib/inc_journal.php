@@ -1597,7 +1597,7 @@ class journal_process extends journal_base
 		/*
 			If journal entry is a file, upload the data
 		*/
-		if ($this->structure["type"] == "file" && $_FILES["upload"]["size"] > 1)
+		if ($this->structure["type"] == "file")
 		{
 			// output file data
 			$file_obj			= New file_storage;

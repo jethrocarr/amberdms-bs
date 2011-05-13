@@ -471,7 +471,7 @@ class file_storage
 
 		$this->data["file_size"]	= filesize($filepath);
 
-		if (!$this->data["file_name"])
+		if (empty($this->data["file_name"]))
 		{
 			// no filename supplied, take the filename of the provided file path
  			$this->data["file_name"] = format_file_name($filepath);

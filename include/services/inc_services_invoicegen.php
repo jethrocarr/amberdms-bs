@@ -835,26 +835,26 @@ function service_invoices_generate($customerid = NULL)
 
 
 						// description
-						switch ($obj_service->data["typeid_string")
+						switch ($obj_service->data["typeid_string"])
 						{
 							case "phone_single":
 
-								$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $obj_service->data["phone_ddi_single"] .")";
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." from ". $period_data["date_start"] ." to ". $period_data["date_end"] ." (". $obj_service->data["phone_ddi_single"] .")";
 								
 								if ($obj_service->data["description"])
 								{
 									$itemdata["description"]	.= "\n\n";
-									$itemdata["description"]	.= $obj_service->data["description"];
+									$itemdata["description"]	.= addslashes($obj_service->data["description"]);
 								}
 							break;
 
 							default:
-								$itemdata["description"]	= $obj_service->data["name_service"] ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." from ". $period_data["date_start"] ." to ". $period_data["date_end"];
 
 								if ($obj_service->data["description"])
 								{
 									$itemdata["description"]	.= "\n\n";
-									$itemdata["description"]	.= $obj_service->data["description"];
+									$itemdata["description"]	.= addslashes($obj_service->data["description"]);
 								}
 							break;
 						}
@@ -1024,7 +1024,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata = array();
 
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
-								$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
 
 											
@@ -1060,7 +1060,7 @@ function service_invoices_generate($customerid = NULL)
 									Charge for the usage in units
 								*/
 
-								$unitname = $obj_service->data["units"];
+								$unitname = addslashes($obj_service->data["units"]);
 
 								if ($usage > $obj_service->data["included_units"])
 								{
@@ -1134,7 +1134,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata = array();
 
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
-								$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
 
 
@@ -1152,7 +1152,7 @@ function service_invoices_generate($customerid = NULL)
 									// set item attributes
 									$itemdata["price"]	= $obj_service->data["price_extraunits"];
 									$itemdata["quantity"]	= $licenses_excess;
-									$itemdata["units"]	= $obj_service->data["units"];
+									$itemdata["units"]	= addslashes($obj_service->data["units"]);
 
 
 									// description example:		10 licences included
@@ -1205,7 +1205,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata = array();
 
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
-								$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
 
 
@@ -1314,7 +1314,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata = array();
 
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
-								$itemdata["description"]	= $obj_service->data["name_service"] ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
 
 
@@ -1627,69 +1627,82 @@ function service_invoices_generate($customerid = NULL)
 
 
 				/*
-					Process any customer orders
+					Only process orders and invoice
+					summary details if we had no errors above.
 				*/
 
-				if ($GLOBALS["config"]["ORDERS_BILL_ONSERVICE"])
+				if (!error_check())
 				{
-					log_write("debug", "inc_service_invoicegen", "Checking for customer orders to add to service invoice");
+					/*
+						Process any customer orders
+					*/
 
-					$obj_customer_orders 		= New customer_orders;
-					$obj_customer_orders->id	= $customer_data["id"];
-
-					if ($obj_customer_orders->check_orders_num())
+					if ($GLOBALS["config"]["ORDERS_BILL_ONSERVICE"])
 					{
-						log_write("debug", "inc_service_invoicegen", "Order items exist, adding them to service invoice");
+						log_write("debug", "inc_service_invoicegen", "Checking for customer orders to add to service invoice");
 
-						$obj_customer_orders->invoice_generate($invoiceid);
+						$obj_customer_orders 		= New customer_orders;
+						$obj_customer_orders->id	= $customer_data["id"];
+
+						if ($obj_customer_orders->check_orders_num())
+						{
+							log_write("debug", "inc_service_invoicegen", "Order items exist, adding them to service invoice");
+
+							$obj_customer_orders->invoice_generate($invoiceid);
+						}
 					}
-				}
-				else
-				{
-					log_write("debug", "inc_service_invoicegen", "Not checking for customer orders, ORDERS_BILL_ONSERVICE is disabled currently");
-				}
+					else
+					{
+						log_write("debug", "inc_service_invoicegen", "Not checking for customer orders, ORDERS_BILL_ONSERVICE is disabled currently");
+					}
 
 
 
 
-				/*
-					Update the invoice details + Ledger
+					/*
+						Update the invoice details + Ledger
 
-					Processes:
-					- taxes
-					- ledger
-					- invoice summary
+						Processes:
+						- taxes
+						- ledger
+						- invoice summary
 
-					We use the invoice_items class to perform these tasks, but we don't need
-					to define an item ID for the functions being used to work.
-				*/
+						We use the invoice_items class to perform these tasks, but we don't need
+						to define an item ID for the functions being used to work.
+					*/
 
-				$invoice = New invoice_items;
-					
-				$invoice->id_invoice	= $invoiceid;
-				$invoice->type_invoice	= "ar";
+					$invoice = New invoice_items;
+						
+					$invoice->id_invoice	= $invoiceid;
+					$invoice->type_invoice	= "ar";
 
-				$invoice->action_update_tax();
-				$invoice->action_update_ledger();
-				$invoice->action_update_total();
+					$invoice->action_update_tax();
+					$invoice->action_update_ledger();
+					$invoice->action_update_total();
 
-				unset($invoice);
+					unset($invoice);
 
 
 
-				/*
-					Update period information with invoiceid
-				*/
-					
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
-				$sql_obj->execute();
-					
+					/*
+						Update period information with invoiceid
+					*/
+						
+					$sql_obj		= New sql_query;
+					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "'";
+					$sql_obj->execute();
+						
+				} // end if error check
 
 
 
 				/*
 					Commit
+
+					Conduct final error check, before commiting the new invoice and sending the customer an email
+					if appropiate.
+
+					(we obviously don't want to email them if the invoice is getting rolled back!)
 				*/
 				$sql_obj = New sql_query;
 
@@ -1708,45 +1721,46 @@ function service_invoices_generate($customerid = NULL)
 					$_SESSION["notification"]["message"] = array();
 
 					log_write("notification", "inc_services_invoicegen", "New invoice $invoicecode for customer ". $customer_data["code_customer"] ." created");
-				}
 
 
 
-				/*
-						Send the invoice to the customer as a PDF via email
-				*/
+					/*
+							Send the invoice to the customer as a PDF via email
+					*/
 
-				if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") == "enabled")
-				{
-					if (sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_AUTOEMAIL'") == "enabled")
+					if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") == "enabled")
 					{
-						// load completed invoice data
-						$invoice	= New invoice;
-						$invoice->id	= $invoiceid;
-						$invoice->type	= "ar";
-
-						$invoice->load_data();
-						$invoice->load_data_export();
-
-						if ($invoice->data["amount_total"] > 0)
+						if (sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_AUTOEMAIL'") == "enabled")
 						{
-							// generate an email
-							$email = $invoice->generate_email();
+							// load completed invoice data
+							$invoice	= New invoice;
+							$invoice->id	= $invoiceid;
+							$invoice->type	= "ar";
 
-							// send email
-							$invoice->email_invoice("system", $email["to"], $email["cc"], $email["bcc"], $email["subject"], $email["message"]);
+							$invoice->load_data();
+							$invoice->load_data_export();
 
-							// complete
-							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $email["to"] .")");
+							if ($invoice->data["amount_total"] > 0)
+							{
+								// generate an email
+								$email = $invoice->generate_email();
+
+								// send email
+								$invoice->email_invoice("system", $email["to"], $email["cc"], $email["bcc"], $email["subject"], $email["message"]);
+
+								// complete
+								log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has been emailed to customer (". $email["to"] .")");
+							}
+							else
+							{
+								// complete - invoice is for $0, so don't want to email out
+								log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has not been emailed to the customer due to invoice being for $0.");
+							}
+
+							unset ($invoice);
 						}
-						else
-						{
-							// complete - invoice is for $0, so don't want to email out
-							log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has not been emailed to the customer due to invoice being for $0.");
-						}
 
-						unset ($invoice);
-					}
+					} // end if commit successful 
 				}
 
 
@@ -1758,6 +1772,14 @@ function service_invoices_generate($customerid = NULL)
 	{
 		log_debug("inc_services_invoicegen", "No services assigned to customer $customerid");
 	}
+
+
+	/*
+		Write Invoicing Report
+
+		TODO: we should have a report here on invoices that succeeded and failed to alert administrators to issues
+	*/
+
 
 
 	return 1;
