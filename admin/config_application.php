@@ -206,6 +206,14 @@ class page_output
 
 		// security options
 		$structure = NULL;
+		$structure["fieldname"]				= "SESSION_TIMEOUT";
+		$structure["type"]				= "input";
+		$structure["options"]["label"]			= " seconds idle before logging user out";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["defaultvalue"]			= "7200";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
 		$structure["fieldname"]				= "BLACKLIST_ENABLE";
 		$structure["type"]				= "checkbox";
 		$structure["options"]["label"]			= "Enable to prevent brute-force login attempts";
@@ -285,8 +293,8 @@ class page_output
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
 		$this->obj_form->subforms["config_contributions"]	= array("PHONE_HOME");
-		$this->obj_form->subforms["config_security"]		= array("BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
-		$this->obj_form->subforms["config_misc"]			= array("UPLOAD_MAXBYTES", "API_URL");
+		$this->obj_form->subforms["config_security"]		= array("SESSION_TIMEOUT", "BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
+		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "API_URL");
 
 		if ($GLOBALS["config"]["dangerous_conf_options"] == "enabled")
 		{

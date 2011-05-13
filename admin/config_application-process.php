@@ -46,11 +46,12 @@ if (user_permissions_get("admin"))
 	$data["JOURNAL_LOCK"]			= @security_form_input_predefined("int", "JOURNAL_LOCK", 0, "");
 	$data["TIMESHEET_LOCK"]			= @security_form_input_predefined("int", "TIMESHEET_LOCK", 0, "");
 	
+	$data["SESSION_TIMEOUT"]		= @security_form_input_predefined("int", "SESSION_TIMEOUT", 1, "");
 	$data["BLACKLIST_ENABLE"]		= @security_form_input_predefined("any", "BLACKLIST_ENABLE", 0, "");
 	$data["BLACKLIST_LIMIT"]		= @security_form_input_predefined("int", "BLACKLIST_LIMIT", 1, "");
 	
 	$data["UPLOAD_MAXBYTES"]		= @security_form_input_predefined("int", "UPLOAD_MAXBYTES", 1, "");
-	$data["API_URL"]		= @security_form_input_predefined("any", "API_URL", 0, "");
+	$data["API_URL"]			= @security_form_input_predefined("any", "API_URL", 0, "");
 	
 
 	$data["PHONE_HOME"]			= @security_form_input_predefined("any", "PHONE_HOME", 0, "");

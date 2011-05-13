@@ -78,6 +78,18 @@ class user_auth
 		}
 		else
 		{
+			// determine timeout
+			if (empty($GLOBALS["config"]["SESSION_TIMEOUT"]))
+			{
+				// default == two hours (in seconds)
+				$session_timeout = 7200;
+			}
+			else
+			{
+				// use configured setting
+				$session_timeout = $GLOBALS["config"]["SESSION_TIMEOUT"];
+			}
+
 			// get user session data
 			$sql_session_obj		= New sql_query;
 			$sql_session_obj->string 	= "SELECT id, time FROM `users_sessions` WHERE authkey='" . $_SESSION["user"]["authkey"] . "' AND ipaddress='" . $_SERVER["REMOTE_ADDR"] . "' LIMIT 1";
@@ -88,7 +100,7 @@ class user_auth
 				$sql_session_obj->fetch_array();
 
 				$time = time();
-				if ($time < ($sql_session_obj->data[0]["time"] + 7200))
+				if ($time < ($sql_session_obj->data[0]["time"] + $session_timeout))
 				{
 					// we want to update the time value in the database, but we don't want to do this
 					// on every single page load - no need, and a waste of performance.
