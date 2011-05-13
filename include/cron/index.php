@@ -29,6 +29,8 @@ if (!@include($argv[1]))
 	die("Unable to load script \"". $argv[1] ."\"\n");
 }
 
+// set our user account
+$_SESSION["user"]["id"] = 0;
 
 
 
