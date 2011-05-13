@@ -167,7 +167,7 @@ class page_output
 				}
 
 				// tick the paid column if the invoice has been paid off completely
-				if ($this->obj_table->data[$i]["invoiced"])
+				if (!empty($this->obj_table->data[$i]["invoiced"]))
 				{
 					if ($this->obj_table->data[$i]["amount_total"] == $this->obj_table->data[$i]["amount_paid"])
 					{

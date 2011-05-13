@@ -1074,7 +1074,7 @@ class user_auth
 			}
 
 			// return permissions value
-			if ($GLOBALS["cache"]["user"]["perms"][$type])
+			if (!empty($GLOBALS["cache"]["user"]["perms"][$type]))
 			{
 				return 1;
 			}

@@ -830,8 +830,12 @@ function service_invoices_generate($customerid = NULL)
 						// service ID
 						$itemdata["customid"]		= $obj_service->id;
 
+						// no units apply
+						$itemdata["units"]		= "";
+
+
 						// description
-						switch ($service_type)
+						switch ($obj_service->data["typeid_string")
 						{
 							case "phone_single":
 
@@ -857,7 +861,7 @@ function service_invoices_generate($customerid = NULL)
 
 					
 						// is this service item part of a bundle? if it is, we shouldn't charge for the plan
-						if ($obj_service->data["id_bundle_component"])
+						if (!empty($obj_service->data["id_bundle_component"]))
 						{
 							// no charge for the base plan, since this is handled by
 							// the bundle item itself

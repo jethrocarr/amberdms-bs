@@ -1125,7 +1125,9 @@ class form_input
 				}
 				
 				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
+				{
 					print "disabled=\"disabled\" ";
+				}
 					
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
 				{
@@ -1133,7 +1135,7 @@ class form_input
 				}			
 					
 
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
 				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\" id=\"". $fieldname ."\">";
@@ -1325,8 +1327,10 @@ class form_input
 
 				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\"";
 				
-				if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
+				{
 					print "disabled=\"disabled\" ";
+				}
 					
 				print ">";
 			break;

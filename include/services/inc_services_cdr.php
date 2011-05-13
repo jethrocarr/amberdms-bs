@@ -750,7 +750,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 		while ( $num )
 		{
-			if ($this->data["rates"][ $num ]["id_rate"])
+			if (!empty($this->data["rates"][ $num ]["id_rate"]))
 			{
 				log_write("debug", "cdr_rate_table_rates", "Returning prefix $num");
 

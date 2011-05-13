@@ -1563,6 +1563,22 @@ class journal_process extends journal_base
 
 
 		/*
+			Handle some optional fields
+		*/
+
+		if (!isset($this->structure["content"]))
+		{
+			$this->structure["content"] = "";
+		}
+
+		if (!isset($this->structure["userid"]))
+		{
+			// automated system user
+			$this->structure["userid"] = 0;
+		}
+
+
+		/*
 			Update journal record
 		*/
 
