@@ -457,7 +457,7 @@ class sql_query
 	{
 		log_write("debug", "sql_query", "Executing trans_begin()");
 
-		if (isset($GLOBALS["sql"]["transaction"]))
+		if (!empty($GLOBALS["sql"]["transaction"]))
 		{
 			// a transaction is already running, do not try and start another one
 			log_debug("sql_query", "Transaction already active, not starting another");
