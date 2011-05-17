@@ -1578,6 +1578,9 @@ class invoice
 		}
 		else
 		{
+			log_write("debug", "inc_invoice", "Successfully sent email invoice");
+
+
 			/*
 				Start SQL Transaction to post email to journal
 			*/
@@ -2548,7 +2551,14 @@ class invoice_items
 							{
 								// automatic
 								// note: no need to multiple by quantity, since the item amount is already price * quantity
-								$tax_structure[ $data_service_tax["taxid"] ]["auto"]	+= $data["amount"];
+								if (!isset($tax_structure[ $data_service_tax["taxid"] ]["auto"]))
+								{
+									$tax_structure[ $data_service_tax["taxid"] ]["auto"]	= $data["amount"];
+								}
+								else
+								{
+									$tax_structure[ $data_service_tax["taxid"] ]["auto"]	+= $data["amount"];
+								}
 							}
 						}
 					break;
@@ -2654,10 +2664,13 @@ class invoice_items
 					$amount = 0;
 
 					// add any manual (aka fixed amount) taxes
-					$amount += $tax_structure[ $taxid ]["manual"];
+					if (!empty($tax_structure[ $taxid ]["manual"]))
+					{
+						$amount += $tax_structure[ $taxid ]["manual"];
+					}
 
 					// any items requiring automatic tax generation?
-					if ($tax_structure[ $taxid ]["auto"])
+					if (!empty($tax_structure[ $taxid ]["auto"]))
 					{
 						// calculate taxable amount
 						$amount += $tax_structure[ $taxid ]["auto"] * ($sql_tax_obj->data[0]["taxrate"] / 100);

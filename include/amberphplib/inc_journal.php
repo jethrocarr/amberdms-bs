@@ -1596,31 +1596,44 @@ class journal_process extends journal_base
 
 		/*
 			If journal entry is a file, upload the data
+
+			TODO: this currently only works for form uploads
 		*/
 		if ($this->structure["type"] == "file")
 		{
-			// output file data
-			$file_obj			= New file_storage;
-			$file_obj->data["type"]		= "journal";
-			$file_obj->data["customid"]	= $this->structure["id"];
-
-			if ($file_obj->load_data_bytype())
+			if (isset($_FILES["upload"]["name"]))
 			{
-				log_debug("journal_process", "Old file exists, will overwrite.");
-			
-				// unset the title variable - otherwise the action_update_form function will retain the existing title
-				$file_obj->data["file_name"] = NULL;
+				log_write("debug", "journal_process", "Uploading file against journal entry from POST form data");
+
+
+				// output file data
+				$file_obj			= New file_storage;
+				$file_obj->data["type"]		= "journal";
+				$file_obj->data["customid"]	= $this->structure["id"];
+
+				if ($file_obj->load_data_bytype())
+				{
+					log_debug("journal_process", "Old file exists, will overwrite.");
+				
+					// unset the title variable - otherwise the action_update_form function will retain the existing title
+					$file_obj->data["file_name"] = NULL;
+				}
+				else
+				{
+					log_debug("journal_process", "No previous file exists, performing clean upload.");
+				}
+
+						
+				// call the upload function
+				if (!$file_obj->action_update_form("upload"))
+				{
+					log_write("error", "journal_process", "Unable to upload file for journal entry id ". $this->structure["id"] . "");
+				}
 			}
 			else
 			{
-				log_debug("journal_process", "No previous file exists, performing clean upload.");
-			}
-
-					
-			// call the upload function
-			if (!$file_obj->action_update_form("upload"))
-			{
-				log_write("error", "journal_process", "Unable to upload file for journal entry id ". $this->structure["id"] . "");
+				// not uploading
+				log_write("debug", "journal_process", "No file POST data provided, not uploading file to journal - assuming manual DB upload");
 			}
 		}
 

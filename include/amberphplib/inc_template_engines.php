@@ -232,10 +232,9 @@ class template_engine
 				 	{
 				 		$line_tmp = '';
 				 		$match = $matches[1];
-				 		if($current_level_part[$match] != $current_level[$fieldname][($key-1)][$match])
+				 		if(isset($current_level[$fieldname][($key-1)][$match]) && ($current_level_part[$match] != $current_level[$fieldname][($key-1)][$match]))
 				 		{
 						 	$line_tmp = str_replace($matches[0], '', $line);
-						 	
 				 		}
 				 		else
 				 		{	// only print what is after the endif
@@ -404,7 +403,7 @@ class template_engine
 						 	{
 						 		$line_tmp = '';
 						 		$match = $matches[1];
-						 		if(($this->data[$match] != '') || ($this->data_array[$match][$j] != ''))
+						 		if (!empty($this->data[$match]) || !empty($this->data_array[$match][$j]))
 						 		{
 								 	$line_tmp = str_replace($matches[0], '', $line);
 								 	
@@ -420,7 +419,23 @@ class template_engine
 							// run through the loop items
 							foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 							{
-								$line_tmp = str_replace("($var)", $this->data_array[$fieldname][$j][$var], $line_tmp);
+								/*
+									TODO: Need to figure out exactly what is going on here... essentially
+									the non-array version of $this->data_array[$fieldname][$j][$var] are fine
+									but there are array versions mixed in too - appearing in ABS invoice line
+									items mostly.
+									
+									Unfortunatly the invoicing logic is quite complex and will need a code review
+									in the near future, there will be stuff here that could be optimised further.
+
+									For now, the check on array status is the workaround solution.
+								*/
+
+								if (!is_array($this->data_array[$fieldname][$j][$var]))
+								{
+									$line_tmp = str_replace("($var)", $this->data_array[$fieldname][$j][$var], $line_tmp);
+								}
+
 							}
 							
 							// if there are any items left that didn't get matched by any of the loop items, we should
@@ -1063,7 +1078,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 	
 		chdir("/tmp");		// TODO: fix this to be a configurable value
-		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf", $output);
+		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf 2>&1", $output);
 
 		foreach ($output as $line)
 		{

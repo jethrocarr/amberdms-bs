@@ -863,11 +863,13 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 					foreach ($this->data["rates"] as $rate)
 					{
-						if ($rate["rate_destination"] == $local_prefix)
+						if (isset($rate["rate_destination"]))
 						{
-							$local_prefix_tmp[] = $rate["rate_prefix"];
+							if ($rate["rate_destination"] == $local_prefix)
+							{
+								$local_prefix_tmp[] = $rate["rate_prefix"];
+							}
 						}
-
 					}
 
 
@@ -1763,6 +1765,12 @@ class service_usage_cdr extends service_usage
 				/*
 					Calculate costs of calls
 				*/
+
+				if (!isset($this->data[ $ddi ]["charges"]))
+				{
+					$this->data[ $ddi ]["charges"] = 0;
+				}
+
 				if ($obj_cdr_db_sql->num_rows())
 				{
 					$obj_cdr_db_sql->fetch_array();

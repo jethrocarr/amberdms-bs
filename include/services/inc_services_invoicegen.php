@@ -868,6 +868,7 @@ function service_invoices_generate($customerid = NULL)
 
 							$itemdata["price"]		= "0.00";
 							$itemdata["quantity"]		= 1;
+							$itemdata["discount"]		= "0";
 
 							// append description
 							$itemdata["description"]	.= " (part of bundle)";
@@ -991,7 +992,7 @@ function service_invoices_generate($customerid = NULL)
 					/*
 						Create usage items if there is a valid usage period
 					*/
-					if ($period_usage_data["active"])
+					if (!empty($period_usage_data["active"]))
 					{
 						log_write("debug", "service_invoicegen", "Creating usage items due to active usage period");
 
@@ -1026,6 +1027,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
 								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
+								$itemdata["discount"]		= 0;
 
 											
 
@@ -1136,6 +1138,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
 								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
+								$itemdata["discount"]		= 0;
 
 
 								/*
@@ -1207,6 +1210,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
 								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
+								$itemdata["discount"]		= 0;
 
 
 
@@ -1316,6 +1320,7 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["chartid"]		= $obj_service->data["chartid"];
 								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
+								$itemdata["discount"]		= 0;
 
 
 
@@ -1440,6 +1445,7 @@ function service_invoices_generate($customerid = NULL)
 
 									$itemdata["chartid"]			= $obj_service->data["chartid"];
 									$itemdata["customid"]			= $obj_service->id;
+									$itemdata["discount"]			= 0;
 
 
 									// fetch DDI usage
@@ -1495,6 +1501,7 @@ function service_invoices_generate($customerid = NULL)
 
 									$itemdata["chartid"]			= $obj_service->data["chartid"];
 									$itemdata["customid"]			= $obj_service->id;
+									$itemdata["discount"]			= 0;
 
 									// determine excess usage charges
 									if ($obj_service->data["phone_trunk_quantity"] > $obj_service->data["phone_trunk_included_units"])
@@ -1558,6 +1565,7 @@ function service_invoices_generate($customerid = NULL)
 										$itemdata["customid"]			= $obj_service->id;
 
 										// determine excess usage charges
+										$itemdata["discount"]			= 0;
 										$itemdata["price"]			= $usage_obj->data[ $ddi ]["charges"];
 										$itemdata["quantity"]			= "1";
 										$itemdata["units"]			= "";
@@ -1612,7 +1620,7 @@ function service_invoices_generate($customerid = NULL)
 					$sql_obj->execute();
 
 					// set for usage period, if it differs
-					if ($period_usage_data["active"])
+					if (!empty($period_usage_data["active"]))
 					{
 						if ($period_usage_data["id"] != $period_data["id"])
 						{
