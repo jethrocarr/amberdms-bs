@@ -714,6 +714,14 @@ class services_form_plan
 				$this->obj_form->subforms["service_plan_custom"] 	= array("plan_information", "units", "included_units", "price_extraunits");
 				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
 
+
+				// handle misconfiguration
+				if (empty($this->obj_form->structure["units"]["values"]))
+				{
+					$this->obj_form->structure["units"]["type"]			= "text";
+					$this->obj_form->structure["units"]["defaultvalue"]		= "error_no_units_available";
+				}
+
 			break;
 
 
@@ -902,12 +910,6 @@ class services_form_plan
 		$this->obj_form->load_data();
 
 		// handle misconfiguration gracefully
-		if (empty($this->obj_form->structure["units"]["values"]))
-		{
-			$this->obj_form->structure["units"]["type"]			= "text";
-			$this->obj_form->structure["units"]["defaultvalue"]		= "error_no_units_available";
-		}
-
 		if (empty($this->obj_form->structure["billing_cycle"]["values"]))
 		{
 			$this->obj_form->structure["billing_cycle"]["type"]			= "text";
