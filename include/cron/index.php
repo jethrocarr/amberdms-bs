@@ -150,4 +150,22 @@ else
 }
 
 
+/*
+	Display Stats if debugging
+*/
+
+if ($_SESSION["user"]["debug"] == "on")
+{
+	log_debug_render();
+}
+
+
+
+/*
+	Complete
+*/
+
+log_write("debug", "end", "Successful Application Execution & Shutdown");
+
+
 ?>

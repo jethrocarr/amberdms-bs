@@ -942,83 +942,157 @@ function log_notification_render()
 /*
 	log_debug_render()
 
-	Displays the debugging log
+	Displays the debugging log - suitable for both CLI and web UI display - could do
+	with some level of more modular split.
 */
 function log_debug_render()
 {
 	log_debug("inc_misc", "Executing log_debug_render()");
 
 
-	print "<p><b>Debug Output:</b></p>";
-	print "<p><i>Please be aware that debugging will cause some impact on performance and should be turned off in production.</i></p>";
-	
-	
-	// table header
-	print "<table class=\"table_content\" width=\"100%\" cellspacing=\"0\">";
-	
-	print "<tr class=\"header\">";
-		print "<td nowrap><b>Time</b></td>";
-		print "<td nowrap><b>Memory</b></td>";
-		print "<td nowrap><b>Type</b></td>";
-		print "<td nowrap><b>Category</b></td>";
-		print "<td><b>Message/Content</b></td>";
-	print "</tr>";
-
-	// get first time entry
-	$time_first = (float)$_SESSION["user"]["log_debug"][0]["time_sec"] + (float)$_SESSION["user"]["log_debug"][0]["time_usec"];
-
-	// count SQL queries
-	$num_sql_queries = 0;
-
-	// content
-	foreach ($_SESSION["user"]["log_debug"] as $log_record)
+	if (!empty($_SESSION["mode"]))
 	{
-		// get last time entry
-		$time_last = (float)$log_record["time_sec"] + (float)$log_record["time_usec"];
-
-
-		// choose formatting
-		switch ($log_record["type"])
+		if ($_SESSION["mode"] == "cli")
 		{
-			case "error":
-				print "<tr bgcolor=\"#ff5a00\">";
-			break;
+			/*
+				CLI Interface
 
-			case "warning":
-				print "<tr bgcolor=\"#ffeb68\">";
-			break;
+				Limited to a statistical display only.
+			*/
 
-			case "sql":
-				print "<tr bgcolor=\"#7bbfff\">";
-				$num_sql_queries++;
-			break;
+			// get first time entry
+			$time_first = (float)$_SESSION["user"]["log_debug"][0]["time_sec"] + (float)$_SESSION["user"]["log_debug"][0]["time_usec"];
 
-			default:
-				print "<tr>";
-			break;
-		}
+			// count SQL queries
+			$num_sql_queries	= 0;
+			$num_cache_hits		= 0;
 		
-		// display
-		print "<td nowrap>". $time_last  ."</td>";
-		print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
-		print "<td nowrap>". $log_record["type"] ."</td>";
-		print "<td nowrap>". $log_record["category"] ."</td>";
-		print "<td>". $log_record["content"] ."</td>";
+			// run through the log to get stats
+			foreach ($_SESSION["user"]["log_debug"] as $log_record)
+			{
+				// get last time entry
+				$time_last = (float)$log_record["time_sec"] + (float)$log_record["time_usec"];
+
+				// last memmor
+				$memory_last = $log_record["memory"];
+
+				// choose formatting
+				switch ($log_record["type"])
+				{
+					case "sql":
+						$num_sql_queries++;
+					break;
+
+					case "cache":
+						$num_cache_hits++;
+					break;
+
+					default:
+						// nothing todo
+					break;
+				}
+			}
+			
+			// report completion time
+			$time_diff = ($time_last - $time_first);
+
+			// display
+			log_write("debug", "stats", "----");
+			log_write("debug", "stats", "Application execution time:\t". $time_diff  ." seconds");
+			log_write("debug", "stats", "Total Memory Consumption:\t". number_format($memory_last) ." bytes.");
+			log_write("debug", "stats", "SQL Queries Executed:\t". number_format($num_sql_queries) ." queries.");
+			log_write("debug", "stats", "Total Cache Hits:\t\t". number_format($num_cache_hits) ." cache lookups.");
+			log_write("debug", "stats", "----");
+
+		} // end if CLI
+
+	} // end if CLI
+	else
+	{
+		/*
+			Web Interface
+		*/
+
+
+		print "<p><b>Debug Output:</b></p>";
+		print "<p><i>Please be aware that debugging will cause some impact on performance and should be turned off in production.</i></p>";
+		
+		
+		// table header
+		print "<table class=\"table_content\" width=\"100%\" cellspacing=\"0\">";
+		
+		print "<tr class=\"header\">";
+			print "<td nowrap><b>Time</b></td>";
+			print "<td nowrap><b>Memory</b></td>";
+			print "<td nowrap><b>Type</b></td>";
+			print "<td nowrap><b>Category</b></td>";
+			print "<td><b>Message/Content</b></td>";
 		print "</tr>";
 
+		// get first time entry
+		$time_first = (float)$_SESSION["user"]["log_debug"][0]["time_sec"] + (float)$_SESSION["user"]["log_debug"][0]["time_usec"];
 
-	}
+		// count SQL queries
+		$num_sql_queries	= 0;
+		$num_cache_hits		= 0;
 
-	print "</table>";
+		// content
+		foreach ($_SESSION["user"]["log_debug"] as $log_record)
+		{
+			// get last time entry
+			$time_last = (float)$log_record["time_sec"] + (float)$log_record["time_usec"];
 
 
-	// report completion time
-	$time_diff = ($time_last - $time_first);
+			// choose formatting
+			switch ($log_record["type"])
+			{
+				case "error":
+					print "<tr bgcolor=\"#ff5a00\">";
+				break;
 
-	print "<p>Completed in $time_diff seconds.</p>";
+				case "warning":
+					print "<tr bgcolor=\"#ffeb68\">";
+				break;
 
-	// report number of SQL queries
-	print "<p>Executed $num_sql_queries of SQL queries</p>";
+				case "sql":
+					print "<tr bgcolor=\"#7bbfff\">";
+					$num_sql_queries++;
+				break;
+
+				case "cache":
+					print "<tr bgcolor=\"#ddf9ff\">";
+					$num_cache_hits++;
+				break;
+
+				default:
+					print "<tr>";
+				break;
+			}
+			
+			// display
+			print "<td nowrap>". $time_last  ."</td>";
+			print "<td nowrap>". format_size_human($log_record["memory"]) ."</td>";
+			print "<td nowrap>". $log_record["type"] ."</td>";
+			print "<td nowrap>". $log_record["category"] ."</td>";
+			print "<td>". $log_record["content"] ."</td>";
+			print "</tr>";
+
+
+		}
+
+		print "</table>";
+
+
+		// report completion time
+		$time_diff = ($time_last - $time_first);
+
+		print "<p>Completed in $time_diff seconds.</p>";
+
+		// report number of SQL queries
+		print "<p>Executed $num_sql_queries of SQL queries.</p>";
+		print "<p>Executed $num_cache_hits cache lookups.</p>";
+
+	} // end if web UI
 }
 
 

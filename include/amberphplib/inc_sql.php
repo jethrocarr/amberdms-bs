@@ -932,7 +932,7 @@ function sql_get_singlevalue($string)
 
 	if (isset($GLOBALS["cache"]["sql"][$string]))
 	{
-		log_write("sql", "sql_query", "Fetching results from cache");
+		log_write("cache", "sql_query", "Fetching SQL results from cache");
 		return $GLOBALS["cache"]["sql"][$string];
 	}
 	else
@@ -977,7 +977,7 @@ function sql_get_singlerow($string)
 	// this function has been added.
 	if (isset($GLOBALS["cache"]["sql"][$string]))
 	{
-		log_write("sql", "sql_query", "Fetching results from cache");
+		log_write("cache", "sql_query", "Fetching SQL results from cache");
 		return $GLOBALS["cache"]["sql"][$string];
 	}
 	else
@@ -1023,7 +1023,7 @@ function sql_get_singlecol($string)
 	// this function has been added.
 	if (isset($GLOBALS["cache"]["sql"][$string]))
 	{
-		log_write("sql", "sql_query", "Fetching results from cache");
+		log_write("cache", "sql_query", "Fetching SQL results from cache");
 		return $GLOBALS["cache"]["sql"][$string];
 	}
 	else
