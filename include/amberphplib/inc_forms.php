@@ -1545,7 +1545,7 @@ class form_input
 
 
 				// standard vs grouped subform
-				if ($this->subforms_grouped[$form_label])
+				if (isset($this->subforms_grouped[$form_label]))
 				{
 					log_write("debug", "inc_form", "Subform $form_logic is grouped - running additional logic");
 
