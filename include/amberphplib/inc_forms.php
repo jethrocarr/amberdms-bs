@@ -1062,10 +1062,6 @@ class form_input
 						print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
 					}			
 						
-					
-					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
-						print "disabled=\"disabled\" ";
-					
 					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\" id=\"". $fieldname ."_". $value ."\">";
 					print "<label for=\"". $fieldname ."_". $value ."\">". $translations[$value] ."</label><br>";
 				}
