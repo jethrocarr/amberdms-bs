@@ -1153,7 +1153,7 @@ class invoice
 			}
 
 			// define group summary values
-			if(!isset($structure_group_summary[ $structure["group"] ]))
+			if (!isset($structure_group_summary[ $structure["group"] ]))
 			{
 				$structure_group_summary[ $structure["group"] ] = 0;
 			}
@@ -1194,7 +1194,14 @@ class invoice
 				$structure["amount"]		= "-". format_money($discount_calc, 1);
 
 				// track for summary report
-				$structure_group_summary[ "group_discount" ] += $discount_calc;
+				if (!isset($structure_group_summary[ "group_discount" ]))
+				{
+					$structure_group_summary[ "group_discount" ] = $discount_calc;
+				}
+				else
+				{
+					$structure_group_summary[ "group_discount" ] += $discount_calc;
+				}
 
 				// add extra line item
 				$structure_invoiceitems[] = $structure;

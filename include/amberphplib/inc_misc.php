@@ -626,7 +626,7 @@ function time_format_humandate($date = NULL)
 	}
 
 
-	if ($_SESSION["user"]["dateformat"])
+	if (isset($_SESSION["user"]["dateformat"]))
 	{
 		// fetch from user preferences
 		$format = $_SESSION["user"]["dateformat"];
@@ -635,7 +635,7 @@ function time_format_humandate($date = NULL)
 	{
 		// user hasn't chosen a default time format yet - use the system
 		// default
-		$format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
+		$format = $GLOBALS["config"]["DATEFORMAT"];
 	}
 
 
