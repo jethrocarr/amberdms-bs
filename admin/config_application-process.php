@@ -32,8 +32,11 @@ if (user_permissions_get("admin"))
 
 	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
-	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= @security_form_input_predefined("any", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
 
+	$data["ACCOUNTS_EMAIL_ADDRESS"]			= @security_form_input_predefined("email", "ACCOUNTS_EMAIL_ADDRESS", 1, "");
+	$data["ACCOUNTS_EMAIL_AUTOBCC"]			= @security_form_input_predefined("checkbox", "ACCOUNTS_EMAIL_AUTOBCC", 1, "");
+	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= @security_form_input_predefined("checkbox", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
+	$data["ACCOUNTS_INVOICE_BATCHREPORT"]		= @security_form_input_predefined("checkbox", "ACCOUNTS_INVOICE_BATCHREPORT", 0, "");
 
 	$data["ORDERS_BILL_ONSERVICE"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ONSERVICE", 0, "");
 	$data["ORDERS_BILL_ENDOFMONTH"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ENDOFMONTH", 0, "");
@@ -89,7 +92,7 @@ if (user_permissions_get("admin"))
 		$data["TIMESHEET_BOOKTOFUTURE"] = "disabled";
 	}
 		
-	if ($data["ACCOUNTS_INVOICE_AUTOEMAIL"] == "on")
+	if ($data["ACCOUNTS_INVOICE_AUTOEMAIL"] == 1)
 	{
 		$data["ACCOUNTS_INVOICE_AUTOEMAIL"] = "enabled";
 	}

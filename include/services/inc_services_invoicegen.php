@@ -548,9 +548,6 @@ function service_periods_add($id_service_customer, $billing_mode)
 	customerid		(optional) ID of the customer account to generate new period
 				information for. If blank, will execute for all customers.
 
-	logmode			(optional) Mode either "web" or "script". This causes logging to be
-				either printed directly or displayed to screen.
-
 	Results
 	0			failure
 	1			success
@@ -560,13 +557,22 @@ function service_invoices_generate($customerid = NULL)
 	log_debug("inc_services_invoicegen", "Executing service_invoices_generate($customerid)");
 
 
+	/*
+		Invoice Report Statistics
+	*/
+
+	$invoice_stats			= array();
+	$invoice_stats["time_start"]	= time();
+	$invoice_stats["total"]		= 0;
+	$invoice_stats["total_failed"]	= 0;
+
 
 
 	/*
 		Run through all the customers
 	*/
 	$sql_customers_obj		= New sql_query;
-	$sql_customers_obj->string	= "SELECT id, code_customer FROM customers";
+	$sql_customers_obj->string	= "SELECT id, code_customer, name_customer FROM customers";
 
 	if ($customerid)
 		$sql_customers_obj->string .= " WHERE id='$customerid' LIMIT 1";
@@ -1703,7 +1709,6 @@ function service_invoices_generate($customerid = NULL)
 				} // end if error check
 
 
-
 				/*
 					Commit
 
@@ -1736,6 +1741,8 @@ function service_invoices_generate($customerid = NULL)
 							Send the invoice to the customer as a PDF via email
 					*/
 
+					$emailed = "unsent";
+
 					if (sql_get_singlevalue("SELECT value FROM config WHERE name='EMAIL_ENABLE'") == "enabled")
 					{
 						if (sql_get_singlevalue("SELECT value FROM config WHERE name='ACCOUNTS_INVOICE_AUTOEMAIL'") == "enabled")
@@ -1765,11 +1772,57 @@ function service_invoices_generate($customerid = NULL)
 								log_write("notification", "inc_services_invoicegen", "Invoice $invoicecode has not been emailed to the customer due to invoice being for $0.");
 							}
 
+							$emailed = "emailed - " .$email["to"];
+
 							unset ($invoice);
 						}
 
-					} // end if commit successful 
+					} // end if email enabled
+
+				} // end if commit successful 
+
+
+
+				/*
+					Review Status
+
+					Here we need to check whether invoicing succeded/failed for the selected customer and process accordingly - we
+					also want to re-set the error flag if running a batch mode, to enable other customers to still be invoiced.
+				*/
+
+				if (error_check())
+				{
+					// an error occured
+					$invoice_stats["total_failed"]++;
+
+					$invoice_stats["failed"][]	= array("code_customer" => $customer_data["code_customer"],
+										"name_customer" => $customer_data["name_customer"],
+										"code_invoice" => $invoicecode
+										);
+
+					// clear the error strings if we are processing from CLI this will allow us to continue on
+					// with additional invoices.
+					
+					if (!empty($_SESSION["mode"]))
+					{
+						if ($_SESSION["mode"] == "cli")
+						{
+							log_write("debug", "inc_services_invoicegen", "Processing from CLI, clearing error flag and continuing with additional invoices");
+							error_clear();
+						}
+					}
 				}
+				else
+				{
+					// successful
+					$invoice_stats["total"]++;
+
+					$invoice_stats["generated"][]	= array("code_customer" => $customer_data["code_customer"],
+										"name_customer" => $customer_data["name_customer"],
+										"code_invoice" => $invoicecode,
+										"sent" => $emailed
+										);
+				} // end of success/stats review
 
 
 			} // end of processing customers
@@ -1784,10 +1837,150 @@ function service_invoices_generate($customerid = NULL)
 
 	/*
 		Write Invoicing Report
-
-		TODO: we should have a report here on invoices that succeeded and failed to alert administrators to issues
+		
+		This only takes place if no customer ID is provided, eg we have run a full automatic invoice generation report.
 	*/
 
+	if ($customerid == NULL)
+	{
+
+		log_write("debug", "inc_service_invoicegen", "Generating invoice report for invoice generation process");
+
+
+		/*
+			Invoice Stats Calculations
+		*/
+
+		$invoice_stats["time"]	= time() - $invoice_stats["time_start"];
+
+		if ($invoice_stats["time"] == 0)
+		{
+			$invoice_stats["time"] = 1;
+		}
+
+
+
+		/*
+			Write Invoice Report
+		*/
+
+		$invoice_report		= array();
+		$invoice_report[]	= "Complete Invoicing Run Time:\t". $invoice_stats["time"] ." seconds";
+		$invoice_report[]	= "Total Invoices Generated:\t". $invoice_stats["total"];
+		$invoice_report[]	= "Failed Invoices/Customers:\t". $invoice_stats["total_failed"];
+
+		if (isset($invoice_stats["generated"]))
+		{
+			$invoice_report[]	= "";
+			$invoice_report[]	= "Customers / Invoices Generated";
+
+			foreach (array_keys($invoice_stats["generated"]) as $id)
+			{
+				$invoice_report[] = " * ". $invoice_stats["generated"][ $id ]["code_invoice"] .": ".  $invoice_stats["generated"][ $id ]["code_customer"] ." -- ". $invoice_stats["generated"][ $id ]["name_customer"];
+				$invoice_report[] = "   [". $invoice_stats["generated"][ $id ]["sent"] ."]";	
+			}
+
+			$invoice_report[]	= "";
+		}
+		
+
+		if (isset($invoice_stats["failed"]))
+		{
+			$invoice_report[]	= "";
+			$invoice_report[]	= "Failed Customers / Invoices";
+
+			foreach (array_keys($invoice_stats["failed"]) as $id)
+			{
+				$invoice_report[] = " * ".  $invoice_stats["failed"][ $id ]["code_customer"] ." -- ". $invoice_stats["failed"][ $id ]["name_customer"];
+			}
+
+			$invoice_report[]	= "";
+			$invoice_report[]	= "Failed invoices will be attempted again on the following billing run.";
+			$invoice_report[]	= "";
+		}
+
+		$invoice_report[] = "Invoicing Run Complete";
+		
+
+		// display to debug log
+		log_write("debug", "inc_service_invoicegen", "----");
+
+		foreach ($invoice_report as $line)
+		{
+			// loop through invoice report lines
+			log_write("debug", "inc_service_invoicegen", $line);
+		}
+
+		log_write("debug", "inc_service_invoicegen", "----");
+
+
+
+		// email if appropiate
+		if ($GLOBALS["config"]["ACCOUNTS_INVOICE_BATCHREPORT"] && ($invoice_stats["total"] > 0 || $invoice_stats["total_failed"] > 0))
+		{
+			log_write("debug", "inc_service_invoicegen", "Emailing invoice generation report to ". $GLOBALS["config"]["ACCOUNTS_EMAIL_ADDRESS"] ."");
+
+
+			/*
+				External dependency of Mail_Mime
+			*/
+
+			if (!@include_once('Mail.php'))
+			{
+				log_write("error", "invoice", "Unable to find Mail module required for sending email");
+				break;
+			}
+			
+			if (!@include_once('Mail/mime.php'))
+			{
+				log_write("error", "invoice", "Unable to find Mail::Mime module required for sending email");
+				break;
+			}
+
+
+			/*
+				Email the Report
+			*/
+
+			$email_sender	= $GLOBALS["config"]["ACCOUNTS_EMAIL_ADDRESS"];
+			$email_to	= $GLOBALS["config"]["ACCOUNTS_EMAIL_ADDRESS"];
+			$email_subject	= "Invoice Batch Process Report";
+
+			$email_message	= $GLOBALS["config"]["COMPANY_NAME"] ."\n\nInvoice Batch Process Report for ". time_format_humandate() ."\n\n";
+
+			foreach ($invoice_report as $line)
+			{
+				$email_message .= $line ."\n";
+			}	
+
+			// prepare headers
+			$mail_headers = array(
+					'From'   	=> $email_sender,
+					'Subject'	=> $email_subject
+			);
+
+			$mail_mime = new Mail_mime("\n");
+				
+			$mail_mime->setTXTBody($email_message);
+
+			$mail_body	= $mail_mime->get();
+			$mail_headers	= $mail_mime->headers($mail_headers);
+
+			$mail		= & Mail::factory('mail');
+			$status 	= $mail->send($email_to, $mail_headers, $mail_body);
+
+			if (PEAR::isError($status))
+			{
+				log_write("error", "inc_service_invoicegen", "An error occured whilst attempting to send the batch report email: ". $status->getMessage() ."");
+			}
+			else
+			{
+				log_write("debug", "inc_service_invoicegen", "Successfully sent batch report email.");
+			}
+
+		} // end if email
+
+	} // end if report
 
 
 	return 1;

@@ -114,10 +114,33 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+
+		// email options
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_EMAIL_ADDRESS";
+		$structure["type"]				= "input";
+		$structure["options"]["label"]			= " Internal email address to send billing system related emails to.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"]				= "ACCOUNTS_INVOICE_AUTOEMAIL";
 		$structure["type"]				= "checkbox";
-		$structure["options"]["label"]			= "Tick to have service invoices, usage alerts and order invoices automatically emailed to customers when created.";
+		$structure["options"]["label"]			= "Tick to have service invoices, usage alerts and order invoices automatically emailed to customers when created, from address will be COMPANY_EMAIL_ADDRESS";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_INVOICE_BATCHREPORT";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Tick to have an invoice batch report sent to ACCOUNTS_EMAIL_ADDRESS when invoices are automatically generated.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_EMAIL_AUTOBCC";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["label"]			= "Always BCC outgoing invoice emails to ACCOUNTS_EMAIL_ADDRESS";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
@@ -288,7 +311,8 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
-		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_INVOICE_AUTOEMAIL");
+		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS");
+		$this->obj_form->subforms["config_accounts_email"]	= array("ACCOUNTS_EMAIL_ADDRESS", "ACCOUNTS_INVOICE_AUTOEMAIL", "ACCOUNTS_EMAIL_AUTOBCC", "ACCOUNTS_INVOICE_BATCHREPORT");
 		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");

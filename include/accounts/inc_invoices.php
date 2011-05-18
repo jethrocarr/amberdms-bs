@@ -1427,7 +1427,14 @@ class invoice
 		$email["cc"]		= "";
 
 		// default bcc
-		$email["bcc"]		= sql_get_singlevalue("SELECT value FROM config WHERE name='COMPANY_CONTACT_EMAIL'");
+		if ($GLOBALS["config"]["ACCOUNTS_EMAIL_AUTOBCC"])
+		{
+			$email["bcc"]	= "Accounts <". $GLOBALS["config"]["ACCOUNTS_EMAIL_ADDRESS"] .">";
+		}
+		else
+		{
+			$email["bcc"]	= "";
+		}
 
 
 		// type specific
@@ -1546,12 +1553,6 @@ class invoice
 		}
 
 
-		// if no BCC, then set BCC to the sender
-		if (!$email_bcc)
-		{
-			$email_bcc = $email_sender;
-		}
-			
 
 		// prepare headers
 		$mail_headers = array(
