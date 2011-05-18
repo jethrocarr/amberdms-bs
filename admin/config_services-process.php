@@ -261,7 +261,7 @@ if (user_permissions_get("admin"))
 		Test Traffic Database
 	*/
 
-	if ($data["SERVICE_TRAFFIC_DB_TYPE"] == "mysql_netflow_daily")
+	if ($data["SERVICE_TRAFFIC_DB_TYPE"] == "mysql_netflow_daily" || $data["SERVICE_TRAFFIC_DB_TYPE"] == "mysql_traffic_summary")
 	{
 		$obj_sql = New sql_query;
 

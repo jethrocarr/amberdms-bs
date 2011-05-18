@@ -631,11 +631,11 @@ class service_usage_traffic extends service_usage
 
 						} // end foreach date
 
-						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ."");
+						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ." bytes");
 
 					} // end foreach ipv4
 					
-					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ."");
+					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ." bytes");
 
 
 
@@ -656,6 +656,132 @@ class service_usage_traffic extends service_usage
 
 
 				break;
+
+
+
+				case "mysql_traffic_summary":
+					/*
+						MODE: mysql_traffic_summary
+
+						In this mode, the database contains a single table "traffic_summary" which includes the following key fields:
+						* ip_address			IPv4 Address
+						* traffic_datetime		Date/Time Field
+						* total				Total Bytes transfered
+
+						Ideally this table should contain one row per IP address, per day, to enable billing to occur.
+					*/
+
+					log_write("debug", "service_usage_traffic", "Processing external database mysql_traffic_summary");
+
+
+					/*
+						Connect to external database
+					*/
+
+					$obj_traffic_db_sql = New sql_query;
+
+					if (!$obj_traffic_db_sql->session_init("mysql", $GLOBALS["config"]["SERVICE_TRAFFIC_DB_HOST"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_NAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_USERNAME"], $GLOBALS["config"]["SERVICE_TRAFFIC_DB_PASSWORD"]))
+					{
+						log_write("error", "service_usage_traffic", "Unable to establish a connection to the external traffic DB, unable to run data usage processing.");
+
+						return 0;
+					}
+
+
+
+					/*
+						Loop through each IP and fetch usage for that IP.
+					*/
+
+					// make sure we have the array of IPv4 addresses
+					if (!$this->data_ipv4)
+					{
+						$this->load_data_ipv4();
+					}
+
+					// blank current total
+					$this->data["total"] = 0;
+
+					// verify IPv4 address have been configured
+					if (!is_array($this->data_ipv4))
+					{
+						log_write("warning", "service_usage_traffic", "Note: No IPv4 addresses have been configured for this customer");
+
+						return 0;
+					}
+
+
+					// run through each IP
+					foreach ($this->data_ipv4 as $ipv4)
+					{
+						/*
+							Fetch Data
+
+							We run through each IP and for each IP, we fetch the total for the date range.
+
+							Note that we use the SQL database for *ALL* calculations, this is due to the SQL DB being able
+							to handle 64bit integers, whereas PHP will vary depending on the host platform.
+						*/
+
+						log_write("debug", "service_usage_traffic", "Fetching usage records FOR address $ipv4 FOR date ". $this->date_start ." to ". $this->date_end ."");
+
+
+						// check that the table exists
+						$obj_traffic_db_sql->string		= "SHOW TABLES LIKE 'traffic_summary'";
+						$obj_traffic_db_sql->execute();
+
+						if ($obj_traffic_db_sql->num_rows())
+						{
+							// query the current date for the current IP
+							$obj_traffic_db_sql->string		= "SELECT SUM(total) as total FROM traffic_summary WHERE ip_address='$ipv4' AND traffic_datetime >= '". $this->date_start ."' AND traffic_datetime <= '". $this->date_end ."'";
+							$obj_traffic_db_sql->execute();
+
+							$obj_traffic_db_sql->fetch_array();
+
+							if (!empty($obj_traffic_db_sql->data[0]["total"]))
+							{
+								// add to running total
+								$sql_obj			= New sql_query;
+								$sql_obj->string		= "SELECT '". $this->data["total"] ."' + '". $obj_traffic_db_sql->data[0]["total"] ."' as totalusage";
+								$sql_obj->execute();
+								$sql_obj->fetch_array();
+
+								$this->data["total"] 		= $sql_obj->data[0]["totalusage"];
+
+							} // end if traffic exists
+
+						} // end if table exists/query succeeds
+						else
+						{
+							log_write("error", "service_usage_traffic", "SQL database table traffic_summary does not exist");
+						}
+
+						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ." bytes");
+
+					} // end foreach ipv4
+				
+					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ." bytes");
+
+
+
+					/*
+						TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
+						allow different charging for certain networks, such as domestic or within the data center.
+
+						We do not currently need to worry about rating the traffic differently depending on
+						who the packets are going to, we just need a total for the service for that customer.
+					*/
+
+
+					/*
+						Disconnect from database
+					*/
+	
+					$obj_traffic_db_sql->session_terminate();
+
+
+				break;
+
 
 
 				default:

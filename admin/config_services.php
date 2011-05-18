@@ -267,8 +267,9 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]					= "SERVICE_TRAFFIC_DB_TYPE";
 			$structure["type"]					= "radio";
-			$structure["values"]					= array("mysql_netflow_daily");
+			$structure["values"]					= array("mysql_netflow_daily", "mysql_traffic_summary");
 			$structure["translations"]["mysql_netflow_daily"]	= "MySQL Netflow Daily Tables (traffic_YYYYMMDD)";
+			$structure["translations"]["mysql_traffic_summary"]	= "MySQL Traffic Summary Tables (traffic_summary)";
 			$structure["options"]["autoselect"]			= "yes";
 			$structure["options"]["no_translate_fieldname"]		= "yes";
 			$this->obj_form->add_input($structure);
