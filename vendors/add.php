@@ -247,7 +247,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"] 		= "tax_message";
 			$structure["type"]			= "message";
-			$structure["defaultvalue"]		= "<p>Select all the taxes below which apply to this vendor. Any taxes not selected, will not be added to invoices for this customer.</p>";
+			$structure["defaultvalue"]		= "<p>Select all the taxes below which apply to this vendor. Any taxes not selected, will not be added to invoices for this vendor.</p>";
 			$this->obj_form->add_input($structure);
 				
 
