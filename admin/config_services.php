@@ -453,7 +453,18 @@ class page_output
 		$structure["translations"]["destination"]	= "Define local customer region by destination string (eg: \"Wellington\")";
 		$this->obj_form->add_input($structure);
 
-		$this->obj_form->subforms["config_options_cdr"]	= array("SERVICE_CDR_LOCAL");
+
+		$structure = NULL;
+		$structure["fieldname"]				= "SERVICE_CDR_BILLSELF";
+		$structure["type"]				= "radio";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["values"]				= array("free", "local", "regular");
+		$structure["translations"]["free"]		= "Free calling between a customer's own DDIs";
+		$structure["translations"]["local"]		= "\"LOCAL\" calling rate for calls between a customer's own DDI";
+		$structure["translations"]["regular"]		= "Regular calling rates for calls between a customer's own DDI";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["config_options_cdr"]	= array("SERVICE_CDR_LOCAL", "SERVICE_CDR_BILLSELF");
 
 
 		// migration mode options

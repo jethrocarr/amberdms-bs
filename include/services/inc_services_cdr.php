@@ -780,13 +780,14 @@ class cdr_rate_table_rates extends cdr_rate_table
 		src		Source phone number
 		dst		Destination phone number
 		local_prefix	Local prefix - either integer or a string (optional) 
+		DDI array	Array of customer's DDIs (optional)
 
 		Returns
 		-1		Failure
 		#		Price (float, no formatting, tax-exclusive)
 	*/
 
-	function calculate_charges($seconds, $src, $dst, $local_prefix = NULL)
+	function calculate_charges($seconds, $src, $dst, $local_prefix = NULL, $ddi_array = array())
 	{
 		log_write("debug", "cdr_rate_table_rates", "Executing calculate_charges($seconds, $src, $dst, $local_prefix)");
 
@@ -901,6 +902,34 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 			$billed = 1;
 		}
+
+
+		if (in_array($dst, $ddi_array))
+		{
+			// customer has called one of their own DDI numbers
+			//
+			// NOTE: this excludes DDI numbers that the customer might have on other services, it only applies to DDIs in the currently
+			//	 loaded service.
+
+			switch ($GLOBALS["config"]["SERVICE_CDR_BILLSELF"])
+			{
+				case "free":
+					$rate_minute	= "0.00";
+				break;
+
+				case "local":
+					$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+				break;
+
+				case "regular":
+				default:
+					$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
+				break;
+			}
+
+			$billed = 1;
+		}
+
 
 		if (!$billed && is_array($local_prefix))
 		{
@@ -1692,7 +1721,7 @@ class service_usage_cdr extends service_usage
 					}
 					else
 					{
-						$charges = $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $data_cdr["src"] ]);
+						$charges = $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $data_cdr["src"] ], $this->data_ddi);
 
 						// update the charges in the records
 						$sql_obj			= New sql_query;
@@ -1778,7 +1807,7 @@ class service_usage_cdr extends service_usage
 					foreach ($obj_cdr_db_sql->data as $data_cdr)
 					{
 						// determine price
-						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $ddi ]);
+						$charges			= $obj_cdr_rate_table->calculate_charges($data_cdr["billsec"], $data_cdr["src"], $data_cdr["dst"], $this->data_local[ $ddi ], $this->data_ddi);
 
 						// create local usage record for record keeping purposes
 						$sql_obj			= New sql_query;

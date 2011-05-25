@@ -20,6 +20,7 @@ if (user_permissions_get("admin"))
 	*/
 
 	$data["SERVICE_CDR_LOCAL"]				= @security_form_input_predefined("any", "SERVICE_CDR_LOCAL", 1, "");
+	$data["SERVICE_CDR_BILLSELF"]				= @security_form_input_predefined("any", "SERVICE_CDR_BILLSELF", 1, "");
 	$data["SERVICE_PARTPERIOD_MODE"]			= @security_form_input_predefined("any", "SERVICE_PARTPERIOD_MODE", 1, "");
 	$data["SERVICE_MIGRATION_MODE"]				= @security_form_input_predefined("checkbox", "SERVICE_MIGRATION_MODE", 0, "");
 
@@ -282,7 +283,6 @@ if (user_permissions_get("admin"))
 		}
 
 	}
-
 
 
 	/*
