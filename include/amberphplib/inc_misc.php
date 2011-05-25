@@ -649,6 +649,10 @@ function time_format_humandate($date = NULL)
 		case "dd-mm-yyyy":
 			return date("d-m-Y", $timestamp);
 		break;
+
+		case "dd-Mmm-yyyy":
+			return date("d-M-Y", $timestamp);
+		break;
 		
 		case "yyyy-mm-dd":
 		default:

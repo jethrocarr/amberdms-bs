@@ -58,7 +58,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]				= "DATEFORMAT";
 		$structure["type"]				= "radio";
-		$structure["values"]				= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$structure["values"]				= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-Mmm-yyyy", "dd-mm-yyyy");
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 

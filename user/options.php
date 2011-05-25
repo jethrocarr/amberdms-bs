@@ -144,7 +144,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"]		= "option_dateformat";
 		$structure["type"]		= "radio";
-		$structure["values"]		= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-mm-yyyy");
+		$structure["values"]		= array("yyyy-mm-dd", "mm-dd-yyyy", "dd-Mmm-yyyy", "dd-mm-yyyy");
 		$structure["defaultvalue"]	= $options["dateformat"];
 		$this->obj_form->add_input($structure);
 			
