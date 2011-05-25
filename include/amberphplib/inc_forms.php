@@ -621,22 +621,37 @@ class form_input
 
 				// display
 				print "<input id=\"$fieldname\" name=\"$fieldname\" ";
-				
+
+				$css_field_class = array();
+
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
 				{
 					print "value=\"". htmlentities($this->structure[$fieldname]["defaultvalue"], ENT_QUOTES, "UTF-8") ."\" ";
 				}
  				elseif (isset($this->structure[$fieldname]["options"]["help"]))
  				{
- 					print "class=\"helpmessage\" ";
  					print "value=\"". $this->structure[$fieldname]["options"]["help"] ."\" ";
  					$helpmessagestatus = "true";
+					$css_field_class[]  = "helpmessage";
  				}
-			
+
 				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
 				{
-					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
+					$css_field_class[] = $this->structure[$fieldname]["options"]["css_field_class"];
 				}			
+ 				
+				if (!empty($css_field_class))
+				{
+					print "class=\"";
+
+					foreach ($css_field_class as $css)
+					{
+						print $css ." ";
+					}
+
+					print "\" ";
+				}
+
 
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
@@ -682,28 +697,42 @@ class form_input
 		
 				// display
 				print "<input name=\"$fieldname\" ";
+
+				$css_field_class = array();
+
 				if (isset($this->structure[$fieldname]["defaultvalue"]))
-				{	
-					print "value=\"". format_money($this->structure[$fieldname]["defaultvalue"], 1) ."\" ";
+				{
+					print "value=\"". htmlentities($this->structure[$fieldname]["defaultvalue"], ENT_QUOTES, "UTF-8") ."\" ";
 				}
  				elseif (isset($this->structure[$fieldname]["options"]["help"]))
  				{
- 					print "class=\"helpmessage\" ";
  					print "value=\"". $this->structure[$fieldname]["options"]["help"] ."\" ";
  					$helpmessagestatus = "true";
+					$css_field_class[]  = "helpmessage";
  				}
+
+				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
+				{
+					$css_field_class[] = $this->structure[$fieldname]["options"]["css_field_class"];
+				}			
+ 				
+				if (!empty($css_field_class))
+				{
+					print "class=\"";
+
+					foreach ($css_field_class as $css)
+					{
+						print $css ." ";
+					}
+
+					print "\" ";
+				}
  
 				if (isset($this->structure[$fieldname]["options"]["max_length"]))
 					print "maxlength=\"". $this->structure[$fieldname]["options"]["max_length"] ."\" ";
 					
 				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
-					
-				if (isset($this->structure[$fieldname]["options"]["css_field_class"]))	
-				{
-					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
-				}			
-					
 				
 				print "style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\">";
 
