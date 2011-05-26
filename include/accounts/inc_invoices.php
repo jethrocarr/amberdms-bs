@@ -1577,7 +1577,7 @@ class invoice
 		$mail_body	= $mail_mime->get();
 	 	$mail_headers	= $mail_mime->headers($mail_headers);
 
-		$mail		= & Mail::factory('mail');
+		$mail		= & Mail::factory('mail', "-f ". $GLOBALS["config"]["COMPANY_CONTACT_EMAIL"]);
 		$status 	= $mail->send($email_to, $mail_headers, $mail_body);
 
 		if (PEAR::isError($status))
