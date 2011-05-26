@@ -232,7 +232,8 @@ class template_engine
 				 	{
 				 		$line_tmp = '';
 				 		$match = $matches[1];
-				 		if(isset($current_level[$fieldname][($key-1)][$match]) && ($current_level_part[$match] != $current_level[$fieldname][($key-1)][$match]))
+				 		if ((!isset($current_level[$fieldname][($key-1)][$match]) && $current_level_part[$match])
+							|| ($current_level_part[$match] != $current_level[$fieldname][($key-1)][$match]))
 				 		{
 						 	$line_tmp = str_replace($matches[0], '', $line);
 				 		}
