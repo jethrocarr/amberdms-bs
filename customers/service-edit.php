@@ -472,16 +472,28 @@ class page_output
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_included_units";
-					$structure["type"]		= "text";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= " trunks included in service base fee.";
 					$this->obj_form->add_input($structure);
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_quantity";
 					$structure["type"]		= "input";
 					$structure["options"]["req"]	= "yes";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= " trunks assigned to customer (any more than included units will be charged at price per additional trunk).";
 					$this->obj_form->add_input($structure);
 
-					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity");
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_price_extra_units";
+					$structure["type"]		= "money";
+					$this->obj_form->add_input($structure);
+
+
+
+					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity", "phone_trunk_price_extra_units");
 
 				break;
 
@@ -599,6 +611,21 @@ class page_output
 //					$structure["defaultvalue"]	= "<p>This is a phone trunk service - with this service you are able to have multiple individual DDIs and DDI ranges. Note that it is important to define all the DDIs belonging to this customer, otherwise they may be able to make calls without being charged.<br><br>" .$html_string. "</p>";
 					$this->obj_form->add_input($structure);
 
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_included_units";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= " DDI numbers included in service plan fee";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_ddi_price_extra_units";
+					$structure["type"]		= "money";
+					$this->obj_form->add_input($structure);
+
+
+
 					// trunk options
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_info";
@@ -608,17 +635,28 @@ class page_output
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_included_units";
-					$structure["type"]		= "text";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= " trunks included in service base fee.";
 					$this->obj_form->add_input($structure);
 
 					$structure = NULL;
 					$structure["fieldname"]		= "phone_trunk_quantity";
 					$structure["type"]		= "input";
 					$structure["options"]["req"]	= "yes";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= " trunks assigned to customer (any more than included units will be charged at price per additional trunk).";
 					$this->obj_form->add_input($structure);
 
-					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info");
-					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity");
+					$structure = NULL;
+					$structure["fieldname"]		= "phone_trunk_price_extra_units";
+					$structure["type"]		= "money";
+					$this->obj_form->add_input($structure);
+
+
+					$this->obj_form->subforms["service_options_ddi"]	= array("phone_ddi_info", "phone_ddi_included_units", "phone_ddi_price_extra_units");
+					$this->obj_form->subforms["service_options_trunks"]	= array("phone_trunk_info", "phone_trunk_included_units", "phone_trunk_quantity", "phone_trunk_price_extra_units");
 
 				break;
 
