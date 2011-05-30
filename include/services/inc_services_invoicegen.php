@@ -716,6 +716,10 @@ function service_invoices_generate($customerid = NULL)
 					$obj_service->load_data_options();
 
 
+					// ratio is used to adjust prices for partial periods
+					$ratio = 1;
+
+
 					if ($obj_service->data["billing_mode_string"] == "monthend" || $obj_service->data["billing_mode_string"] == "monthadvance" || $obj_service->data["billing_mode_string"] == "monthtelco")
 					{
 						log_debug("services_invoicegen", "Invoice bills by month date");
@@ -772,12 +776,10 @@ function service_invoices_generate($customerid = NULL)
 								// calculate correct base fee
 								$obj_service->data["price"] = ($obj_service->data["price"] / $short_month_days_total) * $short_month_days_short;
 
-								// calculate number of included units - round up to nearest full unit
-								if ($obj_service->data["typeid_string"] != "licenses")
-								{	
-									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] / $short_month_days_total) * $short_month_days_short );
-								}
+								// calculate ratio
+								$ratio = ($short_month_days_short / $short_month_days_total);
 
+								log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
 							}
 							else
 							{
@@ -791,12 +793,12 @@ function service_invoices_generate($customerid = NULL)
 
 								// calculate correct base fee
 								$obj_service->data["price"] = ( ($obj_service->data["price"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["price"];
+								
+								// calculate ratio
+								$ratio = (($extra_month_days_extra + $extra_month_days_total) / $extra_month_days_total);
 
-								// calculate number of included units - round up to nearest full unit
-								if ($obj_service->data["typeid_string"] != "licenses")
-								{	
-									$obj_service->data["included_units"] = sprintf("%d", ( ($obj_service->data["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["included_units"] );
-								}
+								log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle extended period.");
+
 							}
 						}
 					}
@@ -948,6 +950,59 @@ function service_invoices_generate($customerid = NULL)
 
 							$period_usage_data["date_start"]		= $sql_obj->data[0]["date_start"];
 							$period_usage_data["date_end"]			= $sql_obj->data[0]["date_end"];
+
+
+
+							/*
+								TODO: This code is a replicant of the section further above for calculating partial
+								periods and should really be functionalised as part of service usage continual improvements
+							*/
+
+							// calculate usage abnormal period
+							if ($obj_service->data["billing_mode_string"] == "monthend" || $obj_service->data["billing_mode_string"] == "monthadvance" || $obj_service->data["billing_mode_string"] == "monthtelco")
+							{
+								log_debug("services_invoicegen", "Usage period service bills by month date");
+
+								if (time_calculate_daynum($period_usage_data["date_start"]) != "01")
+								{
+									// very first billing month
+									log_write("debug", "services_invoicegen", "First billing month for this usage period, adjusting pricing to suit days.");
+										
+									if ($GLOBALS["config"]["SERVICE_PARTPERIOD_MODE"] == "seporate")
+									{
+										log_write("debug", "services_invoicegen", "Adjusting for partial month period (SERVICE_PARTPERIOD_MODE == seporate)");
+
+										// work out the total number of days
+										$short_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_usage_data["date_start"]) );
+										$short_month_days_short	= $short_month_days_total - time_calculate_daynum($period_usage_data["date_start"]);
+
+										log_write("debug", "services_invoicegen", "Short initial billing period of $short_month_days_short days");
+
+										// calculate ratio
+										$ratio = ($short_month_days_short / $short_month_days_total);
+
+										log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
+									}
+									else
+									{
+										log_write("debug", "services_invoicegen", "Adjusting for extended month period (SERVICE_PARTPERIOD_MODE == merge");
+										
+										// work out the number of days extra
+										$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_usage_data["date_start"]) );
+										$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_usage_data["date_start"]);
+
+										log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
+
+										// calculate ratio
+										$ratio = (($extra_month_days_extra + $extra_month_days_total) / $extra_month_days_total);
+
+										log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle extended period.");
+									}
+								}
+
+							} // end of calculate usage abnormal period
+
+
 						}
 						else
 						{
@@ -1012,7 +1067,16 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["customid"]		= $obj_service->id;
 								$itemdata["discount"]		= 0;
 
-											
+								
+								/*
+									Adjust Included Units to handle partial or extended periods
+								*/
+
+								if ($ratio != "1")
+								{
+									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] * $ratio ));
+								}
+
 
 								/*
 									Fetch usage amount
@@ -1136,7 +1200,7 @@ function service_invoices_generate($customerid = NULL)
 
 
 									// set item attributes
-									$itemdata["price"]	= $obj_service->data["price_extraunits"];
+									$itemdata["price"]	= $obj_service->data["price_extraunits"] * $ratio;
 									$itemdata["quantity"]	= $licenses_excess;
 									$itemdata["units"]	= addslashes($obj_service->data["units"]);
 
@@ -1195,6 +1259,15 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["customid"]		= $obj_service->id;
 								$itemdata["discount"]		= 0;
 
+
+								/*
+									Adjust Included Units to handle partial or extended periods
+								*/
+
+								if ($ratio != "1")
+								{
+									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] * $ratio ));
+								}
 
 
 								/*
@@ -1304,6 +1377,17 @@ function service_invoices_generate($customerid = NULL)
 								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
 								$itemdata["customid"]		= $obj_service->id;
 								$itemdata["discount"]		= 0;
+
+
+
+								/*
+									Adjust Included Units to handle partial or extended periods
+								*/
+
+								if ($ratio != "1")
+								{
+									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] * $ratio ));
+								}
 
 
 
@@ -1441,7 +1525,8 @@ function service_invoices_generate($customerid = NULL)
 										$usage_excess			= $usage - $obj_service->data["phone_ddi_included_units"];
 
 										// set item attributes
-										$itemdata["price"]		= $obj_service->data["phone_ddi_price_extra_units"];
+										$itemdata["price"]		= $obj_service->data["phone_ddi_price_extra_units"] * $ratio;
+										log_write("debug", "DEBUG", "Ratio is $ratio, price is ". $itemdata["price"] ."");
 										$itemdata["quantity"]		= $usage_excess;
 										$itemdata["units"]		= "DDIs";
 										
@@ -1501,7 +1586,7 @@ function service_invoices_generate($customerid = NULL)
 										$usage_excess = $obj_service->data["phone_trunk_quantity"] - $obj_service->data["phone_trunk_included_units"];
 
 										// set item attributes
-										$itemdata["price"]		= $obj_service->data["phone_trunk_price_extra_units"];
+										$itemdata["price"]		= ($obj_service->data["phone_trunk_price_extra_units"] * $ratio);
 										$itemdata["quantity"]		= $usage_excess;
 										$itemdata["units"]		= "trunks";
 
