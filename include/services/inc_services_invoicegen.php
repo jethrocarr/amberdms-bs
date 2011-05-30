@@ -1444,13 +1444,21 @@ function service_invoices_generate($customerid = NULL)
 										$itemdata["price"]		= $obj_service->data["phone_ddi_price_extra_units"];
 										$itemdata["quantity"]		= $usage_excess;
 										$itemdata["units"]		= "DDIs";
-
-										$itemdata["description"]	= $obj_service->data["phone_ddi_included_units"] ."x DDI numbers included in service plan plus additional ". $usage_excess ."x numbers.";
+										
+										if ($obj_service->data["phone_ddi_included_units"])
+										{
+											$itemdata["description"]	= $obj_service->data["phone_ddi_included_units"] ."x DDI numbers included in service plan plus additional ". $usage_excess ."x numbers from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+										}
+										else
+										{
+											// no included units, we use an alternative string format
+											$itemdata["description"]	= $usage_excess ."x DDI numbers from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+										}
 									}
 									else
 									{	
 										// no charge for this item
-										$itemdata["description"]	= $obj_service->data["phone_ddi_included_units"] ."x DDI numbers included in service plan";
+										$itemdata["description"]	= $obj_service->data["phone_ddi_included_units"] ."x DDI numbers included in service plan from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
 									}
 
 
@@ -1497,12 +1505,21 @@ function service_invoices_generate($customerid = NULL)
 										$itemdata["quantity"]		= $usage_excess;
 										$itemdata["units"]		= "trunks";
 
-										$itemdata["description"]	= $obj_service->data["phone_trunk_included_units"] ."x trunks included in service plan plus additional ". $usage_excess ."x trunks.";
+
+										if ($obj_service->data["phone_trunk_included_units"])
+										{
+											$itemdata["description"]	= $obj_service->data["phone_trunk_included_units"] ."x trunks included in service plan plus additional ". $usage_excess ."x trunks from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+										}
+										else
+										{
+											// no included trunks, adjust string to suit.
+											$itemdata["description"]	= $usage_excess ."x trunks from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+										}
 									}
 									else
 									{	
 										// no charge for this item
-										$itemdata["description"]	= $obj_service->data["phone_trunk_included_units"] ."x trunks included in service plan";
+										$itemdata["description"]	= $obj_service->data["phone_trunk_included_units"] ."x trunks included in service plan from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
 									}
 
 
