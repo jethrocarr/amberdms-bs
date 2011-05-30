@@ -1466,7 +1466,7 @@ function service_invoices_generate($customerid = NULL)
 									2. Trunk Charges
 								*/
 
-								if ($obj_service->data["typeid_string"] == "phone_trunk")
+								if ($obj_service->data["typeid_string"] == "phone_trunk" || $obj_service->data["typeid_string"] == "phone_tollfree")
 								{
 									// fetch the number of trunks included in the plan, along with the number provided
 									// we can then see if there are any excess charges for these
