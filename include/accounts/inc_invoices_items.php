@@ -161,7 +161,7 @@ class invoice_list_items
 
 						$sql_obj		= New sql_query;
 					
-						if ($itemdata["type"] == "service_usage")
+						if ($this->obj_table_standard->data[$i]["type"] == "service_usage")
 						{
 							$sql_obj->string	= "SELECT service_groups.group_name as group_name FROM services LEFT JOIN service_groups ON service_groups.id = id_service_group_usage WHERE services.id='". $this->obj_table_standard->data[$i]["customid"] ."' LIMIT 1";
 						}
