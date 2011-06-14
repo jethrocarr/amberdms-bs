@@ -188,6 +188,11 @@ class page_output
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("rate_billgroup", "SELECT id, billgroup_name as label FROM cdr_rate_billgroups");
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["width"]		= "100";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"]		= "rate_price_sale";
 		$structure["type"]		= "money";
@@ -232,7 +237,7 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["service_details"]	= array("name_customer", "service_name", "service_description");
 		$this->obj_form->subforms["rate_table_details"]	= array("rate_table_name", "rate_table_description");
-		$this->obj_form->subforms["rate_table_items"]	= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost");
+		$this->obj_form->subforms["rate_table_items"]	= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost");
 		$this->obj_form->subforms["hidden"]		= array("id_customer", "id_service_customer", "id_rate_override");
 		$this->obj_form->subforms["submit"]		= array("submit");
 		
@@ -270,6 +275,7 @@ class page_output
 
 			$this->obj_form->structure["rate_prefix"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_prefix"];
 			$this->obj_form->structure["rate_description"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_description"];
+			$this->obj_form->structure["rate_billgroup"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_billgroup"];
 			$this->obj_form->structure["rate_price_sale"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_price_sale"];
 			$this->obj_form->structure["rate_price_cost"]["defaultvalue"]		= $this->obj_cdr_rate_table->data_rate["rate_price_cost"];
 		}

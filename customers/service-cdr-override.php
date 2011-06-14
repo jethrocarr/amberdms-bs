@@ -149,13 +149,14 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "rate_prefix", "");
 		$this->obj_table->add_column("standard", "rate_description", "");
+		$this->obj_table->add_column("standard", "rate_billgroup", "");
 		$this->obj_table->add_column("money", "rate_price_sale", "");
 		$this->obj_table->add_column("money", "rate_price_cost", "");
 		$this->obj_table->add_column("standard", "rate_override", "");
 
 
 		// defaults
-		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost", "rate_override");
+		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost", "rate_override");
 
 		// custom-load the service rate data
 		$this->obj_table->data_num_rows		= count(array_keys($this->obj_cdr_rate_table->data["rates"]));
@@ -169,6 +170,7 @@ class page_output
 
 			$this->obj_table->data[$i]["rate_prefix"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_prefix"];
 			$this->obj_table->data[$i]["rate_description"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_description"];
+			$this->obj_table->data[$i]["rate_billgroup"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_billgroup_string"];
 			$this->obj_table->data[$i]["rate_price_sale"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_price_sale"];
 			$this->obj_table->data[$i]["rate_price_cost"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_price_cost"];
 

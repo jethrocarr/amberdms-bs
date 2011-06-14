@@ -1628,42 +1628,48 @@ function service_invoices_generate($customerid = NULL)
 								$usage_obj->id_service_customer			= $period_usage_data["id_service_customer"];
 								$usage_obj->date_start				= $period_usage_data["date_start"];
 								$usage_obj->date_end				= $period_usage_data["date_end"];
+
+								$billgroup_obj					= New sql_query;
+								$billgroup_obj->string				= "SELECT id, billgroup_name FROM cdr_rate_billgroups";
+								$billgroup_obj->execute();
+								$billgroup_obj->fetch_array();
 								
 								if ($usage_obj->load_data_service())
 								{
 									$usage_obj->fetch_usage_calls();
-
-
-									foreach ($usage_obj->data_ddi as $ddi)
+	
+									foreach ($billgroup_obj->data as $data_billgroup)
 									{
-										// start service item
-										$invoice_item				= New invoice_items;
-									
-										$invoice_item->id_invoice		= $invoiceid;
+										foreach ($usage_obj->data_ddi as $ddi)
+										{
+											// start service item
+											$invoice_item				= New invoice_items;
 										
-										$invoice_item->type_invoice		= "ar";
-										$invoice_item->type_item		= "service_usage";
-									
-										$itemdata = array();
+											$invoice_item->id_invoice		= $invoiceid;
+											
+											$invoice_item->type_invoice		= "ar";
+											$invoice_item->type_item		= "service_usage";
+										
+											$itemdata = array();
 
-										$itemdata["chartid"]			= $obj_service->data["chartid"];
-										$itemdata["customid"]			= $obj_service->id;
+											$itemdata["chartid"]			= $obj_service->data["chartid"];
+											$itemdata["customid"]			= $obj_service->id;
 
-										// determine excess usage charges
-										$itemdata["discount"]			= 0;
-										$itemdata["price"]			= $usage_obj->data[ $ddi ]["charges"];
-										$itemdata["quantity"]			= "1";
-										$itemdata["units"]			= "";
-										$itemdata["description"]		= "Call charges for $ddi from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+											// determine excess usage charges
+											$itemdata["discount"]			= 0;
+											$itemdata["price"]			= $usage_obj->data[ $ddi ][ $data_billgroup["id"] ]["charges"];
+											$itemdata["quantity"]			= "1";
+											$itemdata["units"]			= "";
+											$itemdata["description"]		= $data_billgroup["billgroup_name"] ." call charges for $ddi from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+											$itemdata["cdr_billgroup"]		= $data_billgroup["id"];
 
+											// add trunk usage item
+											$invoice_item->prepare_data($itemdata);
+											$invoice_item->action_update();
 
-										// add trunk usage item
-										$invoice_item->prepare_data($itemdata);
-										$invoice_item->action_update();
-
-										unset($invoice_item);
+											unset($invoice_item);
+										}
 									}
-
 								}
 								
 								unset($usage_obj);

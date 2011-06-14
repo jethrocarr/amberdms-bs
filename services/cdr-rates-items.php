@@ -73,17 +73,19 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "rate_prefix", "");
 		$this->obj_table->add_column("standard", "rate_description", "");
+		$this->obj_table->add_column("standard", "rate_billgroup", "cdr_rate_billgroups.billgroup_name");
 		$this->obj_table->add_column("money", "rate_price_sale", "");
 		$this->obj_table->add_column("money", "rate_price_cost", "");
 
 		// defaults
-		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_price_sale", "rate_price_cost");
+		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost");
 		$this->obj_table->columns_order		= array("rate_prefix");
 		$this->obj_table->columns_order_options	= array("rate_prefix");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("cdr_rate_tables_values");
-		$this->obj_table->sql_obj->prepare_sql_addfield("id", "id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN cdr_rate_billgroups ON cdr_rate_billgroups.id = cdr_rate_tables_values.rate_billgroup");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "cdr_rate_tables_values.id");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("id_rate_table='". $this->obj_rate_table->id ."'");
 
 

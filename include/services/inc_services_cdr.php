@@ -499,10 +499,25 @@ class cdr_rate_table_rates extends cdr_rate_table
 	{
 		log_debug("cdr_rate_table", "Executing load_data_rate_all()");
 
+		// Fetch Billgroups
+		$sql_billgroup_obj		= New sql_query;
+		$sql_billgroup_obj->string	= "SELECT id, billgroup_name FROM cdr_rate_billgroups";
+		$sql_billgroup_obj->execute();
+		$sql_billgroup_obj->fetch_array();
+
+		$billgroup = array();
+
+		foreach ($sql_billgroup_obj->data as $data_row)
+		{
+			$billgroup[ $data_row["id"] ] = $data_row["billgroup_name"];
+		}
+
+		unset($sql_billgroup_obj);
+		
 
 		// fetch rates
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale, rate_price_cost FROM cdr_rate_tables_values WHERE id_rate_table='". $this->id ."'";
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_billgroup, rate_price_sale, rate_price_cost FROM cdr_rate_tables_values WHERE id_rate_table='". $this->id ."'";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -511,11 +526,13 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 			foreach ($sql_obj->data as $data_rates)
 			{
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate"]		= $data_rates["id"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]	= $data_rates["rate_description"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_cost"]	= $data_rates["rate_price_cost"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate"]			= $data_rates["id"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]		= $data_rates["rate_prefix"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]		= $data_rates["rate_description"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup"]		= $data_rates["rate_billgroup"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup_string"]	= $billgroup[ $data_rates["rate_billgroup"] ];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]		= $data_rates["rate_price_sale"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_cost"]		= $data_rates["rate_price_cost"];
 
 			}
 
@@ -545,7 +562,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 		// fetch rates
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale, rate_price_cost FROM cdr_rate_tables_values WHERE id_rate_table='". $this->id ."' AND id='". $this->id_rate ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_billgroup, rate_price_sale, rate_price_cost FROM cdr_rate_tables_values WHERE id_rate_table='". $this->id ."' AND id='". $this->id_rate ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -554,6 +571,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 			$this->data_rate["rate_prefix"]		= $sql_obj->data[0]["rate_prefix"];
 			$this->data_rate["rate_description"]	= $sql_obj->data[0]["rate_description"];
+			$this->data_rate["rate_billgroup"]	= $sql_obj->data[0]["rate_billgroup"];
 			$this->data_rate["rate_price_sale"]	= $sql_obj->data[0]["rate_price_sale"];
 			$this->data_rate["rate_price_cost"]	= $sql_obj->data[0]["rate_price_cost"];
 
@@ -641,6 +659,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 		$sql_obj->string	= "UPDATE `cdr_rate_tables_values` SET "
 						."rate_prefix='". $this->data_rate["rate_prefix"] ."', "
 						."rate_description='". $this->data_rate["rate_description"] ."', "
+						."rate_billgroup='". $this->data_rate["rate_billgroup"] ."', "
 						."rate_price_sale='". $this->data_rate["rate_price_sale"] ."', "
 						."rate_price_cost='". $this->data_rate["rate_price_cost"] ."' "
 						."WHERE id='". $this->id_rate ."' LIMIT 1";
@@ -783,8 +802,10 @@ class cdr_rate_table_rates extends cdr_rate_table
 		DDI array	Array of customer's DDIs (optional)
 
 		Returns
-		-1		Failure
-		#		Price (float, no formatting, tax-exclusive)
+		-1			Failure
+		array			Associative Array
+			['price']	# Price (float, no formatting, tax-exclusive)
+			['billgroup']	Bill Group
 	*/
 
 	function calculate_charges($seconds, $src, $dst, $local_prefix = NULL, $ddi_array = array())
@@ -899,6 +920,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 		{
 			// inner prefix calling, this is always going to be local
 			$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+			$billgroup	= "1"; // local
 
 			$billed = 1;
 		}
@@ -919,11 +941,13 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 				case "local":
 					$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+					$billgroup	= "1"; // local
 				break;
 
 				case "regular":
 				default:
 					$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
+					$billgroup	= $this->data["rates"][ $prefix_dst ]["rate_billgroup"];
 				break;
 			}
 
@@ -943,6 +967,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 					// the destination belongs to the local prefix option
 
 					$rate_minute	= $this->data["rates"]["LOCAL"]["rate_price_sale"];
+					$billgroup	= "1";
 
 					$billed = 1;
 				}
@@ -953,6 +978,7 @@ class cdr_rate_table_rates extends cdr_rate_table
 		{
 			// default: fall back to standard prefix matching and billing
 			$rate_minute	= $this->data["rates"][ $prefix_dst ]["rate_price_sale"];
+			$billgroup	= $this->data["rates"][ $prefix_dst ]["rate_billgroup"];
 		}
 
 
@@ -1003,9 +1029,13 @@ class cdr_rate_table_rates extends cdr_rate_table
 		}
 
 
-		log_write("debug", "cdr_rate_table_rates", "Call of $seconds seconds from $src to $dst cost $charges");
+		log_write("debug", "cdr_rate_table_rates", "Call of $seconds seconds from $src to $dst cost $charges for billgroup $billgroup");
 
-		return $charges;
+		$return_array			= array();
+		$return_array["price"]		= $charges;
+		$return_array["billgroup"]	= $billgroup;
+
+		return $return_array;
 	}
 
 
@@ -1237,6 +1267,26 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 
 		/*
+			Fetch Billgroups
+		*/
+
+		$sql_billgroup_obj		= New sql_query;
+		$sql_billgroup_obj->string	= "SELECT id, billgroup_name FROM cdr_rate_billgroups";
+		$sql_billgroup_obj->execute();
+		$sql_billgroup_obj->fetch_array();
+
+		$billgroup = array();
+
+		foreach ($sql_billgroup_obj->data as $data_row)
+		{
+			$billgroup[ $data_row["id"] ] = $data_row["billgroup_name"];
+		}
+
+		unset($sql_billgroup_obj);
+		
+
+
+		/*
 			If this is a customer override, we first need to load service-level overrides to ensure
 			that the customer gets overrides from both services and customers.
 		*/
@@ -1244,7 +1294,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 		{
 			// fetch rates
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='service' AND option_type_id='". $this->option_type_serviceid ."'";
+			$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_billgroup, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='service' AND option_type_id='". $this->option_type_serviceid ."'";
 			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
@@ -1253,11 +1303,13 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 				foreach ($sql_obj->data as $data_rates)
 				{
-					$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate_override"]	= $data_rates["id"];
-					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
-					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]	= $data_rates["rate_description"];
-					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
-					$this->data["rates"][ $data_rates["rate_prefix"] ]["option_type"]	= 'service';
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate_override"]		= $data_rates["id"];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]		= $data_rates["rate_prefix"];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]		= $data_rates["rate_description"];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup"]		= $data_rates["rate_billgroup"];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup_string"]	= $billgroup[ $data_rates["rate_billgroup"] ];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]		= $data_rates["rate_price_sale"];
+					$this->data["rates"][ $data_rates["rate_prefix"] ]["option_type"]		= 'service';
 				}
 			}
 		}
@@ -1265,7 +1317,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 		// fetch rates
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='". $this->option_type ."' AND option_type_id='". $this->option_type_id ."'";
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_billgroup, rate_price_sale FROM cdr_rate_tables_overrides WHERE option_type='". $this->option_type ."' AND option_type_id='". $this->option_type_id ."'";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -1274,11 +1326,13 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 			foreach ($sql_obj->data as $data_rates)
 			{
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate_override"]	= $data_rates["id"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]	= $data_rates["rate_prefix"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]	= $data_rates["rate_description"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]	= $data_rates["rate_price_sale"];
-				$this->data["rates"][ $data_rates["rate_prefix"] ]["option_type"]	= $this->option_type;
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["id_rate_override"]		= $data_rates["id"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_prefix"]		= $data_rates["rate_prefix"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_description"]		= $data_rates["rate_description"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup"]		= $data_rates["rate_billgroup"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_billgroup_string"]	= $billgroup[ $data_rates["rate_billgroup"] ];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["rate_price_sale"]		= $data_rates["rate_price_sale"];
+				$this->data["rates"][ $data_rates["rate_prefix"] ]["option_type"]		= $this->option_type;
 			}
 
 			return 1;
@@ -1307,7 +1361,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 		// fetch rates
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_price_sale FROM cdr_rate_tables_overrides WHERE id='". $this->id_rate_override ."' LIMIT 1";
+		$sql_obj->string	= "SELECT id, rate_prefix, rate_description, rate_billgroup, rate_price_sale FROM cdr_rate_tables_overrides WHERE id='". $this->id_rate_override ."' LIMIT 1";
 		$sql_obj->execute();
 
 		if ($sql_obj->num_rows())
@@ -1316,6 +1370,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 
 			$this->data_rate["rate_prefix"]		= $sql_obj->data[0]["rate_prefix"];
 			$this->data_rate["rate_description"]	= $sql_obj->data[0]["rate_description"];
+			$this->data_rate["rate_billgroup"]	= $sql_obj->data[0]["rate_billgroup"];
 			$this->data_rate["rate_price_sale"]	= $sql_obj->data[0]["rate_price_sale"];
 
 			return 1;
@@ -1402,6 +1457,7 @@ class cdr_rate_table_rates_override extends cdr_rate_table_rates
 		$sql_obj->string	= "UPDATE `cdr_rate_tables_overrides` SET "
 						."rate_prefix='". $this->data_rate["rate_prefix"] ."', "
 						."rate_description='". $this->data_rate["rate_description"] ."', "
+						."rate_billgroup='". $this->data_rate["rate_billgroup"] ."', "
 						."rate_price_sale='". $this->data_rate["rate_price_sale"] ."' "
 						."WHERE id='". $this->id_rate_override ."' LIMIT 1";
 		$sql_obj->execute();
@@ -1694,12 +1750,12 @@ class service_usage_cdr extends service_usage
 				log_write("debug", "service_usage_cdr", "Billing for tollfree service on $ddi");
 
 				// NOTE! for toll-free services, we reverse src and dst for reverse billing calculations
-				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as dst, usage2 as src, usage3 as billsec FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
+				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as dst, usage2 as src, usage3 as billsec, billgroup FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
 				$obj_cdr_sql->execute();
 			}
 			else
 			{
-				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as src, usage2 as dst, usage3 as billsec FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
+				$obj_cdr_sql->string = "SELECT id, date, price, usage1 as src, usage2 as dst, usage3 as billsec, billgroup FROM service_usage_records WHERE id_service_customer='". $this->id_service_customer ."' AND date >= '$date_start' AND date < '$date_end'";
 				$obj_cdr_sql->execute();
 			}
 
@@ -1717,7 +1773,9 @@ class service_usage_cdr extends service_usage
 					if ($data_cdr["price"] != "0.00")
 					{
 						// a price has already been set - make use of that
-						$charges = $data_cdr["price"];
+						$charges		= array();
+						$charges["price"]	= $data_cdr["price"];
+						$charges["billgroup"]	= $data_cdr["billgroup"];
 					}
 					else
 					{
@@ -1725,12 +1783,12 @@ class service_usage_cdr extends service_usage
 
 						// update the charges in the records
 						$sql_obj			= New sql_query;
-						$sql_obj->string		= "UPDATE service_usage_records SET price='$charges' WHERE id='". $data_cdr["id"] ."'";
+						$sql_obj->string		= "UPDATE service_usage_records SET price='". $charges["price"] ."', billgroup='". $charges['billgroup'] ."' WHERE id='". $data_cdr["id"] ."'";
 						$sql_obj->execute();
 					}
 
 					// add to structure - we use the SRC as the DDI
-					$this->data[ $data_cdr["src"] ]["charges"]	+= $charges;
+					$this->data[ $data_cdr["src"] ][ $charges["billgroup"] ]["charges"]	+= $charges["price"];
 
 					// TODO: this won't catch issues where the DDIs configured don't match the SRC DDI (although it should always!)
 				}
@@ -1795,9 +1853,9 @@ class service_usage_cdr extends service_usage
 					Calculate costs of calls
 				*/
 
-				if (!isset($this->data[ $ddi ]["charges"]))
+				if (!isset($this->data[ $ddi ][ $charges["billgroup"] ]["charges"]))
 				{
-					$this->data[ $ddi ]["charges"] = 0;
+					$this->data[ $ddi ][ $charges["billgroup"] ]["charges"] = 0;
 				}
 
 				if ($obj_cdr_db_sql->num_rows())
@@ -1811,11 +1869,11 @@ class service_usage_cdr extends service_usage
 
 						// create local usage record for record keeping purposes
 						$sql_obj			= New sql_query;
-						$sql_obj->string		= "INSERT INTO service_usage_records (id_service_customer, date, price, usage1, usage2, usage3) VALUES ('". $this->id_service_customer ."', '". $data_cdr["calldate"] ."', '". $charges ."', '". $data_cdr["src"] ."', '". $data_cdr["dst"] ."', '". $data_cdr["billsec"] ."')";
+						$sql_obj->string		= "INSERT INTO service_usage_records (id_service_customer, date, price, usage1, usage2, usage3, billgroup) VALUES ('". $this->id_service_customer ."', '". $data_cdr["calldate"] ."', '". $charges["price"] ."', '". $data_cdr["src"] ."', '". $data_cdr["dst"] ."', '". $data_cdr["billsec"] ."', '". $charges["billgroup"] ."')";
 						$sql_obj->execute();
 
 						// add to structure
-						$this->data[ $ddi ]["charges"]	+= $charges;
+						$this->data[ $ddi ][ $charges["billgroup"] ]["charges"]	+= $charges["price"];
 					}
 				}
 

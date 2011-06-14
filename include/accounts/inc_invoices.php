@@ -1104,17 +1104,31 @@ class invoice
 					$itemdata["amount"] 	= $itemdata["price"] * $itemdata["quantity"];
 
 
+					/*
+						Fetch CDR group if any
+					*/
+
+					$itemdata["CDR_BILLGROUP"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='CDR_BILLGROUP'");
+
 
 					/*
 						Set the service group
 
-						This is used for layout and titling purposes on the invoice
+						This is used for layout and titling purposes on the invoice - there are several options, we need to fetch the service group depending
+						on whether the service item is a plan or usage item and specific service types might have other group conditions, eg CDR_BILLGROUP.
 					*/
 					$sql_obj			= New sql_query;
 
 					if ($itemdata["type"] == "service_usage")
 					{
-						$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group_usage WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
+						if ($itemdata["CDR_BILLGROUP"])
+						{
+							$sql_obj->string	= "SELECT CONCAT_WS(' ', billgroup_name, 'Call Charges') as group_name FROM cdr_rate_billgroups WHERE id='". $itemdata["CDR_BILLGROUP"] ."' LIMIT 1";
+						}
+						else
+						{
+							$sql_obj->string	= "SELECT service_groups.group_name FROM services LEFT JOIN service_groups ON service_groups.id = services.id_service_group_usage WHERE services.id = '". $itemdata["customid"] ."' LIMIT 1";
+						}
 					}
 					else
 					{
@@ -2106,6 +2120,9 @@ class invoice_items
 				$this->data["customid"]		= $data["customid"];
 				$this->data["description"]	= $data["description"];
 				$this->data["discount"]		= $data["discount"];
+				
+				// service specific
+				$this->data["cdr_billgroup"]	= $data["cdr_billgroup"];
 
 				// calculate the total amount
 				$this->data["amount"]		= $data["price"] * $data["quantity"];
@@ -2398,6 +2415,12 @@ class invoice_items
 			$sql_obj->execute();
 		}
 
+
+		if (!empty($this->data["cdr_billgroup"]))
+		{
+			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'CDR_BILLGROUP', '". $this->data["cdr_billgroup"] ."')";
+			$sql_obj->execute();
+		}
 
 		/*
 			Update Journal
