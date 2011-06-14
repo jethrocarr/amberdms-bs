@@ -166,32 +166,38 @@ if (user_permissions_get("services_write"))
 					case "Mobile":
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_mobile"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_mobile"];
+						$import_array_raw[$i]["billgroup"]		= "3"; // Mobile
 					break;
 
 					case "TollFree":
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_tollfree"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_tollfree"];
+						$import_array_raw[$i]["billgroup"]		= "2"; // National
 					break;
 
 					case "Special Services":
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_special"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_special"];
+						$import_array_raw[$i]["billgroup"]		= "2"; // National
 					break;
 
 					case "National Directory":
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_directory_national"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_directory_national"];
+						$import_array_raw[$i]["billgroup"]		= "2"; // National
 					break;
 
 					case "International Directory":
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_directory_international"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_directory_international"];
+						$import_array_raw[$i]["billgroup"]		= "4"; // International
 					break;
 
 					case "National":
 					default:
 						$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_national"];
 						$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_national"];
+						$import_array_raw[$i]["billgroup"]		= "2"; // National
 					break;
 				}
 			}
@@ -238,6 +244,7 @@ if (user_permissions_get("services_write"))
 				// pricing
 				$import_row["nad_price_cost"] = $import_array_raw[$i]["nad_price_cost"];
 				$import_row["nad_price_sale"] = $import_array_raw[$i]["nad_price_sale"];
+				$import_row["rate_billgroup"] = $import_array_raw[$i]["billgroup"];
 
 
 				$import_array[] = $import_row;
@@ -291,12 +298,14 @@ if (user_permissions_get("services_write"))
 										id_rate_table,
 										rate_prefix,
 										rate_description,
+										rate_billgroup,
 										rate_price_sale,
 										rate_price_cost)
 										VALUES (
 										'". $obj_rate_table->id ."',
 										'". $import_row["col_prefix"] ."',
 										'". $import_row["col_destination"] ."',
+										'". $import_row["rate_billgroup"] ."',
 										'". $import_row["nad_price_sale"] ."',
 										'". $import_row["nad_price_cost"] ."')";
 			$sql_obj->execute();

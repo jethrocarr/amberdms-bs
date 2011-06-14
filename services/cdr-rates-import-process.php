@@ -240,6 +240,20 @@ if (user_permissions_get("services_write"))
 											$data_new[6]	= $data[5];
 											$data_new[7]	= $data[6];
 
+											// special exceptions
+											if ($data_new[0] == "01" && $data_new[1] == "72")
+											{											
+												$data_new[4]	= "National Directory";
+												$data_new[5]	= "National Directory";
+											}
+
+											if ($data_new[0] == "01" && $data_new[1] == "8")
+											{											
+												$data_new[4]	= "International Directory";
+												$data_new[5]	= "International Directory";
+											}
+
+
 											$rate_table[] = $data_new;
 										}
 
@@ -248,10 +262,13 @@ if (user_permissions_get("services_write"))
 									break;
 
 									case "Value_Added_Service_Codes_08XY.csv":
+									case "Service_Provider_Prefixes_05XY.csv":
 										/*
 											These are special handoff codes from telecommunications providers - note that
 											0800 is used as tollfree, but the 0800.... prefixes are not defined in this file,
 											but in the seporate National_Toll_Free.csv file.
+
+											0508 is a special tollfree prefix as well assigned to Telstraclear Only.
 
 											Import Structure:
 
@@ -274,6 +291,20 @@ if (user_permissions_get("services_write"))
 											$data_new[6]	= $data[4];
 											$data_new[7]	= $data[5];
 
+											// special exceptions
+											if ($data_new[0] == "08" && $data_new[1] == "00")
+											{											
+												$data_new[4]	= "TollFree";
+												$data_new[5]	= "TollFree";
+											}
+
+											if ($data_new[0] == "05" && $data_new[1] == "08")
+											{
+												$data_new[4]	= "TollFree";
+												$data_new[5]	= "TollFree";
+											}
+
+
 											$rate_table[] = $data_new;
 										}
 
@@ -282,12 +313,8 @@ if (user_permissions_get("services_write"))
 									break;
 
 									case "National_Toll_Free.csv":
-									case "Service_Provider_Prefixes_05XY.csv":
 										/*
-											TollFree/0800/0508 numbers.
-
-											Technically tihe Service_Provider_Prefixes_05XY.csv  file is not tollfree, but is
-											how Telstraclear handles 0508 numbers.
+											TollFree 0800 Numbers
 
 											Import Structure:
 
