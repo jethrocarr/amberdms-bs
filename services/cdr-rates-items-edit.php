@@ -29,6 +29,16 @@ class page_output
 		$this->obj_rate_table->id	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 		$this->obj_rate_table->id_rate	= @security_script_input('/^[0-9]*$/', $_GET["id_rate"]);
 
+		if (!$this->obj_rate_table->id_rate)
+		{
+			// check for prefix
+			$prefix = @security_script_input('/^[0-9]*$/', $_GET["prefix"]);
+
+			if (!empty($prefix))
+			{
+				$this->obj_rate_table->id_rate = sql_get_singlevalue("SELECT id as value FROM cdr_rate_tables_values WHERE id_rate_table='". $this->obj_rate_table->id ."' AND rate_prefix='". $prefix ."' LIMIT 1");
+			}
+		}
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;

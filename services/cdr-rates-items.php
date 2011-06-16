@@ -19,10 +19,16 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_table;
 
+	var $mode;
 
 
 	function page_output()
 	{
+		// includes
+		$this->requires["javascript"][]	= "include/javascript/services.js";
+
+
+		// load rate table
 		$this->obj_rate_table	= New cdr_rate_table;
 
 
@@ -40,6 +46,36 @@ class page_output
 			$this->obj_menu_nav->add_item("Import Rates", "page=services/cdr-rates-import.php&id=". $this->obj_rate_table->id ."");
 			$this->obj_menu_nav->add_item("Delete Rate Table", "page=services/cdr-rates-delete.php&id=". $this->obj_rate_table->id ."");
 		}
+
+
+		// fetch the operational mode
+		if (isset($_GET["table_display_options"]))
+		{
+			if ($_GET["filter_search_summarise"] == "on")
+			{
+				$this->mode = "group";
+			}
+			else
+			{
+				$this->mode = "full";
+			}
+		}
+		elseif (isset($_SESSION["form"]["cdr_rate_table_items"]["filters"]["filter_search_summarise"]))
+		{
+			if (empty($_SESSION["form"]["cdr_rate_table_items"]["filters"]["filter_search_summarise"]))
+			{
+				$this->mode = "full";
+			}
+			else
+			{
+				$this->mode = "group";
+			}
+		}
+		else
+		{
+			$this->mode = "group";
+		}
+	
 	}
 
 
@@ -71,7 +107,15 @@ class page_output
 
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "rate_prefix", "");
+		if ($this->mode == "group")
+		{
+			$this->obj_table->add_column("standard", "rate_prefix", "GROUP_CONCAT(' ', rate_prefix)");
+		}
+		else
+		{
+			$this->obj_table->add_column("standard", "rate_prefix", "");
+		}
+
 		$this->obj_table->add_column("standard", "rate_description", "");
 		$this->obj_table->add_column("standard", "rate_billgroup", "cdr_rate_billgroups.billgroup_name");
 		$this->obj_table->add_column("money", "rate_price_sale", "");
@@ -80,13 +124,16 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost");
 		$this->obj_table->columns_order		= array("rate_prefix");
-		$this->obj_table->columns_order_options	= array("rate_prefix");
+		$this->obj_table->columns_order_options	= array("rate_prefix", "rate_description", "rate_billgroup");
+		$this->obj_table->limit_rows		= "1000";
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("cdr_rate_tables_values");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN cdr_rate_billgroups ON cdr_rate_billgroups.id = cdr_rate_tables_values.rate_billgroup");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "cdr_rate_tables_values.id");
+
 		$this->obj_table->sql_obj->prepare_sql_addwhere("id_rate_table='". $this->obj_rate_table->id ."'");
+		$this->obj_table->sql_obj->prepare_sql_addgroupby("rate_description, rate_billgroup, rate_price_sale, rate_price_cost");
 
 
 		// acceptable filter options
@@ -100,11 +147,18 @@ class page_output
 		$structure["sql"]	= "rate_description LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
 
+		$structure["fieldname"] = "search_summarise";
+		$structure["type"]	= "checkbox";
+		$structure["sql"]	= "";
+		$structure["defaultvalue"] = "on";
+		$this->obj_table->add_filter($structure);
+
 		$this->obj_table->add_fixed_option("id", $this->obj_rate_table->id);
 
 
 		// load options
 		$this->obj_table->load_options_form();
+
 
 		// fetch all the service information
 		$this->obj_table->generate_sql();
@@ -144,15 +198,26 @@ class page_output
 			// details link
 			if (user_permissions_get("services_write"))
 			{
+				if ($this->mode == "group")
+				{
+					$structure = NULL;
+					$structure["id"]["value"]	= $this->obj_rate_table->id;
+					$structure["id_rate"]["column"] = "id";
+					$structure["class"]		= "cdr_expand";
+					$this->obj_table->add_link("tbl_lnk_item_expand", "services/cdr-rates-items.php", $structure);
+				}
+					
 				$structure = NULL;
 				$structure["id"]["value"]	= $this->obj_rate_table->id;
 				$structure["id_rate"]["column"]	= "id";
+				$structure["class"]		= "cdr_edit";
 				$this->obj_table->add_link("tbl_lnk_item_edit", "services/cdr-rates-items-edit.php", $structure);
 
 				$structure = NULL;
 				$structure["id"]["value"]	= $this->obj_rate_table->id;
 				$structure["id_rate"]["column"]	= "id";
 				$structure["full_link"]		= "yes";
+				$structure["class"]		= "cdr_delete";
 				$this->obj_table->add_link("tbl_lnk_item_delete", "services/cdr-rates-items-delete-process.php", $structure);
 			}
 

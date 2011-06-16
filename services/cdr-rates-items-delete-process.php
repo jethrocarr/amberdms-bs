@@ -25,6 +25,16 @@ if (user_permissions_get('services_write'))
 	$obj_rate_table->id			= @security_script_input_predefined("int", $_GET["id"]);
 	$obj_rate_table->id_rate		= @security_script_input_predefined("int", $_GET["id_rate"]);
 
+	// check for prefix
+	if (!$obj_rate_table->id_rate)
+	{
+		$prefix = @security_script_input('/^[0-9]*$/', $_GET["prefix"]);
+
+		if (!empty($prefix))
+		{
+			$obj_rate_table->id_rate = sql_get_singlevalue("SELECT id as value FROM cdr_rate_tables_values WHERE id_rate_table='". $obj_rate_table->id ."' AND rate_prefix='". $prefix ."' LIMIT 1");
+		}
+	}
 
 
 	/*
