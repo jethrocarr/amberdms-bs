@@ -147,6 +147,11 @@ class page_output
 		$structure["sql"]	= "rate_description LIKE '%value%'";
 		$this->obj_table->add_filter($structure);
 
+		$structure				= form_helper_prepare_dropdownfromdb("billgroup", "SELECT id, billgroup_name as label FROM cdr_rate_billgroups");
+		$structure["sql"]			= "rate_billgroup='value'";
+		$structure["options"]["search_filter"]	= NULL;
+		$this->obj_table->add_filter($structure);
+
 		$structure["fieldname"] = "search_summarise";
 		$structure["type"]	= "checkbox";
 		$structure["sql"]	= "";

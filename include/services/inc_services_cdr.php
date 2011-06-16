@@ -194,10 +194,10 @@ class cdr_rate_table
 			Create DEFAULT & LOCAL rate items.
 		*/
 
-		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix) VALUES ('". $this->id ."', 'DEFAULT')";
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix, rate_billgroup) VALUES ('". $this->id ."', 'DEFAULT', '1')";
 		$sql_obj->execute();
 
-		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix) VALUES ('". $this->id ."', 'LOCAL')";
+		$sql_obj->string	= "INSERT INTO `cdr_rate_tables_values` (id_rate_table, rate_prefix, rate_billgroup) VALUES ('". $this->id ."', 'LOCAL', '1')";
 		$sql_obj->execute();
 
 

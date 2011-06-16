@@ -154,13 +154,75 @@ class page_output
 		// defaults
 		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost", "rate_override");
 
-		// custom-load the service rate data
-		$this->obj_table->data_num_rows		= count(array_keys($this->obj_cdr_rate_table->data["rates"]));
 
+		// acceptable filter options
+		$structure["fieldname"] = "searchbox_prefix";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "rate_prefix LIKE 'value%'";
+		$this->obj_table->add_filter($structure);
+	
+		$structure["fieldname"] = "searchbox_desc";
+		$structure["type"]	= "input";
+		$structure["sql"]	= "rate_description LIKE '%value%'";
+		$this->obj_table->add_filter($structure);
+
+		$structure				= form_helper_prepare_dropdownfromdb("billgroup", "SELECT id, billgroup_name as label FROM cdr_rate_billgroups");
+		$structure["sql"]			= "";
+		$structure["options"]["search_filter"]	= NULL;
+		$structure["defaultvalue"]		= 2; // national only default
+		$this->obj_table->add_filter($structure);
+
+		$this->obj_table->add_fixed_option("id", $this->id);
+
+
+		// load options
+		$this->obj_table->load_options_form();
+
+		if (!isset($_SESSION["form"]["service_cdr_override"]["filters"]["filter_billgroup"]))
+		{
+			$_SESSION["form"]["service_cdr_override"]["filters"]["filter_billgroup"] = 2; // national only default
+		}
+
+
+		// custom-load the service rate data
 
 		$i = 0;
 		foreach (array_keys($this->obj_cdr_rate_table->data["rates"]) as $rate_prefix)
 		{
+			/*
+				Apply Filters
+			*/
+			if (!empty($_SESSION["form"]["service_cdr_override"]["filters"]["filter_billgroup"]))
+			{
+				if ($this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_billgroup"] != $_SESSION["form"]["service_cdr_override"]["filters"]["filter_billgroup"])
+				{
+					continue;
+				}
+			}
+
+			if (!empty($_SESSION["form"]["service_cdr_override"]["filters"]["filter_searchbox_prefix"]))
+			{
+				if (!preg_match("/". $_SESSION["form"]["service_cdr_override"]["filters"]["filter_searchbox_prefix"] ."/", $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_prefix"]))
+				{
+					continue;
+				}
+			}
+
+			if (!empty($_SESSION["form"]["service_cdr_override"]["filters"]["filter_searchbox_desc"]))
+			{
+				if (!preg_match("/". $_SESSION["form"]["service_cdr_override"]["filters"]["filter_searchbox_desc"] ."/i", $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["rate_description"]))
+				{
+					continue;
+				}
+			}
+
+
+
+
+			/*
+				Add item to table
+			*/
+
 			$this->obj_table->data[$i]["id_rate"]		= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["id_rate"];
 			$this->obj_table->data[$i]["id_rate_override"]	= $this->obj_cdr_rate_table->data["rates"][ $rate_prefix ]["id_rate_override"];
 
@@ -177,6 +239,9 @@ class page_output
 
 			$i++;
 		}
+		
+		$this->obj_table->data_num_rows		= $i;
+
 	}
 
 
@@ -224,6 +289,7 @@ class page_output
 		}
 
 		// display the table
+		$this->obj_table->render_options_form();
 		$this->obj_table->render_table_html();
 
 
