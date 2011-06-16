@@ -49,6 +49,14 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 		
+		$structure = NULL;
+		$structure["fieldname"]				= "TABLE_LIMIT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["label"]			= " ". lang_trans("help_table_limit");
+		$this->obj_form->add_input($structure);
+	
+
 		// time options
 		$structure = form_helper_prepare_timezonedropdown("TIMEZONE_DEFAULT");
 		$structure["options"]["no_translate_fieldname"]	= "yes";
@@ -108,7 +116,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_language"]		= array("LANGUAGE_DEFAULT");
-		$this->obj_form->subforms["config_appearance"]		= array("THEME_DEFAULT");
+		$this->obj_form->subforms["config_appearance"]		= array("THEME_DEFAULT", "TABLE_LIMIT");
 		$this->obj_form->subforms["config_date"]		= array("DATEFORMAT", "TIMEZONE_DEFAULT");
 		$this->obj_form->subforms["config_currency"]		= array("CURRENCY_DEFAULT_NAME", "CURRENCY_DEFAULT_SYMBOL", "CURRENCY_DEFAULT_SYMBOL_POSITION", "CURRENCY_DEFAULT_THOUSANDS_SEPARATOR", "CURRENCY_DEFAULT_DECIMAL_SEPARATOR");
 		$this->obj_form->subforms["submit"]			= array("submit");

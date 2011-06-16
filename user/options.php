@@ -171,6 +171,17 @@ class page_output
 
 		$this->obj_form->subforms["user_options"][]	= "option_shrink_tableoptions";
 
+		$structure = NULL;
+		$structure["fieldname"]		= "option_table_limit";
+		$structure["type"]		= "input";
+		$structure["defaultvalue"]	= $options["table_limit"];
+		$structure["options"]["label"]	= " ". lang_trans("help_table_limit");
+		$structure["options"]["width"]	= "100";
+		$this->obj_form->add_input($structure);
+
+		$this->obj_form->subforms["user_options"][]	= "option_table_limit";
+
+
 
 		// default employee
 		$structure = form_helper_prepare_dropdownfromdb("option_default_employeeid", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");

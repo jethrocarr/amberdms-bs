@@ -29,6 +29,7 @@ if (user_online())
 	$data["option_dateformat"]		= @security_form_input_predefined("any", "option_dateformat", 1, "");
 	$data["option_timezone"]		= @security_form_input_predefined("any", "option_timezone", 1, "");
 	$data["option_shrink_tableoptions"]	= @security_form_input_predefined("any", "option_shrink_tableoptions", 0, "");
+	$data["option_table_limit"]		= @security_form_input_predefined("any", "option_table_limit", 0, "");
 	$data["option_default_employeeid"]	= @security_form_input_predefined("any", "option_default_employeeid", 0, "");
 	$data["option_theme"]			= @security_form_input_predefined("any", "option_theme", 0, "");
 	$data["option_debug"]			= @security_form_input_predefined("any", "option_debug", 0, "");
@@ -121,6 +122,9 @@ if (user_online())
 
 		// table options
 		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'shrink_tableoptions', '". $data["option_shrink_tableoptions"] ."')";
+		$sql_obj->execute();
+
+		$sql_obj->string	= "INSERT INTO users_options (userid, name, value) VALUES ($id, 'table_limit', '". $data["option_table_limit"] ."')";
 		$sql_obj->execute();
 
 		// defaults

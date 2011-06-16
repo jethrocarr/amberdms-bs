@@ -20,6 +20,8 @@ if (user_permissions_get("admin"))
 	*/
 
 	$data["THEME_DEFAULT"]				= @security_form_input_predefined("any", "THEME_DEFAULT", 1, "");
+	$data["TABLE_LIMIT"]				= @security_form_input_predefined("int", "TABLE_LIMIT", 1, "");
+
 	$data["LANGUAGE_DEFAULT"]			= @security_form_input_predefined("any", "LANGUAGE_DEFAULT", 1, "");
 
 	$data["DATEFORMAT"]				= @security_form_input_predefined("any", "DATEFORMAT", 1, "");
