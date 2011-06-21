@@ -2172,6 +2172,20 @@ class invoice_items
 			break;
 
 
+			case "credit":
+				/*
+					CREDIT ITEMS
+				*/
+
+				// very simple, just copy the data across
+				foreach (array_keys($data) as $i)
+				{
+					$this->data[ $i ] = $data[ $i ];
+				}
+
+			break;
+		
+
 			default:
 				log_write("error", "inc_invoice", "Unknown item type provided.");
 				return 0;
@@ -2330,7 +2344,7 @@ class invoice_items
 
 
 		// create options for standard transactions
-		if ($this->type_item == "standard")
+		if ($this->type_item == "standard" || $this->type_item == "credit")
 		{
 			// fetch list of tax IDs
 			$sql_tax_obj		= New sql_query;
@@ -2619,6 +2633,33 @@ class invoice_items
 							}
 						}
 					break;
+
+					case "credit":
+						/*
+							HANDLE TAXES FOR CREDIT ITEMS
+
+							All taxes for credit items are automatically generated, so we need to get the list of taxes
+							selected for the item from the account_items_options table and then add them to the structure
+						*/
+
+						// fetch the taxes for the selected item
+						$sql_item_tax_obj		= New sql_query;
+						$sql_item_tax_obj->string	= "SELECT option_value as taxid FROM account_items_options WHERE itemid='". $data["id"] ."'";
+						$sql_item_tax_obj->execute();
+
+						if ($sql_item_tax_obj->num_rows())
+						{
+							$sql_item_tax_obj->fetch_array();
+
+							foreach ($sql_item_tax_obj->data as $data_item_tax)
+							{
+								// automatic
+								// note: no need to multiple by quantity, since the item amount is already price * quantity
+								$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+							}
+						}
+					break;
+
 				}
 
 			} // end of loop through items
@@ -2632,7 +2673,7 @@ class invoice_items
 		*/
 		$enabled_taxes = NULL;
 
-		if ($this->type_invoice == "ap")
+		if ($this->type_invoice == "ap" || $this->type_invoice == "ap_credit")
 		{
 			$vendorid		= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->id_invoice ."'");
 
@@ -2839,7 +2880,7 @@ class invoice_items
 		
 		$sql_obj = New sql_query;
 
-		if ($this->type_invoice == "quotes")
+		if ($this->type_invoice == "quotes" || $this->type_invoice == "ar_credit" || $this->type_invoice == "ar_credit")
 		{
 			$sql_obj->string = "UPDATE `account_". $this->type_invoice ."` SET "
 						."amount='". $amount ."', "
@@ -2862,6 +2903,22 @@ class invoice_items
 		{
 			log_debug("invoice_items", "A fatal SQL error occured whilst attempting to update invoice totals");
 			return 0;
+		}
+
+
+		/*
+			Update the credit (if any)
+		*/
+
+		if ($this->type_invoice == "ar_credit" || $this->type_invoice == "ap_credit")
+		{
+			$credit		= New credit;
+			$credit->id	= $this->id_invoice;
+			$credit->type	= $this->type_invoice;
+
+			$credit->load_data();
+
+			$credit->action_update_balance();
 		}
 
 
@@ -2949,28 +3006,52 @@ class invoice_items
 				}
 			
 				// create ledger entry for this account
-				if ($this->type_invoice == "ap")
+				switch ($this->type_invoice)
 				{
-					ledger_trans_add("debit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
-				}
-				else
-				{
-					ledger_trans_add("credit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
+					case "ar_credit":
+						ledger_trans_add("debit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
+					break;
+					
+					case "ap_credit":
+						ledger_trans_add("credit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
+					break;
+
+					case "ap":
+						ledger_trans_add("debit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
+					break;
+
+					case "ar":
+					default:
+						ledger_trans_add("credit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
+					break;
 				}
 
 				// add up the total for the AR entry.
 				$amount += $item_data["amount"];
 			}
 
-			if ($this->type_invoice == "ap")
+			switch ($this->type_invoice)
 			{
-				// create credit from AP account
-				ledger_trans_add("credit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
-			}
-			else
-			{
-				// create debit to AR account
-				ledger_trans_add("debit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+				case "ap":
+					// create credit from AP account
+					ledger_trans_add("credit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+				break;
+
+				case "ap_credit":
+					// create debit to AP account
+					ledger_trans_add("debit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+				break;
+
+				case "ar_credit":
+					// create credit from AR account
+					ledger_trans_add("credit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+				break;
+
+				case "ar":
+				default:
+					// create debit to AR account
+					ledger_trans_add("debit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
+				break;
 			}
 		}
 

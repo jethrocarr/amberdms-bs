@@ -109,6 +109,10 @@ if (user_permissions_get("admin"))
 			case 'invoice': 
 				$config_key = 'TEMPLATE_INVOICE_EMAIL';
 			break; 
+
+			case 'credit':
+				$config_key = 'TEMPLATE_CREDIT_EMAIL';
+			break;
 			
 			case 'reminder':
 				$config_key = 'TEMPLATE_INVOICE_REMINDER_EMAIL';

@@ -49,6 +49,16 @@ class page_output
 		);
 		unset($obj_sql);
 		
+		$obj_sql = New sql_query;
+		$obj_sql->string	= "SELECT id, active, template_file, template_name, template_description FROM templates WHERE template_type IN('ar_credit_tex', 'ar_credit_htmltopdf') ORDER BY template_name";
+		$obj_sql->execute();
+		$obj_sql->fetch_array();
+		$this->obj_sql_invoice_data['ar_credit'] = array(
+			'name' => "Credit Notes",
+			'templates' => $obj_sql->data
+		);
+		unset($obj_sql);
+		
 		
 		$obj_sql = New sql_query;
 		$obj_sql->string	= "SELECT id, active, template_file, template_name, template_description FROM templates WHERE template_type IN('quotes_invoice_tex', 'quotes_invoice_htmltopdf') ORDER BY template_name";
@@ -157,7 +167,53 @@ class page_output
 		$structure["defaultvalue"]	= 'quote';
 		$this->email_template_array['quote_email']['form']->add_input($structure);	
 		
+	
+
+		/*
+			Define credit note email template
+		*/
 		
+		$email_template	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_CREDIT_EMAIL') LIMIT 1");
+		
+		
+		$this->email_template_array['credit_email']['name'] = "Credit Note Email";
+		$this->email_template_array['credit_email']['description'] = $email_template;
+		$this->email_template_array['credit_email']['image'] = "include/admin/images/template_credit_email.png";
+		
+		$this->email_template_array['credit_email']['form'] = New form_input;
+		$this->email_template_array['credit_email']['form']->formname = "credit_email_template";
+		$this->email_template_array['credit_email']['form']->language = $_SESSION["user"]["lang"];
+
+		$this->email_template_array['credit_email']['form']->action = "admin/templates-process.php";
+		$this->email_template_array['credit_email']['form']->method = "post";
+		
+		// message
+		$structure = NULL;
+		$structure["fieldname"] 	= "email_message";
+		$structure["type"]		= "textarea";
+		$structure["defaultvalue"]	= $email_template;
+		$structure["options"]["width"]	= "600";
+		$structure["options"]["height"]	= "100";
+		$this->email_template_array['credit_email']['form']->add_input($structure);
+		
+		// action type
+		$structure = NULL;
+		$structure["fieldname"]		= "action";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'email_template';
+		$this->email_template_array['credit_email']['form']->add_input($structure);	
+		
+		// template type
+		$structure = NULL;
+		$structure["fieldname"]		= "template_type";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= 'credit';
+		$this->email_template_array['credit_email']['form']->add_input($structure);	
+		
+		
+
+
+
 		/*
 			Define reminder email template form details
 		*/

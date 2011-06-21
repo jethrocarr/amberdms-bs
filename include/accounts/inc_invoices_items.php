@@ -206,11 +206,39 @@ class invoice_list_items
 					
 						$this->obj_table_standard->data[$i]["qnty"] = "";
 					break;
+
+					case "credit":
+						/*
+							Adjust Fields
+						*/
+
+						$this->obj_table_standard->data[$i]["item_info"]	= "CREDIT";
+						$this->obj_table_standard->data[$i]["qnty"]		= "";
+					break;
 				}
 			}
 
 
-			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+			$authtype = "none";
+
+			switch ($this->type)
+			{
+				case "ar":
+				case "ar_credit":
+					$authtype = "ar";
+				break;
+
+				case "ap":
+				case "ap_credit":
+					$authtype = "ap";
+				break;
+
+				case "quote":
+					$authtype = "quote";
+				break;
+			}
+
+			if (user_permissions_get("accounts_". $authtype ."_write") && !$this->locked)
 			{
 				// edit link
 				$structure = NULL;
@@ -295,29 +323,38 @@ class invoice_list_items
 
 		if (!$this->obj_table_standard->data_num_rows)
 		{
-			print "<table class=\"table_highlight_info\" width=\"100%\">";
-			print "<tr><td width=\"100%\">";
+			if ($this->type == "ar" || $this->type == "ap" || $this->type == "quotes")
+			{
+				// regular invoice item
+				print "<table class=\"table_highlight_info\" width=\"100%\">";
+				print "<tr><td width=\"100%\">";
 
-				print "<p>This invoice has no items and is currently empty.</p>";
+					print "<p>This invoice has no items and is currently empty.</p>";
 
-				print "<div class=\"invoice_button_area\">";
-					print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
-						<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
-						<br />";
+					print "<div class=\"invoice_button_area\">";
+						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
+							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
+							<br />";
 
-					if ($this->type == "ar")
-					{
-						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
-							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
-					}
+						if ($this->type == "ar")
+						{
+							print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
+								<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
+						}
 
-					print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
-						<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
-				print "</div>";
+						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
+							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
+					print "</div>";
 
-			print "</td></tr>";
-			print "</table>";
+				print "</td></tr>";
+				print "</table>";
+			}
+			elseif ($this->type == "ar_credit" || $this->type == "ap_credit")
+			{
+				// credit
 
+				// nothing todo
+			}
 		}
 		else
 		{
@@ -851,17 +888,6 @@ class invoice_form_item
 	{
 		log_debug("invoice_form_item", "Executing execute()");
 
-		// TODO: fix up this class to comply with the standard coding style of the rest of the application
-	
-		// do nothing
-		return 1;
-	}
-
-
-	function render_html()
-	{
-		log_debug("invoice_form_item", "Executing render_html()");
-
 
 		// determine the mode
 		if ($this->itemid)
@@ -877,12 +903,12 @@ class invoice_form_item
 		/*
 			Start Form
 		*/
-		$form = New form_input;
-		$form->formname		= $this->type ."_invoice_". $this->mode;
-		$form->language		= $_SESSION["user"]["lang"];
+		$this->obj_form = New form_input;
+		$this->obj_form->formname		= $this->type ."_invoice_". $this->mode;
+		$this->obj_form->language		= $_SESSION["user"]["lang"];
 
-		$form->action		= $this->processpage;
-		$form->method		= "POST";
+		$this->obj_form->action		= $this->processpage;
+		$this->obj_form->method		= "POST";
 
 
 
@@ -920,7 +946,7 @@ class invoice_form_item
 				$structure = NULL;
 				$structure["fieldname"] 	= "amount";
 				$structure["type"]		= "money";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				$structure = NULL;
 
@@ -936,23 +962,23 @@ class invoice_form_item
 				$structure["options"]["search_filter"]	= "enabled";
 				$structure["options"]["width"]		= "500";
 
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 					
 				$structure = NULL;
 				$structure["fieldname"] 	= "description";
 				$structure["type"]		= "textarea";
 				$structure["options"]["height"]	= "50";
 				$structure["options"]["width"]	= 500;
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 		
 				// define form layout
-				$form->subforms[$this->type ."_invoice_item"] = array("amount", "chartid", "description");
+				$this->obj_form->subforms[$this->type ."_invoice_item"] = array("amount", "chartid", "description");
 
 				// SQL query
 				if ($this->itemid)
 				{
-					$form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+					$this->obj_form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
 				}
 
 
@@ -973,9 +999,9 @@ class invoice_form_item
 
 					$structure["type"]			= "message";
 					$structure["defaultvalue"]		= "<p>Check all taxes that apply to this transaction below. If you want more advanced tax control (eg: fixed amounts of tax) then define a product and add it to the invoice.</p>";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 				
-					$form->subforms[$this->type ."_invoice_item_tax"][] = "tax_message";
+					$this->obj_form->subforms[$this->type ."_invoice_item_tax"][] = "tax_message";
 
 
 					// fetch customer/vendor tax defaults
@@ -1025,8 +1051,8 @@ class invoice_form_item
 						}
 
 						// add to form
-						$form->add_input($structure);
-						$form->subforms[$this->type ."_invoice_item_tax"][] = "tax_". $data_tax["id"];
+						$this->obj_form->add_input($structure);
+						$this->obj_form->subforms[$this->type ."_invoice_item_tax"][] = "tax_". $data_tax["id"];
 					}
 				}
 
@@ -1045,14 +1071,14 @@ class invoice_form_item
 				$structure = NULL;
 				$structure["fieldname"] 	= "price";
 				$structure["type"]		= "money";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				// quantity
 				$structure = NULL;
 				$structure["fieldname"] 	= "quantity";
 				$structure["type"]		= "input";
 				$structure["options"]["width"]	= 50;
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 
 				// units
@@ -1061,7 +1087,7 @@ class invoice_form_item
 				$structure["type"]			= "input";
 				$structure["options"]["width"]		= 50;
 				$structure["options"]["max_length"]	= 10;
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 
 
@@ -1077,7 +1103,7 @@ class invoice_form_item
 				$structure = form_helper_prepare_dropdownfromobj("productid", $sql_struct_obj);
 				$structure["options"]["search_filter"]	= "enabled";
 				$structure["options"]["width"]		= "600";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 
 				// description
@@ -1086,7 +1112,7 @@ class invoice_form_item
 				$structure["type"]			= "textarea";
 				$structure["options"]["height"]		= "50";
 				$structure["options"]["width"]		= 500;
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				// discount
 				$structure = NULL;
@@ -1095,11 +1121,11 @@ class invoice_form_item
 				$structure["options"]["width"]		= 50;
 				$structure["options"]["label"]		= " %";
 				$structure["options"]["max_length"]	= "2";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 
 				// define form layout
-				$form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description", "discount");
+				$this->obj_form->subforms[$this->type ."_invoice_item"]		= array("productid", "price", "quantity", "units", "description", "discount");
 
 
 				// fetch data
@@ -1109,20 +1135,20 @@ class invoice_form_item
 				//
 				if ($this->itemid)
 				{
-					$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+					$this->obj_form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
 				}
 				else
 				{
 					if ($this->type == "ar" || $this->type == "quotes")
 					{
-						$form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+						$this->obj_form->sql_query = "SELECT id as productid, price_sale as price, units, details as description FROM products WHERE id='". $this->productid ."'";
 					}
 					else
 					{
-						$form->sql_query = "SELECT id as productid, price_cost as price, units, details as description FROM products WHERE id='". $this->productid ."'";
+						$this->obj_form->sql_query = "SELECT id as productid, price_cost as price, units, details as description FROM products WHERE id='". $this->productid ."'";
 					}
 
-					$form->structure["quantity"]["defaultvalue"] = 1;
+					$this->obj_form->structure["quantity"]["defaultvalue"] = 1;
 				}
 
 
@@ -1147,11 +1173,11 @@ class invoice_form_item
 				{
 					if ($discount_org > $discount_product)
 					{
-						$form->structure["discount"]["defaultvalue"] = $discount_org;
+						$this->obj_form->structure["discount"]["defaultvalue"] = $discount_org;
 					}
 					else
 					{
-						$form->structure["discount"]["defaultvalue"] = $discount_product;
+						$this->obj_form->structure["discount"]["defaultvalue"] = $discount_product;
 					}
 				}
 
@@ -1178,7 +1204,7 @@ class invoice_form_item
 					$structure["options"]["width"]		= "600";
 					$structure["options"]["autoselect"]	= "yes";
 					$structure["options"]["search_filter"]	= "enabled";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 				
 					// price field
@@ -1186,7 +1212,7 @@ class invoice_form_item
 					$structure = NULL;
 					$structure["fieldname"] 	= "price";
 					$structure["type"]		= "money";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 					// product id
 					$sql_struct_obj	= New sql_query;
@@ -1200,7 +1226,7 @@ class invoice_form_item
 					$structure = form_helper_prepare_dropdownfromobj("productid", $sql_struct_obj);
 					$structure["options"]["width"]		= "600";
 					$structure["options"]["search_filter"]	= "enabled";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 
 					// description
@@ -1209,7 +1235,7 @@ class invoice_form_item
 					$structure["type"]		= "textarea";
 					$structure["options"]["height"]	= "50";
 					$structure["options"]["width"]	= 500;
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 					// discount
 					$structure = NULL;
@@ -1218,14 +1244,14 @@ class invoice_form_item
 					$structure["options"]["width"]		= 50;
 					$structure["options"]["label"]		= " %";
 					$structure["options"]["max_length"]	= "2";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 
 					// define form layout
-					$form->subforms[$this->type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description", "discount");
+					$this->obj_form->subforms[$this->type ."_invoice_item"]		= array("timegroupid", "productid", "price", "description", "discount");
 
 					// SQL query
-					$form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+					$this->obj_form->sql_query = "SELECT price, description, customid as productid, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
 				
 
 
@@ -1250,21 +1276,17 @@ class invoice_form_item
 					{
 						if ($discount_org > $discount_product)
 						{
-							$form->structure["discount"]["defaultvalue"] = $discount_org;
+							$this->obj_form->structure["discount"]["defaultvalue"] = $discount_org;
 						}
 						else
 						{
-							$form->structure["discount"]["defaultvalue"] = $discount_product;
+							$this->obj_form->structure["discount"]["defaultvalue"] = $discount_product;
 						}
 					}
-
-
-
-				
 				}
 				else
 				{
-					print "<p><i>Error: Time items are only avaliable for AR invoices.</i></p>";
+					log_write("error", "inc_invoice_items", "Time items are only avaliable for AR invoices, please report the steps to access this page as an application bug.");
 				}
 
 			break;
@@ -1285,20 +1307,20 @@ class invoice_form_item
 					$structure = NULL;
 					$structure["fieldname"] 		= "id_service";
 					$structure["type"]			= "text";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 			
 					// price field
 					$structure = NULL;
 					$structure["fieldname"] 		= "price";
 					$structure["type"]			= "money";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 					// quantity
 					$structure = NULL;
 					$structure["fieldname"] 		= "quantity";
 					$structure["type"]			= "input";
 					$structure["options"]["width"]		= 50;
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 					// description
 					$structure = NULL;
@@ -1306,7 +1328,7 @@ class invoice_form_item
 					$structure["type"]			= "textarea";
 					$structure["options"]["height"]		= "50";
 					$structure["options"]["width"]		= 500;
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 					// discount
 					$structure = NULL;
@@ -1315,14 +1337,14 @@ class invoice_form_item
 					$structure["options"]["width"]		= 50;
 					$structure["options"]["label"]		= " %";
 					$structure["options"]["max_length"]	= "2";
-					$form->add_input($structure);
+					$this->obj_form->add_input($structure);
 
 
 					// define form layout
-					$form->subforms[$this->type ."_invoice_item"]		= array("id_service", "price", "quantity", "description", "discount");
+					$this->obj_form->subforms[$this->type ."_invoice_item"]		= array("id_service", "price", "quantity", "description", "discount");
 
 					// SQL query
-					$form->sql_query = "SELECT price, description, customid as id_service, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
+					$this->obj_form->sql_query = "SELECT price, description, customid as id_service, quantity, units FROM account_items WHERE id='". $this->itemid ."'";
 			
 
 /*
@@ -1338,11 +1360,11 @@ class invoice_form_item
 					{
 						if ($discount_org > $discount_product)
 						{
-							$form->structure["discount"]["defaultvalue"] = $discount_org;
+							$this->obj_form->structure["discount"]["defaultvalue"] = $discount_org;
 						}
 						else
 						{
-							$form->structure["discount"]["defaultvalue"] = $discount_product;
+							$this->obj_form->structure["discount"]["defaultvalue"] = $discount_product;
 						}
 					}
 */
@@ -1351,7 +1373,7 @@ class invoice_form_item
 				}
 				else
 				{
-					print "<p><i>Error: Service items are only avaliable for AR invoices.</i></p>";
+					log_write("error", "inc_invoice_items", "Service items are only avaliable for AR invoices.");
 				}
 
 			break;
@@ -1367,12 +1389,12 @@ class invoice_form_item
 				$structure["fieldname"] 	= "date_trans";
 				$structure["type"]		= "date";
 				$structure["defaultvalue"]	= date("Y-m-d");
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 				
 				$structure = NULL;
 				$structure["fieldname"] 	= "amount";
 				$structure["type"]		= "money";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				$structure = NULL;
 				if ($this->type == "ap")
@@ -1386,41 +1408,160 @@ class invoice_form_item
 
 				$structure["options"]["search_filter"]	= "enabled";
 
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 
 				$structure = NULL;
 				$structure["fieldname"] 	= "source";
 				$structure["type"]		= "input";
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 					
 				$structure = NULL;
 				$structure["fieldname"] 	= "description";
 				$structure["type"]		= "textarea";
 				$structure["options"]["height"]	= "50";
 				$structure["options"]["width"]	= 500;
-				$form->add_input($structure);
+				$this->obj_form->add_input($structure);
 				
 		
 				// define form layout
-				$form->subforms[$this->type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
+				$this->obj_form->subforms[$this->type ."_invoice_item"]		= array("date_trans", "amount", "chartid", "source", "description");
 
 				// load data
 				if ($this->itemid)
 				{
 					// SQL load
-					$form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+					$this->obj_form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
 				}
 				else
 				{
 					// set defaults
-					$form->structure["amount"]["defaultvalue"]	= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
+					$this->obj_form->structure["amount"]["defaultvalue"]	= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
 				}
 
 			break;
 
 
+			case "credit":
+				/*
+					Credit
+
+					ar_credit or ap_credit only
+
+					This item type only applies to credit notes and acts simular to a standard item but inherits pricing
+					account and tax information from the original item. (inheritance done on item edit page).
+				*/
+				
+				// basic details
+				$structure = NULL;
+				$structure["fieldname"] 		= "amount";
+				$structure["type"]			= "money";
+				$structure["options"]["prelabel"]	= "CREDIT ";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+
+				if ($this->type == "ap")
+				{
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
+				}
+				else
+				{
+					$structure = charts_form_prepare_acccountdropdown("chartid", "ar_income");
+				}
+			
+				$structure["options"]["search_filter"]	= "enabled";
+				$structure["options"]["width"]		= "500";
+
+				$this->obj_form->add_input($structure);
+					
+				$structure = NULL;
+				$structure["fieldname"] 	= "description";
+				$structure["type"]		= "textarea";
+				$structure["options"]["height"]	= "50";
+				$structure["options"]["width"]	= 500;
+				$this->obj_form->add_input($structure);
+
+		
+				// define form layout
+				$this->obj_form->subforms[$this->type ."_invoice_item"] = array("amount", "chartid", "description");
+
+				// SQL query
+				if ($this->itemid)
+				{
+					$this->obj_form->sql_query = "SELECT amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+				}
+
+
+
+				/*
+					List all the taxes, so that the user can select the tax(es) that apply for the transaction.
+				*/
+
+				$sql_tax_obj		= New sql_query;
+				$sql_tax_obj->string	= "SELECT id, name_tax, description FROM account_taxes ORDER BY name_tax";
+				$sql_tax_obj->execute();
+
+				if ($sql_tax_obj->num_rows())
+				{
+					// user note
+					$structure = NULL;
+					$structure["fieldname"] 		= "tax_message";
+
+					$structure["type"]			= "message";
+					$structure["defaultvalue"]		= "<p>Taxes have automatically been determed based on the options of the selected invoice item.</p>";
+					$this->obj_form->add_input($structure);
+				
+					$this->obj_form->subforms[$this->type ."_invoice_item_tax"][] = "tax_message";
+
+
+					// fetch customer/vendor tax defaults
+					if ($this->type == "ap")
+					{
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM vendors WHERE id='". $orgid."'");
+					}
+					else
+					{
+						$defaulttax	= sql_get_singlevalue("SELECT tax_default as value FROM customers WHERE id='". $orgid ."'");
+					}
+
+
+
+					// run through all the taxes
+					$sql_tax_obj->fetch_array();
+
+					foreach ($sql_tax_obj->data as $data_tax)
+					{
+						// define tax checkbox
+						$structure = NULL;
+						$structure["fieldname"] 		= "tax_". $data_tax["id"];
+						$structure["type"]			= "checkbox";
+						$structure["options"]["label"]		= $data_tax["name_tax"] ." -- ". $data_tax["description"];
+						$structure["options"]["no_fieldname"]	= "enable";
+
+						if ($this->itemid)
+						{
+							// see if this tax is currently inuse for the item
+							$sql_obj		= New sql_query;
+							$sql_obj->string	= "SELECT id FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TAX_CHECKED' AND option_value='". $data_tax["id"] ."'";
+							$sql_obj->execute();
+
+							if ($sql_obj->num_rows())
+							{
+								$structure["defaultvalue"] = "on";
+							}
+						}
+
+						// add to form
+						$this->obj_form->add_input($structure);
+						$this->obj_form->subforms[$this->type ."_invoice_item_tax"][] = "tax_". $data_tax["id"];
+					}
+				}
+
+
+			break;
+
 			default:
-				print "<p><b>Error: Unknown type passed to render form.</b></p>";
+				log_write("error", "inc_invoice_items", "Unknown type passed to render form.");
 			break;
 		}
 
@@ -1431,19 +1572,19 @@ class invoice_form_item
 		$structure["fieldname"]		= "id_invoice";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->invoiceid;
-		$form->add_input($structure);	
+		$this->obj_form->add_input($structure);	
 		
 		$structure = NULL;
 		$structure["fieldname"]		= "id_item";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->itemid;
-		$form->add_input($structure);	
+		$this->obj_form->add_input($structure);	
 		
 		$structure = NULL;
 		$structure["fieldname"]		= "item_type";
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->item_type;
-		$form->add_input($structure);	
+		$this->obj_form->add_input($structure);	
 
 
 
@@ -1452,11 +1593,11 @@ class invoice_form_item
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Save Changes";
-		$form->add_input($structure);
+		$this->obj_form->add_input($structure);
 
 
 		// load data
-		$form->load_data();
+		$this->obj_form->load_data();
 
 		// custom loads for different item type
 		if ($this->itemid)
@@ -1466,11 +1607,10 @@ class invoice_form_item
 				case "time":
 
 					// fetch the time group ID
-					$form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TIMEGROUPID' LIMIT 1");
-
+					$this->obj_form->structure["timegroupid"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='TIMEGROUPID' LIMIT 1");
 
 					// fetch discount (if any) from item
-					$form->structure["discount"]["defaultvalue"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+					$this->obj_form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
 
 				break;
 
@@ -1478,15 +1618,15 @@ class invoice_form_item
 				case "payment":
 
 					// fetch payment date_trans and source fields.
-					$form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DATE_TRANS' LIMIT 1");
-					$form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='SOURCE' LIMIT 1");
+					$this->obj_form->structure["date_trans"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DATE_TRANS' LIMIT 1");
+					$this->obj_form->structure["source"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='SOURCE' LIMIT 1");
 				
 				break;
 
 				case "product":
 
 					// fetch discount (if any) from item
-					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+					$this->obj_form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
 
 				break;
 
@@ -1494,7 +1634,7 @@ class invoice_form_item
 				case "service_usage":
 
 					// fetch discount (if any) from item
-					$form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
+					$this->obj_form->structure["discount"]["defaultvalue"]	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='DISCOUNT'");
 
 				break;
 
@@ -1506,22 +1646,41 @@ class invoice_form_item
 			Display Form
 		*/
 		
-		$form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
+		$this->obj_form->subforms["hidden"]			= array("id_invoice", "id_item", "item_type");
 
 
-		if ($this->item_type == "time" && count($form->structure["timegroupid"]["values"]) == 0)
+		if ($this->item_type == "time" && count($this->obj_form->structure["timegroupid"]["values"]) == 0)
 		{
-			$form->subforms["submit"]			= array();
-			$form->render_form();
+			$this->obj_form->subforms["submit"]			= array();
+		}
+		else
+		{
+			$this->obj_form->subforms["submit"]			= array("submit");
+		}
+
+	}
+
+
+	function render_html()
+	{
+		log_debug("invoice_form_item", "Executing render_html()");
+
+
+		/*
+			Display Form
+		*/
+		
+		if ($this->item_type == "time" && count($this->obj_form->structure["timegroupid"]["values"]) == 0)
+		{
+			$this->obj_form->render_form();
+
 			format_msgbox("important", "<p>There are currently no unprocessed time groups belonging to this customer - you must add time to a timegroup before you can create a time item.</p>");
 			
 		}
 		else
 		{
-			$form->subforms["submit"]			= array("submit");
-			$form->render_form();
+			$this->obj_form->render_form();
 		}
-		
 
 
 		return 1;
@@ -1785,6 +1944,35 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
 			
 		break;
+
+		case "credit":
+			/*
+				CREDIT ITEMS
+			*/
+
+			// fetch information from form
+			$data["amount"]		= @security_form_input_predefined("money", "amount", 0, "");
+			$data["chartid"]	= @security_form_input_predefined("int", "chartid", 1, "");
+			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
+
+			// fetch information from all tax checkboxes from form
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id FROM account_taxes";
+			$sql_tax_obj->execute();
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
+					$data["tax_". $data_tax["id"] ]	= @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
+				}
+
+			} // end of loop through taxes
+			
+		break;
+
 
 
 		default:

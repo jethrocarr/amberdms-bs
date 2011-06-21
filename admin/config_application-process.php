@@ -23,6 +23,7 @@ if (user_permissions_get("admin"))
 	$data["ACCOUNTS_AR_INVOICENUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_AR_INVOICENUM", 1, "");
 	$data["ACCOUNTS_GL_TRANSNUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_GL_TRANSNUM", 1, "");
 	$data["ACCOUNTS_QUOTES_NUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_QUOTES_NUM", 1, "");
+	$data["ACCOUNTS_CREDIT_NUM"]		= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "ACCOUNTS_CREDIT_NUM", 1, "");
 	$data["CODE_ACCOUNT"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_ACCOUNT", 1, "");
 	$data["CODE_CUSTOMER"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_CUSTOMER", 1, "");
 	$data["CODE_VENDOR"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_VENDOR", 1, "");
