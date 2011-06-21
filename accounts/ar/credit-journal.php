@@ -77,8 +77,8 @@ class page_output
 		$this->obj_journal->journalname	= "account_ar_credit";
 		
 		// set the pages to use for forms or file downloads
-		$this->obj_journal->prepare_set_form_process_page("accounts/ar/journal-credit-edit.php");
-		$this->obj_journal->prepare_set_download_page("accounts/ar/journal-credit-download-process.php");
+		$this->obj_journal->prepare_set_form_process_page("accounts/ar/credit-journal-edit.php");
+		$this->obj_journal->prepare_set_download_page("accounts/ar/credit-journal-download-process.php");
 
 
 		// configure options form
