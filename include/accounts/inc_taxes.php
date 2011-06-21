@@ -497,6 +497,88 @@ class taxes_report_transactions
 
 
 			/*
+				Append credit notes
+
+				Credit notes are a special condition, we need to fetch any ap_credit_tax or ar_credit_tax items
+				and add to the tax report based on the data of the credit note, regardless whether we are using payment or
+				invoice basis.
+				
+				AR/Tax Collected Report	== include AP Credit Notes (paying tax that was claimed)
+				AP/Tax Paid Report	== include AR Credit Notes (claiming back tax paid)
+			*/
+
+			if ($this->type == "ap")
+			{
+				$type_credit = "ar_credit";
+			}
+			else
+			{
+				$type_credit = "ap_credit";
+			}
+
+			log_write("debug", "inc_taxes", "Fetching tax items for $type_credit credit notes");
+
+
+			// fetch matching credit node IDs
+			$sql_credit_obj		= New sql_query;
+			$sql_credit_obj->string	= "SELECT id, code_credit, amount, date_trans FROM account_". $type_credit ." WHERE date_trans >= '". $this->obj_table->filter["filter_date_start"]["defaultvalue"] ."' AND date_trans <= '". $this->obj_table->filter["filter_date_end"]["defaultvalue"] ."'";
+			$sql_credit_obj->execute();
+
+			if ($sql_credit_obj->num_rows())
+			{
+				$sql_credit_obj->fetch_array();
+
+				// fetch tax items for the selected tax
+				foreach ($sql_credit_obj->data as $data_credit)
+				{
+					$sql_credititems_obj		= New sql_query;
+					$sql_credititems_obj->string	= "SELECT amount FROM account_items WHERE invoiceid='". $data_credit["id"] ."' AND invoicetype='". $type_credit ."' AND type='tax' AND customid='". $this->taxid ."'";
+					$sql_credititems_obj->execute();
+
+					if ($sql_credititems_obj->num_rows())
+					{
+						// credit items exist
+						log_write("debug", "inc_taxes", "Adding taxes for credit note ". $data_credit["code_credit"] ."");
+
+
+						// add tax items to total
+						$sql_credititems_obj->fetch_array();
+
+						$data_credit["amount_tax"] = 0;
+
+						foreach ($sql_credititems_obj->data as $data_credit_tax)
+						{
+							$data_credit["amount_tax"]	+= $data_credit_tax["amount"];
+						}
+
+
+						// add entry to table/report
+						$row = array();
+						$row["id"]		= $data_credit["id"];
+						$row["amount"]		= $data_credit["amount"]; 
+						$row["amount_tax"]	= $data_credit["amount_tax"];
+						$row["date_trans"]	= $data_credit["date_trans"];
+						$row["code_invoice"]	= $data_credit["code_credit"];
+						$row["name_vendor"]	= "AR Credit";
+						$row["name_customer"]	= "AP Credit";
+
+
+						// add row to table
+						$this->obj_table->data[] = $row;
+						$this->obj_table->data_num_rows++;
+					}
+					else
+					{
+						log_write("debug", "inc_taxes", "Credit note ". $data_credit["code_credit"] ." is within the report period, but has no appropiate tax items");
+					}
+
+					unset($sql_credititems_obj);
+				}
+			}
+
+
+
+			/*
 				Re-index the data results to fix any holes created by deleted invoices
 			*/
 			$this->obj_table->data		= array_values($this->obj_table->data);
@@ -525,7 +607,15 @@ class taxes_report_transactions
 		*/
 		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 		{
-			if ($this->type == "ap")
+			if ($this->obj_table->data[$i]["name_vendor"] == "AR Credit")
+			{
+				$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+			}
+			elseif ($this->obj_table->data[$i]["name_customer"] == "AP Credit")
+			{
+				$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/credit-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+			}
+			elseif ($this->type == "ap")
 			{
 				$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=". $this->obj_table->data[$i]["id"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
 			}
