@@ -2263,6 +2263,114 @@ class customer_orders extends customer
 
 
 
+/*
+	CLASS: customer_credits
+
+	Functions for managing credits belonging to a customer - note that this does not integrate with the
+	more accounting focused credit note functionality, but rather with the allocation of credit funds from
+	the customer to an invoice and reporting of credits.
+*/
+
+class customer_credits extends customer
+{
+
+	/*
+		credit_render_summarybox()
+
+		Displays a summary box with information about the customer's credit status such as balance.
+
+		Return Codes
+		0	failure
+		1	sucess
+	*/
+	function credit_render_summarybox()
+	{
+		log_debug("inc_customers", "Executing credit_render_summarybox");
+
+
+		// load customer details if we haven't already
+		if (empty($this->data))
+		{
+			$this->load_data();
+		}
+
+
+		// are there any credits? If there are none, balance is simple.
+		$obj_sql 		= New sql_query;
+		$obj_sql->string	= "SELECT id FROM `customers_credits` WHERE id_customer='". $this->id ."'";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			// fetch general details
+			$credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $this->id ."'");
+
+			// display credits summary information
+			if ($credit_total_amount > 1)
+			{
+				// current credit
+				print "<table width=\"100%\" class=\"table_highlight_open\">";
+				print "<tr>";
+					print "<td>";
+					print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has current outstanding credit.</b>";
+			
+					print "<table cellpadding=\"4\">";
+							
+						print "<tr>";
+							print "<td>Total Amount:</td>";
+							print "<td>". format_money($credit_total_amount) ."</td>";
+						print "</tr>";
+
+					print "</table>";
+
+					print "</td>";
+
+				print "</tr>";
+				print "</table>";
+			}
+			else
+			{
+				// no credit, but there have been in the past
+				print "<table width=\"100%\" class=\"table_highlight_open\">";
+				print "<tr>";
+					print "<td>";
+					print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has a zero credit balance.</b>";
+			
+					print "<table cellpadding=\"4\">";
+							
+						print "<tr>";
+							print "<td>Total Amount:</td>";
+							print "<td>". format_money($order_total_amount) ."</td>";
+						print "</tr>";
+
+					print "</table>";
+
+					print "</td>";
+
+				print "</tr>";
+				print "</table>";
+			}
+		}
+		else
+		{
+			// no credits
+			print "<table width=\"100%\" class=\"table_highlight_info\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has no credits against their account.</b>";
+				print "<p>To credit a customer account, create a credit note against a past invoice.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+
+
+}
+
 
 
 

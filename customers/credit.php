@@ -7,7 +7,11 @@
 
 	Displays any credit on the customer's account and allows new credit to be added.
 */
-	
+
+
+require("include/customers/inc_customers.php");
+
+
 class page_output
 {
 	var $id;
@@ -18,28 +22,30 @@ class page_output
 	function page_output()
 	{
 		// fetch variables
-		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer		= New customer_credits;
+		$this->obj_customer->id		= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+
 
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
 
 		if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled")
 		{
-			$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->id ."");
+			$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->obj_customer->id ."");
 		}
 
-		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->id ."");
-		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->id ."", TRUE);
-		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
 
 		if (user_permissions_get("customers_write"))
 		{
-			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
+			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
 		}
 	}
 
@@ -52,18 +58,12 @@ class page_output
 
 	function check_requirements()
 	{
-		// verifiy that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// verify that customer exists
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
+			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
-
-		unset($sql_obj);
 
 		return 1;
 	}
@@ -77,33 +77,34 @@ class page_output
 		$this->obj_table = New table;
 
 		$this->obj_table->language	= $_SESSION["user"]["lang"];
-		$this->obj_table->tablename	= "customer_credit";
+		$this->obj_table->tablename	= "customers_credits";
 
 		// define all the columns and structure
-		$this->obj_table->add_column("standard", "code_credit", "");
 		$this->obj_table->add_column("date", "date_trans", "");
-		$this->obj_table->add_column("standard", "name_staff", "staff.name_staff");
 		$this->obj_table->add_column("standard", "type", "");
+		$this->obj_table->add_column("standard", "accounts", "NONE");
+		$this->obj_table->add_column("standard", "employee", "CONCAT_WS(' -- ', staff_code, name_staff)");
 		$this->obj_table->add_column("standard", "description", "");
-		$this->obj_table->add_column("money", "amount", "");
+		$this->obj_table->add_column("money", "amount_total", "");
+
 
 		// totals
-		$this->obj_table->total_columns	= array("amount");
+		$this->obj_table->total_columns	= array("amount_total");
 
 		
 		// defaults
-		$this->obj_table->columns	= array("date_trans", "code_credit", "type", "description", "amount");
-		$this->obj_table->columns_order	= array("date_trans", "type", "code_credit");
+		$this->obj_table->columns	= array("date_trans", "type", "accounts", "description", "amount_total");
+		$this->obj_table->columns_order	= array("date_trans", "type");
 
 		// define SQL structure
-		$this->obj_table->sql_obj->prepare_sql_settable("account_credit");
-		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_credit.id");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = account_credit.id_employee");
-		$this->obj_table->sql_obj->prepare_sql_addwhere("account_credit.id_organisation='". $this->id ."'");
+		$this->obj_table->sql_obj->prepare_sql_settable("customers_credits");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id", "customers_credits.id");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = customers_credits.id_employee");
+		$this->obj_table->sql_obj->prepare_sql_addwhere("customers_credits.id_customer='". $this->obj_customer->id ."'");
 
 
 		// acceptable filter options
-		$this->obj_table->add_fixed_option("id_customer", $this->id);
+		$this->obj_table->add_fixed_option("id_customer", $this->obj_customer->id);
 		
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
@@ -118,7 +119,7 @@ class page_output
 		$this->obj_table->add_filter($structure);
 		
 		$structure		= form_helper_prepare_dropdownfromdb("id_employee", "SELECT id, staff_code as label, name_staff as label1 FROM staff ORDER BY name_staff");
-		$structure["sql"]	= "account_credit.employeeid='value'";
+		$structure["sql"]	= "customers_credits.id_employee='value'";
 		$this->obj_table->add_filter($structure);
 
 
@@ -136,9 +137,10 @@ class page_output
 	{
 		// heading
 		print "<h3>CUSTOMER'S CREDIT</h3>";
-		print "<p>This page provides a full list of all credit belonging to this customer as well as providing the option to add additional credits to the customer</p>";
+		print "<p>This page provides a full list of all credit belonging to this customer as well as providing the option to add additional credits to the customer.</p>";
 
-		// display credit status/report box
+		$this->obj_customer->credit_render_summarybox();
+
 
 		// display options form	
 		$this->obj_table->render_options_form();
@@ -167,13 +169,13 @@ class page_output
 			$this->obj_table->render_table_html();
 
 			// display CSV/PDF download link
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/credit.php&id_customer=". $this->id ."\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/credit.php&id_customer=". $this->id ."\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/credit.php&id_customer=". $this->obj_customer->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/credit.php&id_customer=". $this->obj_customer->id ."\">Export as PDF</a></p>";
 		}
 
 
 		// define add credit link
-		print "<p><a class=\"button\" href=\"index.php?page=customers/credit-note-edit.php&id_customer=". $this->id ."\">Create Credit Note</a></p>";
+		print "<p><a class=\"button\" href=\"index.php?page=accounts/ar/credit-add.php&customerid=". $this->obj_customer->id ."\">Create Credit Note</a></p>";
 	}
 
 
