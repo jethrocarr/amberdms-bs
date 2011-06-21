@@ -142,6 +142,19 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 		break;
 
 
+		case "ar_credit":
+		case "ar_credit_tax":
+			// for AP invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_credit as value FROM account_ar_credit WHERE id='$customid'");
+						
+			$result = "AR Credit Note $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=$customid\">$result</a>";
+		break;
+
+	
+
 		case "gl":
 			// general ledger transaction
 			$result = sql_get_singlevalue("SELECT code_gl as value FROM account_gl WHERE id='$customid'");
