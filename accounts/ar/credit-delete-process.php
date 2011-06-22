@@ -23,7 +23,7 @@ if (user_permissions_get('accounts_ar_write'))
 	*/
 
 	$returnpage_error	= "accounts/ar/credit-delete.php";
-	$returnpage_success	= "accounts/ar/ar.php";
+	$returnpage_success	= "accounts/ar/ar-credits.php";
 
 	credit_form_delete_process("ar_credit",$returnpage_error, $returnpage_success);
 }

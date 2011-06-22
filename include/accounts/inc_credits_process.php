@@ -148,7 +148,7 @@ function credit_form_details_process($type, $mode, $returnpage_error, $returnpag
 			if ($credit->action_create())
 			{
 				log_write("process", "notification", "Credit note successfully created");
-				journal_quickadd_event("account_". $credit->type ."", $credit->id, "Invoice successfully created");
+				journal_quickadd_event("account_". $credit->type ."", $credit->id, "Credit Note successfully created");
 			}
 			else
 			{
@@ -419,9 +419,11 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 
 
 	/*
-		Delete Invoice
+		Delete Credit Note
 	*/
-	
+
+	$credit->load_data();
+
 	if ($credit->action_delete())
 	{
 		$_SESSION["notification"]["message"] = array("Credit note has been successfully deleted.");

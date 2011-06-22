@@ -257,26 +257,26 @@ class credit_form_details
 		// define subforms
 		if ($this->type == "ap_credit")
 		{
-			$this->obj_form->subforms[$this->type ."_credit_details"]	= array("vendorid", "invoiceid", "employeeid", "code_credit", "code_ordernumber", "code_ponumber", "date_trans");
+			$this->obj_form->subforms[$this->type ."_details"]	= array("vendorid", "invoiceid", "employeeid", "code_credit", "code_ordernumber", "code_ponumber", "date_trans");
 		}
 		else
 		{
-			$this->obj_form->subforms[$this->type ."_credit_details"]	= array("customerid", "invoiceid", "employeeid", "code_credit", "code_ordernumber", "code_ponumber", "date_trans");
+			$this->obj_form->subforms[$this->type ."_details"]	= array("customerid", "invoiceid", "employeeid", "code_credit", "code_ordernumber", "code_ponumber", "date_trans");
 		}
 		
-		$this->obj_form->subforms[$this->type ."_credit_financials"]		= array("dest_account");
-		$this->obj_form->subforms[$this->type ."_credit_other"	]		= array("notes");
+		$this->obj_form->subforms[$this->type ."_financials"]		= array("dest_account");
+		$this->obj_form->subforms[$this->type ."_other"	]		= array("notes");
 
-		$this->obj_form->subforms["hidden"]					= array("id_credit");
+		$this->obj_form->subforms["hidden"]				= array("id_credit");
 	
 	
 		if ($this->locked)
 		{
-			$this->obj_form->subforms["submit"]				= array();
+			$this->obj_form->subforms["submit"]			= array();
 		}
 		else
 		{
-			$this->obj_form->subforms["submit"]				= array("submit");
+			$this->obj_form->subforms["submit"]			= array("submit");
 		}
 		
 		return 1;
@@ -599,12 +599,11 @@ class credit_form_delete
 		log_debug("credit_form_delete", "Executing execute()");
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT locked, amount_credit FROM account_". $this->type ." WHERE id='". $this->credit_id ."' LIMIT 1";
+		$sql_obj->string	= "SELECT locked FROM account_". $this->type ." WHERE id='". $this->credit_id ."' LIMIT 1";
 		$sql_obj->execute();
 		$sql_obj->fetch_array();
 		
 		$this->locked		= $sql_obj->data[0]["locked"];
-		$this->amount_credit	= $sql_obj->data[0]["amount_credit"];
 
 
 		/*
@@ -662,11 +661,11 @@ class credit_form_delete
 
 
 		// load data
-		$this->obj_form->sql_query = "SELECT date_create, code_credit, locked, amount_credit FROM account_". $this->type ." WHERE id='". $this->credit_id ."'";
+		$this->obj_form->sql_query = "SELECT date_create, code_credit, locked FROM account_". $this->type ." WHERE id='". $this->credit_id ."'";
 		$this->obj_form->load_data();
 
 
-		$this->obj_form->subforms[$this->type ."_credit_delete"]	= array("code_credit");
+		$this->obj_form->subforms[$this->type ."_delete"]		= array("code_credit");
 
 		$this->obj_form->subforms["hidden"]				= array("id_credit", "date_create");
 

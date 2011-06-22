@@ -27,9 +27,9 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Credit Details", "page=accounts/ar/credit-view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Credit Items", "page=accounts/ar/credit-items.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Credit Payments", "page=accounts/ar/credit-payments.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Credit Payment/Refund", "page=accounts/ar/credit-payments.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Credit Journal", "page=accounts/ar/credit-journal.php&id=". $this->id ."", TRUE);
-		$this->obj_menu_nav->add_item("Export Credit", "page=accounts/ar/credit-export.php&id=". $this->id ."");
+		$this->obj_menu_nav->add_item("Export Credit Note", "page=accounts/ar/credit-export.php&id=". $this->id ."");
 
 		if (user_permissions_get("accounts_ar_write"))
 		{

@@ -40,7 +40,6 @@ class page_output
 		$this->obj_table->add_column("standard", "name_customer", "CONCAT_WS(' -- ', customers.code_customer, customers.name_customer)");
 		$this->obj_table->add_column("standard", "name_staff", "CONCAT_WS(' -- ', staff.staff_code, staff.name_staff)");
 		$this->obj_table->add_column("date", "date_trans", "account_ar_credit.date_trans");
-		$this->obj_table->add_column("date", "date_due", "account_ar_credit.date_due");
 		$this->obj_table->add_column("price", "amount_tax", "account_ar_credit.amount_tax");
 		$this->obj_table->add_column("price", "amount", "account_ar_credit.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_ar_credit.amount_total");

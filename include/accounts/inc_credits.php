@@ -46,6 +46,9 @@ function credit_render_summarybox($type, $id)
 	$sql_obj->prepare_sql_addfield("amount_total");
 	$sql_obj->prepare_sql_addfield("locked");
 
+	$sql_obj->prepare_sql_addfield("invoiceid");
+	$sql_obj->prepare_sql_addfield("customerid");
+
 	$sql_obj->prepare_sql_addwhere("id='$id'");
 	$sql_obj->prepare_sql_setlimit("1");
 
@@ -79,50 +82,94 @@ function credit_render_summarybox($type, $id)
 				print "<table width=\"100%\" class=\"table_highlight_open\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is closed (fully paid).</b>";
+					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is locked.</b>";
 					print "<p>This credit has been fully paid and no further action is required.</p>";
-					print "</td>";
-				print "</tr>";
-				print "</table>";
 			}
 			else
 			{
 				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is open (unpaid).</b>";
-
-					print "<table cellpadding=\"4\">";
-					
-					print "<tr>";
-						print "<td>Total Due:</td>";
-						print "<td>". format_money($sql_obj->data[0]["amount_total"]) ."</td>";
-					print "</tr>";
-
-
-					if ($type == "ar")
-					{
-						print "<tr>";
-							print "<td>Date Sent:</td>";
-	
-							if ($sql_obj->data[0]["sentmethod"] == "")
-							{
-								print "<td><i>Has not been sent to customer</i></td>";
-							}
-							else
-							{
-								print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
-							}
-						print "</tr>";
-					}
-									
-					print "</tr></table>";
-					
-					print "</td>";
-				print "</tr>";
-				print "</table>";
-				
+					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is open/unlocked.</b>";
 			}
+
+
+
+
+			print "<table cellpadding=\"4\">";
+
+
+			// fetch code_invoice
+			if ($type == "ar_credit")
+			{
+				$code_invoice	= sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $sql_obj->data[0]["invoiceid"] ."' LIMIT 1");
+				
+				$invoice_url	= "index.php?page=accounts/ar/invoice-view.php&id=". $sql_obj->data[0]["invoiceid"] ."";
+			}
+			else
+			{
+				$code_invoice	= sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='". $sql_obj->data[0]["invoiceid"] ."' LIMIT 1");
+
+				$invoice_url	= "index.php?page=accounts/ap/invoice-view.php&id=". $sql_obj->data[0]["invoiceid"] ."";
+			}
+			
+			print "<tr>";
+				print "<td>Associated Invoice:</td>";
+				print "<td>Applies to invoice <a href=\"". $invoice_url ."\">". $code_invoice ."</a></td>";
+			print "</tr>";
+
+
+			// fetch customer/vendor details
+			if ($type == "ar_credit")
+			{
+				$customer_name	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_customer, name_customer) as value FROM customers WHERE id='". $sql_obj->data[0]["customerid"] ."' LIMIT 1");
+
+				print "<tr>";
+					print "<td>Credited Customer</td>";
+					print "<td><a href=\"index.php?page=customers/credit.php&id_customer=". $sql_obj->data[0]["customerid"] ."\">". $customer_name ."</a></td>";
+				print "</tr>";
+			}
+			else
+			{
+				$vendor_name	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_vendor, name_vendor) as value FROM vendors WHERE id='". $sql_obj->data[0]["vendorid"] ."' LIMIT 1");
+
+				print "<tr>";
+					print "<td>Credited Vendor</td>";
+					print "<td><a href=\"index.php?page=vendors/credit.php&id_vendor=". $sql_obj->data[0]["vendorid"] ."\">". $vendor_name ."</a></td>";
+				print "</tr>";
+
+			}
+
+
+			print "<tr>";
+				print "<td>Total Credit:</td>";
+				print "<td>". format_money($sql_obj->data[0]["amount_total"]) ."</td>";
+			print "</tr>";
+
+
+			if ($type == "ar_credit")
+			{
+				print "<tr>";
+					print "<td>Date Sent:</td>";
+
+					if ($sql_obj->data[0]["sentmethod"] == "")
+					{
+						print "<td><i>Has not been sent to customer</i></td>";
+					}
+					else
+					{
+						print "<td>". $sql_obj->data[0]["date_sent"] ." (". $sql_obj->data[0]["sentmethod"] .")</td>";
+					}
+				print "</tr>";
+			}
+							
+			print "</tr></table>";
+			
+			print "</td>";
+			print "</tr>";
+
+			print "</table>";
+			
 		}
 
 		print "<br>";
@@ -245,7 +292,7 @@ function credit_render_invoiceselect($type, $id, $processpage)
 		if ($sql_invoice_obj->num_rows())
 		{
 			$structure = NULL;
-			$structure["fieldname"]		= "credit_item";
+			$structure["fieldname"]		= "invoice_item";
 			$structure["type"]		= "radio";
 
 			foreach ($sql_invoice_obj->data as $data_invoice)
@@ -297,7 +344,7 @@ function credit_render_invoiceselect($type, $id, $processpage)
 				print "<p><b>Select an item to be credited from the selected invoice - note that amounts can be varied once selected:</b></p>";
 				print "<form method=\"". $obj_invoice_form->method ."\" action=\"". $obj_invoice_form->action ."\">";
 			
-				$obj_invoice_form->render_field("credit_item");
+				$obj_invoice_form->render_field("invoice_item");
 					
 				print "<br>";
 				$obj_invoice_form->render_field("id");
@@ -563,10 +610,11 @@ class credit
 		}
 
 		/*
-			Invoice Data (exc items/taxes)
+			Credit Data (exc items/taxes)
 		*/
 		
 		$this->credit_fields["code_credit"] = $this->data["code_credit"]; 
+		$this->credit_fields["code_invoice"] = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $this->data["invoiceid"] ."' LIMIT 1");
 		$this->credit_fields["code_ordernumber"] = $this->data["code_ordernumber"]; 
 		$this->credit_fields["code_ponumber"] = $this->data["code_ponumber"]; 
 		
@@ -574,6 +622,7 @@ class credit
 		$this->credit_fields["amount"] = format_money($this->data["amount"]);  
 		$this->credit_fields["amount_total"] = format_money($this->data["amount_total"]);
 		$this->credit_fields["amount_currency"] = sql_get_singlevalue("SELECT value FROM config WHERE name='CURRENCY_DEFAULT_NAME'") ; 
+		
 
 
 		return 1;
@@ -741,7 +790,16 @@ class credit
 
 
 		// fetch the original dest_account value - we will use it after we update the invoice details
-		$this->data["dest_account_orig"] = sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+		$this->data["dest_account_orig"]	= sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+
+		if ($this->data["customerid"])
+		{
+			$this->data["customerid_orig"]	= sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+		}
+		else
+		{
+			$this->data["vendorid_orig"]	= sql_get_singlevalue("SELECT vendoridid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+		}
 
 
 		/*
@@ -812,7 +870,7 @@ class credit
 			log_debug("invoice", "dest_account has changed, calling action_update_ledger to update all the ledger transactions");
 			
 			// re-create all the ledger entries
-			$credit_items			= New credit_items;
+			$credit_items			= New invoice_items;
 			
 			$credit_items->type_invoice	= $this->type;
 			$credit_items->id_invoice	= $this->id;
@@ -821,6 +879,33 @@ class credit
 
 			unset($credit_items);
 		}
+
+
+
+		/*
+			Check for changes to the customer/vendor ID
+
+			This is very important, if the customer/vendor is changed, we will need to remove the credit from them, and add to the correct customer/vendor.
+		*/
+		
+		if ($this->data["customerid"])
+		{
+			if ($this->data["customerid_orig"] != $this->data["customerid"])
+			{
+				$sql_obj->string = "UPDATE customers_credits SET id_customer='". $this->data["customerid"] ."' WHERE type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
+				$sql_obj->execute();
+			}
+		}
+		else
+		{
+			if ($this->data["vendorid_orig"] != $this->data["vendorid"])
+			{
+				$sql_obj->string = "UPDATE vendors_credits SET id_vendor='". $this->data["vendorid"] ."' WHERE type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
+				$sql_obj->execute();
+			}
+		}
+
+
 
 
 		/*
@@ -896,18 +981,18 @@ class credit
 
 		if ($this->type == "ap")
 		{
-			$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $this->data["vendorid"] ."' AND type='creditnote' AND id_custom='". $this->data["customid"] ."' LIMIT 1";
+			$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $this->data["vendorid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
 
-			$sql_obj->string = "INSERT INTO vendors_credits (date_trans, type, amount_total, id_custom, id_employee, id_vendor, description) VALUES ('". $this->data["date_trans"] ."', 'creditnote', '". $this->data["amount_total"] ."', '". $this->id ."', '". $this->data["employeeid"] ."', '". $this->data["vendorid"] ."', '". $this->data["description"] ."')";
+			$sql_obj->string = "INSERT INTO vendors_credits (date_trans, type, amount_total, id_custom, id_employee, id_vendor, description) VALUES ('". $this->data["date_trans"] ."', 'creditnote', '". $this->data["amount_total"] ."', '". $this->id ."', '". $this->data["employeeid"] ."', '". $this->data["vendorid"] ."', '". $this->data["notes"] ."')";
 			$sql_obj->execute();
 		}
 		else
 		{
-			$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $this->data["customerid"] ."' AND type='creditnote' AND id_custom='". $this->data["customid"] ."' LIMIT 1";
+			$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $this->data["customerid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
 
-			$sql_obj->string = "INSERT INTO customers_credits (date_trans, type, amount_total, id_custom, id_employee, id_customer, description) VALUES ('". $this->data["date_trans"] ."', 'creditnote', '". $this->data["amount_total"] ."', '". $this->id ."', '". $this->data["employeeid"] ."', '". $this->data["customerid"] ."', '". $this->data["description"] ."')";
+			$sql_obj->string = "INSERT INTO customers_credits (date_trans, type, amount_total, id_custom, id_employee, id_customer, description) VALUES ('". $this->data["date_trans"] ."', 'creditnote', '". $this->data["amount_total"] ."', '". $this->id ."', '". $this->data["employeeid"] ."', '". $this->data["customerid"] ."', '". $this->data["notes"] ."')";
 			$sql_obj->execute();
 		}
 
@@ -939,7 +1024,8 @@ class credit
 	/*
 		action_delete
 
-		Deletes an existing invoice.
+		Deletes an existing credit note (assuming that it's not locked) and associated entry in
+		customer/vendor credit pool.
 
 		Results
 		0	failure
@@ -947,15 +1033,14 @@ class credit
 	*/
 	function action_delete()
 	{
-		log_debug("invoice", "Executing action_delete()");
+		log_debug("inc_credits", "Executing action_delete()");
 
 		// we must have an ID provided
 		if (!$this->id)
 		{
-			log_debug("invoice", "No invoice ID supplied to action_delete function");
+			log_debug("inc_credits", "No credit note ID to action_delete function");
 			return 0;
 		}
-
 
 
 		/*
@@ -968,7 +1053,7 @@ class credit
 
 
 		/*
-			Delete Invoice
+			Delete Credit Note
 		*/
 
 		$sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
@@ -977,10 +1062,10 @@ class credit
 
 
 		/*
-			Delete Invoice Items
+			Delete Credit Items (aka Invoice Items)
 		
-			We do this by using the credit_items::action_delete() function, since there are number of complex
-			steps when deleting certain invoice items (such as time items)
+			We do this by using the invoice_items::action_delete() function, since there are number of complex
+			steps when deleting certain invoice items.
 		*/
 
 		$sql_items_obj		= New sql_query;
@@ -993,8 +1078,8 @@ class credit
 
 			foreach ($sql_items_obj->data as $data_sql)
 			{
-				// delete each invoice one-at-a-time.
-				$obj_credit_item			= New credit_items;
+				// delete each item one-at-a-time.
+				$obj_credit_item			= New invoice_items;
 
 				$obj_credit_item->type_invoice		= $this->type;
 				$obj_credit_item->id_invoice		= $this->id;
@@ -1006,10 +1091,10 @@ class credit
 		}
 
 
-
 		/*
 			Delete Journal
 		*/
+
 		journal_delete_entire("account_". $this->type ."", $this->id);
 
 
@@ -1021,8 +1106,26 @@ class credit
 			 ledger transactions need to be removed manually)
 		*/
 
-		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='". $this->type ."' || type='". $this->type ."_tax' || type='". $this->type ."_pay') AND customid='". $this->id ."'";
+		$sql_obj->string	= "DELETE FROM account_trans WHERE (type='". $this->type ."' || type='". $this->type ."_tax') AND customid='". $this->id ."'";
 		$sql_obj->execute();
+
+
+
+		/*
+			Delete customer/vendor credit allocations
+		*/
+
+		if ($this->type == "ap")
+		{
+			$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $this->data["vendorid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+		}
+		else
+		{
+			$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $this->data["customerid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+		}
+
 
 
 
@@ -1034,7 +1137,7 @@ class credit
 		{
 			$sql_obj->trans_rollback();
 
-			log_write("error", "invoice", "An error occured whilst deleting the invoice. No changes have been made.");
+			log_write("error", "invoice", "An error occured whilst deleting the credit note. No changes have been made.");
 
 			return 0;
 		}
