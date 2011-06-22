@@ -299,7 +299,26 @@ class invoice
 	{
 		log_debug("inc_gl", "Executing check_delete_lock()");
 
-		return $this->check_lock();
+		// check lock status
+		if ($return = $this->check_lock())
+		{
+			return $return;
+		}
+
+		// check for any credits against this invoice.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM account_". $this->type ."_credit WHERE invoiceid='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			// unable to delete, credit notes against this invoice
+			log_write("error", "process", "You are unable to delete this invoice as there are credit(s) assigned against it - first remove the credits");
+
+			return 1;
+		}
+
+		return 0;
 
 	}  // end of check_delete_lock
 
