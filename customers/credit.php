@@ -53,7 +53,7 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("customers_view");
+		return user_permissions_get("customers_credit");
 	}
 	
 
@@ -141,6 +141,14 @@ class page_output
 			{
 				$this->obj_table->data[$i]["accounts"] = sql_get_singlevalue("SELECT code_credit as value FROM account_ar_credit WHERE id='". $this->obj_table->data[$i]["id_custom"] ."' LIMIT 1");
 			}
+
+			// payments
+			if ($this->obj_table->data[$i]["type"] == "payment")
+			{
+				$this->obj_table->data[$i]["id_custom"]	= sql_get_singlevalue("SELECT invoiceid as value FROM account_items WHERE id='". $this->obj_table->data[$i]["id_custom"] ."' LIMIT 1");
+				$this->obj_table->data[$i]["accounts"]	= sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='". $this->obj_table->data[$i]["id_custom"] ."' LIMIT 1");
+			}
+
 		}
 	}
 
@@ -186,6 +194,12 @@ class page_output
 				if ($this->obj_table->data[$i]["type"] == "creditnote")
 				{
 					$this->obj_table->data[$i]["accounts"] = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=". $this->obj_table->data[$i]["id_custom"] ."\">". $this->obj_table->data[$i]["accounts"] ."</a>";
+				}
+
+				// invoices/payments
+				if ($this->obj_table->data[$i]["type"] == "payment")
+				{
+					$this->obj_table->data[$i]["accounts"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id_custom"] ."\">". $this->obj_table->data[$i]["accounts"] ."</a>";
 				}
 			}
 

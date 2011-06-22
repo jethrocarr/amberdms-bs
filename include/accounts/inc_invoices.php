@@ -2332,7 +2332,14 @@ class invoice_items
 			// fetch the current timegroup id - we need this to check if the timegroup ID has changed.
 			$this->data["timegroupid_old"] = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='TIMEGROUPID'");
 		}
-	
+
+		if ($this->type_item == "payment" && $this->data["chartid"] == "credit")
+		{
+			// fetch the actual chartid of the AR/AP account for credit handling
+			$this->data["chartid"]	= sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."' LIMIT 1");
+			$this->data["credit"]	= "CREDIT";
+		}
+
 
 	
 		/*
@@ -2397,6 +2404,14 @@ class invoice_items
 			// date_trans
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'DATE_TRANS', '". $this->data["date_trans"] ."')";
 			$sql_obj->execute();
+
+			// credit
+			if (!empty($this->data["credit"]))
+			{
+				// flag this payment as a credit, so that we handle it correctly
+				$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'CREDIT', 'CREDIT')";
+				$sql_obj->execute();
+			}
 		}
 
 
@@ -3110,6 +3125,9 @@ class invoice_items
 
 					if ($option_data["option_name"] == "DATE_TRANS")
 						$data["date_trans"] = $option_data["option_value"];
+
+					if ($option_data["option_name"] == "CREDIT")
+						$data["credit"] = $option_data["option_value"];
 				}
 
 
@@ -3124,12 +3142,39 @@ class invoice_items
 					// we need to credit the destination account for the payment to come from and debit the AP account
 					ledger_trans_add("credit", $this->type_invoice ."_pay", $this->id_invoice, $data["date_trans"], $data["chartid"], $data["amount"], $data["source"], $data["description"]);
 					ledger_trans_add("debit", $this->type_invoice ."_pay", $this->id_invoice, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["amount"], $data["source"], $data["description"]);
+
+					// if a credit, we need to subtract from vendor credit pool
+					if (!empty($data["credit"]))
+					{
+						$id_vendor = sql_get_singlevalue("SELECT vendorid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+						$id_employee = sql_get_singlevalue("SELECT employeeid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+
+						$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $id_vendor ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+						$sql_obj->execute();
+
+						$sql_obj->string = "INSERT INTO vendors_credits (date_trans, type, amount_total, id_custom, id_employee, id_vendor, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $this->id_item ."', '". $id_employee ."', '". $id_vendor ."', '". $data["description"] ."')";
+						$sql_obj->execute();
+					}
+
 				}
 				else
 				{
 					// we need to debit the destination account for the payment to go into and credit the AR account
 					ledger_trans_add("debit", $this->type_invoice ."_pay", $this->id_invoice, $data["date_trans"], $data["chartid"], $data["amount"], $data["source"], $data["description"]);
 					ledger_trans_add("credit", $this->type_invoice ."_pay", $this->id_invoice, $data["date_trans"], $sql_inv_obj->data[0]["dest_account"], $data["amount"], $data["source"], $data["description"]);
+					
+					// if a credit, we need to subtract from customer credit pool
+					if (!empty($data["credit"]))
+					{
+						$id_customer = sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+						$id_employee = sql_get_singlevalue("SELECT employeeid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+
+						$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $id_customer ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+						$sql_obj->execute();
+
+						$sql_obj->string = "INSERT INTO customers_credits (date_trans, type, amount_total, id_custom, id_employee, id_customer, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $this->id_item ."', '". $id_employee ."', '". $id_customer ."', '". $data["description"] ."')";
+						$sql_obj->execute();
+					}
 				}
 			}
 		}
@@ -3215,7 +3260,36 @@ class invoice_items
 			$sql_obj->string	= "UPDATE time_groups SET invoiceid='0', invoiceitemid='0', locked='$locked' WHERE id='$groupid'";
 			$sql_obj->execute();
 		}
-	
+
+
+		/*
+			Delete credit payments if required
+		*/
+
+		if ($this->type_item == "payment")
+		{
+			$credit = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='CREDIT'");
+
+			if (!empty($credit))
+			{
+				if ($this->type_invoice == "ap")
+				{
+					$id_vendor = sql_get_singlevalue("SELECT vendorid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+
+					$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $id_vendor ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+					$sql_obj->execute();
+				}
+				else
+				{
+					$id_customer = sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+
+					$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $id_customer ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+					$sql_obj->execute();
+				}
+			}
+
+		}
+
 	
 		/*
 			Delete the invoice item options

@@ -817,9 +817,11 @@ class invoice_list_payments
 					if ($data["option_name"] == "SOURCE")
 						$item_list->data[$i]["source"] = $data["option_value"];
 
-
 					if ($data["option_name"] == "DATE_TRANS")
 						$item_list->data[$i]["date_trans"] = $data["option_value"];
+
+					if ($data["option_name"] == "CREDIT")
+						$item_list->data[$i]["account"] = $data["option_value"];
 				}
 			
 			}
@@ -1385,9 +1387,14 @@ class invoice_form_item
 				/*
 					PAYMENT
 
-					Payments against invoices are also items
+					Payments against invoices are also items which credit/subtract funds from a selected account. Note that payments
+					typically come out of an asset account, but if the customer/vendor has credit and the payment is made from
+					that credit, the account will be the AR/AP account
 				*/
-				
+		
+
+
+
 				$structure = NULL;
 				$structure["fieldname"] 	= "date_trans";
 				$structure["type"]		= "date";
@@ -1432,13 +1439,77 @@ class invoice_form_item
 				// load data
 				if ($this->itemid)
 				{
-					// SQL load
-					$this->obj_form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+
+					// credit details (if applicable)
+					$credit = sql_get_singlevalue("SELECT option_value AS value FROM account_items_options WHERE itemid='". $this->itemid ."' AND option_name='CREDIT' LIMIT 1");
+
+					// standard payment item data
+					if ($credit)
+					{
+						$this->obj_form->sql_query = "SELECT amount as amount, description, 'credit' as chartid FROM account_items WHERE id='". $this->itemid ."'";
+					}
+					else
+					{
+						$this->obj_form->sql_query = "SELECT amount as amount, description, chartid FROM account_items WHERE id='". $this->itemid ."'";
+					}
 				}
 				else
 				{
 					// set defaults
 					$this->obj_form->structure["amount"]["defaultvalue"]	= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
+
+					/*
+						Fetch credit information (if any)
+
+						We handle credit information, by determining the maximum available credit and then
+						overwriting values on the item's information including:
+						- amount (equal to invoice or to max credit amout if less than invoice max)
+						- account (set to AR/AP)
+						- date (today's date)
+					*/
+					if ($this->type == "ap")
+					{
+						$credit		= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendors_credits WHERE id_vendor='". $orgid."'");
+					}
+					else
+					{
+						$credit		= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $orgid."'");
+					}
+
+					if ($credit > 0)
+					{
+						// customer/vendor has credit
+						if ($credit > $this->obj_form->structure["amount"]["defaultvalue"])
+						{
+							// credit is more than the invoice amount, set to mac
+							$credit = $this->obj_form->structure["amount"]["defaultvalue"];
+						}
+
+						// set default value
+						$this->obj_form->structure["amount"]["defaultvalue"] = $credit;
+
+
+						// set source
+						$this->obj_form->structure["source"]["defaultvalue"]	= "CREDITED FUNDS";
+					}
+				}
+
+				// overwrite account settings for credits
+
+				if ($credit)
+				{
+					if ($this->type == "ap")
+					{
+						$this->obj_form->structure["chartid"]["values"][] = "credit";
+						$this->obj_form->structure["chartid"]["translations"]["credit"]	= "Vendor Credit";
+					}
+					else
+					{
+						$this->obj_form->structure["chartid"]["values"][] = "credit";
+						$this->obj_form->structure["chartid"]["translations"]["credit"]	= "Customer Credit";
+					}
+
+					$this->obj_form->structure["chartid"]["defaultvalue"]	= "credit";
 				}
 
 			break;
@@ -1942,9 +2013,17 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 			// fetch information from form
 			$data["date_trans"]	= @security_form_input_predefined("date", "date_trans", 1, "");
 			$data["amount"]		= @security_form_input_predefined("money", "amount", 1, "");
-			$data["chartid"]	= @security_form_input_predefined("int", "chartid", 1, "");
 			$data["source"]		= @security_form_input_predefined("any", "source", 0, "");
 			$data["description"]	= @security_form_input_predefined("any", "description", 0, "");
+			
+			if ($_POST["chartid"] == "credit")
+			{
+				$data["chartid"] = "credit";
+			}
+			else
+			{
+				$data["chartid"] = @security_form_input_predefined("int", "chartid", 1, "");
+			}
 			
 		break;
 
