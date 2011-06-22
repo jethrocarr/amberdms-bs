@@ -442,4 +442,94 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 } // end if credit_form_delete_process
 
 
+
+
+
+/*
+	credit_form_lock_process($type, $mode, $returnpage_error, $returnpage_success)
+
+	Form for processing credit deletion form requests.
+
+	Values
+	type			"ar_credit" or "ap_credit"
+	returnpage_error	Page to return to in event of errors or updates
+	returnpage_success	Page to return to if successful.
+*/
+function credit_form_lock_process($type, $returnpage_error, $returnpage_success)
+{
+	log_debug("inc_credits_forms", "Executing credit_form_lock_process($type, $mode, $returnpage_error, $returnpage_success)");
+
+
+	$credit	= New credit;
+	$credit->type	= $type;
+
+	
+	/*
+		Import POST Data
+	*/
+	
+	$credit->id			= @security_form_input_predefined("int", "id_credit", 1, "");
+	$data["lock_credit"]		= @security_form_input_predefined("checkbox", "lock_credit", 0, "");
+
+
+	/*
+		Error Handling
+	*/
+
+	
+	// make sure the credit actually exists
+	if (!$credit->verify_credit())
+	{
+		log_write("error", "process", "The credit note you have attempted to delete - ". $credit->id ." - does not exist in this system.");
+	}
+
+
+	// check if credit is locked or not
+	if ($credit->check_lock())
+	{
+		log_write("error", "process", "The credit note can not be locked because it is *already* locked.");
+	}
+		
+
+	// check lock
+	if (!$data["lock_credit"])
+	{
+		log_write("error", "process", "You must check to confirm the credit note lock.");
+	}
+
+
+	// return to input page in event of an error
+	if ($_SESSION["error"]["message"])
+	{	
+		$_SESSION["error"]["form"][$type ."_credit_lock"] = "failed";
+		header("Location: ../../index.php?page=$returnpage_error&id=". $credit->id);
+		exit(0);
+	}
+
+
+
+	/*
+		Lock Credit Note
+	*/
+
+	$credit->load_data();
+
+	if ($credit->action_lock())
+	{
+		log_write("notification", "process", "The selected credit note has now been locked.");
+	}
+	else
+	{
+		log_write("error", "process", "An error occured whilst attempting to lock the credit note.");
+	}
+
+	
+	// display updated details
+	header("Location: ../../index.php?page=$returnpage_success&id=". $credit->id);
+	exit(0);
+			
+
+} // end if credit_form_delete_process
+
+
 ?>

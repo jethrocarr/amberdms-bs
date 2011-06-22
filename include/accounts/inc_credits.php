@@ -1020,6 +1020,43 @@ class credit
 	} // end of action_update_balance
 
 
+	/*
+		action_lock
+
+		Locks a credit note.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_lock()
+	{
+		log_debug("inc_credit", "Executing action_lock()");
+
+		// we must have an ID provided
+		if (!$this->id)
+		{
+			log_debug("inc_credit", "No credit note ID supplied to action_update function");
+			return 0;
+		}
+
+		
+		// update the lock status
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "UPDATE `account_". $this->type ."` SET locked='1' WHERE id='". $this->id ."' LIMIT 1";
+		
+		if (!$sql_obj->execute())
+		{
+			log_write("error", "inc_credit", "Unable to lock the credit note. No changes have been made.");
+			return 0;
+		}
+	
+
+		return 1;
+
+	} // end of action_lock
+
+
 
 	/*
 		action_delete

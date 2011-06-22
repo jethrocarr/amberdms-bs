@@ -400,62 +400,65 @@ class invoice_list_items
 				}
 
 
-				// links	
-				print "<td align=\"right\">";
-
-				$links		= array_keys($this->obj_table_standard->links);
-				$links_count	= count($links);
-				$count		= 0;
-
-				foreach ($links as $link)
+				// links
+				if (!empty($this->obj_table_standard->links))
 				{
-					$count++;
-					
-					$linkname = language_translate_string($this->obj_table_standard->language, $link);
+					print "<td align=\"right\">";
 
-					// link to page
-					// There are two ways:
-					// 1. (default) Link to index.php
-					// 2. Set the ["options]["full_link"] value to yes to force a full link
+					$links		= array_keys($this->obj_table_standard->links);
+					$links_count	= count($links);
+					$count		= 0;
 
-					if (isset($this->obj_table_standard->links[$link]["options"]["full_link"]) && $this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
+					foreach ($links as $link)
 					{
-						print "<a class=\"button_small\" href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
-					}
-					else
-					{
-						print "<a class=\"button_small\" href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
-					}
+						$count++;
+						
+						$linkname = language_translate_string($this->obj_table_standard->language, $link);
 
-					// add each option
-					foreach (array_keys($this->obj_table_standard->links[$link]["options"]) as $getfield)
-					{
-						/*
-							There are two methods for setting the value of the variable:
-							1. The value has been passed.
-							2. The name of a column to take the value from has been passed
-						*/
-						if (isset($this->obj_table_standard->links[$link]["options"][$getfield]["value"]))
+						// link to page
+						// There are two ways:
+						// 1. (default) Link to index.php
+						// 2. Set the ["options]["full_link"] value to yes to force a full link
+
+						if (isset($this->obj_table_standard->links[$link]["options"]["full_link"]) && $this->obj_table_standard->links[$link]["options"]["full_link"] == "yes")
 						{
-							print "&$getfield=". $this->obj_table_standard->links[$link]["options"][$getfield]["value"];
+							print "<a class=\"button_small\" href=\"". $this->obj_table_standard->links[$link]["page"] ."?libfiller=n";
 						}
 						else
 						{
-							print "&$getfield=". $this->obj_table_standard->data[$i][ $this->obj_table_standard->links[$link]["options"][$getfield]["column"] ];
+							print "<a class=\"button_small\" href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
+						}
+
+						// add each option
+						foreach (array_keys($this->obj_table_standard->links[$link]["options"]) as $getfield)
+						{
+							/*
+								There are two methods for setting the value of the variable:
+								1. The value has been passed.
+								2. The name of a column to take the value from has been passed
+							*/
+							if (isset($this->obj_table_standard->links[$link]["options"][$getfield]["value"]))
+							{
+								print "&$getfield=". $this->obj_table_standard->links[$link]["options"][$getfield]["value"];
+							}
+							else
+							{
+								print "&$getfield=". $this->obj_table_standard->data[$i][ $this->obj_table_standard->links[$link]["options"][$getfield]["column"] ];
+							}
+						}
+
+						// finish link
+						print "\">$linkname</a>";
+
+						// if required, add seporator
+						if ($count < $links_count)
+						{
+							print " ";
 						}
 					}
 
-					// finish link
-					print "\">$linkname</a>";
-
-					// if required, add seporator
-					if ($count < $links_count)
-					{
-						print " ";
-					}
+					print "</tr>";
 				}
-
-				print "</tr>";
 			}
 			
 			/*

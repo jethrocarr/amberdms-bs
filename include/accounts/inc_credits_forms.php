@@ -698,7 +698,113 @@ class credit_form_delete
 }
 
 
+/*
+	class: credit_form_lock
 
+	Provides a form to lock to the credit note, to ensure payments are not reversed by people deleting credit notes
+	when they shouldn't.
+	
+*/
+class credit_form_lock
+{
+	var $type;		// Either "ar" or "ap"
+	var $credit_id;		// ID of the credit to delete
+	var $processpage;	// Page to submit the form to
+	var $locked;
+
+	var $mode;
+	
+	var $obj_form;
+
+
+	function execute()
+	{
+		log_debug("credit_form_lock", "Executing execute()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT locked FROM account_". $this->type ." WHERE id='". $this->credit_id ."' LIMIT 1";
+		$sql_obj->execute();
+		$sql_obj->fetch_array();
+		
+		$this->locked		= $sql_obj->data[0]["locked"];
+
+
+		/*
+			Define form structure
+		*/
+
+		$this->obj_form = New form_input;
+		$this->obj_form->formname		= $this->type ."_credit_lock";
+		$this->obj_form->language		= $_SESSION["user"]["lang"];
+
+		$this->obj_form->action			= $this->processpage;
+		$this->obj_form->method			= "POST";
+		
+		
+		// basic details
+		$structure = NULL;
+		$structure["fieldname"]		= "lock_credit";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Yes, I wish to lock this credit note and realise once done, will be unable to unlock again.";
+		$this->obj_form->add_input($structure);
+
+
+		// hidden fields
+		$structure = NULL;
+		$structure["fieldname"]		= "id_credit";
+		$structure["type"]		= "hidden";
+		$structure["defaultvalue"]	= $this->credit_id;
+		$this->obj_form->add_input($structure);	
+
+
+		// submit
+		$structure = NULL;
+		$structure["fieldname"]		= "submit";
+		$structure["type"]		= "submit";
+		$structure["defaultvalue"]	= "submit_credit_lock";
+		$this->obj_form->add_input($structure);
+	}
+
+
+	function render_html()
+	{
+		log_debug("credit_form_lock", "Executing render_html()");
+		
+		if ($this->locked)
+		{
+			format_msgbox("important", "<p>This credit note is locked, no further changes can be made to it.</p>");
+		}
+		else
+		{
+			print "<table width=\"100%\" class=\"table_highlight_open\">";
+			print "<tr>";
+				print "<td>";
+				print "<p><b>This credit note is currently unlocked - by locking the credit note, you can ensure it won't be deleted and the refund/credit won't be removed from the customer's account.</b></p>";
+				print "<form method=\"". $this->obj_form->method ."\" action=\"". $this->obj_form->action ."\">";
+			
+				$this->obj_form->render_field("lock_credit");
+					
+				print "<br>";
+				$this->obj_form->render_field("id_credit");
+				$this->obj_form->render_field("submit");
+
+				
+				print "</form>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+} // end of credit_form_lock
+
+
+
+
+
+		
 
 
 

@@ -10,8 +10,7 @@
 
 // custom includes
 require("include/accounts/inc_credits.php");
-require("include/accounts/inc_invoices_items.php");
-require("include/accounts/inc_charts.php");
+require("include/accounts/inc_credits_forms.php");
 
 
 class page_output
@@ -74,23 +73,28 @@ class page_output
 
 	function execute()
 	{
-		// nothing todo
-		return 1;
+		$this->obj_form_credit			= New credit_form_lock;
+		$this->obj_form_credit->type		= "ar_credit";
+		$this->obj_form_credit->credit_id	= $this->id;
+		$this->obj_form_credit->processpage	= "accounts/ar/credit-payments-process.php";
+		
+		$this->obj_form_credit->execute();
 	}
 
 	function render_html()
 	{
 		// heading
-		print "<h3>CREDIT NOTE ITEMS</h3><br>";
-		print "<p>This page shows all the items belonging to the credit and allows you to edit them.</p>";
+		print "<h3>CREDIT NOTE PAYMENT/REFUND/LOCK</h3><br>";
+		print "<p>This page allows you to lock credit notes to permanently apply the credit to the selected customer - once done, you can safely refund the customer via the customer's credit page.</p>";
 		
 		// display summary box
 		credit_render_summarybox("ar_credit", $this->id);
 
-		// informational box
-		format_msgbox("open", "<p>All credit note refunds go against the customer's credit pool - once there, refunds can be made or the customer can use the credit as payment for their next invoice.</p>");
+		// display form
+		$this->obj_form_credit->render_html();
 	}
-	
+
+
 }
 
 ?>
