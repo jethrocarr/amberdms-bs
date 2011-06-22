@@ -69,8 +69,8 @@ function credit_render_summarybox($type, $id)
 			print "<table width=\"100%\" class=\"table_highlight_important\">";
 			print "<tr>";
 				print "<td>";
-				print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." has no items on it</b>";
-				print "<p>This credit is currently empty, add some items to it using the Credit Items page.</p>";
+				print "<b>Credit Note ". $sql_obj->data[0]["code_credit"] ." has no items on it</b>";
+				print "<p>This credit note is currently empty, add some items to it using the Credit Items page.</p>";
 				print "</td>";
 			print "</tr>";
 			print "</table>";
@@ -82,15 +82,15 @@ function credit_render_summarybox($type, $id)
 				print "<table width=\"100%\" class=\"table_highlight_open\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is locked.</b>";
-					print "<p>This credit has been fully paid and no further action is required.</p>";
+					print "<b>Credit Note ". $sql_obj->data[0]["code_credit"] ." is locked.</b>";
+					print "<p>This credit note has been locked and no further action is required.</p>";
 			}
 			else
 			{
 				print "<table width=\"100%\" class=\"table_highlight_important\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Credit ". $sql_obj->data[0]["code_credit"] ." is open/unlocked.</b>";
+					print "<b>Credit Note ". $sql_obj->data[0]["code_credit"] ." is open/unlocked.</b>";
 			}
 
 
@@ -211,6 +211,7 @@ function credit_render_invoiceselect($type, $id, $processpage)
 	$sql_obj->prepare_sql_addfield("code_credit");
 	$sql_obj->prepare_sql_addfield("amount_total");
 	$sql_obj->prepare_sql_addfield("invoiceid");
+	$sql_obj->prepare_sql_addfield("locked");
 
 	$sql_obj->prepare_sql_addwhere("id='$id'");
 	$sql_obj->prepare_sql_setlimit("1");
@@ -221,6 +222,12 @@ function credit_render_invoiceselect($type, $id, $processpage)
 	if ($sql_obj->num_rows())
 	{
 		$sql_obj->fetch_array();
+
+		if ($sql_obj->data[0]["locked"])
+		{
+			// credit note is locked, nothing todo
+			return 1;
+		}
 
 
 		/*

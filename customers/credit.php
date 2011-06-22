@@ -38,6 +38,7 @@ class page_output
 		}
 
 		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
+		$this->obj_menu_nav->add_item("Customer's Attributes", "page=customers/attributes.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."", TRUE);
@@ -99,6 +100,7 @@ class page_output
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("customers_credits");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "customers_credits.id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("id_custom", "customers_credits.id_custom");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN staff ON staff.id = customers_credits.id_employee");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("customers_credits.id_customer='". $this->obj_customer->id ."'");
 
@@ -130,6 +132,16 @@ class page_output
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
 
+
+		// set customid fields
+		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+		{
+			// credit notes
+			if ($this->obj_table->data[$i]["type"] == "creditnote")
+			{
+				$this->obj_table->data[$i]["accounts"] = sql_get_singlevalue("SELECT code_credit as value FROM account_ar_credit WHERE id='". $this->obj_table->data[$i]["id_custom"] ."' LIMIT 1");
+			}
+		}
 	}
 
 
@@ -158,11 +170,23 @@ class page_output
 		else
 		{
 			// define links
+			/*
 			if (user_permissions_get("customers_credit"))
 			{
 				$structure = NULL;
 				$structure["id"]["column"]	= "id";
 				$this->obj_table->add_link("tbl_lnk_details", "customers/credit-edit.php", $structure);
+			*/
+
+
+			// set inline hyperlinks
+			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
+			{
+				// credit notes
+				if ($this->obj_table->data[$i]["type"] == "creditnote")
+				{
+					$this->obj_table->data[$i]["accounts"] = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=". $this->obj_table->data[$i]["id_custom"] ."\">". $this->obj_table->data[$i]["accounts"] ."</a>";
+				}
 			}
 
 			// display the table
