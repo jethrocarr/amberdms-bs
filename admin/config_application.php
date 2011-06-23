@@ -121,6 +121,14 @@ class page_output
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_AUTOPAY";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["label"]			= " Check to have invoices automatically paid where there is credit or reoccuring billing details.";
+		$this->obj_form->add_input($structure);
+
+
 
 		// email options
 		$structure = NULL;
@@ -318,7 +326,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "ACCOUNTS_CREDIT_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
-		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS");
+		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_AUTOPAY");
 		$this->obj_form->subforms["config_accounts_email"]	= array("ACCOUNTS_EMAIL_ADDRESS", "ACCOUNTS_INVOICE_AUTOEMAIL", "ACCOUNTS_EMAIL_AUTOBCC", "ACCOUNTS_INVOICE_BATCHREPORT");
 		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");

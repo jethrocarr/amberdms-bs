@@ -1496,7 +1496,7 @@ class invoice_form_item
 
 				// overwrite account settings for credits
 
-				if ($credit)
+				if ($credit > 0 || $credit == "CREDIT")
 				{
 					if ($this->type == "ap")
 					{

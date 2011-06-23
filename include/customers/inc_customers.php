@@ -2157,6 +2157,20 @@ class customer_orders extends customer
 		} // end if order items.
 
 
+		// make automated payments - such as customer credit pool or auto-pay credit card functionality
+		if ($GLOBALS["config"]["ACCOUNTS_AUTOPAY"])
+		{
+			log_write("debug", "inc_services_invoicegen", "Autopay Functionality Enabled, running appropiate functions for invoice ID $invoiceid");
+
+			$obj_autopay			= New invoice_autopay;
+			$obj_autopay->id_invoice	= $invoiceid;
+			$obj_autopay->type_invoice	= "ar";
+
+			$obj_autopay->autopay();
+
+			unset($obj_autopay);
+		}
+
 
 		// save changes
 		if (error_check())

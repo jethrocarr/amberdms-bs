@@ -1795,6 +1795,28 @@ function service_invoices_generate($customerid = NULL)
 
 
 				/*
+					Automatic Payments
+
+					Makes automatic invoice payments using sources such as customer credit pools, reoccuring credit card transactions
+					and other sources.
+				*/
+
+
+				if ($GLOBALS["config"]["ACCOUNTS_AUTOPAY"])
+				{
+					log_write("debug", "inc_services_invoicegen", "Autopay Functionality Enabled, running appropiate functions for invoice ID $invoiceid");
+
+					$obj_autopay			= New invoice_autopay;
+					$obj_autopay->id_invoice	= $invoiceid;
+					$obj_autopay->type_invoice	= "ar";
+
+					$obj_autopay->autopay();
+
+					unset($obj_autopay);
+				}
+
+
+				/*
 					Commit
 
 					Conduct final error check, before commiting the new invoice and sending the customer an email
