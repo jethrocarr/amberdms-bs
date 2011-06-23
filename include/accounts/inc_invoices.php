@@ -2188,6 +2188,23 @@ class invoice_items
 				$this->data["source"]			= $data["source"];
 				$this->data["description"]		= $data["description"];
 				
+				// check credit amount
+				if ($this->type_invoice == "ar")
+				{
+					$id_customer	= sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+					$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $id_customer ."' AND id_custom!='". $this->id_item ."'");
+				}
+				else
+				{
+					$id_vendor	= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->id_invoice ."' LIMIT 1");
+					$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendor_credits WHERE id_vendor='". $id_vendor ."' AND id_custom!='". $this->id_item ."'");
+				}
+
+				if ($this->data["amount"] > $credit_balance)
+				{
+					log_write("error", "inc_invoice_items", "Unable to accept credit payment of ". format_money($this->data["amount"]) .", credit balance is currently ". format_money($credit_balance) ."");
+				}
+
 			break;
 
 
@@ -3149,10 +3166,10 @@ class invoice_items
 						$id_vendor = sql_get_singlevalue("SELECT vendorid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
 						$id_employee = sql_get_singlevalue("SELECT employeeid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
 
-						$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $id_vendor ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+						$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $id_vendor ."' AND type='payment' AND id_custom='". $data["id"]."' LIMIT 1";
 						$sql_obj->execute();
 
-						$sql_obj->string = "INSERT INTO vendors_credits (date_trans, type, amount_total, id_custom, id_employee, id_vendor, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $this->id_item ."', '". $id_employee ."', '". $id_vendor ."', '". $data["description"] ."')";
+						$sql_obj->string = "INSERT INTO vendors_credits (date_trans, type, amount_total, id_custom, id_employee, id_vendor, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $data["id"] ."', '". $id_employee ."', '". $id_vendor ."', '". $data["description"] ."')";
 						$sql_obj->execute();
 					}
 
@@ -3169,10 +3186,10 @@ class invoice_items
 						$id_customer = sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
 						$id_employee = sql_get_singlevalue("SELECT employeeid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
 
-						$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $id_customer ."' AND type='payment' AND id_custom='". $this->id_item ."' LIMIT 1";
+						$sql_obj->string = "DELETE FROM customers_credits WHERE id_customer='". $id_customer ."' AND type='payment' AND id_custom='". $data["id"] ."' LIMIT 1";
 						$sql_obj->execute();
 
-						$sql_obj->string = "INSERT INTO customers_credits (date_trans, type, amount_total, id_custom, id_employee, id_customer, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $this->id_item ."', '". $id_employee ."', '". $id_customer ."', '". $data["description"] ."')";
+						$sql_obj->string = "INSERT INTO customers_credits (date_trans, type, amount_total, id_custom, id_employee, id_customer, description) VALUES ('". $data["date_trans"] ."', 'payment', '-". $data["amount"] ."', '". $data["id"] ."', '". $id_employee ."', '". $id_customer ."', '". $data["description"] ."')";
 						$sql_obj->execute();
 					}
 				}
