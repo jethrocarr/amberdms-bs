@@ -133,7 +133,7 @@ class page_output
 
 		// define all the columns and structure
 		$this->obj_table->add_column("date", "date", "");
-		$this->obj_table->add_column("standard", "rate_billgroup", "cdr_rate_billgroups.billgroup");
+		$this->obj_table->add_column("standard", "rate_billgroup", "cdr_rate_billgroups.billgroup_name");
 		$this->obj_table->add_column("standard", "number_src", "usage1");
 		$this->obj_table->add_column("standard", "number_dst", "usage2");
 		$this->obj_table->add_column("standard", "billable_seconds", "usage3");
@@ -148,7 +148,7 @@ class page_output
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("service_usage_records");
-		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN cdr_rate_billgroups ON cdr_rate_billgroups.billgroup = service_usage_records.billgroup");
+		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN cdr_rate_billgroups ON cdr_rate_billgroups.id = service_usage_records.billgroup");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "service_usage_records.id");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("id_service_customer = '". $this->obj_customer->id_service_customer ."'");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("date >= '". $sql_period_obj->data[0]["date_start"] ."'");

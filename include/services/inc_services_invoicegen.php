@@ -1642,32 +1642,39 @@ function service_invoices_generate($customerid = NULL)
 									{
 										foreach ($usage_obj->data_ddi as $ddi)
 										{
-											// start service item
-											$invoice_item				= New invoice_items;
-										
-											$invoice_item->id_invoice		= $invoiceid;
+											if ($usage_obj->data[ $ddi ][ $data_billgroup["id"] ]["charges"] > 0)
+											{
+												// start service item
+												$invoice_item				= New invoice_items;
 											
-											$invoice_item->type_invoice		= "ar";
-											$invoice_item->type_item		= "service_usage";
-										
-											$itemdata = array();
+												$invoice_item->id_invoice		= $invoiceid;
+												
+												$invoice_item->type_invoice		= "ar";
+												$invoice_item->type_item		= "service_usage";
+											
+												$itemdata = array();
 
-											$itemdata["chartid"]			= $obj_service->data["chartid"];
-											$itemdata["customid"]			= $obj_service->id;
+												$itemdata["chartid"]			= $obj_service->data["chartid"];
+												$itemdata["customid"]			= $obj_service->id;
 
-											// determine excess usage charges
-											$itemdata["discount"]			= 0;
-											$itemdata["price"]			= $usage_obj->data[ $ddi ][ $data_billgroup["id"] ]["charges"];
-											$itemdata["quantity"]			= "1";
-											$itemdata["units"]			= "";
-											$itemdata["description"]		= $data_billgroup["billgroup_name"] ." call charges for $ddi from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
-											$itemdata["cdr_billgroup"]		= $data_billgroup["id"];
+												// determine excess usage charges
+												$itemdata["discount"]			= 0;
+												$itemdata["price"]			= $usage_obj->data[ $ddi ][ $data_billgroup["id"] ]["charges"];
+												$itemdata["quantity"]			= "1";
+												$itemdata["units"]			= "";
+												$itemdata["description"]		= $data_billgroup["billgroup_name"] ." call charges for $ddi from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] ."";
+												$itemdata["cdr_billgroup"]		= $data_billgroup["id"];
 
-											// add trunk usage item
-											$invoice_item->prepare_data($itemdata);
-											$invoice_item->action_update();
+												// add trunk usage item
+												$invoice_item->prepare_data($itemdata);
+												$invoice_item->action_update();
 
-											unset($invoice_item);
+												unset($invoice_item);
+											}
+											else
+											{
+												log_write("debug", "inc_service_invoicegen", "Excluding DDI $ddi from ". $data_billgroup["billgroup_name"] ." due to no charges for the current period");
+											}
 										}
 									}
 								}
