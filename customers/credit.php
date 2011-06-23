@@ -2,8 +2,8 @@
 /*
 	customers/credit.php
 	
-	access: customers_view
-		customers_credit
+	access: customers_view		View Only
+		customers_credit	View and Adjust
 
 	Displays any credit on the customer's account and allows new credit to be added.
 */
@@ -53,7 +53,10 @@ class page_output
 
 	function check_permissions()
 	{
-		return user_permissions_get("customers_credit");
+		if (user_permissions_get("customers_view") || user_permissions_get("customers_credit"))
+		{
+			return 1;
+		}
 	}
 	
 
@@ -177,14 +180,23 @@ class page_output
 		}
 		else
 		{
-			// define links
-			/*
 			if (user_permissions_get("customers_credit"))
 			{
+				// define links
 				$structure = NULL;
-				$structure["id"]["column"]	= "id";
-				$this->obj_table->add_link("tbl_lnk_details", "customers/credit-edit.php", $structure);
-			*/
+				$structure["id_customer"]["value"]			= $this->obj_customer->id;
+				$structure["id_refund"]["column"]			= "id";
+				$structure["logic"]["if_not"]["column"]			= "accounts";
+				$this->obj_table->add_link("details", "customers/credit-refund.php", $structure);
+
+				// delete link
+				$structure = NULL;
+				$structure["id_customer"]["value"]			= $this->obj_customer->id;
+				$structure["id_refund"]["column"]			= "id";
+				$structure["full_link"]					= "yes";
+				$structure["logic"]["if_not"]["column"]			= "accounts";
+				$this->obj_table->add_link("delete", "customers/credit-refund-delete-process.php", $structure);
+			}
 
 
 			// set inline hyperlinks
@@ -213,7 +225,19 @@ class page_output
 
 
 		// define add credit link
-		print "<p><a class=\"button\" href=\"index.php?page=accounts/ar/credit-add.php&customerid=". $this->obj_customer->id ."\">Create Credit Note</a></p>";
+		print "<p>";
+
+		if (user_permissions_get("accounts_ar_write"))
+		{
+			print "<a class=\"button\" href=\"index.php?page=accounts/ar/credit-add.php&customerid=". $this->obj_customer->id ."\">Create Credit Note</a> ";
+		}
+
+		if (user_permissions_get("customers_credit"))
+		{
+			print "<a class=\"button\" href=\"index.php?page=customers/credit-refund.php&id_customer=". $this->obj_customer->id ."\">Make Refund Payment</a>";
+		}
+
+		print "</p>";
 	}
 
 

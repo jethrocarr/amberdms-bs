@@ -153,7 +153,18 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 				$result = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=$customid\">$result</a>";
 		break;
 
-	
+
+		case "ar_refund":
+			// for AR invoices/transaction fetch the invoice ID
+			$customerid	= sql_get_singlevalue("SELECT id_customer as value FROM customers_credits WHERE id='$customid'");
+			$result 	= sql_get_singlevalue("SELECT code_customer as value FROM customers WHERE id='$customerid'");
+						
+			$result = "Refund to customer $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=customers/credit.php&id_customer=$customerid\">$result</a>";
+		break;
+
 
 		case "gl":
 			// general ledger transaction

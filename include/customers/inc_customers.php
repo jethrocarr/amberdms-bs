@@ -2312,7 +2312,7 @@ class customer_credits extends customer
 				print "<table width=\"100%\" class=\"table_highlight_open\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has current outstanding credit.</b>";
+					print "<b>Customer ". $this->data["name_customer"] ." has current outstanding credit.</b>";
 			
 					print "<table cellpadding=\"4\">";
 							

@@ -1696,5 +1696,318 @@ class credit
 } // END OF CREDIT CLASS
 
 
+
+/*
+	CLASS: CREDIT_REFUND
+
+	Provides functions for creating, updating and deleting credit refunds made to customers or by vendors.
+*/
+class credit_refund
+{
+	var $id;		// ID of the refund
+	var $type;		// "customer" or "vendor"
+	var $data;		// array of returned data
+
+
+	/*
+		verify_id
+
+		Checks that the provided ID & type point to a valid credit refund.
+
+		Results
+		0	Failure to find the refund
+		1	Success - refund exists.
+	*/
+
+	function verify_id()
+	{
+		log_debug("inc_credit_refund", "Executing verify_id()");
+
+		if ($this->id)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM ". $this->type ."s_credits WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				return 1;
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id
+
+
+
+	/*
+		load_data
+
+		Loads the credit data from the MySQL database.
+
+		Return Codes
+		0	failure
+		1	success
+	*/
+	function load_data()
+	{
+		log_debug("inc_credit_refund", "Executing load_data()");
+		
+		// fetch credit information from DB.
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT * FROM ". $this->type ."s_credits WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if (!$sql_obj->num_rows())
+		{
+			log_debug("inc_credit", "No such credit note refund ". $this->id ." in ". $this->type ."_credits");
+			return 0;
+		}
+		else
+		{
+			$sql_obj->fetch_array();
+
+			// save all the data into class variables
+			$this->data = $sql_obj->data[0];
+
+			// make amount positive
+			$this->data["amount_total"]	= $this->data["amount_total"] * -1;
+
+			unset($sql_obj);
+		}
+
+		return 1;
+		
+	} // end of load_data
+
+
+
+	/*
+		action_create
+
+		Creates a new credit refund item.
+
+		Results
+		0	failure
+		#	success - returns item ID
+	*/
+	function action_create()
+	{
+		log_debug("inc_credit_refund", "Executing action_create()");
+
+		// create new credit table entry
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "INSERT INTO ". $this->type ."s_credits (date_trans, type, id_". $this->type .") VALUES ('".$this->data["date_trans"]."', 'refund', '". $this->data["id_customer"] ."')";
+
+		if (!$sql_obj->execute())
+		{
+			log_debug("inc_credit", "Failure whilst creating credit refund entry.");
+			return 0;
+		}
+
+		$this->id = $sql_obj->fetch_insert_id();
+
+		unset($sql_obj);
+
+
+		// call the update function to process the refund fully and generate ledger fields.
+		if (!$this->action_update())
+		{
+			return 0;
+		}
+
+
+		log_debug("inc_credit_refund", "Successfully created new credit refund ". $this->id ."");
+
+		return $this->id;
+		
+	} // end of action_create
+
+
+
+	/*
+		action_update
+
+		Updates an existing credit refund, including ledger records.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_update()
+	{
+		log_debug("inc_credit_refund", "Executing action_update()");
+
+		// we must have an ID provided
+		if (!$this->id)
+		{
+			log_debug("inc_credit_refund", "No credit refund ID supplied to action_update function");
+			return 0;
+		}
+
+
+		/*
+			Start SQL Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Update the Refund Details
+		*/
+			
+		$sql_obj->string = "UPDATE `". $this->type ."s_credits` SET "
+					."date_trans='". $this->data["date_trans"] ."', "
+					."type='refund', "
+					."amount_total='-". $this->data["amount_total"] ."', "
+					."id_custom='0', "
+					."id_employee='". $this->data["id_employee"] ."', "
+					."id_". $this->type ."='". $this->data["id_". $this->type] ."', "
+					."description='". $this->data["description"] ."' "
+					."WHERE id='". $this->id ."' LIMIT 1";
+
+		if (!$sql_obj->execute())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_credit_refund", "Unable to update database with credit refund entry. No changes have been made.");
+
+			return 0;
+		}
+
+
+
+		/*
+			Update Ledger Records
+		*/
+
+		if ($this->type == "customer")
+		{
+			// delete existing records
+			$sql_obj->string	= "DELETE FROM account_trans WHERE (type='ar_refund') AND customid='". $this->id ."'";
+			$sql_obj->execute();
+
+			// add new ledger records
+			ledger_trans_add("credit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_asset"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+			ledger_trans_add("debit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_dest"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+		}
+		else
+		{
+			// delete existing records
+			$sql_obj->string	= "DELETE FROM account_trans WHERE (type='ap_refund') AND customid='". $this->id ."'";
+			$sql_obj->execute();
+			
+			// add new ledger records
+			ledger_trans_add("debit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_asset"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+			ledger_trans_add("credit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_dest"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+		}
+
+
+
+
+		/*
+			Commit
+		*/
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "inc_credit_refund", "An error occured whilst attempting to update credit refund. No changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return 1;
+		}
+		
+		
+	} // end of action_update
+
+
+
+	/*
+		action_delete
+
+		Deletes the selected credit refund, including removing the associated ledger items.
+
+		Results
+		0	failure
+		1	success
+	*/
+	function action_delete()
+	{
+		log_debug("inc_credits_refund", "Executing action_delete()");
+
+		// we must have an ID provided
+		if (!$this->id)
+		{
+			log_debug("inc_credits_refund", "No credit refund ID to action_delete function");
+			return 0;
+		}
+
+
+		/*
+			Start SQL Transaction
+		*/
+
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			Delete Credit Refund
+		*/
+
+		$sql_obj->string	= "DELETE FROM ". $this->type ."s_credits WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+		
+
+
+		/*
+			Delete Ledger Items
+		*/
+
+		if ($this->type == "customer")
+		{
+			$sql_obj->string	= "DELETE FROM account_trans WHERE (type='ar_refund') AND customid='". $this->id ."'";
+			$sql_obj->execute();
+		}
+		else
+		{
+			$sql_obj->string	= "DELETE FROM account_trans WHERE (type='ap_refund') AND customid='". $this->id ."'";
+			$sql_obj->execute();
+		}
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "invoice", "An error occured whilst deleting the credit refund. No changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+			
+			return 1;
+		}
+		
+	} // end of action_delete
+
+} // END OF CREDIT_REFUND CLASS
+
 	
 ?>
