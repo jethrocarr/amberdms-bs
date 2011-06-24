@@ -29,7 +29,7 @@ INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 
 
 ALTER TABLE  `cdr_rate_tables_values` ADD  `rate_billgroup` INT UNSIGNED NOT NULL AFTER  `rate_description`;
 ALTER TABLE  `cdr_rate_tables_overrides` ADD  `rate_billgroup` INT UNSIGNED NOT NULL AFTER  `rate_description`;
-ALTER TABLE  `service_usage_records` ADD  `billgroup` INT UNSIGNED NOT NULL AFTER  `usage3`
+ALTER TABLE  `service_usage_records` ADD  `billgroup` INT UNSIGNED NOT NULL AFTER  `usage3`;
 
 UPDATE cdr_rate_tables_values SET rate_billgroup='1' WHERE rate_prefix='LOCAL';
 UPDATE cdr_rate_tables_values SET rate_billgroup='1' WHERE rate_prefix='DEFAULT';
