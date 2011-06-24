@@ -964,13 +964,135 @@ class invoice
 		$this->obj_pdf->prepare_add_file("company_logo", "png", "COMPANY_LOGO", 0);
 		
 		
+	
+
+		/*
+			Previous Activity
+
+			Some invoice PDFs include a "previous activity" statement function displaying past account activity - we only display unpaid
+			invoices.
+		*/
+		$structure_pastactivity		= array();
+		$structure_pastactivity[0]	= array(); // reserved for past balance
+
+		$amount_outstanding		= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."'");
+		$amount_outstanding_past	= $amount_outstanding;
 		
-		
-		// convert the invoice_fields array into 
+		$sql_past_obj			= New sql_query;
+		$sql_past_obj->string		= "SELECT id, code_invoice, date_trans, amount_total, amount_paid, date_trans FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."' ORDER BY date_trans LIMIT 2";
+		$sql_past_obj->execute();
+
+		if ($sql_past_obj->num_rows())
+		{
+			$sql_past_obj->fetch_array();
+
+			foreach ($sql_past_obj->data as $data_row)
+			{
+				// invoice
+				$itemdata			= array();
+
+				$itemdata["item_date_raw"]	= time_date_to_timestamp($data_row["date_trans"]) .".". $data_row["id"] ."00";	// used to sort items
+				$itemdata["item_date"]		= time_format_humandate($data_row["date_trans"]);
+				$itemdata["item_details"]	= "Invoice ". $data_row["code_invoice"] ."";
+				$itemdata["item_amount"]	= $data_row["amount_total"];
+
+				$structure_pastactivity[]	= $itemdata;
+
+
+				// payments (if any)
+				if ($data_row["amount_paid"] > 0)
+				{
+					$sql_pay_obj		= New sql_query;
+					$sql_pay_obj->string	= "SELECT id, amount FROM account_items WHERE invoiceid='". $data_row["id"] ."' AND type='payment'";
+					$sql_pay_obj->execute();
+					$sql_pay_obj->fetch_array();
+
+					foreach ($sql_pay_obj->data as $data_pay)
+					{
+						// update balance
+						$amount_outstanding_past = $amount_outstanding_past + $data_pay["amount"];
+
+						// source & date
+						$pay_date	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data_pay["id"] ."' AND option_name='DATE_TRANS' LIMIT 1");
+						$pay_credit	= sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $data_pay["id"] ."' AND option_name='CREDIT' LIMIT 1");
+
+						// add payment item
+						$itemdata			= array();
+						$itemdata["item_date_raw"]	= time_date_to_timestamp($pay_date) .".". $data_row["id"] ."01"; // used to sort items
+						$itemdata["item_date"]		= time_format_humandate($pay_date);
+						
+						if ($pay_credit)
+						{
+							$itemdata["item_details"]	= "Credit applied to invoice ". $data_row["code_invoice"] ."";
+						}
+						else
+						{
+							$itemdata["item_details"]	= "Payment against invoice ". $data_row["code_invoice"] ."";
+						}
+
+						$itemdata["item_amount"]	= "-". $data_pay["amount"];
+
+						$structure_pastactivity[]	= $itemdata;
+					}
+
+					unset($sql_pay_obj);
+				}
+
+				$amount_outstanding_past	= $amount_outstanding_past - $data_row["amount_total"];
+			}
+
+			// sort by date, to correct payment & invoice ordering
+
+			function cmp_date($a, $b)
+			{
+				if ($a["item_date_raw"] == $b["item_date_raw"]) {
+					return 0;
+				}
+				
+				return ($a["item_date_raw"] < $b["item_date_raw"]) ? -1 : 1;
+			}
+
+			usort($structure_pastactivity, "cmp_date");
+
+			// add previous balance item
+			$structure_pastactivity[0]["item_date"]		= "Previous Balance";
+			$structure_pastactivity[0]["item_details"]	= "";
+			$structure_pastactivity[0]["item_amount"]	= format_money($amount_outstanding_past);
+			
+		}
+		else
+		{
+			$itemdata = array();
+
+			$itemdata["item_date"]		= time_format_humandate(date("Y-m-d"));;
+			$itemdata["item_details"]	= "No Past Activity";
+			$itemdata["item_amount"]	= "";
+
+			$structure_pastactivity[0]	= $itemdata;
+
+			$amount_outstanding		= "0.00";
+		}
+
+
+		$this->obj_pdf->prepare_add_array("previous_items", $structure_pastactivity);
+		$this->obj_pdf->prepare_add_field("amount_outstanding", format_money($amount_outstanding));
+
+		unset($structure_pastactivity);
+		unset($sql_past_obj);
+
+
+
+		/*
+			Add general invoice details from load_data_export	
+		*/
+		$this->invoice_fields["amount_total"]		= format_money($this->data["amount_total"] - $this->data["amount_paid"]);  
+		$this->invoice_fields["amount_total_final"]	= format_money(($this->data["amount_total"] - $this->data["amount_paid"]) + $amount_outstanding);
+
 		foreach($this->invoice_fields as $invoice_field_key => $invoice_field_value) {
 			$this->obj_pdf->prepare_add_field($invoice_field_key, $invoice_field_value);
 		}
-		
+	
+
 		
 		/*
 			Invoice Items
@@ -1180,6 +1302,7 @@ class invoice
 					$itemdata["price"]	= NULL;
 
 					$structure["group"]	= lang_trans("group_other");
+					$structure["group_num"]	= "1";
 
 					unset($sql_obj);
 				break;
@@ -1329,7 +1452,15 @@ class invoice
 			{
 				$structure = array();
 			
-				$structure["description"]	= $itemdata["description"];
+				if (sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $itemdata["id"] ."' AND option_name='CREDIT' LIMIT 1"))
+				{
+					$structure["label"]	= "Credit Applied";
+				}
+				else
+				{
+					$structure["label"]	= "Payment";
+				}
+
 				$structure["amount"]		= format_money($itemdata["amount"]);
 				$structure["date"]		= time_format_humandate( sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE option_name='DATE_TRANS' AND itemid='". $itemdata["id"] ."' LIMIT 1") );
 
@@ -1394,11 +1525,30 @@ class invoice
 		// fill template
 		$this->obj_pdf->prepare_filltemplate();
 
-		// Useful for debugging - shows the processed template lines BEFORE it is fed to the render engine
+
+		/*
+			Debugging Functions
+
+			Debugging invoice generation can be tricky, especially when making large number of
+			development changes. These functions need to be uncommented in code, future releases
+			should make them a checkable option.
+		*/
+
+		// display invoice in browser, suitable for HTML-based invoices only
+		//foreach ($this->obj_pdf->processed as $line)
+		//{
+		//	$line = str_replace('(tmp_filename)', "../../". $template_data['template_file'] ."/", $line);
+		//	print $line;
+		//}
+
+		// output raw HTML
 		//print "<pre>";
 		//print_r($this->obj_pdf->processed);
 		//print "</pre>";
+
+		//die("Terminated Generation");
 		
+
 		// generate PDF output
 		$this->obj_pdf->generate_pdf();
 
@@ -2189,22 +2339,24 @@ class invoice_items
 				$this->data["description"]		= $data["description"];
 				
 				// check credit amount
-				if ($this->type_invoice == "ar")
+				if ($this->data["chartid"] == "credit")
 				{
-					$id_customer	= sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
-					$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $id_customer ."' AND id_custom!='". $this->id_item ."'");
-				}
-				else
-				{
-					$id_vendor	= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->id_invoice ."' LIMIT 1");
-					$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendor_credits WHERE id_vendor='". $id_vendor ."' AND id_custom!='". $this->id_item ."'");
-				}
+					if ($this->type_invoice == "ar")
+					{
+						$id_customer	= sql_get_singlevalue("SELECT customerid as value FROM account_ar WHERE id='". $this->id_invoice ."' LIMIT 1");
+						$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $id_customer ."' AND id_custom!='". $this->id_item ."'");
+					}
+					else
+					{
+						$id_vendor	= sql_get_singlevalue("SELECT vendorid as value FROM account_ap WHERE id='". $this->id_invoice ."' LIMIT 1");
+						$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendor_credits WHERE id_vendor='". $id_vendor ."' AND id_custom!='". $this->id_item ."'");
+					}
 
-				if ($this->data["amount"] > $credit_balance)
-				{
-					log_write("error", "inc_invoice_items", "Unable to accept credit payment of ". format_money($this->data["amount"]) .", credit balance is currently ". format_money($credit_balance) ."");
+					if ($this->data["amount"] > $credit_balance)
+					{
+						log_write("error", "inc_invoice_items", "Unable to accept credit payment of ". format_money($this->data["amount"]) .", credit balance is currently ". format_money($credit_balance) ."");
+					}
 				}
-
 			break;
 
 
