@@ -994,7 +994,7 @@ class invoice
 				$itemdata["item_date_raw"]	= time_date_to_timestamp($data_row["date_trans"]) .".". $data_row["id"] ."00";	// used to sort items
 				$itemdata["item_date"]		= time_format_humandate($data_row["date_trans"]);
 				$itemdata["item_details"]	= "Invoice ". $data_row["code_invoice"] ."";
-				$itemdata["item_amount"]	= $data_row["amount_total"];
+				$itemdata["item_amount"]	= format_money($data_row["amount_total"]);
 
 				$structure_pastactivity[]	= $itemdata;
 
@@ -1030,7 +1030,7 @@ class invoice
 							$itemdata["item_details"]	= "Payment against invoice ". $data_row["code_invoice"] ."";
 						}
 
-						$itemdata["item_amount"]	= "-". $data_pay["amount"];
+						$itemdata["item_amount"]	= "-". format_money($data_pay["amount"]);
 
 						$structure_pastactivity[]	= $itemdata;
 					}
@@ -1323,14 +1323,14 @@ class invoice
 
 			if ($itemdata["price"])
 			{
-				$structure["price"]	= format_money($itemdata["price"], 1);
+				$structure["price"]	= format_money($itemdata["price"]);
 			}
 			else
 			{
 				$structure["price"]	= "";
 			}
 
-			$structure["amount"]		= format_money($itemdata["amount"], 1);
+			$structure["amount"]		= format_money($itemdata["amount"]);
 
 			$structure_invoiceitems[] = $structure;
 
@@ -1347,7 +1347,7 @@ class invoice
 				$discount_calc	= $itemdata["discount"] / 100;
 				$discount_calc	= $itemdata["amount"] * $discount_calc;
 
-				$structure["amount"]		= "-". format_money($discount_calc, 1);
+				$structure["amount"]		= "-". format_money($discount_calc);
 
 				// track for summary report
 				if (!isset($structure_group_summary[ "group_discount" ]))
