@@ -24,6 +24,7 @@ if (user_permissions_get("services_write"))
 	$obj_rate_table->id					= @security_form_input_predefined("int", "id_rate_table", 1, "");
 
 	$data["cdr_rate_import_mode"]				= @security_form_input_predefined("any", "cdr_rate_import_mode", 1, "");
+	$data["rate_billgroup"]					= @security_form_input_predefined("int", "rate_billgroup", 1, "");
 	$data["cdr_rate_import_cost_price"]			= @security_form_input_predefined("any", "cdr_rate_import_cost_price", 1, "");
 	$data["cdr_rate_import_sale_price"]			= @security_form_input_predefined("any", "cdr_rate_import_sale_price", 1, "");
 	$data["cdr_rate_import_sale_price_margin"]		= @security_form_input_predefined("float", "cdr_rate_import_sale_price_margin", 0, "");
@@ -253,12 +254,14 @@ if (user_permissions_get("services_write"))
 													id_rate_table,
 													rate_prefix,
 													rate_description,
+													rate_billgroup,
 													rate_price_sale,
 													rate_price_cost)
 													VALUES (
 													'". $obj_rate_table->id ."',
 													'". $prefix ."',
 													'". $import_row["col_destination"] ."',
+													'". $data["rate_billgroup"] ."',
 													'". $data_row["sale_price"] ."',
 													'". $data_row["cost_price"] ."')";
 					$sql_obj->execute();

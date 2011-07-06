@@ -90,6 +90,11 @@ class page_output
 		$structure["defaultvalue"]		= "cdr_import_update_existing";
 		$this->obj_form->add_input($structure);
 
+		$structure = form_helper_prepare_dropdownfromdb("rate_billgroup", "SELECT id, billgroup_name as label FROM cdr_rate_billgroups");
+		$structure["options"]["req"]		= "yes";
+		$structure["options"]["width"]		= "100";
+		$this->obj_form->add_input($structure);
+
 		$structure 				= NULL;
 		$structure["fieldname"]			= "cdr_rate_import_cost_price";
 		$structure["type"]			= "radio";
@@ -245,6 +250,22 @@ class page_output
 			print "<td colspan=\"2\">". lang_trans("cdr_rate_import_mode") ." *</td>";
 			print "<td>";
 			$this->obj_form->render_field("cdr_rate_import_mode");
+			print "</td>";
+		print "</tr>";
+
+
+		if (isset($_SESSION["error"]["rate_billgroup"]))
+		{
+			print "<tr class=\"form_error\">";
+		}
+		else
+		{
+			print "<tr id=\"rate_billgroup\">";
+		}
+
+			print "<td colspan=\"2\">". lang_trans("rate_billgroup") ." *</td>";
+			print "<td>";
+			$this->obj_form->render_field("rate_billgroup");
 			print "</td>";
 		print "</tr>";
 
