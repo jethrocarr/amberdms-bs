@@ -944,6 +944,14 @@ class template_engine_htmltopdf extends template_engine
 			{
 				$temp_data['invoice_items'][$set_key] = $invoice_row;
 				$i++;
+
+				// if there are new lines in invoice description fields, increment
+				// the counter further to prevent wrap failure.
+				if (!empty($invoice_row["description"]))
+				{
+					$i = $i + substr_count($invoice_row["description"], '<br />');
+				}
+
 //				foreach($invoice_set['invoice_items'] as $row_key => $invoice_row)
 //				{
 //					$i++;
