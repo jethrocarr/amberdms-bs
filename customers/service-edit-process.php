@@ -57,6 +57,14 @@ if (user_permissions_get('customers_write'))
 		*/
 		switch ($obj_customer->obj_service->data["typeid_string"])
 		{
+			case "data_traffic":
+
+				$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
+				$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
+
+			break;
+			
+
 			case "phone_single":
 				$data["phone_ddi_single"]		= @security_form_input_predefined("int", "phone_ddi_single", 1, "");
 				
@@ -273,6 +281,9 @@ if (user_permissions_get('customers_write'))
 				$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];
 			}
 
+			$obj_customer->obj_service->data["included_units"]			= $data["included_units"];
+			$obj_customer->obj_service->data["price_extraunits"]			= $data["price_extraunits"];
+
 			$obj_customer->obj_service->data["phone_ddi_single"]			= $data["phone_ddi_single"];
 			$obj_customer->obj_service->data["phone_local_prefix"]			= $data["phone_local_prefix"];
 
@@ -284,6 +295,7 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data["phone_trunk_price_extra_units"]	= $data["phone_trunk_price_extra_units"];
 
 			$obj_customer->obj_service->action_update_options();
+
 
 
 			// do we need to generate a setup fee?

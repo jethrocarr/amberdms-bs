@@ -357,6 +357,25 @@ class page_output
 				break;
 
 
+				case "data_traffic":
+
+					$structure = NULL;
+					$structure["fieldname"] 	= "included_units";
+					$structure["type"]		= "input";
+					$structure["options"]["req"]	= "yes";
+					$structure["options"]["label"]	= " ". sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $this->obj_customer->obj_service->data["units"] ."'");
+					$this->obj_form->add_input($structure);
+					
+					$structure = NULL;
+					$structure["fieldname"] 	= "price_extraunits";
+					$structure["type"]		= "money";
+					$structure["options"]["req"]	= "yes";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["service_options_data_traffic"] = array("included_units", "price_extraunits");
+				break;	
+
+
 				case "phone_single":
 
 					// single DDI
