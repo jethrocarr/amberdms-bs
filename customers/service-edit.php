@@ -161,6 +161,13 @@ class page_output
 			$this->obj_form->add_input($structure);
 
 			$structure = NULL;
+			$structure["fieldname"]		= "service_parent";
+			$structure["type"]		= "text";
+			$structure["options"]["nohidden"] = 1;
+			$structure["defaultvalue"]	= "<a href=\"index.php?page=services/view.php&id=". $this->obj_customer->obj_service->id ."\">". sql_get_singlevalue("SELECT name_service as value FROM services WHERE id='". $this->obj_customer->obj_service->id ."' LIMIT 1") ."</a>";
+			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
 			$structure["fieldname"]		= "name_service";
 			$structure["type"]		= "input";
 			$structure["options"]["req"]	= "yes";
@@ -171,7 +178,7 @@ class page_output
 			$structure["type"]		= "textarea";
 			$this->obj_form->add_input($structure);
 
-			$this->obj_form->subforms["service_edit"]	= array("id_service_customer", "name_service", "description");
+			$this->obj_form->subforms["service_edit"]	= array("id_service_customer", "service_parent", "name_service", "description");
 
 
 
