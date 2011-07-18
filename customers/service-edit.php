@@ -184,12 +184,24 @@ class page_output
 
 			// service controls
 			$structure = NULL;
+			$structure["fieldname"] 	= "control_help";
+			$structure["type"]		= "message";
+			$structure["defaultvalue"]	= "When disabling services, the best approach is to set the last period date, and ABS will correctly bill to that final date, handle usage/partial periods and issue a final invoice, before disabling the service automatically - however it is possible to disable a service immediently if so desired by using the active checkbox.";
+			$this->obj_form->add_input($structure);
+
+			$structure = NULL;
 			$structure["fieldname"] 	= "active";
 			$structure["type"]		= "checkbox";
 			$structure["options"]["label"]	= "Service is enabled";
 			$this->obj_form->add_input($structure);
 
-			$this->obj_form->subforms["service_controls"]	= array("active");
+			$structure = NULL;
+			$structure["fieldname"] 		= "date_period_last";
+			$structure["type"]			= "date";
+			$structure["options"]["label"]		= " Earliest termination date is: ". time_format_humandate( sql_get_singlevalue("SELECT date_end as value FROM services_customers_periods WHERE id_service_customer='". $this->obj_customer->id_service_customer ."' ORDER BY date_end DESC LIMIT 1") );
+			$this->obj_form->add_input($structure);
+
+			$this->obj_form->subforms["service_controls"]	= array("control_help", "active", "date_period_last");
 
 
 
@@ -208,7 +220,6 @@ class page_output
 			$structure["fieldname"] 	= "date_period_next";
 			$structure["type"]		= "text";
 			$this->obj_form->add_input($structure);
-
 
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle_string", "date_period_first", "date_period_next");
 
@@ -843,7 +854,7 @@ class page_output
 			}
 
 			// fetch DB data
-			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
+			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, date_period_last, quantity FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
 			$this->obj_form->load_data();
 
 

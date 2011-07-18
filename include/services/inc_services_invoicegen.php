@@ -46,7 +46,7 @@ function service_periods_generate($customerid = NULL)
 		Fetch all the assigned services information
 	*/
 	$sql_custserv_obj		= New sql_query;
-	$sql_custserv_obj->string	= "SELECT services_customers.id, services.billing_mode, serviceid, date_period_next FROM services_customers LEFT JOIN services ON services.id = services_customers.serviceid WHERE services_customers.active='1'";
+	$sql_custserv_obj->string	= "SELECT services_customers.id, services.billing_mode, serviceid, date_period_next, date_period_last FROM services_customers LEFT JOIN services ON services.id = services_customers.serviceid WHERE services_customers.active='1'";
 
 	if ($customerid)
 		$sql_custserv_obj->string .= " AND customerid='$customerid'";
@@ -59,7 +59,7 @@ function service_periods_generate($customerid = NULL)
 		$sql_custserv_obj->fetch_array();
 
 		foreach ($sql_custserv_obj->data as $data)
-		{
+		{	
 			/*
 				Based on the billing mode, we now need to determine what date we need to create the next plan entry
 				for the selected service.
@@ -92,13 +92,21 @@ function service_periods_generate($customerid = NULL)
 					{
 						// fetch the period next date
 						$sql_service_obj		= New sql_query;
-						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->string	= "SELECT date_period_next, date_period_last FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
 						$sql_service_obj->execute();
 						$sql_service_obj->fetch_array();
 
-						// check if we need to generate a new period
-						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
+						// check if the service has ended
+						if ($sql_service_obj->data[0]["date_period_next"] == "0000-00-00" &&  $sql_service_obj->data[0]["date_period_last"] != "0000-00-00")
 						{
+							// service has ended - no next date set, but a last date set
+							unset($sql_service_obj);
+
+							$complete = 1;
+						}
+						elseif (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
+						{
+							// check if we need to generate a new period
 							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of ". $sql_service_obj->data[0]["date_period_next"]);
 
 							// the latest billing period has finished, we need to generate a new time period.
@@ -154,12 +162,19 @@ function service_periods_generate($customerid = NULL)
 					{
 						// fetch the period next date
 						$sql_service_obj		= New sql_query;
-						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->string	= "SELECT date_period_next, date_period_last FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
 						$sql_service_obj->execute();
 						$sql_service_obj->fetch_array();
 
 						// check if we need to generate a new period
-						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= $date_period_next)
+						if ($sql_service_obj->data[0]["date_period_next"] == "0000-00-00" &&  $sql_service_obj->data[0]["date_period_last"] != "0000-00-00")
+						{
+							// service has ended - no next date set, but a last date set
+							unset($sql_service_obj);
+
+							$complete = 1;
+						}
+						elseif (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= $date_period_next)
 						{
 							log_debug("inc_services_invoicegen", "Generating advance billing period for service with next billing date of $date_period_next");
 
@@ -205,12 +220,19 @@ function service_periods_generate($customerid = NULL)
 					{
 						// fetch the period next date
 						$sql_service_obj		= New sql_query;
-						$sql_service_obj->string	= "SELECT date_period_next FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
+						$sql_service_obj->string	= "SELECT date_period_next, date_period_last FROM services_customers WHERE services_customers.id='". $data["id"] ."' LIMIT 1";
 						$sql_service_obj->execute();
 						$sql_service_obj->fetch_array();
 
 						// check if we need to generate a new period
-						if (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
+						if ($sql_service_obj->data[0]["date_period_next"] == "0000-00-00" &&  $sql_service_obj->data[0]["date_period_last"] != "0000-00-00")
+						{
+							// service has ended - no next date set, but a last date set
+							unset($sql_service_obj);
+
+							$complete = 1;
+						}
+						elseif (time_date_to_timestamp($sql_service_obj->data[0]["date_period_next"]) <= mktime())
 						{
 							log_debug("inc_services_invoicegen", "Generating billing period for service with next billing date of ". $sql_service_obj->data[0]["date_period_next"]);
 
@@ -257,6 +279,9 @@ function service_periods_generate($customerid = NULL)
 	This function is typically called by the services_periods_generate function and is used to create
 	a new billing period which can then be used by the services_invoices_generate function to generate new invoices.
 
+	The logic is smart enough to handle services with an ending date, to ensure that they get a proper last date period
+	correctly handled.
+
 	Values
 	id_service_customer		ID of the service entry for the customer in services_customers.
 	billing_mode			name of the billing mode
@@ -276,12 +301,70 @@ function service_periods_add($id_service_customer, $billing_mode)
 	*/
 	
 	$sql_custserv_obj		= New sql_query;
-	$sql_custserv_obj->string	= "SELECT serviceid, date_period_first, date_period_next FROM services_customers WHERE id='$id_service_customer' LIMIT 1";
+	$sql_custserv_obj->string	= "SELECT serviceid, date_period_first, date_period_next, date_period_last FROM services_customers WHERE id='$id_service_customer' LIMIT 1";
 	$sql_custserv_obj->execute();
 	$sql_custserv_obj->fetch_array();
 
 	$serviceid		= $sql_custserv_obj->data[0]["serviceid"];
 	$date_period_start	= $sql_custserv_obj->data[0]["date_period_next"];
+	$date_period_last	= $sql_custserv_obj->data[0]["date_period_last"];
+
+	if (empty($date_period_last) || $date_period_last == "0000-00-00")
+	{
+		$date_period_last = NULL;
+	}
+
+
+
+	/*
+		Has the service reached it's end date?
+	*/
+
+	if ($date_period_last)
+	{
+		/*
+			Is deactivation required?
+		*/
+
+		if (time_date_to_timestamp($date_period_last) <= time())
+		{
+			log_write("debug", "inc_services_invoicegen", "Service $id_service_customer has reached deactivation date ($date_period_last), disabling service.");
+
+			// disable the service
+			$obj_service				= New customer_services;
+			$obj_service->id_service_customer	= $id_service_customer;
+
+			$obj_service->verify_id_service_customer();
+			$obj_service->service_disable();
+
+			unset($obj_service);
+		}
+
+
+		/*
+			Have we reached the end of the service with the current period?
+		*/
+
+		if ($date_period_start == $date_period_last)	
+		{
+			// start date the same as the last date
+			log_write("debug", "inc_services_invoicegen", "Service $id_service_customer is due to be deactived on $date_period_last, new period due to start on $date_period_start, preventing new period generation and making no changes.");
+
+			return 1;
+		}
+
+
+		/*
+			Catch any glitches, where the period start date is newer than the period last date, and correct.
+		*/
+
+		if (time_date_to_timestamp($date_period_start) > time_date_to_timestamp($date_period_last))
+		{
+			log_write("debug", "inc_services_invoicegen", "Service start date of $date_period_start, but last period date is for $date_period_last - adjusting start date to match last");
+
+			$date_period_start = $date_period_last;
+		}
+	}
 
 
 
@@ -299,6 +382,181 @@ function service_periods_add($id_service_customer, $billing_mode)
 
 
 	/*
+		Fetch Dates
+	*/
+
+	$billing_cycle	= sql_get_singlevalue("SELECT billing_cycles.name as value FROM services LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle WHERE services.id='$serviceid'");
+
+	$dates		= service_period_dates_generate($date_period_start, $billing_cycle, $billing_mode);
+
+	$date_period_start	= $dates["start"];
+	$date_period_end	= $dates["end"];
+	$date_period_next	= $dates["next"];
+
+
+
+	/*
+		Handle Last Date
+
+		If the service has reached the date_period_last, we need to flag the period as being the last - this means
+		if an end/last date is set half way during a period, the period will be changed into a partial period.
+	*/
+
+	if ($date_period_last)
+	{
+		if (time_date_to_timestamp($date_period_last) <= time_date_to_timestamp($date_period_end))
+		{
+			/*
+				Period ending date is later than the last period date - adjust the end date to align.
+			*/
+
+			$date_period_end	= $date_period_last;
+			$date_period_next	= "0000-00-00";
+		}
+
+
+		if ($date_period_last == $date_period_end)
+		{
+			/*
+				Period end date same as the service last date.
+			*/
+
+			$date_period_next	= "0000-00-00";
+		}
+	}
+
+
+	
+	/*
+		Calculate date to bill the period on
+	*/
+
+	switch ($billing_mode)
+	{
+		case "periodadvance":
+		case "monthadvance":
+			// PERIODADVANCE / MONTHADVANCE
+			//
+			// Billing date should be set to today, since the period will have just been generated in advance today and
+			// we don't need to bother regenerating the billing period.
+			//
+
+			$date_period_billing = date("Y-m-d");
+		break;
+
+		case "periodtelco":
+		case "monthtelco":
+			// PERIODTELCO / MONTHTELCO
+			//
+			// With Telco periods, we need to bill on the first day of the new period.
+
+			$date_period_billing = $date_period_start;
+
+		break;
+			
+		case "periodend":
+		case "monthend":
+			// PERIODEND /  MONTHEND
+			//
+			// We can't bill for this period until it's end, so we set the billing date to the start of the next period,
+			// so that the period has completely finished before we invoice.
+
+			$date_period_billing = $date_period_next;
+
+		break;
+	}
+
+	log_write("debug", "inc_customers", "Calculated billing date of \"". $date_period_billing ."\" for service billing mode of \"". $billing_mode ."\"");
+
+
+
+	/*
+		Start Transaction
+	*/
+
+	$sql_obj = New sql_query;
+	$sql_obj->trans_begin();
+
+
+	/*
+		Add a new period
+	*/
+	$sql_obj->string	= "INSERT INTO services_customers_periods (id_service_customer, date_start, date_end, date_billed) VALUES ('$id_service_customer', '$date_period_start', '$date_period_end', '$date_period_billing')";
+	$sql_obj->execute();
+			
+
+	/*
+		Update services_customers
+	*/
+	$sql_obj->string	= "UPDATE services_customers SET date_period_next='$date_period_next' WHERE id='$id_service_customer' LIMIT 1";
+	$sql_obj->execute();
+
+
+
+
+	/*
+		If the period is ending, we need to create a special 0-day period - this is used
+		to account for usage on services, by having a final period with no service charge
+		but with usage for the previous (final) period.
+	*/
+
+	if ($date_period_last && $date_period_next == "0000-00-00")
+	{
+		/*
+			This period is for one day after the service terminates - it will force an invoice to be generated for the
+			terminated service, with $0 plan charges and any usage charges that apply.
+
+			Depending on configuration, the customer may or may not recieve a copy of the invoice.
+		*/
+
+		$sql_obj->string	= "INSERT INTO services_customers_periods (id_service_customer, date_start, date_end, date_billed) VALUES ('$id_service_customer',  DATE_ADD('$date_period_end', INTERVAL 1 DAY), DATE_ADD('$date_period_end', INTERVAL 1 DAY), DATE_ADD('$date_period_billing', INTERVAL 1 DAY))";
+		$sql_obj->execute();
+	}
+
+
+	/*
+		Commit
+	*/
+	if (error_check())
+	{
+		$sql_obj->trans_rollback();
+
+		log_write("error", "process", "An error occured whilst attempting to add a new period to a service. No changes were made.");
+		return 0;
+	}
+	else
+	{
+		$sql_obj->trans_commit();
+	}
+
+	return 1;
+}
+
+
+
+
+/*
+	service_period_dates_generate
+
+	Takes the provided start date, billing cycle and mode, returns the start, end and next billing date
+	for the selected period.
+	
+	Fields
+	date_period_start	YYYY-MM-DD
+	billing_cycle		String of billing cycle name
+	billing_mode		String of billing mode name
+
+	Returns
+	0		Failure
+	array		Associative array, keys "start", "end", "next"
+*/
+
+function service_period_dates_generate($date_period_start, $billing_cycle, $billing_mode)
+{
+	log_write("debug", "inc_service_invoicegen", "Executing service_period_dates_generate($date_period_start, $billing_cycle, $billing_mode)");
+
+
+	/*
 		Calculate the new dates for the billing period
 
 		We use MySQL's DATE_ADD function to do the month caluclations for us, since it is smart
@@ -309,11 +567,6 @@ function service_periods_add($id_service_customer, $billing_mode)
 			DATE_ADD('2010-01-07', INTERVAL 1 MONTH )		==	2010-02-07
 		
 	*/
-
-	
-	// get the billing cycle
-	$billing_cycle = sql_get_singlevalue("SELECT billing_cycles.name as value FROM services LEFT JOIN billing_cycles ON billing_cycles.id = services.billing_cycle WHERE services.id='$serviceid'");
-
 
 	// Work out how much time to add onto the start date to find the period end
 	$sql_add_string = "";
@@ -444,90 +697,16 @@ function service_periods_add($id_service_customer, $billing_mode)
 	}
 
 
-	
-	/*
-		Calculate date to bill the period on
-	*/
+	// return
+	$return = array();
 
-	switch ($billing_mode)
-	{
-		case "periodadvance":
-		case "monthadvance":
-			// PERIODADVANCE / MONTHADVANCE
-			//
-			// Billing date should be set to today, since the period will have just been generated in advance today and
-			// we don't need to bother regenerating the billing period.
-			//
+	$return["start"]	= $date_period_start;
+	$return["end"]		= $date_period_end;
+	$return["next"]		= $date_period_next;
 
-			$date_period_billing = date("Y-m-d");
-		break;
+	return $return;
 
-		case "periodtelco":
-		case "monthtelco":
-			// PERIODTELCO / MONTHTELCO
-			//
-			// With Telco periods, we need to bill on the first day of the new period.
-
-			$date_period_billing = $date_period_start;
-
-		break;
-			
-		case "periodend":
-		case "monthend":
-			// PERIODEND /  MONTHEND
-			//
-			// We can't bill for this period until it's end, so we set the billing date to the start of the next period,
-			// so that the period has completely finished before we invoice.
-
-			$date_period_billing = $date_period_next;
-
-		break;
-	}
-
-	log_write("debug", "inc_customers", "Calculated billing date of \"". $date_period_billing ."\" for service billing mode of \"". $billing_mode ."\"");
-
-
-
-	/*
-		Start Transaction
-	*/
-
-	$sql_obj = New sql_query;
-	$sql_obj->trans_begin();
-
-
-	/*
-		Add a new period
-	*/
-	$sql_obj->string	= "INSERT INTO services_customers_periods (id_service_customer, date_start, date_end, date_billed) VALUES ('$id_service_customer', '$date_period_start', '$date_period_end', '$date_period_billing')";
-	$sql_obj->execute();
-			
-
-	/*
-		Update services_customers
-	*/
-	$sql_obj->string	= "UPDATE services_customers SET date_period_next='$date_period_next' WHERE id='$id_service_customer' LIMIT 1";
-	$sql_obj->execute();
-
-
-
-	/*
-		Commit
-	*/
-	if (error_check())
-	{
-		$sql_obj->trans_rollback();
-
-		log_write("error", "process", "An error occured whilst attempting to add a new period to a service. No changes were made.");
-		return 0;
-	}
-	else
-	{
-		$sql_obj->trans_commit();
-	}
-
-	return 1;
-}
+} // end of service_period_dates_generate
 
 
 
@@ -598,6 +777,8 @@ function service_invoices_generate($customerid = NULL)
 								."services_customers_periods.date_start, "
 								."services_customers_periods.date_end, "
 								."services_customers.date_period_first, "
+								."services_customers.date_period_next, "
+								."services_customers.date_period_last, "
 								."services_customers.id as id_service_customer, "
 								."services_customers.quantity, "
 								."services_customers.serviceid "
@@ -806,6 +987,54 @@ function service_invoices_generate($customerid = NULL)
 
 
 					/*
+						Service Last Period Handling
+
+						If this is the last period for a service, it may be of a different link to the regular full period term
+						- this effects both month and period based services.
+					*/
+
+					if ($period_data["date_period_last"] == $period_data["date_end"] || time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_data["date_end"]))
+					{
+						log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
+
+						// fetch the regular end date
+						$orig_dates = service_period_dates_generate($period_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
+
+						if ($orig_dates["end"] != $period_data["date_end"])
+						{
+							// work out the total number of days
+							$time = NULL;
+
+							$time["start"]		= time_date_to_timestamp($period_data["date_start"]);
+
+							$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
+							$time["end_new"]	= time_date_to_timestamp($period_data["date_end"]);
+
+							$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
+							$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+
+							log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
+
+
+							// calculate correct base fee
+							$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
+
+							// calculate ratio
+							$ratio = ($time["new_days"] / $time["orig_days"]);
+
+							log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
+
+							unset($time);
+						}
+						else
+						{
+							log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+						}
+					}
+
+
+
+					/*
 						Service Base Plan Item
 
 						Note: There can be a suitation where we shouldn't charge for the base plan
@@ -868,6 +1097,13 @@ function service_invoices_generate($customerid = NULL)
 						}
 
 					
+						// handle final periods
+						if ($period_data["date_period_last"] != "0000-00-00" && $period_data["date_start"] == $period_data["date_end"])
+						{
+							$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." service terminated as of ". $period_data["date_end"] ."";
+						}
+
+
 						// is this service item part of a bundle? if it is, we shouldn't charge for the plan
 						if (!empty($obj_service->data["id_bundle_component"]))
 						{
@@ -936,7 +1172,7 @@ function service_invoices_generate($customerid = NULL)
 
 						if ($sql_obj->num_rows())
 						{
-							log_write("debug", "service_invoicegen", "Billing for seporate past usage period (". $period_data["date_start"] ." to ". $period_data["date_end"] ."");
+							log_write("debug", "service_invoicegen", "Billing for seporate past usage period - current period is (". $period_data["date_start"] ." to ". $period_data["date_end"] ."), usage period is (". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] .")");
 
 							// there is a valid usage period
 							$period_usage_data["active"]		= "yes";
@@ -951,6 +1187,8 @@ function service_invoices_generate($customerid = NULL)
 							$period_usage_data["date_start"]		= $sql_obj->data[0]["date_start"];
 							$period_usage_data["date_end"]			= $sql_obj->data[0]["date_end"];
 
+							// reset ratio
+							$ratio = 1;
 
 
 							/*
@@ -1002,6 +1240,45 @@ function service_invoices_generate($customerid = NULL)
 
 							} // end of calculate usage abnormal period
 
+
+							if ($period_data["date_period_last"] == $period_usage_data["date_end"] || time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_usage_data["date_end"]))
+							{
+								log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
+
+								// fetch the regular end date
+								$orig_dates = service_period_dates_generate($period_usage_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
+
+								if ($orig_dates["end"] != $period_usage_data["date_end"])
+								{
+									// work out the total number of days
+									$time = NULL;
+
+									$time["start"]		= time_date_to_timestamp($period_usage_data["date_start"]);
+
+									$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
+									$time["end_new"]	= time_date_to_timestamp($period_usage_data["date_end"]);
+
+									$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
+									$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+
+									log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
+
+
+									// calculate correct base fee
+									$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
+
+									// calculate ratio
+									$ratio = ($time["new_days"] / $time["orig_days"]);
+
+									log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
+
+									unset($time);
+								}
+								else
+								{
+									log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+								}
+							}
 
 						}
 						else

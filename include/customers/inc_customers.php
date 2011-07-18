@@ -980,9 +980,33 @@ class customer_services extends customer
 	{
 		log_write("debug", "customers_services", "Executing service_check_delete_lock()");
 
+
+		// check for bundle lock
 		if ($this->service_get_is_bundle_item())
 		{
+			log_write("error", "customers_services", "Service is part of a bundle and can not be deleted.");
+
 			return 2;
+		}
+
+		// check if the service has current periods - if so, service can not be deleted until periods are terminated
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT date_end FROM `services_customers_periods` WHERE id_service_customer='". $this->id_service_customer ."' ORDER BY date_end DESC LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			if (time_date_to_timestamp($sql_obj->data[0]["date_end"]) > time())
+			{
+				// period end date is larger than today - we can not delete the service
+				// until after the period completes.
+
+				log_write("error", "customers_services", "Service has current periods, can not be deleted until the final period terminates.");
+
+				return 1;
+			}
 		}
 
 		return 0;

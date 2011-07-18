@@ -207,7 +207,7 @@ class page_output
 	
 		if ($this->locked)
 		{
-			format_msgbox("locked", "<p>This service can not be deleted as it is part of a bundle - if you do not want the service active, you can disable it, otherwise you have to delete the bundle.</p>");
+			format_msgbox("locked", "<p>This service is locked and can not be deleted at this time.</p>");
 		}
 
 	}

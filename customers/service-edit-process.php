@@ -35,6 +35,7 @@ if (user_permissions_get('customers_write'))
 
 		// standard fields
 		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
+		$data["date_period_last"]	= @security_form_input_predefined("date", "date_period_last", 0, "");
 		$data["name_service"]		= @security_form_input_predefined("any", "name_service", 0, "");
 		$data["description"]		= @security_form_input_predefined("any", "description", 0, "");
 		$data["price"]			= @security_form_input_predefined("money", "price", 0, "");
@@ -179,6 +180,31 @@ if (user_permissions_get('customers_write'))
 	}
 
 
+	// make sure the last period date is no earlier than the last current service period
+	if (!empty($data["date_period_last"]) && $data["date_period_last"] != "0000-00-00")
+	{
+		// check last current service period
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT date_end FROM `services_customers_periods` WHERE id_service_customer='". $obj_customer->id_service_customer ."' ORDER BY date_end DESC LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			if (time_date_to_timestamp($sql_obj->data[0]["date_end"]) > time_date_to_timestamp($data["date_period_last"]))
+			{
+				// period end date is larger than today - we can not delete the service
+				// until after the period completes.
+
+				log_write("error", "process", "Due to active service periods, the last period date can be no later than ". $sql_obj->data[0]["date_end"] ."");
+			}
+
+		}
+
+	} // end of last period date check
+
+
 
 	/*
 		Check for any errors
@@ -241,7 +267,7 @@ if (user_permissions_get('customers_write'))
 		{
 			/*
 				Adjust an existing service
-			*/
+			"*/
 
 
 			// enable/disable service if needed
@@ -261,6 +287,17 @@ if (user_permissions_get('customers_write'))
 					// service has been disabled
 					$obj_customer->service_disable();
 				}
+			}
+
+			// handle end date
+			if (!empty($data["date_period_last"]))
+			{
+				// TODO: why is there no service->action_update function? some work needed to finish
+				//       standardising interfaces
+
+				$obj_sql		= New sql_query;
+				$obj_sql->string	= "UPDATE services_customers SET date_period_last='". $data["date_period_last"] ."' WHERE id='". $obj_customer->id_service_customer ."' LIMIT 1";
+				$obj_sql->execute();
 			}
 
 
