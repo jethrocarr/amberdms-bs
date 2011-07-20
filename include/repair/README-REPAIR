@@ -1,0 +1,28 @@
+ABS REPAIR SCRIPTS
+------------------
+
+The scripts in the repair directory are designed for execution by EXPERIENCED BILLING PLATFORM
+DEVELOPERS ONLY and enable bulk DB changes, such as rolling back billed items and trigger rebilling of bulk runs.
+
+
+Execution:
+
+1. ALWAYS BACKUP THE SQL DATABASE BEFORE RUNNING.
+
+2. ./index.php <scriptname> <scriptoptions>
+
+
+
+Scripts:
+
+
+credit_usage_services.php
+---
+Will take the specific service type and date and will create credit for all invoices generated on the specified
+date that have usage of the specific item.
+
+Will then uncheck the usage as having been billed in services_customers_periods to force the service usage to be
+rebilled on the following month's invoices.
+
+
+
