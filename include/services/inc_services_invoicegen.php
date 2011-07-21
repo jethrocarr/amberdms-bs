@@ -795,6 +795,14 @@ function service_invoices_generate($customerid = NULL)
 				$sql_periods_obj->fetch_array();
 
 				/*
+					TODO:
+
+					We should be able to re-bill usage here when needed with a clever cheat - if we load the periods to be billed,
+					we can then ignore the plan item, and rebill the usage item.
+				*/
+
+
+				/*
 					BILL CUSTOMER
 
 					This customer has at least one service that needs to be billed. We need to create
@@ -993,42 +1001,47 @@ function service_invoices_generate($customerid = NULL)
 						- this effects both month and period based services.
 					*/
 
-					if ($period_data["date_period_last"] == $period_data["date_end"] || time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_data["date_end"]))
+					if ($period_data["date_period_last"] != "0000-00-00")
 					{
-						log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
+						log_write("debug", "services_invoicegen", "Service has a final period date set (". $period_data["date_period_last"] .")");
 
-						// fetch the regular end date
-						$orig_dates = service_period_dates_generate($period_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
-
-						if ($orig_dates["end"] != $period_data["date_end"])
+						if ($period_data["date_period_last"] == $period_data["date_end"] || time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_data["date_end"]))
 						{
-							// work out the total number of days
-							$time = NULL;
+							log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
 
-							$time["start"]		= time_date_to_timestamp($period_data["date_start"]);
+							// fetch the regular end date
+							$orig_dates = service_period_dates_generate($period_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
 
-							$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
-							$time["end_new"]	= time_date_to_timestamp($period_data["date_end"]);
+							if ($orig_dates["end"] != $period_data["date_end"])
+							{
+								// work out the total number of days
+								$time = NULL;
 
-							$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
-							$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+								$time["start"]		= time_date_to_timestamp($period_data["date_start"]);
 
-							log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
+								$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
+								$time["end_new"]	= time_date_to_timestamp($period_data["date_end"]);
+
+								$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
+								$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+
+								log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
 
 
-							// calculate correct base fee
-							$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
+								// calculate correct base fee
+								$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
 
-							// calculate ratio
-							$ratio = ($time["new_days"] / $time["orig_days"]);
+								// calculate ratio
+								$ratio = ($time["new_days"] / $time["orig_days"]);
 
-							log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
+								log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
 
-							unset($time);
-						}
-						else
-						{
-							log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+								unset($time);
+							}
+							else
+							{
+								log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+							}
 						}
 					}
 
@@ -1142,7 +1155,7 @@ function service_invoices_generate($customerid = NULL)
 					/*
 						Service Usage Items
 
-						Create another item on the invoice for any usage, provided that the service type is a usage service)
+						Create another item on the invoice for any usage, provided that the service type is a usage service
 					*/
 
 					$period_usage_data	= array();
@@ -1241,42 +1254,47 @@ function service_invoices_generate($customerid = NULL)
 							} // end of calculate usage abnormal period
 
 
-							if ($period_data["date_period_last"] == $period_usage_data["date_end"] || time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_usage_data["date_end"]))
+							if ($period_data["date_period_last"] != "0000-00-00")
 							{
-								log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
+								log_write("debug", "services_invoicegen", "Service has a final period date set (". $period_data["date_period_last"] .")");
 
-								// fetch the regular end date
-								$orig_dates = service_period_dates_generate($period_usage_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
-
-								if ($orig_dates["end"] != $period_usage_data["date_end"])
+								if ($period_data["date_period_last"] == $period_usage_data["date_end"] || (time_date_to_timestamp($period_data["date_period_last"]) < time_date_to_timestamp($period_usage_data["date_end"]) ) )
 								{
-									// work out the total number of days
-									$time = NULL;
+									log_write("debug", "services_invoicegen", "Service is a final period, checking for time adjustment (if any)");
 
-									$time["start"]		= time_date_to_timestamp($period_usage_data["date_start"]);
+									// fetch the regular end date
+									$orig_dates = service_period_dates_generate($period_usage_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
 
-									$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
-									$time["end_new"]	= time_date_to_timestamp($period_usage_data["date_end"]);
+									if ($orig_dates["end"] != $period_usage_data["date_end"])
+									{
+										// work out the total number of days
+										$time = NULL;
 
-									$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
-									$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+										$time["start"]		= time_date_to_timestamp($period_usage_data["date_start"]);
 
-									log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
+										$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
+										$time["end_new"]	= time_date_to_timestamp($period_usage_data["date_end"]);
+
+										$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
+										$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+
+										log_write("debug", "services_invoicegen", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
 
 
-									// calculate correct base fee
-									$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
+										// calculate correct base fee
+										$obj_service->data["price"] = ($obj_service->data["price"] / $time["orig_days"]) * $time["new_days"];
 
-									// calculate ratio
-									$ratio = ($time["new_days"] / $time["orig_days"]);
+										// calculate ratio
+										$ratio = ($time["new_days"] / $time["orig_days"]);
 
-									log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
+										log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
 
-									unset($time);
-								}
-								else
-								{
-									log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+										unset($time);
+									}
+									else
+									{
+										log_write("debug", "services_invoicegen", "Final service period is regular size, no adjustment required.");
+									}
 								}
 							}
 
