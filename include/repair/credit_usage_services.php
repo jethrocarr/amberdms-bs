@@ -334,9 +334,15 @@ function page_execute($argv)
 						}
 						else
 						{
+							// create & update payment item
 							$item->action_create();
 							$item->action_update();
-							
+
+							// update invoice totals & ledger
+							$item->action_update_tax();
+							$item->action_update_total();
+							$item->action_update_ledger();
+
 							log_write("notification", "repair", "Applied credit of ". $amount_invoice["creditpay"] ."");
 						}
 
@@ -374,6 +380,46 @@ function page_execute($argv)
 
 				// unset the credit note
 				unset($credit);
+
+
+				/*
+					Flag the refunded usage periods for re-billing.
+
+					Now that we have refunded the usage on the selected invoice, we should then flag any service periods
+					of the same service type and invoice ID, to cause the usge to be rebilled in the next service billing month.
+				*/
+
+				// fetch id_service_customer values from services where customer matches invoice
+				$obj_sql_cust		= New sql_query;
+				$obj_sql_cust->string	= "SELECT id FROM services_customers WHERE customerid='". $data_ar["customerid"] ."' AND serviceid IN (". format_arraytocommastring($option_services, NULL) .")";
+				$obj_sql_cust->execute();
+
+				if ($obj_sql_cust->num_rows())
+				{
+					$obj_sql_cust->fetch_array();
+
+					foreach ($obj_sql_cust->data as $data_cust)
+					{
+						// update any periods for this customer-service which have the ID of the selected invoice as
+						// the usage period invoice.
+						//
+						// these usage periods will then be re-invoiced at the next service invoicing run.
+						//
+
+						$obj_sql_period			= New sql_query;
+						$obj_sql_period->string		= "UPDATE services_customers_periods SET invoiceid_usage='0', rebill='1' WHERE invoiceid_usage='". $data_ar["id"] ."' AND id_service_customer='". $data_cust["id"] ."'";
+						$obj_sql_period->execute();
+
+					}
+					
+					log_write("notification", "repair", "Flagged services for customer ". $data_ar["customerid"] ." to bill for usage periods.");
+				}
+				else
+				{
+					log_write("warning", "repair", "No usage periods found to flag for rebilling for customer ". $data_ar["customerid"] .", possibly the service has been deleted?");
+				}
+
+				unset($obj_sql_cust);
 
 
 			} // if creditable items exist on the selected invoice

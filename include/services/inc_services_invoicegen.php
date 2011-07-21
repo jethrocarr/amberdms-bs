@@ -773,7 +773,9 @@ function service_invoices_generate($customerid = NULL)
 			$sql_periods_obj		= New sql_query;
 			$sql_periods_obj->string	= "SELECT "
 								."services_customers_periods.id, "
+								."services_customers_periods.rebill, "
 								."services_customers_periods.invoiceid, "
+								."services_customers_periods.invoiceid_usage, "
 								."services_customers_periods.date_start, "
 								."services_customers_periods.date_end, "
 								."services_customers.date_period_first, "
@@ -786,7 +788,7 @@ function service_invoices_generate($customerid = NULL)
 								."LEFT JOIN services_customers ON services_customers.id = services_customers_periods.id_service_customer "
 								."WHERE "
 								."services_customers.customerid='". $customer_data["id"] ."' "
-								."AND invoiceid = '0' "
+								."AND (invoiceid = '0' OR rebill = '1')"
 								."AND date_billed <= '". date("Y-m-d")."'";
 			$sql_periods_obj->execute();
 
@@ -794,12 +796,6 @@ function service_invoices_generate($customerid = NULL)
 			{
 				$sql_periods_obj->fetch_array();
 
-				/*
-					TODO:
-
-					We should be able to re-bill usage here when needed with a clever cheat - if we load the periods to be billed,
-					we can then ignore the plan item, and rebill the usage item.
-				*/
 
 
 				/*
@@ -888,6 +884,29 @@ function service_invoices_generate($customerid = NULL)
 				*/
 				foreach ($sql_periods_obj->data as $period_data)
 				{
+
+					/*
+						TODO:
+
+						We should be able to re-bill usage here when needed with a clever cheat - if we load the periods to be billed,
+						we can then ignore the plan item, and rebill the usage item.
+					*/
+
+					$period_data["mode"] = "standard";
+
+
+					if ($period_data["rebill"])
+					{
+						if (!$period_data["invoiceid_usage"] && $period_data["invoiceid"])
+						{
+							// the selected period has been billed, but the usage has been flagged for rebilling - we need to *ignore* the base plan
+							// item and only bill for the usage range.
+
+							$period_data["mode"] = "rebill_usage";
+						}
+					}
+
+
 
 					// fetch service details
 					$obj_service			= New service_bundle;
@@ -1057,7 +1076,7 @@ function service_invoices_generate($customerid = NULL)
 						before the actual plan starts properly.
 					*/
 					
-					if (time_date_to_timestamp($period_data["date_period_first"]) < time_date_to_timestamp($period_data["date_end"]))
+					if (time_date_to_timestamp($period_data["date_period_first"]) < time_date_to_timestamp($period_data["date_end"]) && $period_data["mode"] == "standard")
 					{
 						// date of the period is newer than the start date
 						log_write("debug", "inc_service_invoicegen", "Generating base plan item for period ". $period_data["date_start"] ." to ". $period_data["date_end"] ."");
@@ -1147,7 +1166,7 @@ function service_invoices_generate($customerid = NULL)
 					}
 					else
 					{
-						log_write("debug", "inc_service_invoicegen", "Skipping base plan item generation, due to migration mode operation");
+						log_write("debug", "inc_service_invoicegen", "Skipping base plan item generation, due to migration or rebill mode operation");
 					}
 
 
@@ -1172,10 +1191,20 @@ function service_invoices_generate($customerid = NULL)
 					{
 						log_write("debug", "service_invoicegen", "Determining previous period for telco-style usage billing (if any)");
 
-						// fetch previous period (if any) - we can determine the previous by subtracting one day from the current period start date.
-						$tmp_date			= explode("-", $period_data["date_start"]);
+						if ($period_data["mode"] == "standard")
+						{
+							// fetch previous period (if any) - we can determine the previous by subtracting one day from the current period start date.
+							$tmp_date			= explode("-", $period_data["date_start"]);
 
-						$period_usage_data["date_end"]	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] - 1), $tmp_date[0]));
+							$period_usage_data["date_end"]	= date("Y-m-d", mktime(0,0,0,$tmp_date[1], ($tmp_date[2] - 1), $tmp_date[0]));
+						}
+						elseif ($period_data["mode"] == "rebill_usage")
+						{
+							// use the period as the usage period
+							log_write("debug", "service_invoicegen", "Using the selected period ". $period_usage_data["date_end"] ." for rebill_usage mode");
+
+							$period_usage_data["date_end"]	= $period_data["date_end"];
+						}
 
 
 						// fetch period data to confirm previous period
@@ -1185,7 +1214,7 @@ function service_invoices_generate($customerid = NULL)
 
 						if ($sql_obj->num_rows())
 						{
-							log_write("debug", "service_invoicegen", "Billing for seporate past usage period - current period is (". $period_data["date_start"] ." to ". $period_data["date_end"] ."), usage period is (". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] .")");
+							log_write("debug", "service_invoicegen", "Billing for seporate past usage period");
 
 							// there is a valid usage period
 							$period_usage_data["active"]		= "yes";
@@ -1199,6 +1228,10 @@ function service_invoices_generate($customerid = NULL)
 
 							$period_usage_data["date_start"]		= $sql_obj->data[0]["date_start"];
 							$period_usage_data["date_end"]			= $sql_obj->data[0]["date_end"];
+
+
+							// tracing
+							log_write("debug", "service_invoicegen", "Current period is (". $period_data["date_start"] ." to ". $period_data["date_end"] ."), usage period is (". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"] .")");
 
 							// reset ratio
 							$ratio = 1;
@@ -2009,18 +2042,15 @@ function service_invoices_generate($customerid = NULL)
 
 					// set for plan period
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid' WHERE id='". $period_data["id"] . "' LIMIT 1";
+					$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid='$invoiceid', rebill='0' WHERE id='". $period_data["id"] . "' LIMIT 1";
 					$sql_obj->execute();
 
-					// set for usage period, if it differs
+					// set for usage period
 					if (!empty($period_usage_data["active"]))
 					{
-						if ($period_usage_data["id"] != $period_data["id"])
-						{
-							$sql_obj		= New sql_query;
-							$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid_usage='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
-							$sql_obj->execute();
-						}
+						$sql_obj		= New sql_query;
+						$sql_obj->string	= "UPDATE services_customers_periods SET invoiceid_usage='$invoiceid' WHERE id='". $period_usage_data["id"] . "' LIMIT 1";
+						$sql_obj->execute();
 					}
 				
 

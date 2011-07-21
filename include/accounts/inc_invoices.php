@@ -1043,13 +1043,16 @@ class invoice
 
 			// sort by date, to correct payment & invoice ordering
 
-			function cmp_date($a, $b)
+			if (!function_exists("cmp_date"))
 			{
-				if ($a["item_date_raw"] == $b["item_date_raw"]) {
-					return 0;
-				}
+				function cmp_date($a, $b)
+				{
+					if ($a["item_date_raw"] == $b["item_date_raw"]) {
+						return 0;
+					}
 				
-				return ($a["item_date_raw"] < $b["item_date_raw"]) ? -1 : 1;
+					return ($a["item_date_raw"] < $b["item_date_raw"]) ? -1 : 1;
+				}
 			}
 
 			usort($structure_pastactivity, "cmp_date");
