@@ -36,11 +36,13 @@ UPDATE cdr_rate_tables_values SET rate_billgroup='1' WHERE rate_prefix='DEFAULT'
 
 CREATE TABLE  `cdr_rate_billgroups` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, `billgroup_name` VARCHAR( 255 ) NOT NULL) ENGINE = INNODB;
 
-INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(0, 'Unknown Region');
+INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(9000, 'Unknown Region');
 INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(1, 'Local');
 INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(2, 'National');
 INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(3, 'Mobile');
 INSERT INTO `cdr_rate_billgroups` (`id`, `billgroup_name`) VALUES(4, 'International');
+
+UPDATE  `cdr_rate_billgroups` SET  `id` =  '0' WHERE  `cdr_rate_billgroups`.`id` =9000;
 
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'rate_billgroup', 'Billing Group/Region');
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'tbl_lnk_item_expand', 'Expand/Show');
