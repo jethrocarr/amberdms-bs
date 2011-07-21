@@ -975,11 +975,11 @@ class invoice
 		$structure_pastactivity		= array();
 		$structure_pastactivity[0]	= array(); // reserved for past balance
 
-		$amount_outstanding		= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."'");
+		$amount_outstanding		= sql_get_singlevalue("SELECT SUM(amount_total - amount_paid) as value FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."' AND date_trans <= '". $this->data["date_trans"] ."'");
 		$amount_outstanding_past	= $amount_outstanding;
 		
 		$sql_past_obj			= New sql_query;
-		$sql_past_obj->string		= "SELECT id, code_invoice, date_trans, amount_total, amount_paid, date_trans FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."' ORDER BY date_trans LIMIT 2";
+		$sql_past_obj->string		= "SELECT id, code_invoice, date_trans, amount_total, amount_paid, date_trans FROM account_ar WHERE customerid='". $this->data["customerid"] ."' AND id!='". $this->id ."' AND date_trans <= '". $this->data["date_trans"] ."' ORDER BY date_trans DESC LIMIT 2";
 		$sql_past_obj->execute();
 
 		if ($sql_past_obj->num_rows())
