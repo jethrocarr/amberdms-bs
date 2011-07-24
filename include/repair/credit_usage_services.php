@@ -144,6 +144,13 @@ function page_execute($argv)
 						// item is one of the target services, add details to array
 						log_write("debug", "repair", "Invoice ID #". $data_ar["id"] .", (". $data_ar["code_invoice"] .") item ID #". $data_item["id"] ." is a valid service usage item to refund.");
 
+						// check if it's call charges
+						if (!strpos($data_item["description"], "call charges"))
+						{
+							log_write("debug", "repair", "Skipping non-call charge usage item from credit");
+							continue;
+						}
+
 						// add invoice items
 						$invoice_items_tmp = array();
 

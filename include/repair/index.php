@@ -147,7 +147,7 @@ else
 		Just execute the functions in the script once.
 	*/
 
-	page_execute();
+	page_execute($argv);
 }
 
 

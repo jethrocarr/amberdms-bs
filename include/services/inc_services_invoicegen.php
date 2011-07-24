@@ -1825,7 +1825,7 @@ function service_invoices_generate($customerid = NULL)
 									charges due to overage of the allocated amount in the plan.
 								*/
 
-								if ($obj_service->data["typeid_string"] == "phone_trunk")
+								if ($obj_service->data["typeid_string"] == "phone_trunk" && $period_data["mode"] == "standard")
 								{
 
 									// start service item
@@ -1887,7 +1887,7 @@ function service_invoices_generate($customerid = NULL)
 									2. Trunk Charges
 								*/
 
-								if ($obj_service->data["typeid_string"] == "phone_trunk" || $obj_service->data["typeid_string"] == "phone_tollfree")
+								if (($obj_service->data["typeid_string"] == "phone_trunk" || $obj_service->data["typeid_string"] == "phone_tollfree") && $period_data["mode"] == "standard")
 								{
 									// fetch the number of trunks included in the plan, along with the number provided
 									// we can then see if there are any excess charges for these
