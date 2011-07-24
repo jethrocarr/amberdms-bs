@@ -28,8 +28,8 @@ if (user_permissions_get('services_write'))
 	$obj_rate_table->data_rate["rate_prefix"]		= @security_form_input_predefined("any", "rate_prefix", 1, "");
 	$obj_rate_table->data_rate["rate_description"]		= @security_form_input_predefined("any", "rate_description", 0, "");
 	$obj_rate_table->data_rate["rate_billgroup"]		= @security_form_input_predefined("int", "rate_billgroup", 0, "");
-	$obj_rate_table->data_rate["rate_price_sale"]		= @security_form_input_predefined("money", "rate_price_sale", 0, "");
-	$obj_rate_table->data_rate["rate_price_cost"]		= @security_form_input_predefined("money", "rate_price_cost", 0, "");
+	$obj_rate_table->data_rate["rate_price_sale"]		= @security_form_input_predefined("float", "rate_price_sale", 0, "");
+	$obj_rate_table->data_rate["rate_price_cost"]		= @security_form_input_predefined("float", "rate_price_cost", 0, "");
 
 
 
