@@ -441,18 +441,23 @@ class template_engine
 							
 							// if there are any items left that didn't get matched by any of the loop items, we should
 							// then run through the global variables, as there may be a match there
-							foreach (array_keys($this->data) as $var)
+							if (isset($this->data))
 							{
-								$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+								foreach (array_keys($this->data) as $var)
+								{
+									$line_tmp = str_replace("($var)", $this->data[$var], $line_tmp);
+								}
 							}
 						
 						
 							// And we also need to match any files, as well.
-							foreach (array_keys($this->data_files) as $var)
+							if (isset($this->data_files))
 							{
-								$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+								foreach (array_keys($this->data_files) as $var)
+								{
+									$line_tmp = str_replace("($var)", $this->data_files[$var]["filename_short"], $line_tmp);
+								}
 							}
-							
 							
 							// append the rows to the processed item array
 							$repeated_processed_lines[$j][] = $line_tmp; 

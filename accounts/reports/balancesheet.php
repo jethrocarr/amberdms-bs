@@ -355,15 +355,18 @@ class page_output
 
 
 					// run through equity charts
-					for ($i = 0; $i < count(array_keys($this->data_equity)); $i++)
+					if (isset($this->data_equity))
 					{
-						if ($data_trans["chartid"] == $this->data_equity[$i]["id"])
+						for ($i = 0; $i < count(array_keys($this->data_equity)); $i++)
 						{
-							@$this->data_equity[$i]["amount"] -= $data_trans["amount_debit"];
-							@$this->data_equity[$i]["amount"] += $data_trans["amount_credit"];
-						}
+							if ($data_trans["chartid"] == $this->data_equity[$i]["id"])
+							{
+								@$this->data_equity[$i]["amount"] -= $data_trans["amount_debit"];
+								@$this->data_equity[$i]["amount"] += $data_trans["amount_credit"];
+							}
 					
-					} // end of loop through equity charts
+						}
+					}// end of loop through equity charts
 
 
 					// run through income charts

@@ -132,11 +132,12 @@ class page_output
 		// totals
 		$this->obj_table->total_columns		= array("debit", "credit");
 		$this->obj_table->total_rows		= array("debit", "credit");
-		$this->obj_table->total_rows_mode	= "subtotal_nofinal";
+		$this->obj_table->total_rows_mode	= "subtotal_nofinal";		// this is actually re-calculated based on chart type
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("account_charts");
 		$this->obj_table->sql_obj->prepare_sql_addfield("id", "account_charts.id");
+		$this->obj_table->sql_obj->prepare_sql_addfield("chart_total_mode", "account_chart_type.total_mode");
 		$this->obj_table->sql_obj->prepare_sql_addjoin("LEFT JOIN account_chart_type ON account_chart_type.id = account_charts.chart_type");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("account_charts.chart_type != '1'");
 
@@ -182,6 +183,7 @@ class page_output
 			{
 				foreach ($sql_amount_obj->data as $data_amount)
 				{
+						
 					if ($data_amount["chartid"] == $this->obj_table->data[$i]["id"])
 					{
 						$this->obj_table->data[$i]["debit"]	= $data_amount["debit"];
@@ -190,6 +192,33 @@ class page_output
 				}
 			}
 		}
+
+
+		// process table data
+		$this->obj_table->render_table_prepare();
+
+
+		// correctly generate the total column
+		for ($i = 0; $i < count(array_keys($this->obj_table->data)); $i++)
+		{
+			if (!empty($this->obj_table->data[$i]["debit"]) && !empty($this->obj_table->data[$i]["debit"]))
+			{
+				if ($this->obj_table->data[$i]["chart_total_mode"] == "credit")
+				{
+					$this->obj_table->data[$i]["total"]		= $this->obj_table->data[$i]["credit"] - $this->obj_table->data[$i]["debit"];
+				}
+				else
+				{
+					$this->obj_table->data[$i]["total"]		= $this->obj_table->data[$i]["debit"] - $this->obj_table->data[$i]["credit"];
+				}
+
+				$this->obj_table->data_render[$i]["total"]		= format_money($this->obj_table->data[$i]["total"]);
+			}
+		}
+
+		$this->obj_table->data["total"]["total"] 	= $this->obj_table->data["total"]["debit"] - $this->obj_table->data["total"]["credit"];
+		$this->obj_table->data_render["total"]["total"] = format_money($this->obj_table->data["total"]["total"]);
+		
 
 	}
 

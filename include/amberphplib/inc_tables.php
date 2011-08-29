@@ -1418,7 +1418,10 @@ class table
 
 
 		// calculate all the totals and prepare processed values
-		$this->render_table_prepare();
+		if (!isset($this->data_render))
+		{
+			$this->render_table_prepare();
+		}
 		
 		// display header row
 		print "\n<table class=\"table_content\" cellspacing=\"0\" width=\"100%\">\n";

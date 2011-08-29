@@ -184,18 +184,30 @@ class page_output
 			The reports for taxes can handle it simpler, by just calcuating the invoice item total, but we also have
 			to include general ledger transactions.
 
+			Credit notes add additional complexity, however the solution is the same for both accural/invoice and cash
+			basis - read all the items for the credit notes for the selected date range, and subtract from the appropiate
+			account.
+
+			Note that it is entirely possible for the credit notes to end up being more than the invoice amount for a selected
+			time period, in which case, the account may go into negative, which is acceptable.
+
+
 			Accural/Invoice:
 				1. Run though all invoices
 				2. Add item amounts to accounts
-				3. Run through all general ledger transactions
-				4. Add GL amounts to accounts
+				3. Run through all credit notes during period
+				4. Subtract credit notes falling during period
+				5. Run through all general ledger transactions
+				6. Add GL amounts to accounts
 
 			Cash:
 				1. Run through all invoices
 				2. If invoices are fully paid, then add item amounts to accounts.
 				3. Impossible to handle partially paid invoices properly, so we ignore them.
-				4. Run through all general ledger transactions
-				5. Add GL amounts to accounts.
+				4. Run through all credit notes during period
+				5. Subtract credit notes falling during period
+				6. Run through all general ledger transactions
+				7. Add GL amounts to accounts.
 
 				Note: The date checks are made against the invoice date, not the payment date.
 		*/
@@ -272,6 +284,70 @@ class page_output
 
 
 		//
+		// AR CREDIT NOTES
+		//
+		$sql_obj = New sql_query;
+		
+		$sql_obj->prepare_sql_settable("account_ar_credit");
+		$sql_obj->prepare_sql_addfield("id");
+
+		// date options
+		if ($this->date_start)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans >= '". $this->date_start ."'");
+		}
+		
+		if ($this->date_end)
+		{
+			$sql_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
+		}
+
+
+		// run through credit notes
+		$sql_obj->generate_sql();
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			foreach ($sql_obj->data as $data_credit)
+			{
+				// fetch all items for this invoice type
+				$sql_item_obj		= New sql_query;
+				$sql_item_obj->string	= "SELECT chartid, amount FROM account_items WHERE invoiceid='". $data_credit["id"] ."' AND invoicetype='ar_credit'";
+				$sql_item_obj->execute();
+
+				if ($sql_item_obj->num_rows())
+				{
+					$sql_item_obj->fetch_array();
+
+					foreach ($sql_item_obj->data as $data_item)
+					{
+
+						// run through income charts
+						for ($i = 0; $i < count(array_keys($this->data_income)); $i++)
+						{
+							if ($data_item["chartid"] == $this->data_income[$i]["id"])
+							{
+								@$this->data_income[$i]["amount"] -= $data_item["amount"];
+							}
+							
+						} // end of loop through charts
+
+					} // end of credit item loop
+					
+				} // end of credit items
+				
+			} // end of credit loop
+			
+		} // end of credits
+
+		unset($sql_obj);
+
+
+
+		//
 		// AP INVOICES
 		//
 		$sql_obj = New sql_query;
@@ -338,6 +414,16 @@ class page_output
 
 		unset($sql_obj);
 
+
+
+		//
+		// AP CREDIT NOTES
+		//
+		
+		/*
+			TODO:	AP credit notes have not been implemented at this stage - when they are, an appropiate section will need to be added
+				here to support them.
+		*/
 
 
 
