@@ -830,6 +830,7 @@ function service_invoices_generate($customerid = NULL)
 				$invoice->data["customerid"]	= $customer_data["id"];
 				$invoice->data["employeeid"]	= 1;				// set employee to the default internal user
 
+				$invoice->prepare_date_shift();
 
 				if (!$invoice->action_create())
 				{

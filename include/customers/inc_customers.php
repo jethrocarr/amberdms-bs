@@ -2122,6 +2122,7 @@ class customer_orders extends customer
 			$obj_invoice->data["employeeid"]	= 1;
 			$obj_invoice->data["notes"]		= "Invoice generated from customer orders page.";
 
+			$obj_invoice->prepare_date_shift();
 			$obj_invoice->action_create();
 
 			$invoiceid	= $obj_invoice->id;

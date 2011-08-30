@@ -31,7 +31,8 @@ if (user_permissions_get("admin"))
 	$data["CODE_PROJECT"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_PROJECT", 1, "");
 	$data["CODE_STAFF"]			= @security_form_input("/^[A-Za-z0-9_\-]*[0-9]*$/", "CODE_STAFF", 1, "");
 
-	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("any", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
+	$data["ACCOUNTS_SERVICES_ADVANCEBILLING"]	= @security_form_input_predefined("int", "ACCOUNTS_SERVICES_ADVANCEBILLING", 1, "");
+	$data["ACCOUNTS_SERVICES_DATESHIFT"]		= @security_form_input_predefined("int", "ACCOUNTS_SERVICES_DATESHIFT", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
 	$data["ACCOUNTS_AUTOPAY"]			= @security_form_input_predefined("checkbox", "ACCOUNTS_AUTOPAY", 0, "");
 

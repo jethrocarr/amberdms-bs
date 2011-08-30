@@ -579,6 +579,51 @@ class invoice
 	} // end of prepare_code_invoice
 
 
+	/*
+		prepare_date_shift
+
+		Generates an invoice date that follows the ACCOUNTS_SERVICES_DATESHIFT options - this will change the date back to the
+		last date of the previous month if the date is within the range configured.
+
+		The use for this feature is to date invoices for the end of the month, rather than the first of the subsequent month, to
+		address the issue of some companies refusing to pay until the following month of the invoice date.
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function prepare_date_shift()
+	{
+		log_write("debug", "invoice", "Executing prepare_date_shift()");
+
+
+		if (!$this->data["date_trans"])
+		{
+			$this->data["date_trans"] = date("Y-m-d");
+		}
+
+
+		// fetch the day of the month, check against configuration options
+		if (time_calculate_daynum($this->data["date_trans"]) < $_GLOBALS["config"]["ACCOUNTS_SERVICES_DATESHIFT"])
+		{
+			// calculate previous month date
+			$newdate = sql_get_singlevalue("SELECT DATE_SUB('". $this->data["date_trans"] ."', INTERVAL 1 MONTH ) as value");
+
+			// calulate last date of that month
+			$newdate = time_calculate_monthdate_last($newdate);
+
+			log_write("debug", "invoice", "Performing date shift from ". $this->data["date_trans"] ."  to $newdate");
+
+			$this->data["date_trans"] = $newdate;
+		}
+		else
+		{
+			log_write("debug", "invoice", "No date shift required, using current date");
+		}
+
+		return 1;
+
+	} // end of prepare_date_shift
 
 
 

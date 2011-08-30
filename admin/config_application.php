@@ -113,7 +113,18 @@ class page_output
 		$structure["fieldname"]				= "ACCOUNTS_SERVICES_ADVANCEBILLING";
 		$structure["type"]				= "input";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["width"]			= "50";
+		$structure["options"]["label"]			= " days";
 		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_SERVICES_DATESHIFT";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["width"]			= "50";
+		$structure["options"]["label"]			= " ". lang_trans("help_accounts_services_dateshift");
+		$this->obj_form->add_input($structure);
+
 
 		$structure = NULL;
 		$structure["fieldname"]				= "ACCOUNTS_TERMS_DAYS";
@@ -326,7 +337,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "ACCOUNTS_CREDIT_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
-		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_AUTOPAY");
+		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_SERVICES_DATESHIFT", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_AUTOPAY");
 		$this->obj_form->subforms["config_accounts_email"]	= array("ACCOUNTS_EMAIL_ADDRESS", "ACCOUNTS_INVOICE_AUTOEMAIL", "ACCOUNTS_EMAIL_AUTOBCC", "ACCOUNTS_INVOICE_BATCHREPORT");
 		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
