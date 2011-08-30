@@ -656,6 +656,55 @@ class invoice
 		$this->data["dest_account_orig"] = sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
 
 
+		// make sure a dest account is seelcted
+		if (!$this->data["dest_account"])
+		{
+			if ($this->data["dest_account_orig"])
+			{
+				// no dest account supplied, but one originally set - use
+				$this->data["dest_account"] = $this->data["dest_account_orig"];
+			}
+			else
+			{
+				/*
+					When invoices are generated automatically, such as part of the accounts invoicing or service invoicing
+					work, a destination AR or AP account needs to be selected.
+
+					Typically we handle this in the UI, by default selecting the first account in the list and then if more exist,
+					allowing the user to select the desired.
+
+					For automated invoices, we just select the first match - this will meet the needs of most users who
+					will only ever have one AR and one AP account, 
+
+
+					TODO: A better solution might be to select the first one by default, unless a configuration option has been
+					set detailing which AR account to use.
+				*/
+					
+
+				// fetch the ID of the summary type label
+				$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='". $this->type ."_summary_account' LIMIT 1");
+
+				// fetch the top AR/AP summary account
+				$sql_query	= "SELECT "
+						."account_charts.id as value "
+						."FROM account_charts "
+						."LEFT JOIN account_charts_menus ON account_charts_menus.chartid = account_charts.id "
+						."WHERE account_charts_menus.menuid='$menuid' "
+						."LIMIT 1";
+								
+				$this->data["dest_account"]	= sql_get_singlevalue($sql_query);
+
+				if (!$this->data["dest_account"])
+				{
+					log_write("error", "services_invoicegen", "No AR/AP summary account could be found, it is not possible to create an invoice without one.");
+
+					return 0;
+				}
+			}
+		}
+
+
 		/*
 			Start SQL Transaction
 		*/

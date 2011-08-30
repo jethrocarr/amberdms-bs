@@ -831,37 +831,6 @@ function service_invoices_generate($customerid = NULL)
 				$invoice->data["employeeid"]	= 1;				// set employee to the default internal user
 
 
-				/*
-					TODO: Determine optimal solution for dest_account in service invoices.
-					
-					To determine the dest_account for use in the invoice, we fetch the first AR account in the list - a
-					better solution needs to be worked out, since it is possible that a user might have more than 1
-					AR summary account.
-				*/
-					
-
-				// fetch the ID of the summary type label
-				$menuid = sql_get_singlevalue("SELECT id as value FROM account_chart_menu WHERE value='ar_summary_account' LIMIT 1");
-
-				// fetch the top AR account
-				$sql_query	= "SELECT "
-						."account_charts.id as value "
-						."FROM account_charts "
-						."LEFT JOIN account_charts_menus ON account_charts_menus.chartid = account_charts.id "
-						."WHERE account_charts_menus.menuid='$menuid' "
-						."LIMIT 1";
-								
-				$invoice->data["dest_account"]	= sql_get_singlevalue($sql_query);
-
-				if (!$invoice->data["dest_account"])
-				{
-					log_write("error", "services_invoicegen", "No AR summary account could be found");
-
-					$sql_obj->trans_rollback();
-					return 0;
-				}
-
-
 				if (!$invoice->action_create())
 				{
 					log_write("error", "services_invoicegen", "Unexpected problem occured whilst attempting to create invoice.");

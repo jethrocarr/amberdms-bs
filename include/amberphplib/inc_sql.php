@@ -950,7 +950,16 @@ function sql_get_singlevalue($string)
 		else
 		{
 			$sql_obj->fetch_array();
-			$GLOBALS["cache"]["sql"][$string] = $sql_obj->data[0]["value"];
+
+			// if the value is NULL/0/empty, we do not cache - this does mean we do increase lookups somewhat,
+			// but it also fixes issues where queries are used to check the original value of a record before updating
+			// it - which would then cause the cache to expire.
+
+			if (!empty($sql_obj->data[0]["value"]))
+			{
+				$GLOBALS["cache"]["sql"][$string] = $sql_obj->data[0]["value"];
+			}
+
 			return $sql_obj->data[0]["value"];
 		}
 	}
