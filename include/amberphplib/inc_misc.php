@@ -409,9 +409,11 @@ function format_linkbox($type, $hyperlink, $text)
 	Formats the provided floating integer and adds the default currency and applies
 	rounding to it to make a number suitable for display.
 
-	Set nocurrency to 1 to disable addition of the currency symbol
+	Set nocurrency to 1 to disable addition of the currency symbol.
+
+	Set round to desired number of SF values, default is 2
 */
-function format_money($amount, $nocurrency = NULL)
+function format_money($amount, $nocurrency = NULL, $round = 2)
 {
 	log_debug("misc", "Executing format_money($amount)");
 	
@@ -420,7 +422,7 @@ function format_money($amount, $nocurrency = NULL)
 	$decimal	= $GLOBALS["config"]["CURRENCY_DEFAULT_DECIMAL_SEPARATOR"];
 
 	// formatting for readability
-	$amount 	= number_format($amount, "2", $decimal, $thousands);
+	$amount 	= number_format($amount, $round, $decimal, $thousands);
 
 
 	if ($nocurrency)

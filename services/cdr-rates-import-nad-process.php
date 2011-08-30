@@ -29,18 +29,18 @@ if (user_permissions_get("services_write"))
 
 	$data["cdr_rate_import_mode"]				= @security_form_input_predefined("any", "cdr_rate_import_mode", 1, "");
 
-	$data["nad_price_cost_national"]			= @security_form_input_predefined("money", "nad_price_cost_national", 0, "");
-	$data["nad_price_sale_national"]			= @security_form_input_predefined("money", "nad_price_sale_national", 0, "");
-	$data["nad_price_cost_mobile"]				= @security_form_input_predefined("money", "nad_price_cost_mobile", 0, "");
-	$data["nad_price_sale_mobile"]				= @security_form_input_predefined("money", "nad_price_sale_mobile", 0, "");
-	$data["nad_price_cost_directory_national"]		= @security_form_input_predefined("money", "nad_price_cost_directory_national", 0, "");
-	$data["nad_price_sale_directory_national"]		= @security_form_input_predefined("money", "nad_price_sale_directory_national", 0, "");
-	$data["nad_price_cost_directory_international"]		= @security_form_input_predefined("money", "nad_price_cost_directory_international", 0, "");
-	$data["nad_price_sale_directory_international"]		= @security_form_input_predefined("money", "nad_price_sale_directory_international", 0, "");
-	$data["nad_price_cost_tollfree"]			= @security_form_input_predefined("money", "nad_price_cost_tollfree", 0, "");
-	$data["nad_price_sale_tollfree"]			= @security_form_input_predefined("money", "nad_price_sale_tollfree", 0, "");
-	$data["nad_price_cost_special"]				= @security_form_input_predefined("money", "nad_price_cost_special", 0, "");
-	$data["nad_price_sale_special"]				= @security_form_input_predefined("money", "nad_price_sale_special", 0, "");
+	$data["nad_price_cost_national"]			= @security_form_input_predefined("float", "nad_price_cost_national", 0, "");
+	$data["nad_price_sale_national"]			= @security_form_input_predefined("float", "nad_price_sale_national", 0, "");
+	$data["nad_price_cost_mobile"]				= @security_form_input_predefined("float", "nad_price_cost_mobile", 0, "");
+	$data["nad_price_sale_mobile"]				= @security_form_input_predefined("float", "nad_price_sale_mobile", 0, "");
+	$data["nad_price_cost_directory_national"]		= @security_form_input_predefined("float", "nad_price_cost_directory_national", 0, "");
+	$data["nad_price_sale_directory_national"]		= @security_form_input_predefined("float", "nad_price_sale_directory_national", 0, "");
+	$data["nad_price_cost_directory_international"]		= @security_form_input_predefined("float", "nad_price_cost_directory_international", 0, "");
+	$data["nad_price_sale_directory_international"]		= @security_form_input_predefined("float", "nad_price_sale_directory_international", 0, "");
+	$data["nad_price_cost_tollfree"]			= @security_form_input_predefined("float", "nad_price_cost_tollfree", 0, "");
+	$data["nad_price_sale_tollfree"]			= @security_form_input_predefined("float", "nad_price_sale_tollfree", 0, "");
+	$data["nad_price_cost_special"]				= @security_form_input_predefined("float", "nad_price_cost_special", 0, "");
+	$data["nad_price_sale_special"]				= @security_form_input_predefined("float", "nad_price_sale_special", 0, "");
 
 
 	/*
@@ -205,6 +205,7 @@ if (user_permissions_get("services_write"))
 			{
 				$import_array_raw[$i]["nad_price_cost"]		= $data["nad_price_cost_national"];
 				$import_array_raw[$i]["nad_price_sale"]		= $data["nad_price_sale_national"];
+				$import_array_raw[$i]["billgroup"]		= "2"; // National
 			}
 
 
@@ -227,13 +228,13 @@ if (user_permissions_get("services_write"))
 
 
 				// take the region name as the destination
-				if ($import_array_raw[$i]["lcarea"])
-				{
-					$import_row["col_destination"] = $import_array_raw[$i]["lcarea"];
-				}
-				elseif (!empty($import_array_raw[$i]["lica"]))
+				if ($import_array_raw[$i]["lica"])
 				{
 					$import_row["col_destination"] = $import_array_raw[$i]["lica"];
+				}
+				elseif (empty($import_array_raw[$i]["lica"]) && !empty($import_array_raw[$i]["lcarea"]))
+				{
+					$import_row["col_destination"] = $import_array_raw[$i]["lcarea"];
 				}
 				else
 				{

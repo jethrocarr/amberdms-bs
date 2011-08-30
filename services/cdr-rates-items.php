@@ -118,8 +118,8 @@ class page_output
 
 		$this->obj_table->add_column("standard", "rate_description", "");
 		$this->obj_table->add_column("standard", "rate_billgroup", "cdr_rate_billgroups.billgroup_name");
-		$this->obj_table->add_column("money", "rate_price_sale", "");
-		$this->obj_table->add_column("money", "rate_price_cost", "");
+		$this->obj_table->add_column("money_float", "rate_price_sale", "");
+		$this->obj_table->add_column("money_float", "rate_price_cost", "");
 
 		// defaults
 		$this->obj_table->columns		= array("rate_prefix", "rate_description", "rate_billgroup", "rate_price_sale", "rate_price_cost");
@@ -164,6 +164,11 @@ class page_output
 		// load options
 		$this->obj_table->load_options_form();
 
+
+		// increase limit of group data
+		$obj_group_sql		= New sql_query;
+		$obj_group_sql->string	= "SET group_concat_max_len = 4092";
+		$obj_group_sql->execute();
 
 		// fetch all the service information
 		$this->obj_table->generate_sql();

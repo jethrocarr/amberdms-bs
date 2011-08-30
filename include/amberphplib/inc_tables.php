@@ -97,6 +97,7 @@ class table
 				timestamp	- UNIX style timestamp field (converts to date + time)
 				timestamp_date	- UNIX style timestamp field (converts to date only)
 				money		- displays a financial value correctly
+				money_float	- displays a financial value without rounding
 				price		- legacy use - just calls money
 				precentage	- does formatting for display percentages
 				hourmins	- input is a number of seconds, display as H:MM
@@ -712,6 +713,7 @@ class table
 
 			case "price":
 			case "money":
+			case "money_float":
 
 				// TODO: This exists here to work around a PHP bug - it seems that if
 				// we don't have it, even though $row will equal 0, it will still match
@@ -740,7 +742,14 @@ class table
 				}
 				else
 				{
-					$result = format_money($this->data[$row][$column]);
+					if ($this->structure[$column]["type"] == "money_float")
+					{
+						$result = format_money($this->data[$row][$column], NULL, 4);
+					}
+					else
+					{
+						$result = format_money($this->data[$row][$column]);
+					}
 				}
 			break;
 
