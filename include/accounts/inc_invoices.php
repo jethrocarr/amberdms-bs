@@ -604,7 +604,7 @@ class invoice
 
 
 		// fetch the day of the month, check against configuration options
-		if (time_calculate_daynum($this->data["date_trans"]) < $_GLOBALS["config"]["ACCOUNTS_SERVICES_DATESHIFT"])
+		if (time_calculate_daynum($this->data["date_trans"]) < $GLOBALS["config"]["ACCOUNTS_SERVICES_DATESHIFT"])
 		{
 			// calculate previous month date
 			$newdate = sql_get_singlevalue("SELECT DATE_SUB('". $this->data["date_trans"] ."', INTERVAL 1 MONTH ) as value");
