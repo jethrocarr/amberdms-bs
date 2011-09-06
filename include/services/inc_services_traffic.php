@@ -339,6 +339,329 @@ class traffic_customer_service_ipv4
 
 
 /*
+	CLASS traffic_types
+
+	Functions for managing and querying traffic types.
+*/
+class traffic_types
+{
+	var $id;		// traffic_type id
+	var $data;		// traffic_type data
+
+
+
+	/*
+		verify_id
+
+		Check that the supplied traffic type exists.
+
+		Results
+		0	Failure to find the ID
+		1	Success - service exists
+	*/
+
+	function verify_id()
+	{
+		log_debug("traffic_types", "Executing verify_id()");
+
+		if ($this->id)
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM `traffic_types` WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				return 1;
+			}
+		}
+
+		return 0;
+
+	} // end of verify_id
+
+
+	/*
+		check_delete_lock
+
+		Checks whether we can safely delete the selected traffic type - if the traffic type is assigned
+		to service caps it can't be deleted, nor can it be deleted if the traffic type ID == 1 (default catch all)
+
+		Results
+		0	Unlocked
+		1	Locked
+	*/
+
+	function check_delete_lock()
+	{
+		log_debug("traffic_types", "Executing check_delete_lock()");
+
+		// unable to delete anything with an ID of 1
+		if ($this->id == 1)
+		{
+			return 1;
+		}
+
+		// makes sure not in use by any traffic caps
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM traffic_caps WHERE id_traffic_type='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			return 1;
+		}
+
+
+		// unlocked
+		return 0;
+
+	}  // end of check_delete_lock
+
+
+
+
+	/*
+		load_data
+
+		Loads the traffic type data into $this->data
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function load_data()
+	{
+		log_debug("traffic_types", "Executing load_data()");
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT type_name, type_description, type_label FROM traffic_types WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			// fetch basic service data
+			$sql_obj->fetch_array();
+
+			$this->data["type_name"]		= $sql_obj->data[0]["type_name"];
+			$this->data["type_label"]		= $sql_obj->data[0]["type_label"];
+			$this->data["type_description"]		= $sql_obj->data[0]["type_description"];
+
+			return 1;
+		}
+
+		// failure
+		return 0;
+
+	} // end of load_data
+
+
+
+	/*
+		action_create
+	
+		Create a traffic type item based on the data in $this->data
+
+		Results
+		0	Failure
+		#	Success - return ID
+	*/
+	function action_create()
+	{
+		log_write("debug", "traffic_types", "Executing action_create()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Create CDR Rate Table
+		*/
+		$sql_obj->string	= "INSERT INTO `traffic_types` (type_name) VALUES ('". $this->data["type_name"]. "')";
+		$sql_obj->execute();
+
+		$this->id = $sql_obj->fetch_insert_id();
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "traffic_types", "An error occured when attemping to define a new traffic type.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			return $this->id;
+		}
+
+
+	} // end of action_create
+
+
+
+
+	/*
+		action_update
+
+		Update the details for the selected traffic type based on the data in $this->data. If no ID is provided,
+		it will first call the action_create function to add a new rate table.
+
+		Returns
+		0	failure
+		#	success - returns the ID
+	*/
+	function action_update()
+	{
+		log_write("debug", "traffic_types", "Executing action_update()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+
+		/*
+			If no ID supplied, create a new rate table first
+		*/
+		if (!$this->id)
+		{
+			$mode = "create";
+
+			if (!$this->action_create())
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			$mode = "update";
+		}
+
+
+
+		/*
+			Update Rate Table Details
+		*/
+
+		$sql_obj->string	= "UPDATE `traffic_types` SET "
+						."type_name='". $this->data["type_name"] ."', "
+						."type_label='". $this->data["type_label"] ."', "
+						."type_description='". $this->data["type_description"] ."' "
+						."WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj->execute();
+
+		
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "traffic_types", "An error occured when updating traffic type details.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			if ($mode == "update")
+			{
+				log_write("notification", "traffic_types", "Traffic type successfully updated.");
+			}
+			else
+			{
+				log_write("notification", "traffic_types", "Traffic type successfully added.");
+			}
+			
+			return $this->id;
+		}
+
+	} // end of action_update
+
+
+
+	/*
+		action_delete
+
+		Deletes the selected rate table - note that check_delete_lock should be executed
+		before calling this function.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+	function action_delete()
+	{
+		log_write("debug", "traffic_types", "Executing action_delete()");
+
+
+		/*
+			Start Transaction
+		*/
+		$sql_obj = New sql_query;
+		$sql_obj->trans_begin();
+
+
+		/*
+			Delete Traffic Type
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "DELETE FROM `traffic_types` WHERE id='". $this->id ."'";
+		$sql_obj->execute();
+
+
+
+		/*
+			Commit
+		*/
+
+		if (error_check())
+		{
+			$sql_obj->trans_rollback();
+
+			log_write("error", "traffic_types", "An error occured when deleting the selected traffic type, no changes have been made.");
+
+			return 0;
+		}
+		else
+		{
+			$sql_obj->trans_commit();
+
+			log_write("notification", "traffic_types", "Traffic type successfully deleted");
+
+			return 1;
+		}
+
+	} // end of action_delete
+
+
+
+} // end of class traffic_types
+
+
+
+
+/*
 	CLASS: service_usage_traffic
 
 	Functions for querying traffic usage for billing purposes
