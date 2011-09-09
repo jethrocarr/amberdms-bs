@@ -643,11 +643,9 @@ class services_form_plan
 			break;
 
 
-			
 			case "time":
-			case "data_traffic":
 				/*
-					TIME or DATA_TRAFFIC
+					TIME
 
 					Incrementing usage counters.
 				*/
@@ -725,6 +723,256 @@ class services_form_plan
 			break;
 
 
+			case "data_traffic":
+				/*
+					DATA_TRAFFIC
+		
+					Data traffic service types are reasonably complex and allow multiple data caps to be assigned, based
+					on the selected traffic types.
+				*/
+
+
+
+				/*
+					data_traffic: General service optionsd
+
+				*/
+
+				// general
+				$structure = form_helper_prepare_radiofromdb("billing_mode", "SELECT id, name as label, description as label1 FROM billing_modes WHERE active='1' AND name NOT LIKE '%advance%'");
+				$structure["options"]["req"]		= "yes";
+
+				// replace all the -- joiners with <br> for clarity
+				for ($i = 0; $i < count($structure["values"]); $i++)
+				{
+					$structure["translations"][ $structure["values"][$i] ] = str_replace("--", "<br><i>", $structure["translations"][ $structure["values"][$i] ]);
+					$structure["translations"][ $structure["values"][$i] ] .= "</i>";
+				}
+		
+				$this->obj_form->add_input($structure);
+
+				// subforms
+				$this->obj_form->subforms["service_plan"]		= array("name_service", "price", "price_setup", "discount", "billing_cycle", "billing_mode");
+
+
+
+
+				/*
+					data_traffic: Service Plan Options
+				*/
+
+				$structure = NULL;
+				$structure["fieldname"]		= "plan_information";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<i>This section is where you define what units you wish to bill in, along with the cost of excess units. It is acceptable to leave the price for extra units set to 0.00 if you have some other method of handling excess usage (eg: rate shaping rather than billing). If you wish to create an uncapped/unlimited usage service, set both the price for extra units and the included units to 0.</i>";
+				$this->obj_form->add_input($structure);
+
+				$structure = form_helper_prepare_radiofromdb("units", "SELECT id, name as label, description as label1 FROM service_units WHERE typeid='". $sql_plan_obj->data[0]["typeid"] ."' AND active='1' ORDER BY name");
+				$structure["options"]["req"]		= "yes";
+				$structure["options"]["autoselect"]	= "yes";
+				$this->obj_form->add_input($structure);
+		
+				// handle misconfiguration
+				if (empty($this->obj_form->structure["units"]["values"]))
+				{
+					$this->obj_form->structure["units"]["type"]			= "text";
+					$this->obj_form->structure["units"]["defaultvalue"]		= "error_no_units_available";
+				}
+
+				// subforms
+				$this->obj_form->subforms["service_plan_custom"] 	= array("plan_information", "units");
+
+
+
+
+				/*
+					data_traffic: Service Plan Datacaps
+				*/
+
+				// help info
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_help";
+				$structure["type"]		= "message";
+				$structure["defaultvalue"]	= "<p>Define the traffic cap(s) for the selected service below - note that the \"Any\" type will always exist and applies to any traffic that doesn't match any of the other types matched to the customer on this service.</p>";
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_help";
+
+
+				// header
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_header_active";
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= lang_trans("header_traffic_cap_active");
+				$this->obj_form->add_input($structure);
+				
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_header_name";
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= lang_trans("header_traffic_cap_name");
+				$this->obj_form->add_input($structure);
+				
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_header_mode";
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= lang_trans("header_traffic_cap_mode");
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_header_units_included";
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= lang_trans("header_traffic_units_included");
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"]		= "traffic_cap_header_units_price";
+				$structure["type"]		= "text";
+				$structure["defaultvalue"]	= lang_trans("header_traffic_units_price");
+				$this->obj_form->add_input($structure);
+
+
+				$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_active";
+				$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_name";
+				$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_mode";
+				$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_units_included";
+				$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_units_price";
+
+				$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_header";
+
+
+				// loop through all the traffic types
+				$obj_sql_traffic_types		= New sql_query;
+				$obj_sql_traffic_types->string	= "SELECT id, type_name FROM traffic_types ORDER BY id='1', type_name DESC";
+				$obj_sql_traffic_types->execute();
+				
+				$obj_sql_traffic_types->num_rows();	// will always be at least one, need for loop
+				$obj_sql_traffic_types->fetch_array();
+
+
+				for ($i=0; $i < $obj_sql_traffic_types->data_num_rows; $i++)
+				{
+
+
+					// define form fields
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_active";
+					$structure["type"]		= "checkbox";
+					$structure["options"]["label"]	= "Apply to Service";
+
+					if ($obj_sql_traffic_types->data[$i]["id"] == 1)
+					{
+						$structure["options"]["disabled"]	= "yes";
+						$structure["defaultvalue"]		= "on";
+					}
+
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_id";
+					$structure["type"]		= "hidden";
+					$structure["defaultvalue"]	= $obj_sql_traffic_types->data[$i]["id"];
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_name";
+					$structure["type"]		= "text";
+					$structure["defaultvalue"]	= $obj_sql_traffic_types->data[$i]["type_name"];
+					$this->obj_form->add_input($structure);
+					
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_mode";
+					$structure["type"]		= "dropdown";
+
+					$structure["values"][0]		= "unlimited";
+					$structure["values"][1]		= "capped";
+
+					$structure["defaultvalue"]	= "unlimited";
+					$structure["options"]["width"]	= "100";
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_units_included";
+					$structure["type"]		= "input";
+					$structure["options"]["width"]	= "100";
+					$structure["options"]["label"]	= "_units_"; // javascript replace with unit name
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_". $i ."_units_price";
+					$structure["type"]		= "money";
+					$structure["options"]["label"]	= "_units_"; // javascript replace with unit name
+					$this->obj_form->add_input($structure);
+
+
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_active";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_name";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_mode";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_units_included";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_units_price";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_id";
+
+					$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_". $i;
+
+
+					// fetch data caps for this service, if any
+					$obj_sql_traffic_cap 		= New sql_query;
+					$obj_sql_traffic_cap->string	= "SELECT mode, units_price, units_included FROM `traffic_caps` WHERE id_service='". $this->serviceid ."' AND id_traffic_type='". $obj_sql_traffic_types->data[$i]["id"] ."' LIMIT 1";
+					$obj_sql_traffic_cap->execute();
+
+					if ($obj_sql_traffic_cap->num_rows())
+					{
+						$obj_sql_traffic_cap->fetch_array();
+
+						$this->obj_form->structure["traffic_cap_". $i ."_active"]["defaultvalue"]		= "on";
+						$this->obj_form->structure["traffic_cap_". $i ."_mode"]["defaultvalue"]			= $obj_sql_traffic_cap->data[0]["mode"];
+						$this->obj_form->structure["traffic_cap_". $i ."_units_included"]["defaultvalue"]	= $obj_sql_traffic_cap->data[0]["units_included"];
+						$this->obj_form->structure["traffic_cap_". $i ."_units_price"]["defaultvalue"]		= $obj_sql_traffic_cap->data[0]["units_price"];
+					}
+
+					unset($obj_sql_traffic_cap);
+
+
+				}
+
+
+
+
+
+				/*
+					data_traffic: Service Usage Alerts
+				*/
+
+
+				// usage alerts
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_80pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 80% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_100pc";
+				$structure["type"]			= "checkbox";
+				$structure["options"]["no_fieldname"]	= "yes";
+				$structure["options"]["label"]		= "Send customers email warnings when they hit 100% of their usage";
+				$this->obj_form->add_input($structure);
+
+				$structure = NULL;
+				$structure["fieldname"] 		= "alert_extraunits";
+				$structure["type"]			= "input";
+				$this->obj_form->add_input($structure);
+													
+				
+				// subforms
+				$this->obj_form->subforms["service_plan_alerts"] 	= array("alert_80pc", "alert_100pc", "alert_extraunits");
+
+
+
+			break;
+
+
+		
 			case "bundle":
 				// do not offer any advance billing methods	
 

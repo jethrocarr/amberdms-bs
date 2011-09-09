@@ -664,7 +664,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 
 				print "<input type=\"hidden\" name=\"".$fieldname."_helpmessagestatus\" value=\"".$helpmessagestatus."\">";
@@ -747,7 +747,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 				
 				print "<input type=\"hidden\" name=\"".$fieldname."_helpmessagestatus\" value=\"".$helpmessagestatus."\">";
@@ -788,7 +788,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 			break;
 			
@@ -860,7 +860,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 			break;
 
@@ -931,7 +931,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 
 			break;
@@ -964,7 +964,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 
 			break;
@@ -994,7 +994,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 
 			break;
@@ -1098,7 +1098,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 
 			break;
@@ -1179,7 +1179,7 @@ class form_input
 						$translation = language_translate_string($this->language, $fieldname);
 					}
 	
-					print "<label for=\"$fieldname\">$translation</label><br>";
+					print "<label for=\"". $fieldname ."\">". $translation ."</label>";
 				}
 
 
@@ -1343,7 +1343,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 			break;
 
@@ -1395,7 +1395,7 @@ class form_input
 				// optional label/description
 				if (isset($this->structure[$fieldname]["options"]["label"]))
 				{
-					print $this->structure[$fieldname]["options"]["label"];
+					print "<label for=\"". $fieldname ."\">". $this->structure[$fieldname]["options"]["label"] ."</label>";
 				}
 			break;
 

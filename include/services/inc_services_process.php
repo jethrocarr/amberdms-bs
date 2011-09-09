@@ -358,7 +358,6 @@ function service_form_plan_process()
 		break;
 
 		case "time":
-		case "data_traffic":
 			$data["units"]			= @security_form_input_predefined("int", "units", 1, "");
 			$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
 			$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
@@ -366,6 +365,54 @@ function service_form_plan_process()
 			// force data usage/time to be incrementing
 			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
 
+			$data["alert_80pc"]		= @security_form_input_predefined("any", "alert_80pc", 0, "");
+			$data["alert_100pc"]		= @security_form_input_predefined("any", "alert_100pc", 0, "");
+			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
+		break;
+		
+		case "data_traffic":
+			// general data traffic options
+			$data["units"]			= @security_form_input_predefined("int", "units", 1, "");
+			
+			// force data usage/time to be incrementing
+			$data["usage_mode"]		= sql_get_singlevalue("SELECT id as value FROM service_usage_modes WHERE name='incrementing' LIMIT 1");
+
+			// loop through all the traffic types
+			$data["data_traffic_caps"]	= array();
+
+			$obj_sql_traffic_types		= New sql_query;
+			$obj_sql_traffic_types->string	= "SELECT id FROM traffic_types";
+			$obj_sql_traffic_types->execute();
+			$obj_sql_traffic_types->num_rows();	// will always be at least one, need for loop
+
+
+			for ($i=0; $i < $obj_sql_traffic_types->data_num_rows; $i++)
+			{
+				$cap = array();
+
+				if (@security_form_input_predefined("checkbox", "traffic_cap_". $i ."_active", 0, "") || $_POST["traffic_cap_". $i ."_id"] == "1")
+				{
+					// fetch traffic cap details
+					$cap["id_traffic_type"]	= @security_form_input_predefined("int", "traffic_cap_". $i ."_id", 1, "");
+					$cap["name"]		= @security_form_input_predefined("any", "traffic_cap_". $i ."_name", 0, "");
+					$cap["mode"]		= @security_form_input_predefined("any", "traffic_cap_". $i ."_mode", 0, "");
+					$cap["units_included"]	= @security_form_input_predefined("int", "traffic_cap_". $i ."_units_included", 0, "");
+					$cap["units_price"]	= @security_form_input_predefined("money", "traffic_cap_". $i ."_units_price", 0, "");
+
+					// additional checks
+					if ($cap["mode"] != "unlimited" && $cap["mode"] != "capped")
+					{
+						log_write("error", "A data type must either be disabled or marked as capped vs unlimited");
+						error_flag("traffic_cap_". $i);
+					}
+					
+					$data["data_traffic_caps"][] = $cap;
+				}
+			}
+
+			unset($obj_sql_traffic_types);
+
+			// alert configuration
 			$data["alert_80pc"]		= @security_form_input_predefined("any", "alert_80pc", 0, "");
 			$data["alert_100pc"]		= @security_form_input_predefined("any", "alert_100pc", 0, "");
 			$data["alert_extraunits"]	= @security_form_input_predefined("any", "alert_extraunits", 0, "");
@@ -431,7 +478,6 @@ function service_form_plan_process()
 		switch ($sql_plan_obj->data[0]["name"])
 		{
 			case "time":
-			case "data_traffic":
 
 				$sql_obj->string = "UPDATE services SET "
 						."active='1', "
@@ -451,7 +497,40 @@ function service_form_plan_process()
 				$sql_obj->execute();
 				
 			break;
-			
+
+
+			case "data_traffic":
+				// update service plan
+				$sql_obj->string = "UPDATE services SET "
+						."active='1', "
+						."price='". $data["price"] ."', "
+						."price_setup='". $data["price_setup"] ."', "
+						."discount='". $data["discount"] ."', "
+						."units='". $data["units"] ."', "
+						."billing_cycle='". $data["billing_cycle"] ."', "
+						."billing_mode='". $data["billing_mode"] ."', "
+						."usage_mode='". $data["usage_mode"] ."', "
+						."alert_80pc='". $data["alert_80pc"] ."', "
+						."alert_100pc='". $data["alert_100pc"] ."', "
+						."alert_extraunits='". $data["alert_extraunits"] ."' "
+						."WHERE id='$id'";
+				$sql_obj->execute();
+
+				// delete existing service traffic caps
+				$sql_obj->string = "DELETE FROM traffic_caps WHERE id_service='$id'";
+				$sql_obj->execute();
+
+				// update service traffic caps
+				foreach ($data["data_traffic_caps"] as $cap)
+				{
+					// add each traffic cap
+					$sql_obj->string = "INSERT INTO traffic_caps (id_service, id_traffic_type, mode, units_price, units_included) VALUES ('$id', '". $cap["id_traffic_type"] ."', '". $cap["mode"] ."', '". $cap["units_price"] ."', '". $cap["units_included"] ."')";
+					$sql_obj->execute();
+				}
+	
+			break;
+
+
 			case "generic_with_usage":
 
 				$sql_obj->string = "UPDATE services SET "

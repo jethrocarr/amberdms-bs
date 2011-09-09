@@ -1658,39 +1658,15 @@ function service_invoices_generate($customerid = NULL)
 
 
 								/*
-									Usage Item Basics
+									Fetch data traffic plan usage type
 								*/
 
-								// start the item
-								$invoice_item				= New invoice_items;
-							
-								$invoice_item->id_invoice		= $invoiceid;
-							
-								$invoice_item->type_invoice		= "ar";
-								$invoice_item->type_item		= "service_usage";
-							
-								$itemdata = array();
-
-								$itemdata["chartid"]		= $obj_service->data["chartid"];
-								$itemdata["description"]	= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
-								$itemdata["customid"]		= $obj_service->id;
-								$itemdata["discount"]		= 0;
-
+								$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
 
 
 								/*
-									Adjust Included Units to handle partial or extended periods
-								*/
-
-								if ($ratio != "1")
-								{
-									$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] * $ratio ));
-								}
-
-
-
-								/*
-									Fetch usage amount
+									Fetch usage amount - the returned usage structure will include breakdown of traffic
+									by configured types.
 								*/
 								
 								$usage_obj					= New service_usage_traffic;
@@ -1698,67 +1674,144 @@ function service_invoices_generate($customerid = NULL)
 								$usage_obj->date_start				= $period_usage_data["date_start"];
 								$usage_obj->date_end				= $period_usage_data["date_end"];
 								
+
+								/*
+									Fetch Traffic Caps & Details
+								*/
+								
+								$traffic_types_obj		= New sql_query;
+								$traffic_types_obj->string	= "SELECT
+													traffic_types.type_label as type_label,
+													traffic_types.type_name as type_name,
+													traffic_caps.mode as cap_mode,
+													traffic_caps.units_price as cap_units_price,
+													traffic_caps.units_included as cap_units_included
+												FROM `traffic_caps`
+												LEFT JOIN traffic_types ON traffic_types.id = traffic_caps.id_traffic_type
+												WHERE traffic_caps.id_service='". $obj_service->id ."'";
+								$traffic_types_obj->execute();
+								$traffic_types_obj->num_rows();		// always at least 1 record
+								$traffic_types_obj->fetch_array();	// always at least 1 record
+
+
+								/*
+									Generate Traffic Bills
+								*/
+
 								if ($usage_obj->load_data_service())
 								{
 									$usage_obj->fetch_usage_traffic();
 
-									$usage = $usage_obj->data["total_byunits"];
-								}
-								
-								unset($usage_obj);
+	
+									foreach ($traffic_types_obj->data as $data_traffic_cap)
+									{
+										// Adjust Included Units to handle partial or extended periods
+										if ($ratio != "1")
+										{
+											$data_traffic_cap["cap_units_included"] = sprintf("%d", ($data_traffic_cap["cap_units_included"] * $ratio ));
+										}
+
+										// if there is only a single traffic cap, we should make the traffic type name blank, since there's only going to be
+										// one line item anyway.
+
+										if ($traffic_types_obj->data_num_rows == 1)
+										{
+											$data_traffic_cap["type_name"] = "";
+										}
+
+
+										// if the any traffic type is zero and there are other traffic types, we should skip it, since most likely
+										// the other traffic types provide everything expected.
+										//
+										if ($traffic_types_obj->data_num_rows > 1 && $data_traffic_cap["type_label"] == "*" && $usage_obj->data["total_byunits"]["*"] == 0)
+										{
+											continue;
+										}
 
 								
+
+										// start service item
+										$invoice_item				= New invoice_items;
+									
+										$invoice_item->id_invoice		= $invoiceid;
+										
+										$invoice_item->type_invoice		= "ar";
+										$invoice_item->type_item		= "service_usage";
+									
+										$itemdata = array();
+
+										$itemdata["chartid"]			= $obj_service->data["chartid"];
+										$itemdata["customid"]			= $obj_service->id;
+
+
+										// base details
+										$itemdata["price"]			= 0;
+										$itemdata["quantity"]			= 0;
+										$itemdata["discount"]			= 0;
+										$itemdata["units"]			= "";
+										$itemdata["description"]		= addslashes($obj_service->data["name_service"]) ." usage from ". $period_usage_data["date_start"] ." to ". $period_usage_data["date_end"];
+
+
+										if ($data_traffic_cap["cap_mode"] == "unlimited")
+										{
+											// unlimited data cap, there will never be any excess traffic charges, so the line item
+											// description should be purely for informative purposes.
+
+											$itemdata["description"] .= "\nUnlimited ". addslashes($data_traffic_cap["type_name"]) ." traffic, total of ". $usage_obj->data["total_byunits"][ $data_traffic_cap["type_label"] ] ." $unitname used\n";
+	
+										}
+										else
+										{
+											// capped traffic - check for excess changes, otherwise just report on how much traffic
+											// that the customer used.
+											
+											// description example:		Used 10 GB out of 50 GB included in plan
+											$itemdata["description"] .= "\nCapped ". addslashes($data_traffic_cap["type_name"]) ." traffic, used ". $usage_obj->data["total_byunits"][ $data_traffic_cap["type_label"] ] ." $unitname out of ". $data_traffic_cap["cap_units_included"] ." $unitname in plan.";
+
+									
+											// handle excess charges
+											//
+											if ($usage_obj->data["total_byunits"][ $data_traffic_cap["type_label"] ] > $data_traffic_cap["cap_units_included"])
+											{
+												// there is excess usage that we can bill for.
+												$usage_excess = $usage_obj->data["total_byunits"][ $data_traffic_cap["type_label"] ] - $data_traffic_cap["cap_units_included"];
+
+												// set item attributes
+												$itemdata["price"]	= $data_traffic_cap["cap_units_price"];
+												$itemdata["quantity"]	= $usage_excess;
+												$itemdata["units"]	= $unitname;
+
+												// description example:		Excess usage of 70 GB charged at $5.00 per GB
+												$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". format_money($data_traffic_cap["cap_units_price"]) ." per $unitname.";
+											}
+
+										} // end of traffic cap mode
+
+
+										// add trunk usage item
+										//
+										$invoice_item->prepare_data($itemdata);
+										$invoice_item->action_update();
+
+										unset($invoice_item);
+									}
+								}
+
 								
-
-								/*
-									Charge for the usage in units
-								*/
-
-								$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
-
-								if ($usage > $obj_service->data["included_units"])
-								{
-									// there is excess usage that we can bill for.
-									$usage_excess = $usage - $obj_service->data["included_units"];
-
-									// set item attributes
-									$itemdata["price"]	= $obj_service->data["price_extraunits"];
-									$itemdata["quantity"]	= $usage_excess;
-									$itemdata["units"]	= $unitname;
-
-									// description example:		Used 120 GB out of 50 GB included in plan
-									//				Excess usage of 70 GB charged at $5.00 per GB
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-									$itemdata["description"] .= "\nExcess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname.";
-								}
-								else
-								{
-									// description example:		Used 10 out of 50 included units
-									$itemdata["description"] .= "\nUsed $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.";
-								}
-
-
-								/*
-									Add the item to the invoice
-								*/
-
-								$invoice_item->prepare_data($itemdata);
-								$invoice_item->action_update();
-
-								unset($invoice_item);
-
-
 								/*
 									Update usage value for period - this summary value is visable on the service
 									history page and saves having to query lots of records to generate period totals.
 								*/
 								$sql_obj		= New sql_query;
-								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='$usage' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
+								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='". $usage_ob->data["total_byunits"]["total"] ."' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
 								$sql_obj->execute();
+
+								
+								unset($usage_obj);
 
 							break;
 
-
+							
 							case "phone_single":
 							case "phone_tollfree":
 							case "phone_trunk":

@@ -20,6 +20,10 @@ class page_output
 
 	function page_output()
 	{
+		// includes
+		$this->requires["javascript"][]	= "include/javascript/services.js";
+
+
 		$this->obj_serviceform			= New services_form_plan;
 		$this->obj_serviceform->serviceid	= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 

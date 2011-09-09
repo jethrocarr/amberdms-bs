@@ -39,6 +39,92 @@ $(document).ready(function()
 		cdr_expand_table(cell);
 		return false;
 	});
+
+
+	/*
+	 * Traffic Cap UI Handling
+	 *
+	 * 1. Enable/disable entire rows depending on the check status of active.
+	 * 2. Depending on the mode, we need to enable/disable the units included and price fields, as they only apply to capped traffic.
+	 * 3. We need to load the unit type from the selected value and render inline with the units included field
+	 */
+
+	// disable any rows on load that are unselected
+	$("input[name*='_active']").not(":checked").each(function()
+	{
+		console.log("Disabling inactive traffic cap rows");
+
+		$(this).parent().siblings().children("select[name*='_mode']").attr("disabled", "disabled");
+		$(this).parent().siblings().children("input[name*='_units_price']").attr("disabled", "disabled");
+		$(this).parent().siblings().children("input[name*='_units_included']").attr("disabled", "disabled");
+	});
+
+
+	$("input[name*='_active']").live("change", function()
+	{
+		if ($(this).attr("checked"))
+		{
+			console.log("Enabling traffic cap row");
+
+			$(this).parent().siblings().children("select[name*='_mode']").removeAttr("disabled");
+			
+			if ($(this).parent().siblings().children("select[name*='_mode']").val() == "capped")
+			{
+				$(this).parent().siblings().children("input[name*='_units_price']").removeAttr("disabled");
+				$(this).parent().siblings().children("input[name*='_units_included']").removeAttr("disabled");
+			}
+		}
+		else
+		{
+			console.log("Disabling traffic cap row");
+
+			$(this).parent().siblings().children("select[name*='_mode']").attr("disabled", "disabled");
+			$(this).parent().siblings().children("input[name*='_units_price']").attr("disabled", "disabled");
+			$(this).parent().siblings().children("input[name*='_units_included']").attr("disabled", "disabled");
+		}
+	});
+
+
+
+	// handle unlimited vs capped services UI
+	$("select[name*='_mode']").each(function()
+	{
+		console.log("Disabling any unlimited cap fields on page load");
+
+		if ($(this).val() == "unlimited")
+		{
+			$(this).parent().siblings().children("input[name*='_units_price']").attr("disabled", "disabled");
+			$(this).parent().siblings().children("input[name*='_units_included']").attr("disabled", "disabled");
+		}
+	});
+
+	$("select[name*='_mode']").live("change", function()
+	{
+		console.log("Traffic cap mode changes, enabling/disabling UI fields");
+
+		if ($(this).val() == "unlimited")
+		{
+			$(this).parent().siblings().children("input[name*='_units_price']").attr("disabled", "disabled");
+			$(this).parent().siblings().children("input[name*='_units_included']").attr("disabled", "disabled");
+		}
+		else
+		{
+			$(this).parent().siblings().children("input[name*='_units_price']").removeAttr("disabled");
+			$(this).parent().siblings().children("input[name*='_units_included']").removeAttr("disabled");
+		}
+	});
+
+
+	// fetch units for UI
+	$("input[name^='units']:checked").each(function()
+	{
+		traffic_cap_units_update($(this));
+	});
+	
+	$("input[name^='units']:checked").live("change",function()
+	{
+		traffic_cap_units_update($(this));
+	});
 });
 
 
@@ -98,4 +184,34 @@ function cdr_expand_table(previous_row)
 	return false;
 }
 
+
+
+/*
+	traffic_cap_units_update
+
+	Updates the displayed units for traffic caps, based on selected values by user.
+*/
+function traffic_cap_units_update(radio_option)
+{
+	console.log("Executing traffic_cap_units_update()");
+
+	unit_value = $(radio_option).val();
+	unit_label = $("label[for^='units_" + unit_value + "']").text();
+
+	pattern	= /^([A-Z]*)\s/;
+	matches	= unit_label.match(pattern);
+
+	if (matches)
+	{
+		unit_label = matches[1];
+	}
+
+	console.log("Unit value is: " + unit_value + ", label is " + unit_label + ", updating page labels");
+
+	$("label[for*='units_included']").text(" " + unit_label);
+	$("label[for*='units_price']").text(" per " + unit_label + " additional usage.");
+
+
+	return false;
+}
 

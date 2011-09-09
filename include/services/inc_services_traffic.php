@@ -760,6 +760,14 @@ class service_usage_traffic extends service_usage
 
 		Fetching data traffic from database and returns total usage amount.
 
+
+		Total traffic counts are stored in:
+		$this->data["total"]["total"]	Total traffic of all types combined in bytes.
+		$this->data["total"][ $type ]	Total of specific traffic type in bytes.
+
+		$this->data["total_byunit"]["total"]	Total traffic of all types combined by the service units (eg total GB or MB)
+		$this->data["total_byunit"]["type"]	Total of a specific traffic type by the service units (eg total GB or MB)
+
 		Returns
 		0		failure
 		1		success
@@ -768,6 +776,13 @@ class service_usage_traffic extends service_usage
 	{
 		log_write("debug", "service_usage_traffic", "Executing fetch_usage_traffic()");
 
+
+
+		/*
+			Fetch data traffic types
+		*/
+
+		$traffic_types = sql_get_singlecol("SELECT traffic_types.type_label as col FROM `traffic_caps` LEFT JOIN traffic_types ON traffic_types.id = traffic_caps.id_traffic_type WHERE traffic_caps.id_service='". $this->obj_service->id ."'");
 
 
 		/*
@@ -781,6 +796,9 @@ class service_usage_traffic extends service_usage
 
 				Use the internal database - this stores the usage information for upload/download mapped against the customer's
 				IP address.
+
+				TODO:	Currently all traffic is just assigned against type any/*, this should be upgraded to properly support
+					the different traffic types.
 			*/
 
 			log_write("debug", "service_usage_traffic", "Fetching traffic records from internal database");
@@ -794,6 +812,8 @@ class service_usage_traffic extends service_usage
 			$this->data["usage1"]	= $sql_obj->data[0]["usage1"];
 			$this->data["usage2"]	= $sql_obj->data[0]["usage2"];
 
+			unset($sql_obj);
+
 
 			// create a total of both usage columns
 			$sql_obj			= New sql_query;
@@ -801,11 +821,14 @@ class service_usage_traffic extends service_usage
 			$sql_obj->execute();
 			$sql_obj->fetch_array();
 	
-			$this->data["total"] 	= $sql_obj->data[0]["totalusage"];
+			$this->data["total"]["*"] 	= $sql_obj->data[0]["totalusage"];
+			$this->data["total"]["total"] 	= $sql_obj->data[0]["totalusage"];
+			
+			unset($sql_obj);
 
 
 			// we now have the raw usage
-			log_write("debug", "service_usage_traffic", "Total raw traffic usage for ". $this->date_start ." until ". $this->date_end ." is ". $this->data["total"] ." bytes");
+			log_write("debug", "service_usage_traffic", "Total raw traffic usage for ". $this->date_start ." until ". $this->date_end ." is ". $this->data["total"]["total"] ." bytes");
 		}
 		else
 		{
@@ -831,6 +854,8 @@ class service_usage_traffic extends service_usage
 						traffic_20110421
 						traffic_20110422
 
+						TODO:	Currently all traffic is just assigned against type any/*, this should be upgraded to properly support
+							the different traffic types.
 					*/
 
 					log_write("debug", "service_usage_traffic", "Processing external database mysql_netflow_daily");
@@ -891,7 +916,7 @@ class service_usage_traffic extends service_usage
 					}
 
 					// blank current total
-					$this->data["total"] = 0;
+					$this->data["total"]["total"] = 0;
 
 					// verify IPv4 address have been configured
 					if (!is_array($this->data_ipv4))
@@ -938,11 +963,11 @@ class service_usage_traffic extends service_usage
 								{
 									// add to running total
 									$sql_obj			= New sql_query;
-									$sql_obj->string		= "SELECT '". $this->data["total"] ."' + '". $obj_traffic_db_sql->data[0]["total"] ."' as totalusage";
+									$sql_obj->string		= "SELECT '". $this->data["total"]["total"] ."' + '". $obj_traffic_db_sql->data[0]["total"] ."' as totalusage";
 									$sql_obj->execute();
 									$sql_obj->fetch_array();
 
-									$this->data["total"] 	= $sql_obj->data[0]["totalusage"];
+									$this->data["total"]["total"] 	= $sql_obj->data[0]["totalusage"];
 
 								} // end if traffic exists
 
@@ -954,21 +979,11 @@ class service_usage_traffic extends service_usage
 
 						} // end foreach date
 
-						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ." bytes");
+						log_write("debug", "service_usage_traffic", "Completed usage query for address $ipv4.");
 
 					} // end foreach ipv4
 					
-					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ." bytes");
-
-
-
-					/*
-						TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
-						allow different charging for certain networks, such as domestic or within the data center.
-
-						We do not currently need to worry about rating the traffic differently depending on
-						who the packets are going to, we just need a total for the service for that customer.
-					*/
+					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"]["total"] ." bytes");
 
 
 					/*
@@ -976,6 +991,8 @@ class service_usage_traffic extends service_usage
 					*/
 	
 					$obj_traffic_db_sql->session_terminate();
+
+					unset($obj_traffic_db_sql);
 
 
 				break;
@@ -989,9 +1006,12 @@ class service_usage_traffic extends service_usage
 						In this mode, the database contains a single table "traffic_summary" which includes the following key fields:
 						* ip_address			IPv4 Address
 						* traffic_datetime		Date/Time Field
+						* traffic_type			Type of traffic
 						* total				Total Bytes transfered
 
 						Ideally this table should contain one row per IP address, per day, to enable billing to occur.
+
+						TODO: update to support traffic types
 					*/
 
 					log_write("debug", "service_usage_traffic", "Processing external database mysql_traffic_summary");
@@ -1022,8 +1042,15 @@ class service_usage_traffic extends service_usage
 						$this->load_data_ipv4();
 					}
 
-					// blank current total
-					$this->data["total"] = 0;
+					// blank current overall and per-type totals
+					$this->data["total"]["total"]		= 0;
+					$this->data["total_byunits"]["total"]	= 0;
+
+					foreach ($traffic_types as $type)
+					{
+						$this->data["total"][$type]		= 0;
+						$this->data["total_byunits"][$type]	= 0;
+					}
 
 					// verify IPv4 address have been configured
 					if (!is_array($this->data_ipv4))
@@ -1056,20 +1083,35 @@ class service_usage_traffic extends service_usage
 						if ($obj_traffic_db_sql->num_rows())
 						{
 							// query the current date for the current IP
-							$obj_traffic_db_sql->string		= "SELECT SUM(total) as total FROM traffic_summary WHERE ip_address='$ipv4' AND traffic_datetime >= '". $this->date_start ."' AND traffic_datetime <= '". $this->date_end ."'";
+							$obj_traffic_db_sql->string		= "SELECT SUM(total) as total, traffic_type FROM traffic_summary WHERE ip_address='$ipv4' AND traffic_datetime >= '". $this->date_start ."' AND traffic_datetime <= '". $this->date_end ."' GROUP BY traffic_type";
 							$obj_traffic_db_sql->execute();
 
-							$obj_traffic_db_sql->fetch_array();
-
-							if (!empty($obj_traffic_db_sql->data[0]["total"]))
+							if ($obj_traffic_db_sql->num_rows())
 							{
-								// add to running total
-								$sql_obj			= New sql_query;
-								$sql_obj->string		= "SELECT '". $this->data["total"] ."' + '". $obj_traffic_db_sql->data[0]["total"] ."' as totalusage";
-								$sql_obj->execute();
-								$sql_obj->fetch_array();
+								$obj_traffic_db_sql->fetch_array();
 
-								$this->data["total"] 		= $sql_obj->data[0]["totalusage"];
+								foreach ($obj_traffic_db_sql->data as $data_traffic)
+								{
+									if (in_array($data_traffic["traffic_type"], $traffic_types))
+									{
+										$type = $data_traffic["traffic_type"];
+									}
+									else
+									{
+										// unmatched type, assign to any
+										$type = "*";
+									}
+									
+									// add to running total
+									$sql_obj			= New sql_query;
+									$sql_obj->string		= "SELECT '". $this->data["total"][ $type ] ."' + '". $data_traffic["total"] ."' as totalusage";
+									$sql_obj->execute();
+									$sql_obj->fetch_array();
+
+									$this->data["total"][$type]	= $sql_obj->data[0]["totalusage"];
+
+									unset($sql_obj);
+								}
 
 							} // end if traffic exists
 
@@ -1082,18 +1124,23 @@ class service_usage_traffic extends service_usage
 						log_write("debug", "service_usage_traffic", "Total usage for address $ipv4 is ". $this->data["total"] ." bytes");
 
 					} // end foreach ipv4
+
+
+					// produce overall total
+					$sql_obj			= New sql_query;
+
+					foreach ($traffic_types as $type)
+					{
+						$sql_obj->string		= "SELECT '". $this->data["total"]["total"] ."' + '". $this->data["total"][ $type ] ."' as totalusage";
+						$sql_obj->execute();
+						$sql_obj->fetch_array();
+
+						$this->data["total"]["total"]	= $sql_obj->data[0]["totalusage"];
+					}
+
+					unset($sql_obj);
 				
 					log_write("debug", "service_usage_traffic", "Total usage for all addresses in the date range is ". $this->data["total"] ." bytes");
-
-
-
-					/*
-						TODO: Investigating extending data traffic to be like CDR codes with data rate tables to
-						allow different charging for certain networks, such as domestic or within the data center.
-
-						We do not currently need to worry about rating the traffic differently depending on
-						who the packets are going to, we just need a total for the service for that customer.
-					*/
 
 
 					/*
@@ -1101,6 +1148,8 @@ class service_usage_traffic extends service_usage
 					*/
 	
 					$obj_traffic_db_sql->session_terminate();
+
+					unset($obj_traffic_db_sql);
 
 
 				break;
@@ -1137,17 +1186,21 @@ class service_usage_traffic extends service_usage
 			log_debug("service_usage_traffic", "Error: Unable to fetch number of raw units for the units type");
 			return 0;
 		}
-			
-		// calculate
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT '". $this->data["total"] ."' / '". $this->data["numrawunits"] ."' as value";
-		$sql_obj->execute();
-		$sql_obj->fetch_array();
 
-		$this->data["total_byunits"]	= $sql_obj->data[0]["value"];
+
+		foreach (array_keys($this->data["total"]) as $type)
+		{
+			// calculate
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT '". $this->data["total"][ $type ] ."' / '". $this->data["numrawunits"] ."' as value";
+			$sql_obj->execute();
+			$sql_obj->fetch_array();
+
+			$this->data["total_byunits"][$type]	= $sql_obj->data[0]["value"];
+		}
 
 		
-		log_write("debug", "service_usage_traffic", "Total traffic usage for period is ". $this->data["total_byunits"] ."");
+		log_write("debug", "service_usage_traffic", "Total traffic usage for period is ". $this->data["total_byunits"]["total"] ."");
 
 
 
