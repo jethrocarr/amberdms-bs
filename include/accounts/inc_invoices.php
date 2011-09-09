@@ -1708,7 +1708,15 @@ class invoice
 		$email["sender"]	= "system";
 	
 		// email to the accounts user
-		$email["to"]		= $this->invoice_fields["customer_contact"] ." <". $this->invoice_fields["customer_contact_email"] .">";
+		if (empty($this->invoice_fields["customer_contact_email"]))
+		{
+			$email["to"]	= "";
+		}
+		else
+		{
+			$email["to"]	= $this->invoice_fields["customer_contact"] ." <". $this->invoice_fields["customer_contact_email"] .">";
+		}
+
 
 		// default cc
 		$email["cc"]		= "";
