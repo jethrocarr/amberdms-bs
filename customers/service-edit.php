@@ -11,6 +11,7 @@
 
 require("include/services/inc_services.php");
 require("include/services/inc_services_cdr.php");
+require("include/services/inc_services_traffic.php");
 require("include/customers/inc_customers.php");
 
 
@@ -28,8 +29,8 @@ class page_output
 
 	function page_output()
 	{
-	
 		// define page dependencies
+		$this->requires["javascript"][]		= "include/javascript/services.js";
 		$this->requires["javascript"][]		= "include/customers/javascript/service-edit.js";
 		$this->requires["css"][]		= "include/customers/css/service-edit.css";
 		
@@ -377,20 +378,132 @@ class page_output
 
 				case "data_traffic":
 
+					// help info
 					$structure = NULL;
-					$structure["fieldname"] 	= "included_units";
-					$structure["type"]		= "input";
-					$structure["options"]["req"]	= "yes";
-					$structure["options"]["label"]	= " ". sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $this->obj_customer->obj_service->data["units"] ."'");
+					$structure["fieldname"]		= "traffic_cap_help";
+					$structure["type"]		= "message";
+					$structure["defaultvalue"]	= "<p>If desired, traffic types, data caps and overage changes can be overridden here to customise a service for a particular customer.</p>";
+					$this->obj_form->add_input($structure);
+
+					$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_help";
+
+
+					// header
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_header_name";
+					$structure["type"]		= "text";
+					$structure["defaultvalue"]	= lang_trans("header_traffic_cap_name");
 					$this->obj_form->add_input($structure);
 					
 					$structure = NULL;
-					$structure["fieldname"] 	= "price_extraunits";
-					$structure["type"]		= "money";
-					$structure["options"]["req"]	= "yes";
+					$structure["fieldname"]		= "traffic_cap_header_mode";
+					$structure["type"]		= "text";
+					$structure["defaultvalue"]	= lang_trans("header_traffic_cap_mode");
 					$this->obj_form->add_input($structure);
 
-					$this->obj_form->subforms["service_options_data_traffic"] = array("included_units", "price_extraunits");
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_header_units_included";
+					$structure["type"]		= "text";
+					$structure["defaultvalue"]	= lang_trans("header_traffic_units_included");
+					$this->obj_form->add_input($structure);
+
+					$structure = NULL;
+					$structure["fieldname"]		= "traffic_cap_header_units_price";
+					$structure["type"]		= "text";
+					$structure["defaultvalue"]	= lang_trans("header_traffic_units_price");
+					$this->obj_form->add_input($structure);
+
+
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_name";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_mode";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_units_included";
+					$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_header"][]		= "traffic_cap_header_units_price";
+
+					$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_header";
+
+					
+					// fetch service unitname
+					$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $this->obj_customer->obj_service->data["units"] ."'");
+
+
+
+					// manual load of override values for data cap services
+					$data_traffic_overrides = New traffic_caps;
+
+					$data_traffic_overrides->id_service		= $this->obj_customer->obj_service->id;
+					$data_traffic_overrides->id_service_customer	= $this->obj_customer->id_service_customer;
+
+					$data_traffic_overrides->load_data_traffic_caps();
+					$data_traffic_overrides->load_data_override_caps();
+
+
+					for ($i=0; $i < $data_traffic_overrides->data_num_rows; $i++)
+					{
+						// define form fields
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_id";
+						$structure["type"]		= "hidden";
+						$structure["defaultvalue"]	= $data_traffic_overrides->data[$i]["id_type"];
+						$this->obj_form->add_input($structure);
+
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_name";
+						$structure["type"]		= "text";
+						$structure["defaultvalue"]	= $data_traffic_overrides->data[$i]["type_name"];
+						$this->obj_form->add_input($structure);
+						
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_mode";
+						$structure["type"]		= "dropdown";
+
+						$structure["values"][0]		= "unlimited";
+						$structure["values"][1]		= "capped";
+
+						$structure["defaultvalue"]	= $data_traffic_overrides->data[$i]["cap_mode"];
+						$structure["options"]["width"]	= "100";
+						$this->obj_form->add_input($structure);
+
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_units_included";
+						$structure["type"]		= "input";
+						$structure["options"]["width"]	= "100";
+						$structure["options"]["label"]	= " $unitname";
+						$structure["defaultvalue"]	= $data_traffic_overrides->data[$i]["cap_units_included"];
+						$this->obj_form->add_input($structure);
+
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_units_price";
+						$structure["type"]		= "money";
+						$structure["options"]["label"]	= " per $unitname additional usage.";
+						$structure["defaultvalue"]	= $data_traffic_overrides->data[$i]["cap_units_price"];
+						$this->obj_form->add_input($structure);
+
+						$structure = NULL;
+						$structure["fieldname"]		= "traffic_cap_". $i ."_override";
+						$structure["type"]		= "text";
+						$structure["options"]["nohidden"] = 1;
+
+						if (!empty($data_traffic_overrides->data[$i]["override"]))
+						{
+							$structure["defaultvalue"] = "<span class=\"table_highlight_important\">SERVICE OVERRIDE</span>";
+						}
+
+						$this->obj_form->add_input($structure);
+
+
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_name";
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_mode";
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_units_included";
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_units_price";
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_override";
+						$this->obj_form->subforms_grouped["traffic_caps"]["traffic_cap_". $i][]		= "traffic_cap_". $i ."_id";
+
+						$this->obj_form->subforms["traffic_caps"][] = "traffic_cap_". $i;
+					}
+
+					unset($data_traffic_overrides);
+
+
 				break;	
 
 

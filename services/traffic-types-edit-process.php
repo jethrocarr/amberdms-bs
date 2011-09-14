@@ -45,7 +45,11 @@ if (user_permissions_get('services_write'))
 	}
 
 
-	// note, we don't verify name uniqueness - there may be valid reasons for having multiple traffic types for sales/plan purposes.
+	// check naming
+	if (!$obj_traffic_type->verify_fields())
+	{
+		log_write("error", "process", "Unacceptable values provided, please see above errors.");
+	}
 
 
 	/*

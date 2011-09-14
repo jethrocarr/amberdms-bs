@@ -13,6 +13,7 @@ require("../include/amberphplib/main.php");
 
 require("../include/customers/inc_customers.php");
 require("../include/services/inc_services.php");
+require("../include/services/inc_services_traffic.php");
 require("../include/services/inc_services_invoicegen.php");
 
 
@@ -60,8 +61,59 @@ if (user_permissions_get('customers_write'))
 		{
 			case "data_traffic":
 
-				$data["included_units"]		= @security_form_input_predefined("int", "included_units", 0, "");
-				$data["price_extraunits"]	= @security_form_input_predefined("money", "price_extraunits", 0, "");
+
+				// cap details
+				$data["data_traffic_caps"] = array();
+
+
+				// load all cap information from the selected service.
+				$data_traffic_caps = New traffic_caps;
+
+				$data_traffic_caps->id_service		= $obj_customer->obj_service->id;
+				$data_traffic_caps->id_service_customer	= $obj_customer->id_service_customer;
+
+				$data_traffic_caps->load_data_traffic_caps();
+
+
+				for ($i=0; $i < $data_traffic_caps->data_num_rows; $i++)
+				{
+					$cap = array();
+
+					// fetch traffic cap details
+					$cap["type_id"]		= @security_form_input_predefined("int", "traffic_cap_". $i ."_id", 1, "");
+					$cap["name"]		= @security_form_input_predefined("any", "traffic_cap_". $i ."_name", 0, "");
+					$cap["mode"]		= @security_form_input_predefined("any", "traffic_cap_". $i ."_mode", 0, "");
+					$cap["units_included"]	= @security_form_input_predefined("int", "traffic_cap_". $i ."_units_included", 0, "");
+					$cap["units_price"]	= @security_form_input_predefined("money", "traffic_cap_". $i ."_units_price", 0, "");
+
+					// any differences to the standard cap?
+					if	(
+						$cap["mode"]		!= $data_traffic_caps->data[$i]["cap_mode"] ||
+						$cap["units_included"]	!= $data_traffic_caps->data[$i]["cap_units_included"] ||
+						$cap["units_price"]	!= $data_traffic_caps->data[$i]["cap_units_price"]
+						)
+					{
+						log_write("debug", "process", "Traffic cap type ". $cap["type_id"] ." has been overridden, loading data.");
+
+
+						// additional checks
+						if ($cap["mode"] != "unlimited" && $cap["mode"] != "capped")
+						{
+							log_write("error", "A data type must either be disabled or marked as capped vs unlimited");
+							error_flag("traffic_cap_". $i);
+						}
+
+						// add to array
+						$data["data_traffic_caps"][] = $cap;
+					}
+					else
+					{
+						log_write("debug", "process", "Traffic cap type ". $cap["type_id"] ." has not been altered.");
+					}
+
+				}
+
+				unset($data_traffic_caps);
 
 			break;
 			
@@ -318,9 +370,6 @@ if (user_permissions_get('customers_write'))
 				$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];
 			}
 
-			$obj_customer->obj_service->data["included_units"]			= $data["included_units"];
-			$obj_customer->obj_service->data["price_extraunits"]			= $data["price_extraunits"];
-
 			$obj_customer->obj_service->data["phone_ddi_single"]			= $data["phone_ddi_single"];
 			$obj_customer->obj_service->data["phone_local_prefix"]			= $data["phone_local_prefix"];
 
@@ -332,6 +381,33 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data["phone_trunk_price_extra_units"]	= $data["phone_trunk_price_extra_units"];
 
 			$obj_customer->obj_service->action_update_options();
+
+
+	
+			// handle data traffic service cap overrides, these are a bit more complex than regular options
+			if ($obj_customer->obj_service->data["typeid_string"] == "data_traffic")
+			{
+				$sql_obj			= New sql_query;
+
+				// delete existing options
+				$sql_obj->string		= "DELETE FROM services_options WHERE option_type='customer' AND option_type_id='". $obj_customer->id_service_customer ."' AND option_name LIKE 'cap_%'";
+				$sql_obj->execute();
+
+				// add new cap override options
+				foreach ($data["data_traffic_caps"] as $cap)
+				{
+					log_write("debug", "process", "Creating data traffic cap override for ". $cap["type_id"] ."");
+
+					$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('customer', '". $obj_customer->id_service_customer ."', 'cap_mode_". $cap["type_id"] ."', '". $cap["mode"] ."')";
+					$sql_obj->execute();
+
+					$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('customer', '". $obj_customer->id_service_customer ."', 'cap_units_included_". $cap["type_id"] ."', '". $cap["units_included"] ."')";
+					$sql_obj->execute();
+	
+					$sql_obj->string	= "INSERT INTO services_options (option_type, option_type_id, option_name, option_value) VALUES ('customer', '". $obj_customer->id_service_customer ."', 'cap_units_price_". $cap["type_id"] ."', '". $cap["units_price"] ."')";
+					$sql_obj->execute();
+				}
+			}
 
 
 

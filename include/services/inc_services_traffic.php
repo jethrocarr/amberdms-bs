@@ -381,6 +381,76 @@ class traffic_types
 	} // end of verify_id
 
 
+
+	/*
+		verify_fields
+
+		Runs certains checks on inputs to ensure that the traffic type can be safely adjusted - examples include
+		name or label conflicts, as well as special keywords.
+
+		Results
+		0	Unacceptable
+		1	Acceptable
+	*/
+
+	function verify_fields()
+	{
+		log_debug("traffic_types", "Executing verify_fields()");
+
+
+		if (!empty($this->data["type_name"]))
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_name='". $this->data["type_name"] ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				log_write("error", "traffic_types", "This name is already in use, please select another");
+				error_flag_field("type_name");
+
+				return 0;
+			}
+		}
+
+		if (!empty($this->data["type_label"]))
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_label='". $this->data["type_label"] ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				log_write("error", "traffic_types", "This label is already in use, please select another");
+				error_flag_field("type_label");
+
+				return 0;
+			}
+		}
+
+		if ($this->data["type_name"] == "any" || $this->data["type_name"] == "Any")
+		{
+			log_write("error", "traffic_types", "Any is a reserved cap name for catchall caps.");
+			error_flag_field("type_name");
+
+			return 0;
+		}
+
+		if ($this->data["type_label"] == "*" || $this->data["type_label"] == "any" || $this->data["type_label"] == "Any")
+		{
+			log_write("error", "traffic_types", "Any/* is a reserved label type for catchall caps.");
+			error_flag_field("type_label");
+
+			return 0;
+		}
+
+		return 1;
+
+	} // end of verify_field
+
+
+
+
 	/*
 		check_delete_lock
 
@@ -660,6 +730,164 @@ class traffic_types
 
 
 
+/*
+	CLASS traffic_caps
+
+	Support functions for working with traffic caps - traffic caps are configured against service and traffic_types, however there
+	is also a need to query override data when dealing with services.
+*/
+class traffic_caps
+{
+	var $id_service;		// service ID
+	var $id_service_customer;	// customer's service ID
+
+	var $data;		// traffic cap data
+	var $data_num_rows;	// number of traffic caps
+
+
+	/*
+		load_data_traffic_caps
+
+		Loads all traffic caps for the selected service into $this->data, with structure of:
+		$this->data[$i]["FIELD"].
+
+		Used by any function needing all the service cap information - of course, this function
+		will only report on *active* traffic types.
+
+		Results
+		0	Failure
+		1	Success
+	*/
+
+	function load_data_traffic_caps()
+	{
+		log_debug("traffic_caps", "Executing load_data_traffic_caps()");
+
+		
+		$obj_sql_traffic_types		= New sql_query;
+		$obj_sql_traffic_types->string	= "SELECT
+							traffic_types.id as id_type,
+							traffic_caps.id as id_cap,
+							traffic_types.type_name as type_name,
+							traffic_types.type_label as type_label,
+							traffic_caps.mode as cap_mode,
+							traffic_caps.units_included as cap_units_included,
+							traffic_caps.units_price as cap_units_price
+						FROM `traffic_caps`
+						LEFT JOIN traffic_types ON traffic_types.id = traffic_caps.id_traffic_type
+						WHERE
+							traffic_caps.id_service='". $this->id_service ."'
+						ORDER BY
+							traffic_types.id='1',
+							traffic_types.type_name DESC";
+		
+		if (!$obj_sql_traffic_types->execute())
+		{
+			return 0;
+		}
+
+		$obj_sql_traffic_types->fetch_array();
+		
+		$this->data_num_rows = $obj_sql_traffic_types->num_rows();
+		
+		for ($i=0; $i < $obj_sql_traffic_types->data_num_rows; $i++)
+		{
+			foreach (array_keys($obj_sql_traffic_types->data[0]) as $field)
+			{
+				$this->data[$i][ $field ] = $obj_sql_traffic_types->data[$i][ $field ];
+			}
+		}
+
+		unset($obj_sql_traffic_types);
+
+		return 1;
+
+	} // end of load_data_traffic_caps
+
+
+
+
+	/*
+		load_data_override_caps
+
+		Replaces values loaded by load_data_override_caps with customer-specific override values
+
+		Returns
+		0	Failure
+		1	Success
+	*/
+
+	function load_data_override_caps()
+	{
+		log_debug("traffic_caps", "Executing load_data_override_caps()");
+
+		/*
+			The query is somewhat complex - we need to load any option values in the format of:
+			cap_mode_#
+			cap_units_included_#
+			cap_units_price_#
+
+			With # being the type ID. (not the CAP ID, which can change....)
+
+			We then take this data and replace the appropiate values in $this->data with the overriden ones,
+			as well as flagging $this->data[$i]["override"]	= "yes" to allow the UI to highlight which values
+			are overridden or not.
+		*/
+
+		$obj_sql_cap_overrides		= New sql_query;
+		$obj_sql_cap_overrides->string	= "SELECT option_name, option_value FROM services_options WHERE option_type='customer' AND option_type_id='". $this->id_service_customer ."' AND option_name LIKE 'cap_%'";
+		$obj_sql_cap_overrides->execute();
+
+		if ($obj_sql_cap_overrides->num_rows())
+		{
+			$obj_sql_cap_overrides->fetch_array();
+
+			$data_override = array();
+
+			foreach ($obj_sql_cap_overrides->data as $data_row)
+			{
+				if (preg_match("/^cap_(\S*)_([0-9]*)$/", $data_row["option_name"], $matches))
+				{
+					$tmp = array();
+					$tmp["id"]	= $matches[2];
+					$tmp["field"]	= $matches[1];
+					$tmp["value"]	= $data_row["option_value"];
+
+					$data_override[ $tmp["id"] ]["id_type"]		= $tmp["id"];
+					$data_override[ $tmp["id"] ][ $tmp["field"] ]	= $tmp["value"];
+				}
+			}
+
+			for ($i=0; $i < $this->data_num_rows; $i++)
+			{
+				foreach ($data_override as $data_row)
+				{
+					if ($this->data[$i]["id_type"] == $data_row["id_type"])
+					{
+						$id = $data_row["id_type"];
+
+						$this->data[$i]["override"]		= "yes";
+						$this->data[$i]["cap_mode"]		= $data_row["mode"];
+						$this->data[$i]["cap_units_price"]	= $data_row["units_price"];
+						$this->data[$i]["cap_units_included"]	= $data_row["units_included"];
+					}
+				}
+			}
+		}
+
+		unset($obj_sql_cap_overrides);
+		unset($data_override);
+
+		return 1;
+
+	} // end of load_data_override_caps
+
+
+} // end of CLASS traffic_caps
+
+
+
+
 
 /*
 	CLASS: service_usage_traffic
@@ -780,6 +1008,9 @@ class service_usage_traffic extends service_usage
 
 		/*
 			Fetch data traffic types
+
+			Note that this doesn't query overrides, since the override options will never impact which traffic types that exist,
+			only how they are billed by include/services/inc_services_invoicegen.php
 		*/
 
 		$traffic_types = sql_get_singlecol("SELECT traffic_types.type_label as col FROM `traffic_caps` LEFT JOIN traffic_types ON traffic_types.id = traffic_caps.id_traffic_type WHERE traffic_caps.id_service='". $this->obj_service->id ."'");

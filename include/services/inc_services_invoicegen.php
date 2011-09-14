@@ -1677,21 +1677,25 @@ function service_invoices_generate($customerid = NULL)
 
 								/*
 									Fetch Traffic Caps & Details
+
+									Returns all the traffic cap types including overrides.
+
+									id_type,
+									id_cap,
+									type_name,
+									type_label,
+									cap_mode,
+									cap_units_included,
+									cap_units_price
 								*/
 								
-								$traffic_types_obj		= New sql_query;
-								$traffic_types_obj->string	= "SELECT
-													traffic_types.type_label as type_label,
-													traffic_types.type_name as type_name,
-													traffic_caps.mode as cap_mode,
-													traffic_caps.units_price as cap_units_price,
-													traffic_caps.units_included as cap_units_included
-												FROM `traffic_caps`
-												LEFT JOIN traffic_types ON traffic_types.id = traffic_caps.id_traffic_type
-												WHERE traffic_caps.id_service='". $obj_service->id ."'";
-								$traffic_types_obj->execute();
-								$traffic_types_obj->num_rows();		// always at least 1 record
-								$traffic_types_obj->fetch_array();	// always at least 1 record
+								$traffic_types_obj = New traffic_caps;
+								$traffic_types_obj->id_service		= $obj_service->id;
+								$traffic_types_obj->id_service_customer	= $period_usage_data["id_service_customer"];
+
+								$traffic_types_obj->load_data_traffic_caps();
+								$traffic_types_obj->load_data_override_caps();
+								
 
 
 								/*
@@ -1701,7 +1705,6 @@ function service_invoices_generate($customerid = NULL)
 								if ($usage_obj->load_data_service())
 								{
 									$usage_obj->fetch_usage_traffic();
-
 	
 									foreach ($traffic_types_obj->data as $data_traffic_cap)
 									{
@@ -1803,11 +1806,12 @@ function service_invoices_generate($customerid = NULL)
 									history page and saves having to query lots of records to generate period totals.
 								*/
 								$sql_obj		= New sql_query;
-								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='". $usage_ob->data["total_byunits"]["total"] ."' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
+								$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='". $usage_obj->data["total_byunits"]["total"] ."' WHERE id='". $period_usage_data["id"] ."' LIMIT 1";
 								$sql_obj->execute();
 
 								
 								unset($usage_obj);
+								unset($traffic_types_obj);
 
 							break;
 
