@@ -3,11 +3,8 @@
 /*
 	include/cron/services.php
 
-	This script is called daily and runs through all the customers and performs the following service tasks
-	1. Creates new service periods (when required)
-	2. Creates invoices (when required)
-	3. Checks customer usage and sends alerts if required.
-	
+	This cronjob is called daily and will check for any services that need invoicing and
+	generate appropiate invoices.
 */
 
 
@@ -36,21 +33,7 @@ function page_execute()
 	// generate any invoices required
 	service_invoices_generate(NULL);
 
-
 	print "Service invoicing complete.\n";
-
-
-	// send customers usage alerts
-	print "Checking customer usage alerts...\n";
-
-	$return = service_usage_alerts_generate(NULL);
-
-	if ($return == -1)
-	{
-		print "No alerts sent - EMAIL_ENABLE is disabled.\n";
-	}
-
-	print "Alerting complete.\n";
 
 } // end of page_execute()
 

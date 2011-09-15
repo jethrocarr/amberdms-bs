@@ -41,6 +41,8 @@ if (user_permissions_get("admin"))
 	$data["ACCOUNTS_INVOICE_AUTOEMAIL"]		= @security_form_input_predefined("checkbox", "ACCOUNTS_INVOICE_AUTOEMAIL", 0, "");
 	$data["ACCOUNTS_INVOICE_BATCHREPORT"]		= @security_form_input_predefined("checkbox", "ACCOUNTS_INVOICE_BATCHREPORT", 0, "");
 
+	$data["SERVICES_USAGEALERTS_ENABLE"]		= @security_form_input_predefined("checkbox", "SERVICES_USAGEALERTS_ENABLE", 0, "");
+
 	$data["ORDERS_BILL_ONSERVICE"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ONSERVICE", 0, "");
 	$data["ORDERS_BILL_ENDOFMONTH"]		= @security_form_input_predefined("checkbox", "ORDERS_BILL_ENDOFMONTH", 0, "");
 
