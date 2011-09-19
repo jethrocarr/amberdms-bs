@@ -867,9 +867,21 @@ class traffic_caps
 						$id = $data_row["id_type"];
 
 						$this->data[$i]["override"]		= "yes";
-						$this->data[$i]["cap_mode"]		= $data_row["mode"];
-						$this->data[$i]["cap_units_price"]	= $data_row["units_price"];
-						$this->data[$i]["cap_units_included"]	= $data_row["units_included"];
+
+						if (isset($data_row["mode"]))
+						{
+							$this->data[$i]["cap_mode"]		= $data_row["mode"];
+						}
+
+						if (isset($data_row["units_price"]))
+						{
+							$this->data[$i]["cap_units_price"]	= $data_row["units_price"];
+						}
+
+						if (isset($data_row["units_included"]))
+						{
+							$this->data[$i]["cap_units_included"]	= $data_row["units_included"];
+						}
 					}
 				}
 			}
