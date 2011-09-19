@@ -9,6 +9,9 @@
 	* inc_services_cdr.php
 	* inc_services_traffic.php
 	* inc_services_generic.php
+
+	Some legacy functions required from:
+	* inc_services_invoicegen.php
 */
 
 
@@ -59,7 +62,7 @@ function service_usage_alerts_generate($customerid = NULL)
 	*/
 
 	$sql_custserv_obj		= New sql_query;
-	$sql_custserv_obj->string	= "SELECT id, customerid, serviceid, description FROM services_customers WHERE services_customers.active='1'";
+	$sql_custserv_obj->string	= "SELECT id, customerid, serviceid, description, date_period_first, date_period_next, date_period_last FROM services_customers WHERE services_customers.active='1'";
 
 	if ($customerid)
 		$sql_custserv_obj->string .= " AND customerid='$customerid'";
@@ -163,10 +166,104 @@ function service_usage_alerts_generate($customerid = NULL)
 					/*
 						Calculate number of included units
 
-						TODO: replace with ratio logic
+						TODO: This code is a replicant of the source in include/services/inc_service_invoicegen.php used for calculating
+						partial	periods and should really be functionalised as part of service usage continual improvements.
+
+						Part of the issue is lack of service period OO handling functions - migrating the code to such a setup will make
+						such ratio calculation functions far, far easier.
 					*/
 
+
+					// default ratio
 					$ratio = 1;
+
+
+					// calculate usage abnormal period
+					if ($obj_service->data["billing_mode_string"] == "monthend" || $obj_service->data["billing_mode_string"] == "monthadvance" || $obj_service->data["billing_mode_string"] == "monthtelco")
+					{
+						log_debug("inc_services_usage", "Usage period service bills by month date");
+
+						if (time_calculate_daynum($period_data["date_start"]) != "01")
+						{
+							// very first billing month
+							log_write("debug", "inc_services_usage", "First billing month for this usage period, adjusting pricing to suit days.");
+								
+							if ($GLOBALS["config"]["SERVICE_PARTPERIOD_MODE"] == "seporate")
+							{
+								log_write("debug", "inc_services_usage", "Adjusting for partial month period (SERVICE_PARTPERIOD_MODE == seporate)");
+
+								// work out the total number of days
+								$short_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
+								$short_month_days_short	= $short_month_days_total - time_calculate_daynum($period_data["date_start"]);
+
+								log_write("debug", "inc_services_usage", "Short initial billing period of $short_month_days_short days");
+
+								// calculate ratio
+								$ratio = ($short_month_days_short / $short_month_days_total);
+
+								log_write("debug", "inc_services_usage", "Calculated service bill ratio of $ratio to handle short period.");
+							}
+							else
+							{
+								log_write("debug", "inc_services_usage", "Adjusting for extended month period (SERVICE_PARTPERIOD_MODE == merge");
+								
+								// work out the number of days extra
+								$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
+								$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_data["date_start"]);
+
+								log_debug("inc_services_usage", "$extra_month_days_extra additional days ontop of started billing period");
+
+								// calculate ratio
+								$ratio = (($extra_month_days_extra + $extra_month_days_total) / $extra_month_days_total);
+
+								log_write("debug", "inc_services_usage", "Calculated service bill ratio of $ratio to handle extended period.");
+							}
+						}
+
+					} // end of calculate usage abnormal period
+
+
+					// calculate a final period
+					if ($period_data["date_period_last"] != "0000-00-00")
+					{
+						log_write("debug", "inc_services_usage", "Service has a final period date set (". $customer_data["date_period_last"] .")");
+
+						if ($customer_data["date_period_last"] == $period_data["date_end"] || (time_date_to_timestamp($customer_data["date_period_last"]) < time_date_to_timestamp($period_data["date_end"]) ) )
+						{
+							log_write("debug", "inc_services_usage", "Service is a final period, checking for time adjustment (if any)");
+
+							// fetch the regular end date
+							$orig_dates = service_period_dates_generate($period_data["date_start"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
+
+							if ($orig_dates["end"] != $period_data["date_end"])
+							{
+								// work out the total number of days
+								$time = NULL;
+
+								$time["start"]		= time_date_to_timestamp($period_data["date_start"]);
+
+								$time["end_orig"]	= time_date_to_timestamp($orig_dates["end"]);
+								$time["end_new"]	= time_date_to_timestamp($period_data["date_end"]);
+
+								$time["orig_days"]	= sprintf("%d", ($time["end_orig"] - $time["start"]) / 86400);
+								$time["new_days"]	= sprintf("%d", ($time["end_new"] - $time["start"]) / 86400);
+
+								log_write("debug", "inc_services_usage", "Short initial billing period of ". $time["new_days"] ." days rather than expected ". $time["orig_days"] ."");
+
+								// calculate ratio
+								$ratio = ($time["new_days"] / $time["orig_days"]);
+
+								log_write("debug", "inc_services_usage", "Calculated service bill ratio of $ratio to handle short period.");
+
+								unset($time);
+							}
+							else
+							{
+								log_write("debug", "inc_services_usage", "Final service period is regular size, no adjustment required.");
+							}
+						}
+					}
+
 
 					if ($billing_mode == "monthend" || $billing_mode == "monthadvance")
 					{
@@ -185,7 +282,7 @@ function service_usage_alerts_generate($customerid = NULL)
 
 								total_amount = (extra_amount + normal_amount)
 
-							Note: This code is based off the section found for services_invoicegen.php. Could be worth creating a function?
+							Note: This code is based off the section found for inc_services_usage.php. Could be worth creating a function?
 						*/
 
 						// check if the period is the very first period - the start and end dates will be in different months.
@@ -198,12 +295,20 @@ function service_usage_alerts_generate($customerid = NULL)
 							$extra_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
 							$extra_month_days_extra	= $extra_month_days_total - time_calculate_daynum($period_data["date_start"]);
 
-							log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
+							log_debug("inc_services_usage", "$extra_month_days_extra additional days ontop of started billing period");
 
 							// calculate number of included units - round up to nearest full unit
-							$obj_service->data["included_units"] = sprintf("%d", ( ($obj_service->data["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["included_units"] );
+							$ratio = ($extra_month_days_total + $extra_month_days_extra) / $extra_month_days_total;
 						}
+
 					}
+
+
+					log_write("debug", "inc_services_usage", "Usage period ratio calculated as $ratio");
+
+					/*
+						^ End of Ratio Calculation - object orientation required around this
+					*/
 
 
 
@@ -241,6 +346,16 @@ function service_usage_alerts_generate($customerid = NULL)
 							}
 							
 							unset($usage_obj);
+
+
+							/*
+								Apply Ratio
+							*/
+
+							if ($ratio != "1")
+							{
+								$obj_service->data["included_units"] = sprintf("%d", ($obj_service->data["included_units"] * $ratio ));
+							}
 
 
 
@@ -554,7 +669,7 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 							// Update Usage Summary - this used for various user interfaces and is the *total* transfer usage report.
-							log_write("notification", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." has used a total of ". $usage_obj->data["total_byunits"]["total"] ." $unitname traffic.");
+							log_write("notification", "inc_service_usage", "Customer ". $sql_customer_obj["name_customer"] ." has used a total of ". $usage_obj->data["total_byunits"]["total"] ." $unitname traffic on service \"". $obj_service->data["name_service"] ."\"");
 
 							$sql_obj		= New sql_query;
 							$sql_obj->string	= "UPDATE services_customers_periods SET usage_summary='". $usage_obj->data["total_byunits"]["total"] ."' WHERE id='". $period_data["id"] ."' LIMIT 1";
@@ -597,6 +712,8 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 								// run through current caps, flag all which need notifications.
+								$j=0;
+
 								foreach ($traffic_types_obj->data as $traffic_cap)
 								{
 									// we don't care about unlimited traffic
@@ -612,13 +729,25 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 									// determine caps
-									$cap_included_units			= $traffic_cap["cap_units_included"] * $ratio;	// apply ratios
-									$traffic_cap["cap_units_included"]	= $cap_included_units;				// override, no permanant changes
+									if ($ratio != "1")
+									{
+										// recalculate for short or long months
+										$cap_units_included = sprintf("%d", ($traffic_cap["cap_units_included"] * $ratio ));
+									
+										// save for rest of session
+										$traffic_types_obj->data[$j]["cap_units_included"] = $cap_units_included;
+									}
+									else
+									{
+										// no changes
+										$cap_units_included = $traffic_cap["cap_units_included"];
+									}
+
 
 
 									// determine threshholds
-									$cap_100	= $cap_included_units;
-									$cap_80		= $cap_included_units * 0.80;
+									$cap_100	= $cap_units_included;
+									$cap_80		= $cap_units_included * 0.80;
 
 									if ($usage >= $cap_100)
 									{
@@ -683,6 +812,8 @@ function service_usage_alerts_generate($customerid = NULL)
 										$alert_none[] = $traffic_cap["type_label"];
 									}
 
+									$j++;
+
 								} // end of traffic loops
 	
 	
@@ -735,6 +866,12 @@ function service_usage_alerts_generate($customerid = NULL)
 										BILLING PERIOD
 
 										Your current billing period ends on YYYY-MM-DD.
+
+										{optional} Note:
+										This billing period is longer/shorter than your regular billing period, this may mean
+										your data cap allocations appear different to normal to refect the longer/shorter period.
+
+										This typically occurs when you first signup to a service, upgrade a service or cancel a service.
 									*/
 
 									$message  = "\n";
@@ -812,6 +949,24 @@ function service_usage_alerts_generate($customerid = NULL)
 									$message .= "\n";
 									$message .= "Your current billing period ends on ". time_format_humandate($period_data["date_end"]) ."\n";
 									$message .= "\n";
+
+
+									/*
+										Tell user about long/short periods to avoid inevidable accounts enquires relating to their usage
+									*/
+
+									if ($ratio < 1)
+									{
+										// shorter period
+										$message .= "\n";
+										$message .= "Important Note: This billing period is shorter than your regular billing period, this may mean your data cap allocations appear smaller than normal to refect the shorter period. This typically occurs when you first signup to a service, upgrade a service or cancel a service.\n";
+									}
+									elseif ($ratio > 1)
+									{
+										// longer period
+										$message .= "\n";
+										$message .= "Important Note: This billing period is longer than your regular billing period, this may mean your data cap allocations appear larger than normal to refect the longer period. This typically occurs when you first signup to a service, upgrade a service or cancel a service.\n";
+									}
 
 
 									/*

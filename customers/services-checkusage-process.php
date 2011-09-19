@@ -19,6 +19,7 @@ include_once("../include/services/inc_services_usage.php");
 include_once("../include/services/inc_services_generic.php");
 include_once("../include/services/inc_services_traffic.php");
 include_once("../include/services/inc_services_cdr.php");
+include_once("../include/services/inc_services_invoicegen.php");
 
 
 if (user_permissions_get('customers_write'))

@@ -11,19 +11,20 @@
 */
 
 
-// custom includes
+// custom accounts includes
 require("../accounts/inc_ledger.php");
-require("../accounts/inc_invoices.php");
+require("../accounts/inc_invoices.php");		// TODO: required?
 
 // custom service includes
 require("../services/inc_services.php");
-//require("../services/inc_services_invoicegen.php");
 require("../services/inc_services_generic.php");
 require("../services/inc_services_cdr.php");
 require("../services/inc_services_traffic.php");
 require("../services/inc_services_usage.php");
 require("../customers/inc_customers.php");
 
+// legacy includes
+require("../services/inc_services_invoicegen.php");	// TODO: functionise out
 
 
 function page_execute()
