@@ -79,11 +79,22 @@ function service_usage_alerts_generate($customerid = NULL)
 			*/
 			
 			// fetch service details
-			$sql_service_obj		= New sql_query;
-			$sql_service_obj->string	= "SELECT * FROM services WHERE id='". $customer_data["serviceid"] . "' LIMIT 1";
-			$sql_service_obj->execute();
-			$sql_service_obj->fetch_array();
-			
+			$obj_service			= New service_bundle;
+
+			$obj_service->option_type	= "customer";
+			$obj_service->option_type_id	= $customer_data["id"];
+
+			if (!$obj_service->verify_id_options())
+			{
+				log_write("error", "customers_services", "Unable to verify service ID of ". $customer_data["id"] ." as being valid.");
+				return 0;
+			}
+		
+			$obj_service->load_data();
+			$obj_service->load_data_options();
+
+
+		
 			
 			
 			// fetch customer details
@@ -98,7 +109,7 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 			// check the service type
-			$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $sql_service_obj->data[0]["typeid"] ."'");
+			$service_type = sql_get_singlevalue("SELECT name as value FROM service_types WHERE id='". $obj_service->data["typeid"] ."'");
 
 
 			// only process data_traffic, time or generic_usage services
@@ -135,16 +146,16 @@ function service_usage_alerts_generate($customerid = NULL)
 
 
 					// fetch billing mode
-					$billing_mode = sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $sql_service_obj->data[0]["billing_mode"] ."'");
+					$billing_mode = sql_get_singlevalue("SELECT name as value FROM billing_modes WHERE id='". $obj_service->data["billing_mode"] ."'");
 
 					// fetch unit naming
 					if ($service_type == "generic_with_usage")
 					{
-						$unitname = $sql_service_obj->data[0]["units"];
+						$unitname = $obj_service->data["units"];
 					}
 					else
 					{
-						$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $sql_service_obj->data[0]["units"] ."'");
+						$unitname = sql_get_singlevalue("SELECT name as value FROM service_units WHERE id='". $obj_service->data["units"] ."'");
 					}
 
 
@@ -190,7 +201,7 @@ function service_usage_alerts_generate($customerid = NULL)
 							log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
 
 							// calculate number of included units - round up to nearest full unit
-							$sql_service_obj->data[0]["included_units"] = sprintf("%d", ( ($sql_service_obj->data[0]["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $sql_service_obj->data[0]["included_units"] );
+							$obj_service->data["included_units"] = sprintf("%d", ( ($obj_service->data["included_units"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["included_units"] );
 						}
 					}
 
@@ -241,18 +252,18 @@ function service_usage_alerts_generate($customerid = NULL)
 							{
 								$message = "";
 
-								if ($usage > $sql_service_obj->data[0]["included_units"])
+								if ($usage > $obj_service->data["included_units"])
 								{
 									// usage is over 100% - check if we should report this
 									log_debug("inc_service_usage", "Usage is over 100%");
 
-									if ($sql_service_obj->data[0]["alert_extraunits"])
+									if ($obj_service->data["alert_extraunits"])
 									{
 										// check at what usage amount we last reported, and if
 										// we have used alert_extraunits more usage since then, send
 										// an alert to the customer.
 
-										if (($usage - $period_data["usage_alerted"]) >= $sql_service_obj->data[0]["alert_extraunits"])
+										if (($usage - $period_data["usage_alerted"]) >= $obj_service->data["alert_extraunits"])
 										{
 											log_write("notification", "inc_service_usage", "Sending excess usage notification (over 100%)");
 
@@ -273,15 +284,15 @@ function service_usage_alerts_generate($customerid = NULL)
 											*/
 
 											// there is excess usage
-											$usage_excess = $usage - $sql_service_obj->data[0]["included_units"];
+											$usage_excess = $usage - $obj_service->data["included_units"];
 
 											// prepare message
 											$message .= "This email has been sent to advise you that you have gone over the included usage on your plan\n";
 											$message .= "\n";
-											$message .= "You have now used $usage_excess excess $unitname on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+											$message .= "You have now used $usage_excess excess $unitname on your ". $obj_service->data["name_service"] ." plan.\n";
 											$message .= "\n";
-											$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-											$message .= "Excess usage of $usage_excess $unitname charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+											$message .= "Used $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.\n";
+											$message .= "Excess usage of $usage_excess $unitname charged at ". $obj_service->data["price_extraunits"] ." per $unitname (exc taxes).\n";
 											$message .= "\n";
 											$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
 											$message .= "\n";
@@ -312,10 +323,10 @@ function service_usage_alerts_generate($customerid = NULL)
 								else
 								{
 									// calculate 80% of the included usage
-									$included_usage_80pc = $sql_service_obj->data[0]["included_units"] * 0.80;
+									$included_usage_80pc = $obj_service->data["included_units"] * 0.80;
 
 
-									if ($usage == $sql_service_obj->data[0]["included_units"])
+									if ($usage == $obj_service->data["included_units"])
 									{
 										log_debug("inc_service_usage", "Usage is at 100%");
 
@@ -325,7 +336,7 @@ function service_usage_alerts_generate($customerid = NULL)
 										// 1. 100% usage alerting is enabled
 										// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
 										//
-										if ($sql_service_obj->data[0]["alert_100pc"] && $period_data["usage_summary"] < $sql_service_obj->data[0]["included_units"])
+										if ($obj_service->data["alert_100pc"] && $period_data["usage_summary"] < $obj_service->data["included_units"])
 										{
 											log_write("notification", "inc_service_usage", "Sending excess usage notification (100% reached)");
 
@@ -344,10 +355,10 @@ function service_usage_alerts_generate($customerid = NULL)
 											*/
 
 											// prepare message
-											$message .= "This email has been sent to advise you that you have used 100% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+											$message .= "This email has been sent to advise you that you have used 100% of your included usage on your ". $obj_service->data["name_service"] ." plan.\n";
 											$message .= "\n";
-											$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-											$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+											$message .= "Used $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.\n";
+											$message .= "Any excess usage will be charged at ". $obj_service->data["price_extraunits"] ." per $unitname (exc taxes).\n";
 											$message .= "\n";
 											$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
 											$message .= "\n";
@@ -382,7 +393,7 @@ function service_usage_alerts_generate($customerid = NULL)
 										// 1. 80% usage alerting is enabled
 										// 2. that we have not already sent this alert (by checking period_data["usage_summary"])
 										//
-										if ($sql_service_obj->data[0]["alert_80pc"] && $period_data["usage_summary"] < $included_usage_80pc)
+										if ($obj_service->data["alert_80pc"] && $period_data["usage_summary"] < $included_usage_80pc)
 										{
 											log_write("notification", "inc_service_usage", "Sending excess usage notification (80% - 100%)");
 
@@ -401,10 +412,10 @@ function service_usage_alerts_generate($customerid = NULL)
 											*/
 
 											// prepare message
-											$message .= "This email has been sent to advise you that you have used over 80% of your included usage on your ". $sql_service_obj->data[0]["name_service"] ." plan.\n";
+											$message .= "This email has been sent to advise you that you have used over 80% of your included usage on your ". $obj_service->data["name_service"] ." plan.\n";
 											$message .= "\n";
-											$message .= "Used $usage $unitname out of ". $sql_service_obj->data[0]["included_units"] ." $unitname included in plan.\n";
-											$message .= "Any excess usage will be charged at ". $sql_service_obj->data[0]["price_extraunits"] ." per $unitname (exc taxes).\n";
+											$message .= "Used $usage $unitname out of ". $obj_service->data["included_units"] ." $unitname included in plan.\n";
+											$message .= "Any excess usage will be charged at ". $obj_service->data["price_extraunits"] ." per $unitname (exc taxes).\n";
 											$message .= "\n";
 											$message .= "Your current billing period ends on ". $period_data["date_end"] ."\n";
 											$message .= "\n";
@@ -613,7 +624,7 @@ function service_usage_alerts_generate($customerid = NULL)
 									{
 										// usage is at or over 100%
 
-										if ($usage < ($cap_100 + $sql_service_obj->data[0]["alert_extraunits"]))
+										if ($usage < ($cap_100 + $obj_service->data["alert_extraunits"]))
 										{
 											// just over 100%, but less than the excess alert count - consider as 100%
 
@@ -629,13 +640,13 @@ function service_usage_alerts_generate($customerid = NULL)
 										else
 										{
 											// well over 100%
-											if ($sql_service_obj->data[0]["alert_extraunits"])
+											if ($obj_service->data["alert_extraunits"])
 											{
 												// check at what usage amount we last reported, and if
 												// we have used alert_extraunits+ more usage since then, send
 												// an alert to the customer.
 
-												if (($usage - $usage_alerted) >= $sql_service_obj->data[0]["alert_extraunits"])
+												if (($usage - $usage_alerted) >= $obj_service->data["alert_extraunits"])
 												{
 													// excess usage
 													$alert_extra[] = $traffic_cap["type_label"];
@@ -656,7 +667,7 @@ function service_usage_alerts_generate($customerid = NULL)
 									elseif ($usage >= $cap_80 && $usage < $cap_100)
 									{
 										// usage between 80% and 100%
-										if ($sql_service_obj->data[0]["alert_80pc"] && $usage_alerted < $cap_80)
+										if ($obj_service->data["alert_80pc"] && $usage_alerted < $cap_80)
 										{
 											// we haven't alerted for this yet, so flag it
 											$alert_80[] = $traffic_cap["type_label"];
@@ -731,7 +742,7 @@ function service_usage_alerts_generate($customerid = NULL)
 									$message .= "\n";
 									$message .= "This email has been sent to advise you about your data service usage as of ". time_format_humandate() ."\n";
 									$message .= "\n";
-									$message .= "Service \"". $sql_service_obj->data[0]["name_service"] ."\"\n";
+									$message .= "Service \"". $obj_service->data["name_service"] ."\"\n";
 									$message .= "\n";
 									$message .= "\n";
 									$message .= "\n";
