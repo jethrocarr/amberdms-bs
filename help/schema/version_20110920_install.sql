@@ -2348,7 +2348,7 @@ INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES (NULL, 'en_us', 'traffic_caps', 'Service Plan Traffic Caps/Options');
 
 
-INSERT INTO traffic_caps (id_service, id_traffic_type, mode, units_price, units_included) SELECT id, '1', 'capped', price_extraunits, included_units FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE service_types.name='data_traffic';
+INSERT INTO traffic_caps (id_service, id_traffic_type, mode, units_price, units_included) SELECT services.id, '1', 'capped', price_extraunits, included_units FROM services LEFT JOIN service_types ON service_types.id = services.typeid WHERE service_types.name='data_traffic';
 
 UPDATE services LEFT JOIN service_types ON service_types.id = services.typeid SET price_extraunits='0', included_units='0' WHERE service_types.name='data_traffic';
 
