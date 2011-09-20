@@ -401,7 +401,7 @@ class traffic_types
 		if (!empty($this->data["type_name"]))
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_name='". $this->data["type_name"] ."' LIMIT 1";
+			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_name='". $this->data["type_name"] ."' AND id!='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
@@ -416,7 +416,7 @@ class traffic_types
 		if (!empty($this->data["type_label"]))
 		{
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_label='". $this->data["type_label"] ."' LIMIT 1";
+			$sql_obj->string	= "SELECT id FROM traffic_types WHERE type_label='". $this->data["type_label"] ."' AND id!='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
 
 			if ($sql_obj->num_rows())
