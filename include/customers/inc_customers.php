@@ -2149,6 +2149,18 @@ class customer_orders extends customer
 			{
 				log_write("debug", "inc_customers", "Adding order item ". $data_order["id"] ." to invoice ". $invoiceid ." for customer ". $this->id ."");
 
+			
+				// select values desired, certain safety checks
+				$data_order_tmp = array();
+
+				$data_order_tmp["customid"]	= $data_order["customid"];
+				$data_order_tmp["quantity"]	= $data_order["quantity"];
+				$data_order_tmp["units"]	= addslashes($data_order["units"]);
+				$data_order_tmp["amount"]	= $data_order["amount"];
+				$data_order_tmp["price"]	= $data_order["price"];
+				$data_order_tmp["discount"]	= $data_order["discount"];
+				$data_order_tmp["description"]	= addslashes($data_order["description"]);
+
 
 				// Add each order as an item on the invoice.
 				$obj_item = New invoice_items;
@@ -2157,7 +2169,7 @@ class customer_orders extends customer
 				$obj_item->type_invoice		= "ar";
 				$obj_item->type_item		= $data_order["type"];
 
-				$obj_item->prepare_data($data_order);
+				$obj_item->prepare_data($data_order_tmp);
 
 				$obj_item->action_create();
 				$obj_item->action_update();
