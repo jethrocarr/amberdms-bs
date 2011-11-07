@@ -847,7 +847,7 @@ class page_output
 								."<tr>"
 								."<td>Bundle Parent: <b>". $obj_component->data["name_service"] ."</b></td>"
 								."<td>". $obj_component->data["description"] ."</td>"
-								."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&customerid=". $this->obj_customer->id ."&serviceid=". $obj_component->option_type_id ."\">View Service</a></td>"
+								."<td><a class=\"button_small\" href=\"index.php?page=customers/service-edit.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $obj_component->option_type_id ."\">View Service</a></td>"
 								."</tr>"
 								."</table>";
 				$this->obj_form->add_input($structure);
