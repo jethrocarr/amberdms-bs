@@ -102,7 +102,7 @@ div.left-column {
 
 div.left-column> div {
 	padding: 3mm 0mm 0mm 1mm;
-	font-size: 10pt;
+	font-size: 8pt;
 	border-top: 2px solid #666666;
 	margin: 0mm 0mm 4mm 0mm;
 	width: 100%;
@@ -179,8 +179,12 @@ div.left-column div.to-address {
 
 div.previous-activity {
 	width: 100%;
-	border-top: 2px solid #666666;
+	border-top: 2px solid #5d97aa;
 	color: #5d97aa;
+}
+
+div.previous-activity td {
+	font-size: 8pt;
 }
 
 div.previous-activity td.previous_value_total {
@@ -272,14 +276,13 @@ div.footer div.right-col table{
 
 div.footer div.right-col table tr td{
 	border: none;
+	font-weight: normal;
+}
+div.footer div.right-col table tr:last-child td{
+	border-top: 2px solid #666666;
 	font-size: 9pt;
 	padding: 3mm 0mm;
 	font-weight: bold;
-}
-
-div.footer div.right-col table tr:first-child td{
-	border-bottom: 2px solid #666666;
-	font-weight: normal;
 }
 div.right-col div.footer-mail {
 }

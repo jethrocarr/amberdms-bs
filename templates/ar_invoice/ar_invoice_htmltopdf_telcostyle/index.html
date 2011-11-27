@@ -86,7 +86,27 @@
 						
 					</div>
 
+					<div class='previous-activity'>
+						<h4>Previous Activity</h4>
 
+						<div class='invoice-section'>
+							<table>
+<!-- foreach previous_items -->
+								<tr> <td>(item_date)</td> <td>(item_details)</td> <td class='values'>(item_amount)</td> </tr>
+<!-- end -->
+							</table>
+						</div>
+
+						<div class='invoice-section total'>
+						<table>
+							<tr>
+								<td>Total</td>
+								<td></td>
+								<td class='values'>(amount_outstanding)</td>
+							</tr>
+						</table>
+						</div>
+					</div>
 
 					<div class='current-activity'>
 						<h4>Current Activity</h4>
@@ -110,10 +130,10 @@
 								<tr> <td>(name_tax)</td> <td></td> <td>(amount)</td> </tr>
 <!-- end -->
 <!-- foreach invoice_payments -->
-								<tr> <td>Payment on (date)</td> <td></td> <td>- (amount)</td> </tr>							 
+								<tr> <td>(label) on (date)</td> <td></td> <td>- (amount)</td> </tr>							 
 <!-- end -->
 								<tr>
-									<td><strong>Total Due by (date_due)</strong></td>
+									<td><strong>Invoice Total Due by (date_due)</strong></td>
 									<td></td>
 									<td class='values'><strong>(amount_currency) (amount_total)</strong></td>
 								</tr>
@@ -126,7 +146,7 @@
 					
 					<div class='total-amount-due'>
 						<h4>Total Amount Due</h4>
-						<div class='total-due-value'>(amount_currency) (amount_total)</div>
+						<div class='total-due-value'>(amount_currency) (amount_total_final)</div>
 					</div>
 					
 					
@@ -157,10 +177,13 @@
 					<h3>PLEASE DO NOT STAPLE</h3>
 					<table>
 						<tr>
+							<td>Outstanding Balance</td> <td>Please Pay Immediately</td> <td>(amount_outstanding)</td>
+						</tr>
+						<tr>
 							<td>Current Amount</td> <td>(date_due)</td> <td>(amount_total)</td>
 						</tr>
 						<tr>
-							<td>Total Amount Due</td> <td></td> <td>(amount_total)</td>
+							<td>Total Amount Due</td> <td></td> <td>(amount_total_final)</td>
 						</tr>
 					</table>
 					
@@ -209,6 +232,8 @@
 				</div>
 				<div class='left-column'>
 					<div class='current-activity invoice_items'>
+						<h4>Invoice Details</h4>
+
 						<table>
 <!-- foreach invoice_items -->
 <!-- if group ne previous --></table><table><tr><th colspan='6'>(group)</th></tr> <!-- endif --> 	<tr> <td>(info)</td> <td>(description)</td> <td>(amount)</td> </tr>
