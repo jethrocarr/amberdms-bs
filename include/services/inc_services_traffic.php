@@ -1440,7 +1440,7 @@ class service_usage_traffic extends service_usage
 			$sql_obj->fetch_array();
 
 			// format & return
-			$this->data["total_byunits"][$type]	= round($sql_obj->data[0]["value"], 2, PHP_ROUND_HALF_UP);
+			$this->data["total_byunits"][$type]	= round($sql_obj->data[0]["value"], 2);
 		}
 
 		
