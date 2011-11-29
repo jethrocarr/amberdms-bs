@@ -885,9 +885,9 @@ class cdr_rate_table_rates extends cdr_rate_table
 
 					foreach ($this->data["rates"] as $rate)
 					{
-						if (isset($rate["rate_destination"]))
+						if (isset($rate["rate_description"]))
 						{
-							if ($rate["rate_destination"] == $local_prefix)
+							if ($rate["rate_description"] == $local_prefix)
 							{
 								$local_prefix_tmp[] = $rate["rate_prefix"];
 							}
@@ -958,9 +958,9 @@ class cdr_rate_table_rates extends cdr_rate_table
 		if (!$billed && is_array($local_prefix))
 		{
 			// local prefix has been set, if any apply, then bill
-
 			foreach ($local_prefix as $local_prefix_single)
 			{
+
 				if (preg_match("/^$local_prefix_single/", $prefix_dst))
 				{
 					// local prefix - numbers might not be both in the same exact prefix, but
