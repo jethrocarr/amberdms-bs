@@ -363,12 +363,8 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data["price"]		= $data["price"];
 			$obj_customer->obj_service->data["discount"]		= $data["discount"];
 
-		
-			if ($data["price_setup"] != "0.00")
-			{
-				$obj_customer->obj_service->data["price_setup"]		= $data["price_setup"];
-				$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];
-			}
+			$obj_customer->obj_service->data["price_setup"]		= $data["price_setup"];
+			$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];
 
 			$obj_customer->obj_service->data["phone_ddi_single"]			= $data["phone_ddi_single"];
 			$obj_customer->obj_service->data["phone_local_prefix"]			= $data["phone_local_prefix"];
