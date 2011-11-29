@@ -13,6 +13,6 @@
 01 05 * * * apache cd /usr/share/amberdms/billing_system/include/cron/; php -q index.php orders.php
 
 # run usage notifications post-service invoicing
-45 06 * * * apache cd /usr/share/amberdms/billing_system/include/cron/; php -q index.php services.php
+45 06 * * * apache cd /usr/share/amberdms/billing_system/include/cron/; php -q index.php services_usage.php
 
 
