@@ -528,7 +528,6 @@ class services_form_plan
 				$structure["fieldname"]			= "units";
 				$structure["type"]			= "input";
 				$structure["options"]["req"]		= "yes";
-				$structure["options"]["autoselect"]	= "yes";	
 				$this->obj_form->add_input($structure);
 		
 				$structure = NULL;
@@ -1164,6 +1163,13 @@ class services_form_plan
 			$this->obj_form->structure["billing_cycle"]["defaultvalue"]		= "error_no_billing_cycles_available";
 		}
 
+		if ($sql_plan_obj->data[0]["name"] == "generic_with_usage")
+		{
+			if ($this->obj_form->structure["units"]["defaultvalue"] == 0)
+			{
+				$this->obj_form->structure["units"]["defaultvalue"] = "units";
+			}
+		}
 
 		// load options data
 		$sql_obj		= New sql_query;
