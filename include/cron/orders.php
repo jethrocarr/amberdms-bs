@@ -63,7 +63,7 @@ function page_execute()
 					$invoiceid = $obj_customer->invoice_generate();
 
 					// send the PDF (if desired)
-					if ($GLOBALS["config"]["ACCOUNTS_INVOICE_AUTOEMAIL"])
+					if ($GLOBALS["config"]["ACCOUNTS_INVOICE_AUTOEMAIL"] == 1 || $GLOBALS["config"]["ACCOUNTS_INVOICE_AUTOEMAIL"] == "enabled")
 					{
 						$invoice	= New invoice;
 						$invoice->id	= $invoiceid;
@@ -92,6 +92,10 @@ function page_execute()
 						unset ($invoice);
 
 					} // end if send PDF
+					else
+					{
+						log_write("notification", "cron_orders", "Not emailing invoice ". $invoice->data["code_invoice"] ." to customer due to ACCOUNTS_INVOICE_AUTOEMAIL being disabled");
+					}
 
 				}
 			}
