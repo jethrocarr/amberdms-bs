@@ -1350,7 +1350,7 @@ class customer_services extends customer
 
 					// activate service
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "UPDATE services_customers SET active='0' WHERE id='". $data_component["id"] ."' LIMIT 1";
+					$sql_obj->string	= "UPDATE services_customers SET active='0', date_period_next='0000-00-00' WHERE id='". $data_component["id"] ."' LIMIT 1";
 		
 					if (!$sql_obj->execute())
 					{
@@ -1372,11 +1372,11 @@ class customer_services extends customer
 
 
 		/*
-			Activate Service
+			De-activate Service
 		*/
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "UPDATE services_customers SET active='0' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->string	= "UPDATE services_customers SET active='0', date_period_next='0000-00-00' WHERE id='". $this->id_service_customer ."' LIMIT 1";
 		
 		if (!$sql_obj->execute())
 		{
