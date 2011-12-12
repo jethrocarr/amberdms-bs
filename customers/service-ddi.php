@@ -128,10 +128,11 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "ddi_start", "");
 		$this->obj_table->add_column("standard", "ddi_finish", "");
+		$this->obj_table->add_column("standard", "local_prefix", "");
 		$this->obj_table->add_column("standard", "description", "");
 
 		// defaults
-		$this->obj_table->columns		= array("ddi_start", "ddi_finish", "description");
+		$this->obj_table->columns		= array("ddi_start", "ddi_finish", "local_prefix", "description");
 
 		// define SQL structure
 		$this->obj_table->sql_obj->prepare_sql_settable("services_customers_ddi");
@@ -140,7 +141,7 @@ class page_output
 		
 
 		// load settings from options form
-		$this->obj_table->load_options_form();
+		//$this->obj_table->load_options_form();
 
 		// fetch all the customer information
 		$this->obj_table->generate_sql();
