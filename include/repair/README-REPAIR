@@ -25,4 +25,12 @@ Will then uncheck the usage as having been billed in services_customers_periods 
 rebilled on the following month's invoices.
 
 
+list_call_rate_differences.php
+---
+Will take the specific customer-service ID and will re-calculate call costs and
+issue a CSV format output of all call records that are calculated as wrong.
+
+This is useful if a particular region was billed wrong, but crediting and
+rebilling the entire period is undesirable - the CSV output can be provided
+to the customer, along with a credit adjustment to their account.
 
