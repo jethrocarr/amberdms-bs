@@ -24,6 +24,7 @@ class page_output
 	var $obj_form;
 	
 	var $num_ddi_rows;
+	var $locked_datechange;
 
 	
 
@@ -129,6 +130,10 @@ class page_output
 			}
 		}
 
+
+		// obtain edit status
+		$this->locked_datechange = $this->obj_customer->service_check_datechangesafe();
+
 		return 1;
 	}
 
@@ -211,16 +216,34 @@ class page_output
 			$structure["fieldname"]		= "billing_cycle_string";
 			$structure["type"]		= "text";
 			$this->obj_form->add_input($structure);
+
+
+			if ($this->locked_datechange)
+			{
+				// the service has been billed, the start date is fixed.
+				$structure = NULL;
+				$structure["fieldname"] 	= "date_period_first";
+				$structure["type"]		= "text";
+				$this->obj_form->add_input($structure);
 			
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_period_first";
-			$structure["type"]		= "text";
-			$this->obj_form->add_input($structure);
+				$structure = NULL;
+				$structure["fieldname"] 	= "date_period_next";
+				$structure["type"]		= "text";
+				$this->obj_form->add_input($structure);
+			}
+			else
+			{
+				// service has not yet been billed, so the dates can still be adjusted
+				$structure = NULL;
+				$structure["fieldname"] 	= "date_period_first";
+				$structure["type"]		= "date";
+				$this->obj_form->add_input($structure);
 			
-			$structure = NULL;
-			$structure["fieldname"] 	= "date_period_next";
-			$structure["type"]		= "text";
-			$this->obj_form->add_input($structure);
+				$structure = NULL;
+				$structure["fieldname"] 	= "date_period_next";
+				$structure["type"]		= "text";
+				$this->obj_form->add_input($structure);
+			}
 
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle_string", "date_period_first", "date_period_next");
 

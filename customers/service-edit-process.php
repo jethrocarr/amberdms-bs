@@ -34,6 +34,25 @@ if (user_permissions_get('customers_write'))
 		$obj_customer->load_data_service();
 
 
+		// check the date lock status
+		if (!$obj_customer->service_check_datechangesafe())
+		{
+			// start date is adjustable
+			$data["date_period_first"]	= @security_form_input_predefined("date", "date_period_first", 1, "");
+			$data["date_period_next"]	= $data["date_period_first"];
+			
+			if ($data["date_period_first"] != $obj_customer->obj_service->data["date_period_first"])
+			{
+				// date has been adjusted
+			}
+			else
+			{
+				// no change
+				unset($data["date_period_first"]);
+				unset($data["date_period_next"]);
+			}
+		}
+
 		// standard fields
 		$data["active"]			= @security_form_input_predefined("checkbox", "active", 0, "");
 		$data["date_period_last"]	= @security_form_input_predefined("date", "date_period_last", 0, "");
@@ -340,6 +359,40 @@ if (user_permissions_get('customers_write'))
 					$obj_customer->service_disable();
 				}
 			}
+
+
+			// adjust dates if possible - only possible for services that have yet to be billed
+			if ($data["date_period_first"])
+			{
+				log_write("notification", "process", "Adjusted service start date to ". time_format_humandate($data["date_period_first"]) ."");
+
+				// handle service information
+				$obj_sql		= New sql_query;
+				$obj_sql->string	= "UPDATE services_customers SET date_period_first='". $data["date_period_first"] ."',  date_period_next='". $data["date_period_next"] ."' WHERE id='". $obj_customer->id_service_customer ."' LIMIT 1";
+				$obj_sql->execute();
+				unset($obj_sql);
+
+
+				// handle any bundle member services
+				$obj_sql		= New sql_query;
+				$obj_sql->string	= "SELECT id FROM services_customers WHERE bundleid='". $obj_customer->id_service_customer ."'";
+				$obj_sql->execute();
+
+				if ($obj_sql->num_rows())
+				{
+					$obj_sql->fetch_array();
+
+					foreach ($obj_sql->data as $data_component)
+					{
+						$obj_sql		= New sql_query;
+						$obj_sql->string	= "UPDATE services_customers SET date_period_first='". $data["date_period_first"] ."',  date_period_next='". $data["date_period_next"] ."' WHERE id='". $data_component["id"]  ."' LIMIT 1";
+						$obj_sql->execute();
+					}
+				}
+
+				unset($obj_sql);
+			}
+
 
 			// handle end date
 			if (!empty($data["date_period_last"]))

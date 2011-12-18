@@ -966,6 +966,48 @@ class customer_services extends customer
 
 
 	/*
+		service_check_datechangesafe
+
+		Returns whether it is safe to adjust the service start dates. This is possibly only
+		when the service is recently added and has not yet been billed at all.
+
+		Returns
+		0	Unlocked
+		1	Locked
+		2	Locked // Is part of a bundle
+	*/
+
+	function service_check_datechangesafe()
+	{
+		log_write("debug", "customers_service", "Executing service_check_datechangesafe()");
+
+
+		// check for bundle lock
+		if ($this->service_get_is_bundle_item())
+		{
+			// bundle lock
+			return 2;
+		}
+
+
+		// check if the service has current periods
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id FROM `services_customers_periods` WHERE id_service_customer='". $this->id_service_customer ."' AND (invoiceid!='0' OR invoiceid_usage!='0') LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			// active periods
+			return 1;
+		}
+
+
+		// open to change
+		return 0;
+	}
+
+
+	/*
 		service_check_delete_lock
 
 		Returns whether or not the selected service can be deleted/is locked.
