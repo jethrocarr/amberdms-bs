@@ -684,9 +684,36 @@ function service_period_dates_generate($date_period_start, $billing_cycle, $bill
 			else
 			{
 				// regular billing period - ie: not the first time.
-			
+				//
+				// We need to generate the period as the end of the month for the period range (month/year/etc). This code is a bit
+				// confusing, essentially we need to add the period to the current date, minus by one month, to get the next date.
+				//
+				// This is a bit overly complicated for monthly services, but makes sense for longer services such as yearly:
+				//
+				// For example:
+				//
+				//	Monthly Service:
+				//
+				//	Period start date:	2012-01-01
+				//	Period +1month:		2012-02-01
+				//	Period -1month:		2012-01-01
+				//	Period Last_day:	2012-01-31
+				//
+				//	Yearly Service:
+				//
+				//	Period start date:	2012-01-01
+				//	Period +12months:	2013-01-01
+				//	Period -1month:		2012-12-01
+				//	Period Last_day:	2012-12-31
+				//
+				//
+				//
+
+						
 				// fetch the end of the month date
-				$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_start') as value");
+				$date_period_end	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_start', INTERVAL $sql_add_string) as value");
+				$date_period_end	= sql_get_singlevalue("SELECT DATE_SUB('$date_period_end', INTERVAL 1 MONTH) as value");
+				$date_period_end	= sql_get_singlevalue("SELECT LAST_DAY('$date_period_end') as value");
 
 				// fetch the next period's start date (the first of the next month)
 				$date_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_end', INTERVAL 1 DAY ) as value");
@@ -938,13 +965,28 @@ function service_invoices_generate($customerid = NULL)
 						{
 							// very first billing month
 							log_write("debug", "services_invoicegen", "First billing month for this service, adjusting pricing to suit days.");
+
+							// figure out normal period length - rememeber, whilst service may be configured to align monthly, it needs to
+							// handle pricing calculations for variations such as month, year, etc.
 							
+
+							// get the number of days of a regular period - this correctly handles, month, year, etc
+							// 1. generate the next period dates, this will be of regular length
+							// 2. calculate number of days
+
+							$tmp_dates = service_period_dates_generate($period_data["date_period_next"], $obj_service->data["billing_cycle_string"], $obj_service->data["billing_mode_string"]);
+
+							$regular_period_num_days = sql_get_singlevalue("SELECT DATEDIFF('". $tmp_dates["end"] ."', '". $tmp_dates["start"] ."') as value");
+
+
+							// process for short/long periods
+							//
 							if ($GLOBALS["config"]["SERVICE_PARTPERIOD_MODE"] == "seporate")
 							{
 								log_write("debug", "services_invoicegen", "Adjusting for partial month period (SERVICE_PARTPERIOD_MODE == seporate)");
 
 
-								// work out the total number of days
+								// work out the total number of days in partial month
 								$short_month_days_total = time_calculate_daynum( time_calculate_monthdate_last($period_data["date_start"]) );
 								$short_month_days_short	= $short_month_days_total - time_calculate_daynum($period_data["date_start"]);
 
@@ -952,10 +994,10 @@ function service_invoices_generate($customerid = NULL)
 
 
 								// calculate correct base fee
-								$obj_service->data["price"] = ($obj_service->data["price"] / $short_month_days_total) * $short_month_days_short;
+								$obj_service->data["price"] = ($obj_service->data["price"] / $regular_period_num_days) * $short_month_days_short;
 
 								// calculate ratio
-								$ratio = ($short_month_days_short / $short_month_days_total);
+								$ratio = ($short_month_days_short / $regular_period_num_days);
 
 								log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle short period.");
 							}
@@ -970,10 +1012,10 @@ function service_invoices_generate($customerid = NULL)
 								log_debug("services_invoicegen", "$extra_month_days_extra additional days ontop of started billing period");
 
 								// calculate correct base fee
-								$obj_service->data["price"] = ( ($obj_service->data["price"] / $extra_month_days_total) * $extra_month_days_extra ) + $obj_service->data["price"];
+								$obj_service->data["price"] = ( ($obj_service->data["price"] / $regular_period_num_days) * $extra_month_days_extra ) + $obj_service->data["price"];
 								
 								// calculate ratio
-								$ratio = (($extra_month_days_extra + $extra_month_days_total) / $extra_month_days_total);
+								$ratio = (($extra_month_days_extra + $extra_month_days_total) / $regular_period_num_days);
 
 								log_write("debug", "services_invoicegen", "Calculated service bill ratio of $ratio to handle extended period.");
 
