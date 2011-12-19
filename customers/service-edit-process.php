@@ -361,7 +361,8 @@ if (user_permissions_get('customers_write'))
 			}
 
 
-			// adjust dates if possible - only possible for services that have yet to be billed
+			// adjust dates if possible - only possible for services that have yet to be billed, any periods that currently
+			// exist are uninvoiced and can be safely deleted.
 			if ($data["date_period_first"])
 			{
 				log_write("notification", "process", "Adjusted service start date to ". time_format_humandate($data["date_period_first"]) ."");
@@ -373,24 +374,36 @@ if (user_permissions_get('customers_write'))
 				unset($obj_sql);
 
 
-				// handle any bundle member services
+				// delete service periods
 				$obj_sql		= New sql_query;
-				$obj_sql->string	= "SELECT id FROM services_customers WHERE bundleid='". $obj_customer->id_service_customer ."'";
+				$obj_sql->string	= "DELETE FROM services_customers_periods WHERE id_service_customer='". $obj_customer->id_service_customer ."'";
 				$obj_sql->execute();
+				unset($obj_sql);
 
-				if ($obj_sql->num_rows())
+				// handle any bundle member services
+				$obj_component_sql		= New sql_query;
+				$obj_component_sql->string	= "SELECT id FROM services_customers WHERE bundleid='". $obj_customer->id_service_customer ."'";
+				$obj_component_sql->execute();
+
+				if ($obj_component_sql->num_rows())
 				{
-					$obj_sql->fetch_array();
+					$obj_component_sql->fetch_array();
 
-					foreach ($obj_sql->data as $data_component)
+					foreach ($obj_component_sql->data as $data_component)
 					{
+						// adjust service dates
 						$obj_sql		= New sql_query;
 						$obj_sql->string	= "UPDATE services_customers SET date_period_first='". $data["date_period_first"] ."',  date_period_next='". $data["date_period_next"] ."' WHERE id='". $data_component["id"]  ."' LIMIT 1";
+						$obj_sql->execute();
+
+						// delete service periods
+						$obj_sql		= New sql_query;
+						$obj_sql->string	= "DELETE FROM services_customers_periods WHERE id_service_customer='". $id_component["id"] ."'";
 						$obj_sql->execute();
 					}
 				}
 
-				unset($obj_sql);
+				unset($obj_component_sql);
 			}
 
 
