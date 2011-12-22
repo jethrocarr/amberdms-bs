@@ -402,8 +402,8 @@ function service_form_plan_process()
 					// additional checks
 					if ($cap["mode"] != "unlimited" && $cap["mode"] != "capped")
 					{
-						log_write("error", "A data type must either be disabled or marked as capped vs unlimited");
-						error_flag("traffic_cap_". $i);
+						log_write("error", "inc_services_process", "A data type must either be disabled or marked as capped vs unlimited");
+						error_flag_field("traffic_cap_". $i);
 					}
 					
 					$data["data_traffic_caps"][] = $cap;
