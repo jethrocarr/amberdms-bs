@@ -431,6 +431,25 @@ class page_output
 		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 
+		// reseller options
+		$structure = NULL;
+		$structure["fieldname"]			= "reseller_customer";
+		$structure["type"]			= "radio";
+		$structure["values"]			= array("standalone", "reseller", "customer_of_reseller");
+		$structure["defaultvalue"]		= "standalone";
+		$structure["options"]["css_row_class"]	= "reseller_customer";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure = form_helper_prepare_dropdownfromdb("reseller_id", "SELECT id, name_customer as label FROM customers WHERE reseller_customer = 'reseller' AND id <> ". $this->id);
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 		= "reseller_message";
+		$structure["type"]			= "message";
+		$structure["defaultvalue"]		= "<p>Each customer in the system can either be classified for the Reseller Options as either a standalone customer, a reseller to other customers, or as a customer of a reseller. By default new customers are standalone.</p>";
+		$this->obj_form->add_input($structure);
+
 		// submit section
 		if (user_permissions_get("customers_write"))
 		{
@@ -448,7 +467,6 @@ class page_output
 		$structure["type"]		= "hidden";
 		$structure["defaultvalue"]	= $this->id;
 		$this->obj_form->add_input($structure);
-					
 		
 		// fetch the form data
 		$this->obj_form->sql_query = "SELECT * FROM `customers` WHERE id='". $this->id ."' LIMIT 1";
@@ -763,6 +781,20 @@ class page_output
 		$this->obj_form->render_row("address2_state");
 		$this->obj_form->render_row("address2_country");
 		$this->obj_form->render_row("address2_zipcode");
+		
+		print "</table>";
+		
+		print "<br />";
+		
+		//reseller options
+		print "<table class=\"form_table\" width=\"100%\">";
+		print "<tr class=\"header\">";
+			print "<td colspan=\"2\"><b>" .lang_trans("reseller_options"). "</b></td>";
+		print "</tr>";
+		
+		$this->obj_form->render_row("reseller_customer");
+		$this->obj_form->render_row("reseller_id");
+		$this->obj_form->render_row("reseller_message");
 		
 		print "</table>";
 		

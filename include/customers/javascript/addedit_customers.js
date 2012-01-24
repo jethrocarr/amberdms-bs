@@ -13,6 +13,21 @@ $(document).ready(function() {
 		}
 	});
 
+	// set the reseller id to 0 and disable it if the reseller is enabled
+	if($(":input[name='reseller_customer']:checked").val() !== "customer_of_reseller") {
+		$(":input[name='reseller_id']").val('0');
+		$(":input[name='reseller_id']").attr('disabled', 'disabled');
+	}
+
+	// if the reseller is selected or deselected, then disable/enable the reseller customer dropdown
+	$(":input[name='reseller_customer']").change(function() {
+		if($(this).val() === "customer_of_reseller") {
+			$(":input[name='reseller_id']").removeAttr('disabled');
+		} else {
+			$(":input[name='reseller_id']").attr('disabled', 'disabled');
+		}
+	});
+
 	billing_street = $(":input[name='address1_street']").val();
 	billing_city = $(":input[name='address1_city']").val();
 	billing_state = $(":input[name='address1_state']").val();

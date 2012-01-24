@@ -41,6 +41,13 @@ if (user_permissions_get('customers_write'))
 	
 	$obj_customer->data["address1_same_as_2"]	= @security_form_input_predefined("checkbox", "address1_same_as_2", 0, "");
 
+	$obj_customer->data["reseller_customer"]	= @security_form_input_predefined("any", "reseller_customer", 0, "");
+	$obj_customer->data["reseller_id"]		= @security_form_input_predefined("int", "reseller_id", 0, "");
+	
+	// prevent a reseller being a customer of another reseller (multiple levels of resellers)
+	if ($obj_customer->data['reseller_customer'] !== 'customer_of_reseller' ) {
+		$obj_customer->data["reseller_id"] = NULL;
+	}
 
 	// If the address 1 is set to be the same as address 2
 	if ($obj_customer->data["address1_same_as_2"])

@@ -427,6 +427,8 @@ class customer
 						."address2_state='". $this->data["address2_state"] ."', "
 						."address2_country='". $this->data["address2_country"] ."', "
 						."address2_zipcode='". $this->data["address2_zipcode"] ."', "
+						."reseller_customer='". $this->data["reseller_customer"] ."', "
+						."reseller_id='". $this->data["reseller_id"] ."', "
 						."discount='". $this->data["discount"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();
