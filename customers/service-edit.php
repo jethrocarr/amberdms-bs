@@ -250,7 +250,18 @@ class page_output
 
 			$this->obj_form->subforms["service_billing"]	= array("billing_cycle_string", "date_period_first", "date_period_next");
 
+			$pos = stristr($this->obj_customer->obj_service->data["typeid_string"], "phone_");
+			if($pos !== FALSE && $pos == 0) {
 
+				$structure = NULL;
+				$structure["fieldname"]         = "billing_cdr_csv_output";
+				$structure["options"]["label"]  = " ". lang_trans("billing_cdr_csv_output_help");
+				$structure["type"]              = "checkbox";
+				$this->obj_form->add_input($structure);
+
+				$this->obj_form->subforms["service_billing"][] = "billing_cdr_csv_output";
+
+			}
 
 			if (!$this->obj_customer->service_get_is_bundle_item())
 			{

@@ -72,6 +72,8 @@ if (user_permissions_get('customers_write'))
 		$data["price_setup"]	= @security_form_input_predefined("money", "price_setup", 0, "");
 		$data["discount_setup"]	= @security_form_input_predefined("float", "discount_setup", 0, "");
 
+		// billing cdr
+		$data["billing_cdr_csv_output"]	= @security_form_input_predefined("checkbox", "billing_cdr_csv_output", 0, "");
 
 		/*
 			Fetch Service-Type Options
@@ -441,6 +443,8 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->obj_service->data["phone_trunk_included_units"]		= $data["phone_trunk_included_units"];
 			$obj_customer->obj_service->data["phone_trunk_quantity"]		= $data["phone_trunk_quantity"];
 			$obj_customer->obj_service->data["phone_trunk_price_extra_units"]	= $data["phone_trunk_price_extra_units"];
+
+			$obj_customer->obj_service->data["billing_cdr_csv_output"]    		= $data["billing_cdr_csv_output"];
 
 			$obj_customer->obj_service->action_update_options();
 
