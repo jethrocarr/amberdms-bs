@@ -34,3 +34,16 @@ This is useful if a particular region was billed wrong, but crediting and
 rebilling the entire period is undesirable - the CSV output can be provided
 to the customer, along with a credit adjustment to their account.
 
+
+
+send_all_unsent_invoices.php
+---
+If a billing run has been executed without the invoices being sent and there are too many to easily send them by
+hand, the following script will attempt to email any unsent invoices to customers.
+
+If a customer doesn't have a valid email address, this script will report accordingly, although it won't pickup
+syntaxally correct addresses that then later bounce.
+
+Will run on all unsent invoices for a specific date, typically you'll want to do a bulk send of a particular billing
+run period. It will also ignore any $0 invoices.
+
