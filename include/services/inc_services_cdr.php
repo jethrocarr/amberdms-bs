@@ -2228,5 +2228,233 @@ class cdr_customer_service_ddi
 
 
 
+/*
+	CLASS: cdr_csv
+
+	Functions for exporting cdr output in csv
+
+	This class is more a collection of specific functions for CDR output to CSV
+
+*/
+
+class cdr_csv
+{
+	var $data;			// data from this cdr_csv export
+
+	var $id_customer;		//
+	var $id_service_customer;	//
+	var $period_start;		//
+	var $period_end;		//
+
+	var $required_params;		//
+	var $csv_body_fields;		//
+
+
+	function cdr_csv($options = false) {
+		$this->required_params 	= array('id_customer', 'id_service_customer', 'period_start', 'period_end');
+		$this->csv_body_fields  = array('id_service_customer', 'date_time', 'rate_billgroup', 'number_src', 'number_dst', 'billable_seconds', 'price', 'qualifier');
+
+		if($options) {
+			return $this->setOptions($options);
+		}
+	}
+
+	function setOptions($options) {
+		foreach($options as $k => $v) {
+			if(in_array($k, $this->required_params)) {
+				$this->$k = $v;
+			}
+		}
+	}
+
+	function hasParams() {
+		$retval = false;
+
+		if(is_array($this->required_params)) {
+			$retval = true;
+			foreach($this->required_params as $k) {
+				if(!isset($this->$k)) {
+					log_write("error", "cdr_csv", "Requred parameter for cdr_csv output: " . $k . " was not specified");
+					$retval = false;
+				}
+			}
+		}	
+		return $retval;
+	}
+
+	function isDate($value) {
+
+		$expression = "/^[0-9]*-[0-9]*-[0-9]*$/";
+
+		if (preg_match($expression, $value)) {
+			$value = addslashes($value);
+
+			return $value;
+		}
+
+		log_write("error", "cdr_csv", "Date $value is invalid");
+		
+		return false;
+	}
+
+	function getQuery() {
+		// what do we need
+		if(!$this->hasParams()) {
+			return false;
+		}
+
+		$sql = "SELECT 
+				CONCAT(date, ' 00:00:00') as date_time, 
+				cdr_rate_billgroups.billgroup_name as rate_billgroup, 
+				usage1 as number_src, 
+				usage2 as number_dst, 
+				usage3 as billable_seconds, 
+				price, 
+				'ANSWERED' AS qualifier 
+			FROM service_usage_records 
+			LEFT JOIN cdr_rate_billgroups 
+				ON cdr_rate_billgroups.id = service_usage_records.billgroup 
+			WHERE 
+				id_service_customer = '" . $this->id_service_customer . "' 
+				AND date >= '" . $this->isDate($this->period_start) . "' 
+				AND date <= '" . $this->isDate($this->period_end) . "' 
+			ORDER BY 
+				date ASC , 
+				rate_billgroup ASC , 
+				number_src ASC , 
+				number_dst ASC 
+		";
+
+		return $sql;
+
+	}
+
+	function runQuery($sql) {
+
+		$this->sql_obj		= New sql_query;
+		$this->sql_obj->string	= $sql;
+		$this->sql_obj->execute();
+		$this->sql_obj->fetch_array();
+
+	}
+
+	function getData() { 
+		return $this->runQuery($this->getQuery());
+	}
+
+	function makeCSV() {
+
+		// have a go at getting the data if its not there
+		if(!is_object($this->sql_obj)) {
+			$this->getData();
+		}
+
+		// fail if data not found
+		if(!is_object($this->sql_obj)) {
+			log_write("error", "cdr_csv", __FUNCTION__ . " called but no data present, has the query been performed?");
+			return false;
+		}
+
+
+		// string padding is required as per the following:
+		/*
+	  			HEADER SECTION	
+			1	HD-HEADER	Char 6	HEADER	Field contains the following text 'HEADER'
+			2	HD-CUST-NUM	Num 11	Left 0 padded	Master customer account number
+			3	HD-FILE-CREATE-DATE	Char 10	YYYY-MM-DD	Date the file is created
+						
+			BODY SECTION	
+			4	BD-CUST-NBR	Num 11	Left 0 padded	Customer account number
+			5	BD-ORIG-ANI	Num 15	Left 0 padded E164	Originating Party 'A'
+			6	BD-TERM-NBR	Char 16	Left space padded in dialied E164 format	Calling Party 'B'
+			7	BD-START-DT	Char 10	YYYY-MM-DD	Date extracted from the start date
+			8	BD-START-TM	Char 8	HH.MM.SS	Time extracted from the start time
+			9	BD-RATED-SECS	Num 9	Left 0 padded	Rated seconds
+			10	BD-RATED-AMT	Char 10	Left 0 padded before decimal point and right 0 padded after the decimal point XXXXX.XXXX	Rated Dollar amount (excludes all taxes)
+			11	BD-ANS-QUALIFIER	Char 10	As per values in description field	Possible values, ANSWERED, BUSY, FAILED, NO ANSWER
+								
+			TRAILER SECTION	
+			12	TR-TRAILER	Char 7	TRAILER	The following text is in this field
+			13	TR-REC-COUNT	Num 7	Left 0 padded	The number of records in the file, excluding the header and trailer records
+		*/
+		
+		// header of CSV
+		$this->csv[] = array('HEADER', str_pad($this->id_customer, 11, "0", STR_PAD_LEFT), date('Y-m-d'));
+
+		if(count($this->sql_obj->data) > 0) {
+			$csv_record_count = count($this->sql_obj->data);
+			foreach($this->sql_obj->data as $row) {
+
+				// as such this only currently supports one customer account number
+				$row['id_service_customer'] = $this->id_service_customer;
+
+				// reset the row
+				$csv_row = array();
+
+				// loop over the csv_body_fields and apply any formating required before adding to the csv_row in the order defined
+				foreach($this->csv_body_fields as $k) {
+
+					switch($k) {
+						case 'id_service_customer':
+							$csv_row[$k] = str_pad($row[$k], 11, "0", STR_PAD_LEFT);
+							break;
+						case 'number_src':
+							$csv_row[$k] = str_pad($row[$k], 11, "0", STR_PAD_LEFT);
+							break;
+						case 'number_dst':
+							$csv_row[$k] = str_pad($row[$k], 15, " ", STR_PAD_LEFT);
+							break;
+						case 'billable_seconds':
+							$csv_row[$k] = str_pad($row[$k], 9, "0", STR_PAD_LEFT);
+							break;
+						case 'price':
+							$csv_row[$k] = trim(money_format('%=0^!#5.4i', $row[$k]));
+							break;
+
+						default;
+							$csv_row[$k] = $row[$k];
+						break;
+					}
+
+				}
+
+				// add the body row
+				$this->csv[] = $csv_row;
+			}
+		} else {
+			$csv_record_count = 0;
+		}
+
+		// footer of csv
+		$this->csv[] = array('TRAILER', str_pad($csv_record_count,7,"0", STR_PAD_LEFT));
+
+	}
+
+	function getCSV($line_ending = "\n") {
+
+		if(!isset($this->csv)) {
+			$this->makeCSV();
+		}
+
+		if(isset($this->csv)) {
+			$csv = '';
+			foreach($this->csv as $data) {
+				$row = '';
+				foreach($data as $v) {
+					$row .= '"' . $v . '",';
+				}
+				$csv .= rtrim($row, ",") . $line_ending;
+			}
+			return $csv;
+		} else {
+                        log_write("error", "cdr_csv", "Error producing CDR CSV output due to data failure");
+                        return false;
+		}
+
+	}
+
+
+
+} // end of class: cdr_csv
 
 ?>
