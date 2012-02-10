@@ -202,6 +202,8 @@ class page_output
 			$this->obj_table->render_table_html();
 			
 			// display CSV/PDF download link
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history-cdr-export.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."&id_service_period=". $this->id_service_period ."\">CDR Export Mode</a></p>";
+			print "<br>";
 			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/service-history-cdr.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."&id_service_period=". $this->id_service_period ."\">Export as CSV</a></p>";
 			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/service-history-cdr.php&id_customer=". $this->obj_customer->id ."&id_service_customer=". $this->obj_customer->id_service_customer ."&id_service_period=". $this->id_service_period ."\">Export as PDF</a></p>";
 		}
