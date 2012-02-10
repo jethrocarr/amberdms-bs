@@ -464,7 +464,16 @@ class page_output
 		$structure["translations"]["regular"]		= "Regular calling rates for calls between a customer's own DDI";
 		$this->obj_form->add_input($structure);
 
-		$this->obj_form->subforms["config_options_cdr"]	= array("SERVICE_CDR_LOCAL", "SERVICE_CDR_BILLSELF");
+		$structure = NULL;
+		$structure["fieldname"]				= "SERVICE_CDR_EXPORT_FORMAT";
+		$structure["type"]				= "radio";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["values"]				= array("csv_padded");
+		$structure["translations"]["csv_padded"]	= "Export CDRs in padded CSV format";
+		$this->obj_form->add_input($structure);
+
+
+		$this->obj_form->subforms["config_options_cdr"]	= array("SERVICE_CDR_LOCAL", "SERVICE_CDR_BILLSELF", "SERVICE_CDR_EXPORT_FORMAT");
 
 
 		// migration mode options
