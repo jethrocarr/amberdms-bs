@@ -945,6 +945,7 @@ class table
 				foreach ($column_a1 as $column)
 				{
 					$form->render_field($column);
+					print "<br>";
 				}
 
 				print "</td>";
@@ -955,6 +956,7 @@ class table
 				foreach ($column_a2 as $column)
 				{
 					$form->render_field($column);
+					print "<br>";
 				}
 
 				print "</td>";
