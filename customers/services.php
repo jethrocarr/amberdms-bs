@@ -100,6 +100,9 @@ class page_output
 		$this->obj_table->add_column("standard", "billing_cycles", "NONE");
 		$this->obj_table->add_column("date", "date_period_first", "date_period_first");
 		$this->obj_table->add_column("date", "date_period_next", "date_period_next");
+		$this->obj_table->add_column("money", "price_monthly", "NONE");
+		$this->obj_table->add_column("money", "price_yearly", "NONE");
+		$this->obj_table->add_column("percentage", "discount", "NONE");
 		$this->obj_table->add_column("standard", "description", "NONE");
 
 		// defaults
@@ -111,9 +114,30 @@ class page_output
 		$this->obj_table->sql_obj->prepare_sql_addfield("id_service", "serviceid");
 		$this->obj_table->sql_obj->prepare_sql_addwhere("customerid = '". $this->id ."'");
 
+		// acceptable filter options
+		$this->obj_table->add_fixed_option("id", $this->id);
+
+		$structure = NULL;
+		$structure["fieldname"] 	= "show_prices_with_discount";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Display service prices with discounts applied";
+		$structure["defaultvalue"]	= "1";
+		$structure["sql"]		= "";
+		$this->obj_table->add_filter($structure);
+
+
+		// load options
+		$this->obj_table->load_options_form();
+
 		// run SQL query
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
+
+		// fetch service billing cycle information
+		$obj_cycles_sql		= New sql_query;
+		$obj_cycles_sql->string	= "SELECT id, name, priority FROM billing_cycles";
+		$obj_cycles_sql->execute();
+		$obj_cycles_sql->fetch_array();
 
 		// load service item data and optiosn
 		for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
@@ -129,8 +153,82 @@ class page_output
 
 			$this->obj_table->data[$i]["name_service"]		= $obj_service->data["name_service"];
 			$this->obj_table->data[$i]["typeid"]			= $obj_service->data["typeid_string"];
-			$this->obj_table->data[$i]["billing_cycles"]		= $obj_service->data["billing_cycle"];
+			$this->obj_table->data[$i]["billing_cycles"]		= $obj_service->data["billing_cycle_string"];
+			$this->obj_table->data[$i]["discount"]			= $obj_service->data["discount"];
+			$this->obj_table->data[$i]["price_with_discount"]	= $obj_service->data["price_with_discount"];
 			$this->obj_table->data[$i]["description"]		= $obj_service->data["description"];
+
+			// calculate pricing
+			foreach ($obj_cycles_sql->data as $data_cycles)
+			{
+				if ($obj_service->data["billing_cycle"] == $data_cycles["id"])
+				{
+					if ($data_cycles["priority"] < 32)
+					{
+						// monthly or less
+						if ($data_cycles["name"] == "monthly")
+						{
+							// monthly billed service
+							$this->obj_table->data[$i]["price_monthly"] = $obj_service->data["price"];
+						}
+						else
+						{
+							// less than a month, calculate a month's amount
+							$ratio = 28 / $data_cycles["priority"];
+
+							$this->obj_table->data[$i]["price_monthly"] = $obj_service->data["price"] * $ratio;
+						}
+					}
+					else
+					{
+						if ($data_cycles["name"] == "yearly")
+						{
+							// yearly billed service
+							$this->obj_table->data[$i]["price_yearly"] = $obj_service->data["price"];
+						}
+						else
+						{
+							// more than a month, less than a year, calcuate a year's amount
+							$ratio = 365 / $data_cycles["priority"];
+
+							$this->obj_table->data[$i]["price_yearly"] = $obj_service->data["price"] * $ratio;
+						}
+					}
+				}
+
+			} // end of calculate pricing
+
+
+			// apply discount if enabled
+			if ($_SESSION["form"]["service_list"]["filters"]["filter_show_prices_with_discount"])
+			{
+				if (!empty($this->obj_table->data[$i]["price_monthly"]))
+				{
+					$this->obj_table->data[$i]["price_monthly"] = $this->obj_table->data[$i]["price_monthly"] - ($this->obj_table->data[$i]["price_monthly"] * ($this->obj_table->data[$i]["discount"] /100));
+				}
+
+				if (!empty($this->obj_table->data[$i]["price_yearly"]))
+				{
+					$this->obj_table->data[$i]["price_yearly"] = $this->obj_table->data[$i]["price_yearly"] - ($this->obj_table->data[$i]["price_yearly"] * ($this->obj_table->data[$i]["discount"] /100));
+				}
+			}
+
+
+			// special handling for bundle items
+			if ($obj_service->data["id_bundle_component"])
+			{
+				// bundle items have no cost, since it's charged as part of the bundle
+				$this->obj_table->data[$i]["price_monthly"]	= NULL;
+				$this->obj_table->data[$i]["price_yearly"]	= NULL;
+
+/*				// prefix the name with bundle, if haven't already for UI
+				if (!strpos($this->obj_table->data[$i]["name_service"], '[bundled]'))
+				{
+					$this->obj_table->data[$i]["name_service"] = '[bundled] '. $this->obj_table->data[$i]["name_service"];
+				}
+*/
+			}
+
 		}
 
 	}
@@ -179,6 +277,7 @@ class page_output
 
 
 			// display the table
+			$this->obj_table->render_options_form();
 			$this->obj_table->render_table_html();
 
 

@@ -7,6 +7,8 @@
 	Displays a list of all the customers on the system.
 */
 
+include("include/services/inc_services.php");
+
 class page_output
 {
 	var $obj_table_list;
@@ -51,6 +53,8 @@ class page_output
 		$this->obj_table_list->add_column("standard", "address1_city", "");
 		$this->obj_table_list->add_column("standard", "address1_state", "");
 		$this->obj_table_list->add_column("standard", "address1_country", "");
+                $this->obj_table_list->add_column("money", "service_price_monthly", "NONE");
+		$this->obj_table_list->add_column("money", "service_price_yearly", "NONE");
 
 		// defaults
 		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
@@ -87,7 +91,17 @@ class page_output
 		$structure["defaultvalue"]	= "on";
 		$structure["options"]["label"]	= "Hide any customers who are no longer active";
 		$this->obj_table_list->add_filter($structure);
-		
+ 
+ 		$structure = NULL;
+		$structure["fieldname"] 	= "show_prices_with_discount";
+		$structure["type"]		= "checkbox";
+		$structure["options"]["label"]	= "Display service prices with discounts applied";
+		$structure["defaultvalue"]	= "1";
+		$structure["sql"]		= "";
+		$this->obj_table_list->add_filter($structure);
+
+
+               		
 
 		// load settings from options form
 		$this->obj_table_list->load_options_form();
@@ -95,6 +109,130 @@ class page_output
 		// fetch all the customer information
 		$this->obj_table_list->generate_sql();
 		$this->obj_table_list->load_data_sql();
+
+
+		// handle services, if columns selected
+                if (in_array('service_price_yearly', $this->obj_table_list->columns)
+                        || in_array('service_price_monthly', $this->obj_table_list->columns))
+		{
+			/*
+				Foreach customer, we need to fetch all their service details and then determine the 
+				cost of those services.
+
+				Unfortunatly we can't just do a table query, since we need to load the service details to
+				check for stuff such as price overrides. :'(
+			*/
+	
+			// fetch service billing cycle information
+			$obj_cycles_sql		= New sql_query;
+			$obj_cycles_sql->string	= "SELECT id, name, priority FROM billing_cycles";
+			$obj_cycles_sql->execute();
+			$obj_cycles_sql->fetch_array();
+
+
+			// run through all returned customers
+			for ($i=0; $i < $this->obj_table_list->data_num_rows; $i++)
+			{
+				// fetch all services for the customer (if they have any)
+				$obj_services_sql		= New sql_query;
+				$obj_services_sql->string	= "SELECT id as id_service_customer, serviceid as id_service FROM services_customers WHERE customerid='". $this->obj_table_list->data[$i]["id"] ."'";
+				$obj_services_sql->execute();
+
+				if ($obj_services_sql->num_rows())
+				{
+					$obj_services_sql->fetch_array();
+
+
+					foreach ($obj_services_sql->data as $data_service_list)
+					{
+						// query service details for each service
+						$obj_service			= New service;
+
+						$obj_service->option_type	= "customer";
+						$obj_service->option_type_id	= $data_service_list["id_service_customer"];
+						$obj_service->id		= $data_service_list["id_service"];
+
+						$obj_service->load_data();
+						$obj_service->load_data_options();
+
+						// counting totals
+						$service_price_monthly	= 0;
+						$service_price_yearly	= 0;
+
+						// calculate pricing
+						foreach ($obj_cycles_sql->data as $data_cycles)
+						{
+							if ($obj_service->data["billing_cycle"] == $data_cycles["id"])
+							{
+								if ($data_cycles["priority"] < 32)
+								{
+									// monthly or less
+									if ($data_cycles["name"] == "monthly")
+									{
+										// monthly billed service
+										$service_price_monthly = $obj_service->data["price"];
+									}
+									else
+									{
+										// less than a month, calculate a month's amount
+										$ratio = 28 / $data_cycles["priority"];
+
+										$service_price_monthly = $obj_service->data["price"] * $ratio;
+									}
+								}
+								else
+								{
+									if ($data_cycles["name"] == "yearly")
+									{
+										// yearly billed service
+										$service_price_yearly = $obj_service->data["price"];
+									}
+									else
+									{
+										// more than a month, less than a year, calcuate a year's amount
+										$ratio = 365 / $data_cycles["priority"];
+
+										$service_price_yearly = $obj_service->data["price"] * $ratio;
+									}
+								}
+							}
+
+						} // end of calculate pricing
+
+
+						// apply discount if enabled
+						if ($_SESSION["form"]["customer_list"]["filters"]["filter_show_prices_with_discount"])
+						{
+							if (!empty($service_price_monthly))
+							{
+								$service_price_monthly = $service_price_monthly - ($service_price_monthly * ($obj_service->data["discount"] /100));
+							}
+
+							if (!empty($service_price_yearly))
+							{
+								$service_price_yearly = $service_price_yearly - ($service_price_yearly * ($obj_service->data["discount"] /100));
+							}
+						}
+
+						// save totals for this customer
+						$this->obj_table_list->data[$i]["service_price_monthly"]	= $this->obj_table_list->data[$i]["service_price_monthly"] + $service_price_monthly;
+						$this->obj_table_list->data[$i]["service_price_yearly"]		= $this->obj_table_list->data[$i]["service_price_yearly"] + $service_price_yearly;
+
+						unset($obj_service);
+
+					} // end of service loop
+				
+
+				unset($obj_services_sql);
+
+				} // end if services exist
+
+			} // end of table loop
+
+			unset($obj_cycles_sql);
+
+		} // end if service columns enabled
+
 
 	} // end of load_data()
 
