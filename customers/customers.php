@@ -214,6 +214,16 @@ class page_output
 							}
 						}
 
+
+						// special handling for bundle items
+						if ($obj_service->data["id_bundle_component"])
+						{
+							// bundle items have no cost, since it's charged as part of the bundle
+							$service_price_monthly	= NULL;
+							$service_price_yearly	= NULL;
+						}
+
+
 						// save totals for this customer
 						$this->obj_table_list->data[$i]["service_price_monthly"]	= $this->obj_table_list->data[$i]["service_price_monthly"] + $service_price_monthly;
 						$this->obj_table_list->data[$i]["service_price_yearly"]		= $this->obj_table_list->data[$i]["service_price_yearly"] + $service_price_yearly;
