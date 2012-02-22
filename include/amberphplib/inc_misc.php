@@ -210,6 +210,29 @@ function format_file_extension($filename)
 
 
 /*
+	format_file_noextension
+
+	Returns everything but the file extension
+
+	Values
+	filename	Filename or path
+
+	Returns
+	string		file name without extension
+*/
+function format_file_noextension($filename)
+{
+	log_debug("misc", "Executing format_file_noextension($filename)");
+
+	// note: we can't use strstr to search before needle, as it's PHP 5.3.0+ only :'(
+
+	$extension = strtolower(substr(strrchr($filename,"."),1));
+	return str_replace(".$extension", "", $filename);
+}
+
+
+
+/*
 	format_file_name
 
 	Returns the filename & extension of the supplied filepath - effectively strips
@@ -226,6 +249,47 @@ function format_file_name($filepath)
 	log_debug("misc", "Executing format_file_name($filepath)");
 
 	return substr(strrchr($filepath,"/"),1);
+}
+
+
+/*
+	format_file_contenttype
+
+	Returns the MIME content type of the supplied field extension.
+
+	Use with format_file_extension if you want to strip the extension information
+	from a filename.
+
+	Values
+	file_extension	Extension of filename (without the .)
+
+	Returns
+	string		Ctype
+*/
+
+function format_file_contenttype($file_extension)
+{
+	log_debug("misc". "Executing format_file_contenttype($file_extension)");
+
+	$ctype = NULL;
+
+	switch ($file_extension)
+	{
+		case "pdf": $ctype="application/pdf"; break;
+		case "exe": $ctype="application/octet-stream"; break;
+		case "zip": $ctype="application/zip"; break;
+		case "doc": $ctype="application/msword"; break;
+		case "xls": $ctype="application/vnd.ms-excel"; break;
+		case "ppt": $ctype="application/vnd.ms-powerpoint"; break;
+		case "gif": $ctype="image/gif"; break;
+		case "png": $ctype="image/png"; break;
+		case "jpeg":
+		case "jpg": $ctype="image/jpg"; break;
+		case "csv": $ctype="text/csv"; break;
+		default: $ctype="application/force-download";
+	}
+
+	return $ctype;
 }
 
 
