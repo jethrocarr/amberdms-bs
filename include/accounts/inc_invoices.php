@@ -1791,46 +1791,12 @@ class invoice
 		}
 
 
-		/*
-			Generate a PDF of the invoice and save to tmp file
-		*/
-
-		log_debug("invoice", "Generating invoice PDF for emailing");
-
-		// generate PDF
-		$this->generate_pdf();
-		if (error_check())
-		{
-			return 0;
-		}
-		
-		// save to a temporary file
-		if ($this->type == "ar")
-		{
-			$tmp_filename = file_generate_name("/tmp/invoice_". $this->data["code_invoice"] ."", "pdf");
-		}
-		else
-		{
-			$tmp_filename = file_generate_name("/tmp/quote_". $this->data["code_quote"] ."", "pdf");
-			//$email_template	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
-		}
-			
-
-		if (!$fhandle = fopen($tmp_filename, "w"))
-		{
-			die("fatal error occured whilst writing to file $tmp_filename");
-		}
-			
-		fwrite($fhandle, $this->obj_pdf->output);
-		fclose($fhandle);
-
-
+		// track attachment files to tidy up
+		$file_attachments = array();
 
 		/*
-			Email the invoice
+			Prepare Email Mime Data & Headers
 		*/
-		
-		log_debug("invoice", "Sending email");
 
 		// fetch sender address
 		//
@@ -1860,7 +1826,123 @@ class invoice
 		$mail_mime = new Mail_mime("\n");
 			
 		$mail_mime->setTXTBody($email_message);
-		$mail_mime->addAttachment($tmp_filename, 'application/pdf');
+		
+
+
+
+		/*
+			Generate a PDF of the invoice and save to tmp file
+		*/
+
+		log_debug("invoice", "Generating invoice PDF for emailing");
+
+		// generate PDF
+		$this->generate_pdf();
+
+		if (error_check())
+		{
+			return 0;
+		}
+		
+		// save to a temporary file
+		if ($this->type == "ar")
+		{
+			$tmp_file_invoice = file_generate_name($GLOBALS["config"]["PATH_TMPDIR"] ."/invoice_". $this->data["code_invoice"] ."", "pdf");
+		}
+		else
+		{
+			$tmp_file_invoice = file_generate_name($GLOBALS["config"]["PATH_TMPDIR"] ."/quote_". $this->data["code_quote"] ."", "pdf");
+			//$email_template	= sql_get_singlevalue("SELECT value FROM config WHERE name IN('TEMPLATE_QUOTE_EMAIL') LIMIT 1");
+		}
+		
+		if (!$fhandle = fopen($tmp_file_invoice, "w"))
+		{
+			log_write("error", "invoice", "A fatal error occured whilst writing invoice PDF to file $tmp_file_invoice, unable to send email");
+			return 0;
+		}
+		
+		fwrite($fhandle, $this->obj_pdf->output);
+		fclose($fhandle);
+
+		// attach
+		$mail_mime->addAttachment($tmp_file_invoice, 'application/pdf');
+		$file_attachments[] = $tmp_file_invoice;
+
+
+		/*
+			Fetch Extra Attachments
+
+			Certain billing processes may add file attachments to the journal that should be sent along with the invoice
+			when an email is generated.
+
+			Here we grab those file attachments and send each one.
+		*/
+	
+		$obj_sql_journal		= New sql_query;
+		$obj_sql_journal->string	= "SELECT id FROM journal WHERE journalname='account_ar' AND customid='". $this->id ."' AND title LIKE 'SERVICE:%'";
+		$obj_sql_journal->execute();
+
+		if ($obj_sql_journal->num_rows())
+		{
+			$obj_sql_journal->fetch_array();
+
+			foreach ($obj_sql_journal->data as $data_journal)
+			{
+				// there are journaled attachments to send
+				//
+				// we don't care about any of the journal data, we just need to pull the file attachment from
+				// storage, write to disk and then attach to the email
+				//
+
+
+				// fetch file object
+				$file_obj			= New file_storage;
+				$file_obj->data["type"]		= "journal";
+				$file_obj->data["customid"]	= $data_journal["id"];
+
+				if (!$file_obj->load_data_bytype())
+				{
+					log_write("error", "inc_invoices", "Unable to load file from journal to attach to invoice email - possible file storage issue?");
+					return 0;
+				}
+			
+				$file_extension 	= format_file_extension($file_obj->data["file_name"]);
+				$file_name		= format_file_noextension($file_obj->data["file_name"]);
+				$file_ctype		= format_file_contenttype($file_extension);
+
+
+				// we have to write the file to disk before attaching it
+				$tmp_file_attach	= file_generate_name($GLOBALS["config"]["PATH_TMPDIR"] ."/". $file_name, $file_extension);
+
+				if (!$file_obj->filedata_write($tmp_file_attach))
+				{
+					log_write("error", "inc_invoices", "Unable to write file attachments from journal to tmp space");
+					return 0;
+				}
+
+				// add to the invoice
+				$mail_mime->addAttachment($tmp_file_attach, $file_ctype);
+				$file_attachments[] = $tmp_file_attach;
+
+				// cleanup - tmp file will be removed ;ater
+				unset($file_obj);
+
+			} // end of for each journal item
+
+		} // end if sendable journal items
+
+		unset($obj_sql_journal);
+
+
+		
+
+
+		/*
+			Email the invoice
+		*/
+		
+
+		log_write("debug", "invoice", "Sending generated email....");
 
 		$mail_body	= $mail_mime->get();
 	 	$mail_headers	= $mail_mime->headers($mail_headers);
@@ -1931,7 +2013,7 @@ class invoice
 			$file_obj->data["type"]		= "journal";
 			$file_obj->data["customid"]	= $journal->structure["id"];
 
-			if (!$file_obj->action_update_file($tmp_filename))
+			if (!$file_obj->action_update_file($tmp_file_invoice))
 			{
 				log_write("error", "inc_invoice", "Unable to upload emailed PDF to journal entry");
 			}
@@ -1953,8 +2035,13 @@ class invoice
 
 
 		// cleanup - remove the temporary files
-		log_debug("inc_invoices_process", "Performing cleanup - removing temporary file $tmp_filename");
-		unlink($tmp_filename);
+		log_debug("inc_invoice", "Performing cleanup, removing temporary files used for emails");
+		
+		foreach ($file_attachments as $filename)
+		{
+			log_debug("inc_invoice", "Removing tmp file $filename");
+			unlink($filename);
+		}
 
 
 		// return
@@ -2388,12 +2475,16 @@ class invoice_items
 
 
 				// save information
-				$this->data["price"]		= $data["price"];
-				$this->data["quantity"]		= $data["quantity"];
-				$this->data["units"]		= $data["units"];
-				$this->data["customid"]		= $data["customid"];
-				$this->data["description"]	= $data["description"];
-				$this->data["discount"]		= $data["discount"];
+				$this->data["price"]			= $data["price"];
+				$this->data["quantity"]			= $data["quantity"];
+				$this->data["units"]			= $data["units"];
+				$this->data["customid"]			= $data["customid"];
+				$this->data["description"]		= $data["description"];
+				$this->data["discount"]			= $data["discount"];
+
+				// extra ID
+				$this->data["id_service_customer"]	= $period_usage_data["id_service_customer"];
+				$this->data["id_period"]		= $period_usage_data["id"];
 				
 				// service specific
 				$this->data["cdr_billgroup"]	= $data["cdr_billgroup"];
@@ -2743,6 +2834,23 @@ class invoice_items
 			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'CDR_BILLGROUP', '". $this->data["cdr_billgroup"] ."')";
 			$sql_obj->execute();
 		}
+
+
+		// starting with phone services, we are recording service-customer assignment IDs
+		if (!empty($this->data["id_service_customer"]))
+		{
+			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'ID_SERVICE_CUSTOMER', '". $this->data["id_service_customer"] ."')";
+			$sql_obj->execute();
+		}
+
+		if (!empty($this->data["id_period"]))
+		{
+			$sql_obj->string	= "INSERT INTO account_items_options (itemid, option_name, option_value) VALUES ('". $this->id_item ."', 'ID_PERIOD', '". $this->data["id_period"] ."')";
+			$sql_obj->execute();
+		}
+
+
+
 
 		/*
 			Update Journal

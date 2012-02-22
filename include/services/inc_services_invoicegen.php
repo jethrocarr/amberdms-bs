@@ -2054,6 +2054,10 @@ function service_invoices_generate($customerid = NULL)
 												$itemdata["chartid"]			= $obj_service->data["chartid"];
 												$itemdata["customid"]			= $obj_service->id;
 
+												// extra service details
+												$itemdata["id_service_customer"]	= $period_usage_data["id_service_customer"];
+												$itemdata["id_period"]			= $period_usage_data["id"];
+
 												// determine excess usage charges
 												$itemdata["discount"]			= 0;
 												$itemdata["price"]			= $usage_obj->data[ $ddi ][ $data_billgroup["id"] ]["charges"];
@@ -2077,6 +2081,75 @@ function service_invoices_generate($customerid = NULL)
 								}
 								
 								unset($usage_obj);
+
+
+
+								/*
+									If enabled, generate the CDR output format for the current service usage and attach
+									it to the invoice via the invoice journal.
+
+									This feature can be enabled/disabled on a per-customer per-service basis.
+								*/
+
+								if ($obj_service->data["billing_cdr_csv_output"])
+								{
+									log_write("debug", "inc_service_invoicegen", "Generating CDR export file and attaching to invoice journal");
+
+									// generate the CSV formatted export.
+									$cdr_options = array(
+										'id_customer'		=> $customer_data["id"],
+										'id_service_customer'	=> $period_usage_data["id_service_customer"],
+										'period_start'		=> $period_usage_data["date_start"],
+										'period_end'		=> $period_usage_data["date_end"],
+									);
+
+									$csv = new cdr_csv($cdr_options);
+
+									if (!$cdr_output = $csv->getCSV())
+									{
+										log_write("error", "inc_service_invoicegen", "Unable to generate CSV ouput for the configured range");
+										return 0;
+									}
+
+
+									// create journal entry
+									$journal = New journal_process;
+									
+									$journal->prepare_set_journalname("account_ar");
+									$journal->prepare_set_customid($invoiceid);
+									$journal->prepare_set_type("file");
+
+									// we use the prefix "SERVICE:" to find the journal at invoice time
+									$journal->prepare_set_title("SERVICE: Service CDR Export Attachment");
+
+									// details can be anything (just a text block)
+									$data["content"] = NULL;
+									$data["content"] .= "Automatically exported CDR for service ". addslashes($obj_service->data["name_service"]) ."\n";
+									$data["content"] .= "\n";
+									
+									$journal->prepare_set_content($data["content"]);
+
+									$journal->action_update();		// create journal entry
+									$journal->action_lock();		// lock entry to avoid users deleting it or breaking it
+
+
+									// upload file as an attachment for the journal
+									$file_obj			= New file_storage;
+									$file_obj->data["type"]		= "journal";
+									$file_obj->data["customid"]	= $journal->structure["id"];
+									$file_obj->data["file_name"]	= "invoice_". $invoicecode ."_service_CDR_export.csv";
+
+									if (!$file_obj->action_update_var($cdr_output))
+									{
+										log_write("error", "inc_service_invoicegen", "Unable to upload export CDR invoice to journal.");
+									}
+									
+									unset($csv);
+									unset($journal);
+									unset($file_obj);
+									unset($cdr_output);
+								}
+
 
 							break;
 	
