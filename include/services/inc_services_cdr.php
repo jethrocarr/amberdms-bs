@@ -2252,7 +2252,9 @@ class cdr_csv
 
 	function cdr_csv($options = false) {
 		$this->required_params 	= array('id_customer', 'id_service_customer', 'period_start', 'period_end');
-		$this->csv_body_fields  = array('id_service_customer', 'date_time', 'rate_billgroup', 'number_src', 'number_dst', 'billable_seconds', 'price', 'qualifier');
+		$this->csv_body_fields  = array('code_customer', 'number_src', 'number_dst', 'date_date', 'date_time', 'billable_seconds', 'price', 'qualifier');
+
+		// available, but unused: rate_billgroup
 
 		if($options) {
 			return $this->setOptions($options);
@@ -2304,7 +2306,8 @@ class cdr_csv
 		}
 
 		$sql = "SELECT 
-				CONCAT(date, ' 00:00:00') as date_time, 
+				date as date_date, 
+				'00:00:00' as date_time,
 				cdr_rate_billgroups.billgroup_name as rate_billgroup, 
 				usage1 as number_src, 
 				usage2 as number_dst, 
@@ -2356,6 +2359,29 @@ class cdr_csv
 		}
 
 
+		// fetch customer code information
+		$customer_data = sql_get_singlerow("SELECT code_customer, reseller_customer, reseller_id FROM customers WHERE id='". $this->id_customer ."' LIMIT 1");
+
+		if (!$customer_data)
+		{
+			log_write("error", "inc_services_cdr", "No customer with ID ". $this->id_customer ." returned!");
+		}
+		else
+		{
+			$code_customer = $customer_data["code_customer"];
+
+			// is the customer a member of a reseller? If so, we need the code of the reseller to also use.
+			if ($customer_data["reseller_customer"] == "customer_of_reseller")
+			{
+				$code_master = sql_get_singlevalue("SELECT code_customer as value FROM customers WHERE id='". $customer_data["reseller_id"] ."'");
+			}
+			else
+			{
+				// customer is standalone, use their code as the master
+				$code_master = $code_customer;
+			}
+		}
+
 		// string padding is required as per the following:
 		/*
 	  			HEADER SECTION	
@@ -2379,14 +2405,14 @@ class cdr_csv
 		*/
 		
 		// header of CSV
-		$this->csv[] = array('HEADER', str_pad($this->id_customer, 11, "0", STR_PAD_LEFT), date('Y-m-d'));
+		$this->csv[] = array('HEADER', str_pad($code_master, 11, "0", STR_PAD_LEFT), date('Y-m-d'));
 
 		if(count($this->sql_obj->data) > 0) {
 			$csv_record_count = count($this->sql_obj->data);
 			foreach($this->sql_obj->data as $row) {
 
 				// as such this only currently supports one customer account number
-				$row['id_service_customer'] = $this->id_service_customer;
+				$row['code_customer'] = $code_customer;
 
 				// reset the row
 				$csv_row = array();
@@ -2395,7 +2421,7 @@ class cdr_csv
 				foreach($this->csv_body_fields as $k) {
 
 					switch($k) {
-						case 'id_service_customer':
+						case 'code_customer':
 							$csv_row[$k] = str_pad($row[$k], 11, "0", STR_PAD_LEFT);
 							break;
 						case 'number_src':
