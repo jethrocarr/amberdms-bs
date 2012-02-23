@@ -51,7 +51,11 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Resellers Customers", "page=customers/reseller.php&id_customer=". $this->id ."");
+
+		if ($this->obj_customer->verify_reseller() == 1)
+		{
+	               $this->obj_menu_nav->add_item("Reseller's Customers", "page=customers/reseller.php&id_customer=". $this->obj_customer->id ."");
+		}
 
 		if (user_permissions_get("customers_write"))
 		{

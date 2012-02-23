@@ -35,7 +35,12 @@ class page_output
                 $this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
                 $this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."");
                 $this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
-                $this->obj_menu_nav->add_item("Resellers Customers", "page=customers/reseller.php&customer_id=". $this->obj_customer->id ."", TRUE);
+
+
+		if ($this->obj_customer->verify_reseller() == 1)
+		{
+	                $this->obj_menu_nav->add_item("Reseller's Customers", "page=customers/reseller.php&id_customer=". $this->obj_customer->id ."", TRUE);
+		}
 
                 if (user_permissions_get("customers_write"))
                 {
@@ -54,7 +59,13 @@ class page_output
 
 	function check_requirements()
 	{
-		// nothing todo
+		// customer must be a reseller
+		if ($this->obj_customer->verify_reseller() != 1)
+		{
+			log_write("error", "page", "This customer is not a reseller.");
+			return 0;
+		}
+
 		return 1;
 	}
 
@@ -142,7 +153,17 @@ class page_output
 	function render_html()
 	{
 		// heading
-		print "<h3>RESELLER CUSTOMERS LIST</h3><br><br>";
+		print "<h3>RESELLER CUSTOMERS LIST</h3><br>";
+		print "<p>The following list of customers is made up of all customers who belong to this reseller. To add a customer to this reseller, adjust the customer's details and select the reseller they should belong to.</p>";
+
+
+		/*
+			TODO: this code is a big copy and paste job from customers/customers.php, we should
+			turn it into a function so that we don't keep cloning features between the applications.
+
+			DEVELOPER IS VERY NAUGHTY AND MUST BE PUNISHED.
+		*/
+
 
 		// load options form
 		$this->obj_table_list->render_options_form();

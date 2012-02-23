@@ -7,6 +7,8 @@
 	Allows the addition or adjustment of journal entries.
 */
 
+require("include/customers/inc_customers.php");
+
 
 class page_output
 {
@@ -17,6 +19,7 @@ class page_output
 	
 	var $obj_menu_nav;
 	var $obj_form;
+	var $obj_customer;
 
 
 	function page_output()
@@ -27,6 +30,12 @@ class page_output
 		$this->action		= @security_script_input('/^[a-z]*$/', $_GET["action"]);
 		$this->type		= @security_script_input('/^[a-z]*$/', $_GET["type"]);
 	
+	
+		// create customer object
+		$this->obj_customer		= New customer;
+		$this->obj_customer->id		= $this->id;
+
+
 	
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
@@ -44,7 +53,12 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Resellers Customers", "page=customers/reseller.php&id_customer=". $this->id ."");
+
+		if ($this->obj_customer->verify_reseller() == 1)
+		{
+	               $this->obj_menu_nav->add_item("Reseller's Customers", "page=customers/reseller.php&id_customer=". $this->obj_customer->id ."");
+		}
+
 		$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->id ."");
 	}
 
@@ -58,18 +72,11 @@ class page_output
 
 	function check_requirements()
 	{
-		// verify that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."'";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// check if the customer exists
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
-
-		unset($sql_obj);
 
 
 		return 1;

@@ -7,6 +7,9 @@
 	Lists all the invoices belonging to the selected customer
 */
 	
+require("include/customers/inc_customers.php");
+
+
 class page_output
 {
 	var $id;
@@ -18,6 +21,11 @@ class page_output
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
+
+		// create customer object
+		$this->obj_customer		= New customer;
+		$this->obj_customer->id		= $this->id;
+
 
 
 		// define the navigiation menu
@@ -36,7 +44,11 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Resellers Customers", "page=customers/reseller.php&id_customer=". $this->id ."");
+
+		if ($this->obj_customer->verify_reseller() == 1)
+		{
+	               $this->obj_menu_nav->add_item("Reseller's Customers", "page=customers/reseller.php&id_customer=". $this->obj_customer->id ."");
+		}
 
 		if (user_permissions_get("customers_write"))
 		{
@@ -53,18 +65,11 @@ class page_output
 
 	function check_requirements()
 	{
-		// verifiy that customer exists
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM customers WHERE id='". $this->id ."' LIMIT 1";
-		$sql_obj->execute();
-
-		if (!$sql_obj->num_rows())
+		// check if the customer exists
+		if (!$this->obj_customer->verify_id())
 		{
-			log_write("error", "The requested customer (". $this->id .") does not exist - possibly the customer has been deleted.");
 			return 0;
 		}
-
-		unset($sql_obj);
 
 		return 1;
 	}
