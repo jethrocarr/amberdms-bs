@@ -358,7 +358,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure = form_helper_prepare_dropdownfromdb("reseller_id", "SELECT id, name_customer as label FROM customers WHERE reseller_customer = 'reseller'");
+		$structure = form_helper_prepare_dropdownfromdb("reseller_id", "SELECT id, code_customer as label, name_customer as label1 FROM customers WHERE reseller_customer = 'reseller' AND id <> ". $this->id);
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;

@@ -219,7 +219,69 @@ class customer
 	} // end of verify_date_end
 
 
+	/*
+		verify_reseller
 
+		Return whether or not the customer is a reseller.
+
+		Returns
+		0	Not a reseller
+		1	A reseller
+		2	Customer of a reseller (resold)
+	*/
+	
+	function verify_reseller()
+	{
+		log_debug("inc_customers", "Executing verify_reseller()");
+
+
+		// data for customer might not be loaded yet, if it isn't, we should do so.
+		//
+		if (!isset($this->data["reseller_customer"]))
+		{
+			$sql_obj		= New sql_query;
+			$sql_obj->string	= "SELECT reseller_customer, reseller_id FROM customers WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj->execute();
+
+			if ($sql_obj->num_rows())
+			{
+				$sql_obj->fetch_array();
+
+				// save into array
+				$this->data["reseller_customer"]	= $sql_obj->data[0]["reseller_customer"];
+				$this->data["reseller_id"]		= $sql_obj->data[0]["reseller_id"];
+			}
+			else
+			{
+				// invalid customer id
+				return 0;
+			}
+
+			unset($sql_obj);
+		}
+		
+		// use loaded data
+		//
+		switch ($this->data["reseller_customer"])
+		{
+			case "reseller":
+				return 1;
+			break;
+
+			case "customer_of_reseller":
+				return 2;
+			break;
+
+			case "standalone":
+			default:
+				return 0;
+			break;
+		}
+
+		// fail
+		return 0;
+
+	} // end if verify_reseller
 
 
 	/*

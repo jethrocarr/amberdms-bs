@@ -42,6 +42,7 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table_list->add_column("standard", "code_customer", "");
 		$this->obj_table_list->add_column("standard", "name_customer", "");
+		$this->obj_table_list->add_column("standard", "customer_reseller", "reseller_id");
 		$this->obj_table_list->add_column("standard", "name_contact", "NONE");
 		$this->obj_table_list->add_column("standard", "contact_phone", "NONE");
 		$this->obj_table_list->add_column("standard", "contact_mobile", "NONE");
@@ -59,12 +60,12 @@ class page_output
 		// defaults
 		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
 		$this->obj_table_list->columns_order		= array("name_customer");
-		$this->obj_table_list->columns_order_options	= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_mobile", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
+		$this->obj_table_list->columns_order_options	= array("code_customer", "name_customer", "customer_reseller", "name_contact", "contact_phone", "contact_mobile", "contact_email", "contact_fax", "date_start", "date_end", "tax_number", "address1_city", "address1_state", "address1_country");
 
 		// define SQL structure
 		$this->obj_table_list->sql_obj->prepare_sql_settable("customers");
 		$this->obj_table_list->sql_obj->prepare_sql_addfield("id", "");
-
+		
 		// acceptable filter options
 		$structure = NULL;
 		$structure["fieldname"] = "date_start";
@@ -101,16 +102,67 @@ class page_output
 		$this->obj_table_list->add_filter($structure);
 
 
-               		
-
 		// load settings from options form
 		$this->obj_table_list->load_options_form();
+
+		if (in_array('customer_reseller', $this->obj_table_list->columns))
+		{
+			$this->obj_table_list->sql_obj->prepare_sql_addfield("reseller_customer", "");
+		}
+
 
 		// fetch all the customer information
 		$this->obj_table_list->generate_sql();
 		$this->obj_table_list->load_data_sql();
 
+		// handle reseller options
+		if (in_array('customer_reseller', $this->obj_table_list->columns))
+		{
+			// fetch customer IDs to names DB
+			$map_resellers = array();
 
+			$obj_resellers_sql		= New sql_query;
+			$obj_resellers_sql->string	= "SELECT id, code_customer, name_customer FROM customers";
+			$obj_resellers_sql->execute();
+
+			if ($obj_resellers_sql->num_rows())
+			{
+				$obj_resellers_sql->fetch_array();
+
+				foreach ($obj_resellers_sql->data as $data_resellers)
+				{
+					$map_resellers[ $data_resellers["id"] ] = $data_resellers["code_customer"] ." -- ". $data_resellers["name_customer"];
+				}
+			}
+
+			// replace the ID with the names
+			for ($i=0; $i < $this->obj_table_list->data_num_rows; $i++)
+			{
+				// store the ID, we need this for later logic.
+				$this->obj_table_list->data[$i]["reseller_id"] = $this->obj_table_list->data[$i]["customer_reseller"];
+
+				// relabel with customer details
+				switch ($this->obj_table_list->data[$i]["reseller_customer"])
+				{
+					case "reseller":
+						$this->obj_table_list->data[$i]["customer_reseller"] = "[reseller]";
+					break;
+
+					case "customer_of_reseller":
+						$this->obj_table_list->data[$i]["customer_reseller"] = $map_resellers[ $this->obj_table_list->data[$i]["customer_reseller"] ];
+					break;
+
+					case "standalone":
+					default:
+						// nothing todo
+					break;
+				}
+			}
+
+			unset($map_resellers);
+			unset($obj_resellers_sql);
+		}
+	
 		// handle services, if columns selected
                 if (in_array('service_price_yearly', $this->obj_table_list->columns)
                         || in_array('service_price_monthly', $this->obj_table_list->columns))
@@ -271,6 +323,12 @@ class page_output
 		}
 		else
 		{
+			// phases link
+//			$structure = NULL;
+//			$structure["reseller_id"]["column"]	= "id";
+//			$this->obj_table_list->add_link("customer_reseller", "customers/view.php", $structure);
+			
+
 			// calculate all the totals and prepare processed values
 			$this->obj_table_list->render_table_prepare();
 
