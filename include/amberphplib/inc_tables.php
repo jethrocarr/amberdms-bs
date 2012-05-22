@@ -1843,7 +1843,10 @@ class table
 		log_debug("table", "Executing render_table_csv()");
 
 		// calculate all the totals and prepare processed values
-		$this->render_table_prepare();
+		if (!isset($this->data_render))
+		{
+			$this->render_table_prepare();
+		}
 
 		// display header row
 		foreach ($this->columns as $column)
@@ -1936,7 +1939,10 @@ class table
 
 
 		// calculate all the totals and prepare processed values
-		$this->render_table_prepare();
+		if (!isset($this->data_render))
+		{
+			$this->render_table_prepare();
+		}
 
 
 
