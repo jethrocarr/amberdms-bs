@@ -96,14 +96,16 @@ class page_output
 		$this->obj_table->add_column("price", "amount", "account_ar.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_ar.amount_total");
 		$this->obj_table->add_column("price", "amount_paid", "account_ar.amount_paid");
+		$this->obj_table->add_column("price", "amount_owing","(account_ar.amount_total - account_ar.amount_paid)");
+		$this->obj_table->add_column("price", "balance_owed","(account_ar.amount_total - account_ar.amount_paid)");
 		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
 
 		// totals
-		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
+		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid", "amount_owing", "balance_owed");
 
 		
 		// defaults
-		$this->obj_table->columns	= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid", "sent");
+		$this->obj_table->columns	= array("code_invoice", "name_staff", "date_trans", "date_due", "amount_total", "amount_paid", "amount_owing", "balance_owed", "sent");
 		$this->obj_table->columns_order	= array("code_invoice");
 
 		// define SQL structure
@@ -152,6 +154,25 @@ class page_output
 		// fetch all the chart information
 		$this->obj_table->generate_sql();
 		$this->obj_table->load_data_sql();
+
+
+		for ($i=0; $i < $this->obj_table->data_num_rows; $i++) {
+
+			$this->obj_table->data[$i]["balance_owed"]  = $this->obj_table->data[$i]["amount_owing"];
+
+			if(isset($this->obj_table->data[ $i - 1 ]["balance_owed"])) {
+				$this->obj_table->data[$i]["balance_owed"] += $this->obj_table->data[ ($i - 1) ]["balance_owed"];
+			}
+
+			$this->total_balance_owed = $this->obj_table->data[$i]["balance_owed"];
+		}
+
+
+		// force the total for this column to be the running total (rather than a total of all running totals)
+		$this->obj_table->render_table_prepare();
+		// apply money_format to total_balance_owed
+		$this->obj_table->data_render["total"]["balance_owed"] = format_money($this->total_balance_owed);
+
 
 	}
 
