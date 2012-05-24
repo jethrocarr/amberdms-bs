@@ -56,6 +56,7 @@ class page_output
 		$this->obj_table_list->add_column("standard", "address1_country", "");
                 $this->obj_table_list->add_column("money", "service_price_monthly", "NONE");
 		$this->obj_table_list->add_column("money", "service_price_yearly", "NONE");
+		$this->obj_table_list->add_column("money", "balance_owed", "NONE");
 
 		// defaults
 		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
@@ -114,6 +115,51 @@ class page_output
 		// fetch all the customer information
 		$this->obj_table_list->generate_sql();
 		$this->obj_table_list->load_data_sql();
+
+	
+		// handle balance owed
+		if (in_array('balance_owed', $this->obj_table_list->columns)) {
+
+			$obj_balance_owed_sql 		= New sql_query;
+			$obj_balance_owed_sql->string	= 
+			       "SELECT customerid, sum(bal) AS balance_owed FROM (
+				SELECT ar.customerid, sum(ar.amount_total - ar.amount_paid) as bal 
+				FROM account_ar AS ar 
+				WHERE 1 GROUP BY ar.customerid
+				UNION
+				SELECT arc.customerid, sum(arc.amount_total) as bal
+				FROM account_ar_credit AS arc
+				WHERE 1 GROUP BY arc.customerid
+				) as tbl GROUP by customerid";
+
+			$obj_balance_owed_sql->execute();
+	
+			if ($obj_balance_owed_sql->num_rows())
+			{
+				$obj_balance_owed_sql->fetch_array();
+
+				foreach ($obj_balance_owed_sql->data as $data_balance_owed)
+				{
+					$map_balance_owed[ $data_balance_owed['customerid'] ] = $data_balance_owed['balance_owed'];
+				}
+
+			}
+
+			// replace with 0.00 or the calculated balance value
+			for ($i=0; $i < $this->obj_table_list->data_num_rows; $i++)
+			{
+				$this->obj_table_list->data[$i]["balance_owed"] = "0.00";
+
+				if(isset($map_balance_owed[$this->obj_table_list->data[$i]['id']])) {
+					$this->obj_table_list->data[$i]["balance_owed"] = $map_balance_owed[$this->obj_table_list->data[$i]['id']];
+				}
+
+			}
+
+			unset($map_balance_owed);
+			unset($obj_balance_owed_sql);
+			
+		}
 
 		// handle reseller options
 		if (in_array('customer_reseller', $this->obj_table_list->columns))
