@@ -161,7 +161,7 @@ class page_output
 			$this->obj_table->data[$i]["balance_owed"]  = $this->obj_table->data[$i]["amount_owing"];
 
 			if(isset($this->obj_table->data[ $i - 1 ]["balance_owed"])) {
-				$this->obj_table->data[$i]["balance_owed"] += $this->obj_table->data[ ($i - 1) ]["balance_owed"];
+				$this->obj_table->data[$i]["balance_owed"] = sprintf("%0.2f", ($this->obj_table->data[$i]["balance_owed"] + $this->obj_table->data[ $i - 1 ]["balance_owed"]));
 			}
 
 			$this->total_balance_owed = $this->obj_table->data[$i]["balance_owed"];
