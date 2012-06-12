@@ -42,6 +42,9 @@ if (user_permissions_get('customers_write'))
 	$obj_customer->data["address1_same_as_2"]	= @security_form_input_predefined("checkbox", "address1_same_as_2", 0, "");
 
 	$obj_customer->data["reseller_customer"]	= @security_form_input_predefined("any", "reseller_customer", 0, "");
+
+	$obj_customer->data["billing_method"]           = @security_form_input_predefined("any", "billing_method", 0, "");
+	$obj_customer->data["billing_direct_debit"]     = @security_form_input_predefined("any", "billing_direct_debit", 0, "");
 	
 	// prevent a reseller being a customer of another reseller (multiple levels of resellers)
 	if ($obj_customer->data['reseller_customer'] == 'customer_of_reseller' )

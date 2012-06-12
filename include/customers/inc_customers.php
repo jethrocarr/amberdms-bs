@@ -491,6 +491,8 @@ class customer
 						."address2_zipcode='". $this->data["address2_zipcode"] ."', "
 						."reseller_customer='". $this->data["reseller_customer"] ."', "
 						."reseller_id='". $this->data["reseller_id"] ."', "
+						."billing_method='". $this->data["billing_method"] ."', "
+						."billing_direct_debit='". $this->data["billing_direct_debit"] ."', "
 						."discount='". $this->data["discount"] ."' "
 						."WHERE id='". $this->id ."' LIMIT 1";
 		$sql_obj->execute();

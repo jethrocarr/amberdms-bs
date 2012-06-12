@@ -28,6 +28,20 @@ $(document).ready(function() {
 		}
 	});
 
+	if($(":input[name='billing_method']") !== 'direct debit') {
+		$(":input[name='billing_direct_debit']").attr('disabled', 'disabled');
+	}	
+
+	// if the billing method is manual, disable the direct debit entry box
+	$(":input[name='billing_method']").change(function() {
+		console.log($(this).val());
+		if($(this).val() === "direct debit") {
+			$(":input[name='billing_direct_debit']").removeAttr('disabled');
+		} else {
+			$(":input[name='billing_direct_debit']").attr('disabled', 'disabled');
+		}
+	});
+
 	billing_street = $(":input[name='address1_street']").val();
 	billing_city = $(":input[name='address1_city']").val();
 	billing_state = $(":input[name='address1_state']").val();

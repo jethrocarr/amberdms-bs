@@ -436,6 +436,20 @@ class page_output
 		$structure["options"]["css_row_class"]	= "shipping_address";
 		$this->obj_form->add_input($structure);
 
+		// billing options
+		$structure = NULL;
+		$structure["fieldname"]			= "billing_method";
+		$structure["type"]			= "radio";
+		$structure["values"]			= array("manual", "direct debit"); //, "credit card");
+		$structure["defaultvalue"]		= "standalone";
+		$structure["options"]["css_row_class"]	= "billing_method";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]			= "billing_direct_debit";
+		$structure["type"]			= "input";
+		$structure["options"]["css_row_class"]	= "billing_direct_debit";
+
 		// reseller options
 		$structure = NULL;
 		$structure["fieldname"]			= "reseller_customer";
@@ -790,7 +804,21 @@ class page_output
 		print "</table>";
 		
 		print "<br />";
+
+		//billing options
+		print "<table class=\"form_table\" width=\"100%\">";
+		print "<tr class=\"header\">";
+			print "<td colspan=\"2\"><b>" .lang_trans("billing_options"). "</b></td>";
+		print "</tr>";
 		
+		$this->obj_form->render_row("billing_method");
+		$this->obj_form->render_row("billing_direct_debit");
+		
+		print "</table>";
+		
+		print "<br />";
+		
+
 		//reseller options
 		print "<table class=\"form_table\" width=\"100%\">";
 		print "<tr class=\"header\">";
