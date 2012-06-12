@@ -1608,6 +1608,23 @@ class invoice
 		$this->obj_pdf->prepare_add_array("summary_items", $structure_group_summary_final);
 
 
+		// depending on the billing options we may adjust template display, ensure default is set first
+
+		$this->obj_pdf->prepare_add_field('billing_default', 1);	
+		$billing_option		= sql_get_singlevalue("SELECT billing_method AS value FROM customers WHERE id='". $this->data["customerid"] ."'");
+
+		log_write("debug", "inc_invoice", "Billing option for customer is: " . $billing_option);
+
+		switch($billing_option) {
+			case 'direct debit':
+				$this->obj_pdf->prepare_add_field('billing_direct_debit', 1);
+				$this->obj_pdf->prepare_add_field('billing_default', '');
+			break;
+			case 'manual':
+			default:
+				$this->obj_pdf->prepare_add_field('billing_default', 1);
+			break;
+		}
 
 		/*
 			Output PDF
