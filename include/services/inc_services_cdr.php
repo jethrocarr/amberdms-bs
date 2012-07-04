@@ -1590,7 +1590,7 @@ class service_usage_cdr extends service_usage
 				else
 				{
 					// multiple DDIs, go and generate all the DDIs inbetween
-					for ($i=$data["ddi_start"]; $i < $data["ddi_finish"]; $i++)
+					for ($i=$data["ddi_start"]; $i <= $data["ddi_finish"]; $i++)
 					{
 						// add number
 						$this->data_ddi[]	= $i;
