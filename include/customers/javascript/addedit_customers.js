@@ -28,13 +28,13 @@ $(document).ready(function() {
 		}
 	});
 
-	if($(":input[name='billing_method']") !== 'direct debit') {
+	// if the billing method is direct debit then allow entry into the direct debit box
+	if($(":input[name='billing_method']:checked").val() !== 'direct debit') {
 		$(":input[name='billing_direct_debit']").attr('disabled', 'disabled');
 	}	
 
 	// if the billing method is manual, disable the direct debit entry box
 	$(":input[name='billing_method']").change(function() {
-		console.log($(this).val());
 		if($(this).val() === "direct debit") {
 			$(":input[name='billing_direct_debit']").removeAttr('disabled');
 		} else {

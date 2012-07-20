@@ -449,6 +449,7 @@ class page_output
 		$structure["fieldname"]			= "billing_direct_debit";
 		$structure["type"]			= "input";
 		$structure["options"]["css_row_class"]	= "billing_direct_debit";
+		$this->obj_form->add_input($structure);
 
 		// reseller options
 		$structure = NULL;
