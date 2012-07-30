@@ -113,63 +113,81 @@ class products_manage_soap
 	} // end of get_product_details
 
 
-
 	/*
-		get_product_taxes
+		get_product_tax
 
-		Returns a list of all tax items belonging to the selected product
+		Return list of all taxes and mark whether they are enabled or not for this product.
 	*/
-	function get_product_taxes($id)
-	{
-		log_debug("products_manage_soap", "Executing get_product_taxes($id)");
 
+	function get_product_tax($id)
+	{
+		log_debug("products_manage_soap", "Executing get_product_tax($id)");
 
 		if (user_permissions_get("products_view"))
 		{
-			$obj_product_tax = New product_tax;
+			$obj_product = New product;
 
 
 			// sanitise input
-			$obj_product_tax->id = @security_script_input_predefined("int", $id);
+			$obj_product->id = @security_script_input_predefined("int", $id);
 
-			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
+			if (!$obj_product->id || $obj_product->id == "error")
 			{
 				throw new SoapFault("Sender", "INVALID_INPUT");
 			}
 
 
-			// verify that the supplied product ID is valid
-			if (!$obj_product_tax->verify_product_id())
+			// verify that the ID is valid
+			if (!$obj_product->verify_id())
 			{
 				throw new SoapFault("Sender", "INVALID_ID");
 			}
 
 
-			// fetch all the tax item data
+			// fetch product status
+			$enabled_taxes = NULL;
+
 			$sql_obj		= New sql_query;
-			$sql_obj->string	= "SELECT * FROM products_taxes WHERE productid='". $obj_product_tax->id ."'";
+			$sql_obj->string	= "SELECT taxid FROM products_taxes WHERE productid='$id'";
 			$sql_obj->execute();
 
-			$return = NULL;
 			if ($sql_obj->num_rows())
 			{
 				$sql_obj->fetch_array();
 
-				// package data into array for passing back to SOAP client
 				foreach ($sql_obj->data as $data)
 				{
-					// fetch tax_id_label value
-					$data["taxid_label"] = sql_get_singlevalue("SELECT name_tax as value FROM account_taxes WHERE id='". $data["taxid"] ."'");
+					$enabled_taxes[] = $data["taxid"];
+				}
+			}
 
-					// create return structure
+
+			// fetch list of all taxes
+			$sql_tax_obj		= New sql_query;
+			$sql_tax_obj->string	= "SELECT id, name_tax FROM account_taxes ORDER BY name_tax";
+			$sql_tax_obj->execute();
+
+			// package up for sending to the client
+			$return = NULL;
+
+			if ($sql_tax_obj->num_rows())
+			{
+				$sql_tax_obj->fetch_array();
+
+				foreach ($sql_tax_obj->data as $data_tax)
+				{
 					$return_tmp			= NULL;
+					$return_tmp["taxid"]		= $data_tax["id"];
+					$return_tmp["name_tax"]		= $data_tax["name_tax"];
 
-					$return_tmp["itemid"]		= $data["id"];
-					$return_tmp["taxid"]		= $data["taxid"];
-					$return_tmp["taxid_label"]	= $data["taxid_label"];
-					$return_tmp["manual_option"]	= $data["manual_option"];
-					$return_tmp["manual_amount"]	= $data["manual_amount"];
-					$return_tmp["description"]	= $data["description"];
+					if (in_array($data_tax["id"], $enabled_taxes))
+					{
+						$return_tmp["status"]	= "on";
+					}
+					else
+					{
+						$return_tmp["status"]	= "off";
+					}
 
 					$return[] = $return_tmp;
 				}
@@ -182,7 +200,8 @@ class products_manage_soap
 			throw new SoapFault("Sender", "ACCESS_DENIED");
 		}
 
-	} // end of get_product_taxes
+	} // end of get_product_tax
+
 
 
 
@@ -310,66 +329,53 @@ class products_manage_soap
 	/*
 		set_product_tax
 
-		Creates/Updates a tax item assigned to a product.
+		Enables or disables the specified tax for the product
 
 		Returns
 		0	failure
 		#	ID of the product
 	*/
 	function set_product_tax($id,
-					$itemid,
 					$taxid,
-					$manual_option,
-					$manual_amount,
-					$description)
+					$status)
 	{
-		log_debug("products_manage_soap", "Executing set_product_details($id, values...)");
+		log_debug("products_manager", "Executing set_product_tax($id, values...)");
 
 		if (user_permissions_get("products_write"))
 		{
-			$obj_product_tax = New product_tax;
+			$obj_product = New product;
 
 			
 			/*
 				Load SOAP Data
 			*/
-			$obj_product_tax->id				= @security_script_input_predefined("int", $id);
-					
-			$obj_product_tax->itemid			= @security_script_input_predefined("int", $itemid);
-			$obj_product_tax->data["taxid"]			= @security_script_input_predefined("any", $taxid);
-			$obj_product_tax->data["manual_option"]		= @security_script_input_predefined("int", $manual_option);
-			$obj_product_tax->data["manual_amount"]		= @security_script_input_predefined("money", $manual_amount);
-			$obj_product_tax->data["description"]		= @security_script_input_predefined("any", $description);
+			$obj_product->id	= @security_script_input_predefined("int", $id);
+			$taxid			= @security_script_input_predefined("int", $taxid);
+			$status			= @security_script_input_predefined("any", $status);
 
-			
-			foreach (array_keys($obj_product_tax->data) as $key)
+			foreach (array_keys($obj_product->data) as $key)
 			{
-				if ($obj_product_tax->data[$key] == "error")
+				if ($obj_product->data[$key] == "error")
 				{
 					throw new SoapFault("Sender", "INVALID_INPUT");
 				}
 			}
 
+			if ($status != "on" && $status != "off")
+			{
+				throw new SoapFault("Sender", "INVALID_INPUT");
+			}
+
+
 
 			/*
 				Error Handling
 			*/
-	
-	
-			// verify that the supplied product ID is valid
-			if (!$obj_product_tax->verify_product_id())
+
+			// verify product ID
+			if (!$obj_product->verify_id())
 			{
 				throw new SoapFault("Sender", "INVALID_ID");
-			}
-
-
-			// verify that the item exists (if supplied)
-			if ($obj_product_tax->itemid)
-			{
-				if (!$obj_product_tax->verify_item_id())
-				{
-					throw new SoapFault("Sender", "INVALID_ID");
-				}
 			}
 
 
@@ -377,9 +383,37 @@ class products_manage_soap
 				Perform Changes
 			*/
 
-			if ($obj_product_tax->action_update())
+			// fetch product's current tax status
+			$sql_product_taxes_obj		= New sql_query;
+			$sql_product_taxes_obj->string	= "SELECT taxid FROM products_taxes WHERE productid='". $obj_product->id."'";
+
+			$sql_product_taxes_obj->execute();
+
+			if ($sql_product_taxes_obj->num_rows())
 			{
-				return $obj_product_tax->itemid;
+				$sql_product_taxes_obj->fetch_array();
+
+				foreach ($sql_product_taxes_obj->data as $data_tax)
+				{
+					$obj_product->data["tax_". $data_tax["taxid"] ] = "on";
+
+				}
+			}
+
+			// change the status of the supplied option
+			if ($status == "on")
+			{
+				$obj_product->data["tax_". $taxid] = "on";
+			}
+			else
+			{
+				$obj_product->data["tax_". $taxid] = "";
+			}
+
+			
+			if ($obj_product->action_update_taxes())
+			{
+				return 1;
 			}
 			else
 			{
@@ -462,86 +496,6 @@ class products_manage_soap
 		}
 
 	} // end of delete_product
-
-
-
-	/*
-		delete_product_tax
-
-		Deletes a tax from a product. It does not matter whether the product is
-		locked or not, since taxes only affect products when they are first added
-		to invoices.
-
-		Returns
-		0	failure
-		1	success
-	*/
-	function delete_product_tax($id, $itemid)
-	{
-		log_debug("products", "Executing delete_product_tax($id, $itemid)");
-
-		if (user_permissions_get("products_write"))
-		{
-			$obj_product_tax = New product_tax;
-
-			
-			/*
-				Load SOAP Data
-			*/
-
-			$obj_product_tax->id		= @security_script_input_predefined("int", $id);
-			$obj_product_tax->itemid	= @security_script_input_predefined("int", $itemid);
-
-			if (!$obj_product_tax->id || $obj_product_tax->id == "error")
-			{
-				throw new SoapFault("Sender", "INVALID_INPUT");
-			}
-
-			if (!$obj_product_tax->itemid || $obj_product_tax->itemid == "error")
-			{
-				throw new SoapFault("Sender", "INVALID_INPUT");
-			}
-
-
-
-			/*
-				Error Handling
-			*/
-
-			// verify product ID
-			if (!$obj_product_tax->verify_product_id())
-			{
-				throw new SoapFault("Sender", "INVALID_ID");
-			}
-
-
-			// verify tax item ID	
-			if (!$obj_product_tax->verify_item_id())
-			{
-				throw new SoapFault("Sender", "INVALID_ID");
-			}
-
-
-
-			/*
-				Perform Changes
-			*/
-			if ($obj_product_tax->action_delete())
-			{
-				return 1;
-			}
-			else
-			{
-				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
-			}
- 		}
-		else
-		{
-			throw new SoapFault("Sender", "ACCESS DENIED");
-		}
-
-	} // end of delete_product_tax
-
 
 
 } // end of products_manage_soap class

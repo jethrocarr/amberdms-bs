@@ -13,27 +13,25 @@
 		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 		xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
 
-			<complexType name="invoice_taxes_list">
+			<complexType name="product_tax_list">
 				<complexContent>
 					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="invoice_taxes_row[]"/>
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="product_tax_row[]"/>
 					</restriction>
 				</complexContent>
 			</complexType>
 
-			<complexType name="invoice_taxes_row">
+			<complexType name="product_tax_row">
 				<all>
-					<element name="itemid" type="xsd:int"/>
 					<element name="taxid" type="xsd:int"/>
-					<element name="taxid_label" type="xsd:string"/>
-					<element name="manual_option" type="xsd:int"/>
-					<element name="manual_amount" type="xsd:string"/>
-					<element name="description" type="xsd:string"/>
+					<element name="name_tax" type="xsd:int"/>
+					<element name="status" type="xsd:string"/>
 				</all>
 			</complexType>
-
 		</schema>
 	</types>
+
+
  
 
 	<message name='get_product_details_request'>
@@ -63,12 +61,12 @@
 	</message>
 
 
-	<message name='get_product_taxes_request'>
+	<message name='get_product_tax_request'>
 		<part name='id' type='xsd:int'/>
 	</message>
 
-	<message name='get_product_taxes_response'>
-		<part name='return' type='xsd1:product_taxes_list'/>
+	<message name='get_product_tax_response'>
+		<part name='return' type='xsd1:product_tax_list'/>
 	</message>
 
 
@@ -99,15 +97,12 @@
 
 	<message name='set_product_tax_request'>
 		<part name='id' type='xsd:int'/>
-		<part name="itemid" type="xsd:int"/>
-		<part name="taxid" type="xsd:int"/>
-		<part name="manual_option" type="xsd:string"/>
-		<part name="manual_amount" type="xsd:string"/>
-		<part name="description" type="xsd:string"/>
+		<part name='taxid' type='xsd:int'/>
+		<part name='status' type='xsd:string'/>
 	</message>
 
 	<message name='set_product_tax_response'>
-		<part name='itemid' type='xsd:int'/>
+		<part name='returncode' type='xsd:int'/>
 	</message>
 
 
@@ -120,17 +115,6 @@
 	</message>
 
 
-	<message name='delete_product_tax_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='itemid' type='xsd:int'/>
-	</message>
-
-	<message name='delete_product_tax_response'>
-		<part name='returncode' type='xsd:int'/>
-	</message>
-
-
-
 	<portType name='products_manage_porttype'>
 
 		<operation name='get_product_details'>
@@ -138,9 +122,9 @@
 			<output message='tns:get_product_details_response'/>
 		</operation>
 
-		<operation name='get_product_taxes'>
-			<input message='tns:get_product_taxes_request'/>
-			<output message='tns:get_product_taxes_response'/>
+		<operation name='get_product_tax'>
+			<input message='tns:get_product_tax_request'/>
+			<output message='tns:get_product_tax_response'/>
 		</operation>
 
 		<operation name='set_product_details'>
@@ -156,11 +140,6 @@
 		<operation name='delete_product'>
 			<input message='tns:delete_product_request'/>
 			<output message='tns:delete_product_response'/>
-		</operation>
-
-		<operation name='delete_product_tax'>
-			<input message='tns:delete_product_tax_request'/>
-			<output message='tns:delete_product_tax_response'/>
 		</operation>
 
 	</portType>
@@ -179,7 +158,7 @@
 			</output>
 		</operation>
 
-		<operation name='get_product_taxes'>
+		<operation name='get_product_tax'>
 			<soap:operation soapAction='products_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
@@ -213,17 +192,6 @@
 		</operation>
 
 		<operation name='delete_product'>
-			<soap:operation soapAction='products_manage'/>
-			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
-			</input>
-
-			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
-			</output>
-		</operation>
-
-		<operation name='delete_product_tax'>
 			<soap:operation soapAction='products_manage'/>
 			<input>
 				<soap:body use='encoded' namespace='urn:amberdms:products_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
