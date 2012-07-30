@@ -1,6 +1,6 @@
 <?php
 /*
-	hr/inc_vendors.php
+	include/vendors/inc_vendors.php
 
 	Provides classes for managing vendors.
 */
@@ -237,7 +237,7 @@ class vendor
 	/*
 		load_data
 
-		Load the vendor's information into the $this->data array.
+		Load the vendor's information into the $this->data array. Excludes contacts, see load_data_contacts
 
 		Returns
 		0	failure
@@ -264,6 +264,71 @@ class vendor
 		return 0;
 
 	} // end of load_data
+
+
+
+	/*
+		load_data_contacts
+
+		Loads the vendor's contact information into $this->data["contacts"][ index ], with record data in $this->data["contacts"][ index ]["records"]
+
+		The accounts contact is *always* loaded into id 0
+
+		Returns
+		0	failure
+		1	success
+	*/
+	function load_data_contacts()
+	{
+		log_debug("inc_vendors", "Executing load_data_contacts()");
+
+		// fetch all the contacts
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT id, role, contact, description FROM vendor_contacts WHERE vendor_id='" .$this->id ."' ORDER BY role DESC";
+
+		if (!$sql_obj->execute())
+		{
+			return 0;
+		}
+
+		$sql_obj->fetch_array();
+		$this->data["num_contacts"] = $sql_obj->num_rows();
+		
+		for ($i=0; $i < $this->data["num_contacts"]; $i++)
+		{
+			$this->data["contacts"][$i]["contact_id"]	= $sql_obj->data[$i]["id"];
+			$this->data["contacts"][$i]["contact"]		= $sql_obj->data[$i]["contact"];
+			$this->data["contacts"][$i]["role"]		= $sql_obj->data[$i]["role"];
+			$this->data["contacts"][$i]["description"]	= $sql_obj->data[$i]["description"];
+			$this->data["contacts"][$i]["delete_contact"]	= "false"; // trick to work around the auction_create/update form-like expectations (TODO: fix this poor code)
+			
+			// contact records
+			$sql_records_obj		= New sql_query;			
+			$sql_records_obj->string	= "SELECT id, type, label, detail FROM vendor_contact_records WHERE contact_id= " .$sql_obj->data[$i]["id"]. " ORDER BY type";
+			$sql_records_obj->execute();		
+
+			$this->data["contacts"][$i]["num_records"] = $sql_records_obj->num_rows();
+
+			if ($this->data["contacts"][$i]["num_records"])
+			{
+				$sql_records_obj->fetch_array();
+
+				for ($j=0; $j < $sql_records_obj->data_num_rows; $j++)
+				{
+					$this->data["contacts"][$i]["records"][$j]["record_id"]	= $sql_records_obj->data[$j]["id"];
+					$this->data["contacts"][$i]["records"][$j]["type"]	= $sql_records_obj->data[$j]["type"];
+					$this->data["contacts"][$i]["records"][$j]["label"]	= $sql_records_obj->data[$j]["label"];
+					$this->data["contacts"][$i]["records"][$j]["detail"]	= $sql_records_obj->data[$j]["detail"];
+					$this->data["contacts"][$i]["records"][$j]["delete"]	= "false"; // trick to work around the auction_create/update form-like expectations (TODO: fix this poor code)
+				}
+			}
+		}
+
+
+		// success
+		return 1;
+
+	} // end of load_data_contacts
 
 
 

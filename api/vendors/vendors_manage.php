@@ -61,6 +61,60 @@ class vendors_manage_soap
 			}
 
 
+
+			// load vendor contact information 
+			/*
+				TODO: API Upgrade Required
+
+				Since the API spec is limited in order to retain backwards compatibility, we currently only return the information
+				for the accounts contact and ignore the others.
+			
+				At a future stage, we need to extend the API specification to handle the new flexible contact capabilities.
+
+			*/
+			if (!$obj_vendor->load_data_contacts())
+			{
+				throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+			}
+			else
+			{
+				// fetch the contact name
+				$obj_vendor->data["name_contact"] = $obj_vendor->data["contacts"][0]["contact"];
+
+				// fetch first phone, email and fax records as the primaries
+				if (!empty($obj_vendor->data["contacts"][0]["records"]))
+				{
+					foreach ($obj_vendor->data["contacts"][0]["records"] as $record)
+					{
+						if (empty($obj_vendor->data["contact_email"]))
+						{
+							if ($record["type"] == "email")
+							{
+								$obj_vendor->data["contact_email"] = $record["detail"];
+							}
+						}
+
+						if (empty($obj_vendor->data["contact_phone"]))
+						{
+							if ($record["type"] == "phone")
+							{
+								$obj_vendor->data["contact_phone"] = $record["detail"];
+							}
+						}
+
+						if (empty($obj_vendor->data["contact_fax"]))
+						{
+							if ($record["type"] == "fax")
+							{
+								$obj_vendor->data["contact_fax"] = $record["detail"];
+							}
+						}
+					}
+				}
+			}
+
+
+
 			// to save SOAP users from having to do another lookup to find out what the name
 			// of the tax_default is, we do a lookup here.
 			if ($obj_vendor->data["tax_default"])
@@ -302,6 +356,167 @@ class vendors_manage_soap
 			{
 				throw new SoapFault("Sender", "DUPLICATE_CODE_VENDOR");
 			}
+
+
+
+			/*
+				Customer Contacts Handling
+
+				TODO: API Upgrade Required
+
+				Since the API spec is limited in order to retain backwards compatibility, we currently only get provided with the
+				primary contact details for the "account" contact entry.
+
+				This requires some cleverness to adjust the data structure to the new internal associative array, before calling update.
+			
+				At a future stage, we need to extend the API specification to handle the new flexible contact capabilities.
+
+			*/
+
+			// ensure a default contact name is set
+			if (empty($obj_vendor->data["name_contact"]))
+			{
+				$obj_vendor->data["name_contact"] = "Accounts";
+			}
+
+			if ($obj_vendor->id)
+			{
+				// existing vendor - we need to load the contacts and then adjust the values in the
+				// primary records with the values provided by the API.
+
+				if (!$obj_vendor->load_data_contacts())
+				{
+					throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+				}
+
+				// overwrite the accounts primary values
+				if (!empty($obj_vendor->data["contacts"][0]["records"]))
+				{
+					$obj_vendor->data["contacts"][0]["contact"] = $obj_vendor->data["name_contact"];
+
+					$set_email	= 0;
+					$set_phone	= 0;
+					$set_fax	= 0;
+
+					// search and replace values for existing accounts records
+					for ($i=0; $i < $obj_vendor->data["contacts"][0]["num_records"]; $i++)
+					{
+						if (!$set_email)
+						{
+							if ($obj_vendor->data["contacts"][0]["records"][$i]["type"] == "email")
+							{
+								$obj_vendor->data["contacts"][0]["records"][$i]["detail"] = $obj_vendor->data["contact_email"];
+								$set_email = 1;
+							}
+						}
+
+						if (!$set_phone)
+						{
+							if ($obj_vendor->data["contacts"][0]["records"][$i]["type"] == "phone")
+							{
+								$obj_vendor->data["contacts"][0]["records"][$i]["detail"] = $obj_vendor->data["contact_phone"];
+								$set_phone = 1;
+							}
+						}
+						if (!$set_fax)
+						{
+							if ($obj_vendor->data["contacts"][0]["records"][$i]["type"] == "fax")
+							{
+								$obj_vendor->data["contacts"][0]["records"][$i]["detail"] = $obj_vendor->data["contact_fax"];
+								$set_fax = 1;
+							}
+						}
+					}
+
+
+					// no existing record existed, add a new one
+					if (!$set_email)
+					{
+						$i = $obj_vendor->data["contact"]["num_records"];
+						$obj_vendor->data["contact"]["num_records"]++;
+
+						$obj_vendor->data["contacts"][0]["records"][$i]["delete"]	= "false";
+						$obj_vendor->data["contacts"][0]["records"][$i]["type"]		= "email";
+						$obj_vendor->data["contacts"][0]["records"][$i]["label"]	= "Email";
+						$obj_vendor->data["contacts"][0]["records"][$i]["detail"]	= $obj_vendor->data["contact_email"];
+					}
+
+					if (!$set_phone)
+					{
+						$i = $obj_vendor->data["contact"]["num_records"];
+						$obj_vendor->data["contact"]["num_records"]++;
+
+						$obj_vendor->data["contacts"][0]["records"][$i]["delete"]	= "false";
+						$obj_vendor->data["contacts"][0]["records"][$i]["type"]		= "phone";
+						$obj_vendor->data["contacts"][0]["records"][$i]["label"]	= "Phone";
+						$obj_vendor->data["contacts"][0]["records"][$i]["detail"]	= $obj_vendor->data["contact_phone"];
+					}
+
+					if (!$set_fax)
+					{
+						$i = $obj_vendor->data["contact"]["num_records"];
+						$obj_vendor->data["contact"]["num_records"]++;
+
+						$obj_vendor->data["contacts"][0]["records"][$i]["delete"]	= "false";
+						$obj_vendor->data["contacts"][0]["records"][$i]["type"]		= "fax";
+						$obj_vendor->data["contacts"][0]["records"][$i]["label"]	= "Fax";
+						$obj_vendor->data["contacts"][0]["records"][$i]["detail"]	= $obj_vendor->data["contact_fax"];
+					}
+
+				}
+				else
+				{
+					// no valid contact records exist, re-define the entry
+					$obj_vendor->data["contacts"][0]["contact"]			= $obj_vendor->data["name_contact"];
+					$obj_vendor->data["contacts"][0]["role"]			= "accounts";
+
+					$obj_vendor->data["contacts"][0]["records"][0]["delete"]	= "false";
+					$obj_vendor->data["contacts"][0]["records"][0]["type"]		= "email";
+					$obj_vendor->data["contacts"][0]["records"][0]["label"]		= "Email";
+					$obj_vendor->data["contacts"][0]["records"][0]["detail"]	= $obj_vendor->data["contact_email"];
+
+					$obj_vendor->data["contacts"][0]["records"][1]["delete"]	= "false";
+					$obj_vendor->data["contacts"][0]["records"][1]["type"]		= "phone";
+					$obj_vendor->data["contacts"][0]["records"][1]["label"]		= "Phone";
+					$obj_vendor->data["contacts"][0]["records"][1]["detail"]	= $obj_vendor->data["contact_phone"];
+
+					$obj_vendor->data["contacts"][0]["records"][2]["delete"]	= "false";
+					$obj_vendor->data["contacts"][0]["records"][2]["type"]		= "fax";
+					$obj_vendor->data["contacts"][0]["records"][2]["label"]		= "Fax";
+					$obj_vendor->data["contacts"][0]["records"][2]["detail"]	= $obj_vendor->data["contact_fax"];
+
+				}
+
+			}
+			else
+			{
+				// new vendor, easy for us to define a new structure.
+				$obj_vendor->data["num_contacts"] = 1;
+	
+				$obj_vendor->data["contacts"][0]["contact_id"]			= "";
+				$obj_vendor->data["contacts"][0]["contact"]			= $obj_vendor->data["name_contact"];
+				$obj_vendor->data["contacts"][0]["role"]			= "accounts";
+				$obj_vendor->data["contacts"][0]["delete_contact"]		= "false";
+				$obj_vendor->data["contacts"][0]["num_records"]			= 3;
+
+				$obj_vendor->data["contacts"][0]["records"][0]["delete"]	= "false";
+				$obj_vendor->data["contacts"][0]["records"][0]["type"]		= "email";
+				$obj_vendor->data["contacts"][0]["records"][0]["label"]		= "Email";
+				$obj_vendor->data["contacts"][0]["records"][0]["detail"]	= $obj_vendor->data["contact_email"];
+
+				$obj_vendor->data["contacts"][0]["records"][1]["delete"]	= "false";
+				$obj_vendor->data["contacts"][0]["records"][1]["type"]		= "phone";
+				$obj_vendor->data["contacts"][0]["records"][1]["label"]		= "Phone";
+				$obj_vendor->data["contacts"][0]["records"][1]["detail"]	= $obj_vendor->data["contact_phone"];
+
+				$obj_vendor->data["contacts"][0]["records"][2]["delete"]	= "false";
+				$obj_vendor->data["contacts"][0]["records"][2]["type"]		= "fax";
+				$obj_vendor->data["contacts"][0]["records"][2]["label"]		= "Fax";
+				$obj_vendor->data["contacts"][0]["records"][2]["detail"]	= $obj_vendor->data["contact_fax"];
+			}
+
+
+
 
 
 			/*

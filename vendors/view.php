@@ -113,6 +113,11 @@ class page_output
 
 		
 		//contacts
+
+		//
+		// TODO: this should be replaced with load_data_contacts in some point in the future
+		//
+
 		$sql_contacts_obj		= New sql_query;
 		$sql_contacts_obj->string	= "SELECT id, role, contact, description FROM vendor_contacts WHERE vendor_id = " .$this->id;
 		$sql_contacts_obj->execute();
