@@ -49,6 +49,13 @@ $config["dangerous_conf_options"] = "enabled";
 
 
 
+/*
+	PHP Configuration Overrides
+*/
+
+// ini_set('memory_limit', '32M');
+
+
 
 /*
 	Force debugging on for all users + scripts

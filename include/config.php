@@ -23,18 +23,10 @@ $GLOBALS["config"] = array();
 
 // define the application details
 $GLOBALS["config"]["app_name"]			= "Amberdms Billing System";
-$GLOBALS["config"]["app_version"]		= "1.5.0_beta_10";
+$GLOBALS["config"]["app_version"]		= "1.5.0_RC_1";
 
 // define the schema version required
 $GLOBALS["config"]["schema_version"]		= "20120723";
-
-
-
-/*
-	Apply required PHP settings
-*/
-ini_set('memory_limit', '32M');			// note that ABS doesn't need much RAM apart from when
-						// doing source diffs or graph generation.
 
 
 
