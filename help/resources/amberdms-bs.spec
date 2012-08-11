@@ -15,7 +15,6 @@ Requires: php >= 5.1.6, mysql-server, php-mysql, php-soap
 Requires: tetex-latex, wkhtmltopdf
 Requires: php-pear, php-pear-Mail, php-pear-Mail-Mime
 Requires: perl, perl-DBD-MySQL
-Prereq: httpd, php, mysql-server, php-mysql
 
 %description
 The Amberdms Billing System is an open source accounting, service billing and time keeping application.
@@ -53,8 +52,19 @@ install -m 644 help/resources/amberdms-bs-cron $RPM_BUILD_ROOT%{_sysconfdir}/cro
 %post
 
 # install SELinux policies
-echo "Installing SELinux policies"
-/usr/sbin/semodule -i %{_datadir}/amberdms/billing_system/help/resources/selinux_policies/amberdmsbs%{?dist}.pp
+%if 0%{?el4}
+	echo "If you are using/plan to use SELinux Enforcing, please refer to the installation manual for SELinux configuration information"
+%endif
+
+%if 0%{?el5}
+	echo "Installing SELinux policies"
+	/usr/sbin/semodule -i %{_datadir}/amberdms/billing_system/help/resources/selinux_policies/amberdmsbs%{?dist}.pp
+%endif
+
+%if 0%{?el6}
+	echo "Enabling httpd execmem selinux option"
+	setsebool -P httpd_execmem 1
+%endif
 
 
 # Reload apache
@@ -80,7 +90,10 @@ fi
 if [ $1 == 0 ];
 then
 	# uninstall selinux policies
-	/usr/sbin/semodule -r amberdmsbs	
+	%if 0%{?el5}
+		echo "Removing ABS-specific SELinux policies"
+		/usr/sbin/semodule -r amberdmsbs
+	%endif
 
 	# user needs to remove DB
 	echo "The Amberdms Billing System has been removed, but the MySQL database and user will need to be removed manually."
