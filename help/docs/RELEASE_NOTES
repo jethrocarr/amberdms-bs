@@ -1,56 +1,93 @@
 ------------------------------------
-Amberdms Billing System 1.5.0_beta_1
-28 June 2001
+Amberdms Billing System 1.5.0_rc_1
+11 August 2012
 
 RELEASE NOTES
 ------------------------------------
 
-Amberdms Billing System 1.5.0 Beta 1 is an incomplete development release of the billing system to enable public developer testing and feedback regarding the application.
+Amberdms Billing System 1.5.0 RC 1 is intended as a final snapshot of the
+future 1.5.0 stable, to catch any last bugs and obtain user feedback.
+
 
 
 NEW FEATURES
 
-There are a vast number of changes in this version of the billing system, for details refer to the CHANGELOG file.
+There are a vast number of changes in this version of the billing system, for
+details refer to the CHANGELOG file.
 
-Of particular note:
-* New XHTML/CSS to PDF generator and templates using the webkit engine.
-* New VoIP billing features.
-* New service bundling features.
-* Numerious usability improvements
+Core Functionality
+* New XHTML/CSS to PDF generator and templates using the webkit engine for
+  better quality & more flexible invoices.
+* Fully themable application and selectable per-user.
+* Numerious usability improvements, including search fields built into dropdowns
+* Numerious bug fixes.
+* Supports IPv6 for the web application. (however not for usage billing)
 
+Customers & Vendors:
+* Multiple contacts functionality
+* Customer attributes page to track values in a more defined structure than the
+  journal.
+* New orders functionality, allows item and setup charges to be added to a
+  customer to be invoiced automatically with their next service bill.
+* New customer page display and filtering abilities.
 
-INCOMPLETE FEATURES
+Accounting & Invoicing:
+* Full credit note support, with option for automatically applying
+  customer credits to generated invoices.
+* Bulk payment user interface.
+* Bank statement import functionality. (prototype stage)
+* Ability to quickly issue payment reminders to customers for overdue invoices.
 
-The following features exist to some extent but have large chunks of functionality still missing:
-* Bank Statement import - majority of UI complete, backend processing needs lots of work
-* Call records for VoIP billing can only be imported from an external database, there is no capability in the usage API for call records.
-* Credit notes have only just started to be implemented.
-* Upgrades to the installer/upgrader process
+Products
+* Dropped "manual tax" functionality.
+* Standardised tax to match same structure and UI as customers & vendors.
+* Key SOAP API changes to support new setup.
 
-The following features are mostly done but do need more testing:
-* New VoIP billing capabilities
-* New service bundling capabilities
-* New telcoperiod and telcomonth billing modes
+Service Billing
+* VoIP billing
+  - Various importable rate tables.
+  - Regional number import abilities.
+  - Call usage charging.
+  - Automatic emailing of CDR records along with customer invoice.
+* Service Bundles, allowing multiple services grouped under one fee.
+* New telcoperiod and telcomonth billing modes, for billing plan in advance and
+  usage in arrears.
+
+Developers
+* Customer Portal SOAP API calls.
+* Prototype live translation user interface.
+* New repair scripts for carefully manipulating billing runs and data.
+* Cleaned up PHP errors in codebase.
+
 
 
 INSTALLATION & UPGRADING
 
-As this is not a stable release, Amberdms does not build RPM packages but instead recommends that this version be installed and upgraded from SVN.
+There are 3 supported approaches to installing and updating the Amberdms
+Billing System:
 
-Upgrades from previous versions SHOULD work correctly, however testing will not have been in depth, so take care when doing so and always remember to backup.
+RPM:
+https://projects.jethrocarr.com/p/oss-amberdms-bs/page/Installing-RPM/
 
-Instructions for doing so can be found on the Indefero tracker at:
-https://www.amberdms.com/projects/p/oss-amberdms-bs/page/Installing-SVN/
+Source Tarball:
+https://projects.jethrocarr.com/p/oss-amberdms-bs/page/Installing-Source/
+
+SVN (intended for developers only)
+https://projects.jethrocarr.com/p/oss-amberdms-bs/page/Installing-SVN/
 
 
-TESTING AND FEEDBACK
 
-Being a development release, we would love to hear back from you about your thoughts on this version and any contributions or bug fixes that you might make.
+FEEDBACK & SUPPORT
 
-The best place to submit is via emailing the developer mailing list:
-http://lists.amberdms.com/mailman/listinfo/amberdms-bs-devel
+If you have feedback you wish to make, or if you wish to get support, please
+email the community mailing list at:
 
-If you have found a bug, check if it is in the tracker and if not you are welcome to open an issue for it:
+http://lists.amberdms.com/mailman/listinfo/amberdms-bs/
+
+
+If you have found a bug, check if it is in the tracker and if not you are
+welcome to open an issue for it at:
+
 https://www.amberdms.com/projects/p/oss-amberdms-bs/issues/
 
 

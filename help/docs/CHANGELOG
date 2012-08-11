@@ -1,5 +1,322 @@
 CHANGELOG
 
+
+2012-08-11 Jethro Carr <jethro.carr@amberdms.com>
+	
+	* Released version 1.5.0_rc_1
+
+	New Functionality
+	* Added ability for Customers to have multiple contacts (issue 130)
+	* Added ability to add new projects/ phases without leaving page.
+	* Added ability to clean and validate multiple email addresses in form fields for issue 164
+	* Added ability to set default taxes as per issue 222
+	* Added bulk payment features for AR accounts as per issue 187
+	* Added CDR CSV output to the service detail for phone_* services. This allows the customer to be selected for automatic CDR CSV output at time of the billing run (issue 335)
+	* Added classic theme as per issue 34
+	* Added dependency status page as per issue 183
+	* Added dorm_helper_prepare_dromfownfromobj function - creates dropdown from SQL object rather than string - will replace CURRENTID key with default value at render time if needbe
+	* Added email form at bottom of account statements page to allow for customer reminder emails
+	* Added error check for currency separators to ensure the values are different
+	* Added groups and the ability to mass select and deselect
+	* Added Jquery UI for additional application capabilities
+	* Added local prefix column to DDI display to ease config debugging
+	* Added local prefix field to customer DDI configuration (issue 273)
+	* Added missing discount field. (issue 90)
+	* Added missing discount functionality (issue 90)
+	* Added missing translation (issue 90)
+	* Added multiple contacts to vendors as per issue 130
+	* Added new date format dd-Mmm-yyyy (issue 293)
+	* Added new searchable dropdowns to user options page to match user details admin pages.
+	* Added new SQL for recent theme and attribute page changes.
+	* Added orders delete safety check (issue 90)
+	* Added parent service reference. (issue 307)
+	* Added recent DB changes for issue 335, issue 346 and issue 345 to install/update SQL.
+	* Added roles to customers
+	* Added search box to filter invoice list based on notes field (issue 201)
+	* Added support for billgroup to NAD import (issue 300)
+	* Added the ability to configure decimal and thousands separators
+	* Added translation mode icon. (issue 166)
+	* Added web 2.0 theme
+	* Additional improvements to clear out incorrect unbilled periods due to date change (issue 334)
+	* Addition of previous activity section to invoice templates which support it.
+	* Adjusted activity timer with flexible configuration field. (issue 276)
+	* Adjusted CDR export to use code_customer value rather than the backend DB ID. (issue 335)
+	* Adjusted display code to support new AR/AP credit notes (issue 30)
+	* Adjusted format of invoice trunk and DDI pricing to include date range and handle 0 included better (issue 296)
+	* Adjusted invoice generation to use currency format consistantly
+	* Adjusted invoicing backend to use same logic for both form-based email sending and cron-based email sending. (issue 130)
+	* Adjusted linkage to resellers page to only be displayed if the customer *is* a reseller. (issue 335)
+	* Adjusted locations of some AJAX files.
+	* Adjusted permissions checks for new project/phase AJAX add forms on the time keeping interface.
+	* Adjusted require functions to reflect recent OO code changes leading to breakage as per issue 177.
+	* Adjusted UI to provide better appearance for grouped checkboxes. (issue 200)
+	* Adjusting page configuration options order (issue 223)
+	* Adjustments to CDR and IPv4 logic and UI. (issue 180)
+	* Adjust ordering of CDR export columns to suit with specification. (issue 335)
+	* An SQL function will need to be created to transfer some contact details from Customer table into the new customer_contacts and customer_contact_records tables.
+	* Added bulk payment feature to AP (issue 187)
+	* Auto complete and auto display new attribute rows
+	* Changes for issue 146: Adding the quotes section to the templates page
+	* Changes for issue 146: Adding the quote template thumbnail images
+	* Changes for issue 146: Improving a quote template thumbnail images
+	* Changes for issue 146, making latex quotes work again, and adding xhtml quote templates
+	* Changes to packaging helper scripts to reflect move from CVS to SVN
+	* Changes to support 4 SF rate tables (issue 311)
+	* Checking in a fix in bankstatement-csv.php for issue 165
+	* Checking in a modification to the template page and javascript to remove an ID being used twice
+	* Completed changes needed to provide credit note journaling. (issue 30)
+	* Completed partial period logic and increase debugging verobisty and usefulness of messages. (issue 32)
+	* Core functionalities of attribute page completed
+	* Corrected file naming format of selinux modules to suit RPMs
+	* Correct sample cronfile mistake, not including correct usage script.
+	* Created log_debug function to allow for safer bug tracking
+	* DB changes for account statement/reminder page (issue 221)
+	* DB changes for IPv6 compatibility (issue 234)
+	* DB changes for multiple contacts (issue 130)
+	* DB changes for simplified permissions page (issue 200)
+	* DB changes for translation tool (issue 166)
+	* Defined user ID as 0 to prevent undefined index warning.
+	* Delete attributes and groups
+	* Deleteing a customer now deletes both contacts and records
+	* Disabled new coding being done for issue 167, will roll with web 1.0 style DDI management and deploy javascript interface in future release.
+	* Displays all overdue invoices, with option to email reminders in bulk
+	* Displays sent status and errors without user having to manually refresh
+	* Edited pages that use customer database to deal with new format
+	* Enhancements for auto-reload after download for issue 1156
+	* Error handling is broken still
+	* Expanded capabilities of format_arraytocommastring function for more formatting options
+	* Extracted more inline css
+	* FR: Enable adjustment of service start date when service has yet to be billed. (issue 334)
+	* Implementation of new support functions in Amberphplib (to support features required for issue 335)
+	* Implemented ability to charge for self-calls in different methods. (issue 289)
+	* Implemented ability to display service charge details for all customers or for all services for a particular customer. (issue 345)
+	* Implemented ability to enable/disable specific service types (issue 223)
+	* Implemented ability to enable/disable specific service usage unit types (issue 223)
+	* Implemented ability to export CDR records in the configured format (issue 335)
+	* Implemented ability to lock credit notes. (issue 30)
+	* Implemented ability to make payment of invoices from customer/vendor credit pools. (issue 30)
+	* Implemented ability to override data_usage data caps and excess pricing. (issue 308)
+	* Implemented ability to rename/adjust descriptions for service types, to enable customers wanting to add detailed instructions for staff. (issue 223)
+	* Implemented Account Statements as per issue 221
+	* Implemented additional NAD import modes (expanding on issue 273)
+	* Implemented AJAX actions for customer/invoice selection when adding or editing credit notes. (issue 30)
+	* Implemented alpha-grade credit note handling for AR credits. (issue 30)
+	* Implemented autocomplete capability for Amberphplib, using jquery-ui logic
+	* Implemented automatic addition of order items to regular service invoices. (issue 90)
+	* Implemented base of customer orders functionality (issue 90)
+	* Implemented basic customer credit pool for refunds/credit notes to be stored against an account. (issue 30)
+	* Implemented basic NAD import functionality. (issue 273)
+	* Implemented beginning of credit note handling for AP credits. (issue 30)
+	* Implemented better configuration options for invoice emailing.
+	* Implemented bill groups for CDRs (issue 300)
+	* Implemented billing cycle and billing mode enable/disable options. (issue 223)
+	* Implemented bug fix for SQL queries on cron scripts when executing on a hosted platform - issue was caused by a change in approach of Amberphplib's handling of DB sessions. (issue 177)
+	* Implemented CDR export generate & email logic. (issue 335)
+	* Implemented CDR internal data source for call records. (issue 224)
+	* Implemented configurable autopayment option to have automatically generated invoices paid from customer credit when applicable. (issue 30)
+	* Implemented configuration option for default language (issue 166)
+	* Implemented credit refund transaction handling. (issue 30)
+	* Implemented date shifting for invoice dates. (issue 318)
+	* Implemented DDI and trunk allocation overrides. (issue 296)
+	* Implemented external database traffic accounting and usage notification. (issue 178)
+	* Implemented fixes for credit notes in annual reports. (issue 197)
+	* Implemented fixes for trial balance totals. (issue 197)
+	* Implemented fix to support legacy API with new multiple-contacts capabilities. (issue 369)
+	* Implemented fix to support legacy API with new multiple-contacts capabilities. (issue 369)
+	* Implemented function to import form data from an associative array
+	* Implemented improved bank statement import error handling. (issue 31)
+	* Implemented improved rate filtering/grouping logic using javascript (issue 302).
+	* Implemented local call charging. (issue 220)
+	* Implemented monthly cron process for generating order invoices. (issue 90)
+	* Implemented more advanced billing reports for batch processing jobs. (issue 277)
+	* Implemented new configuration option for selecting CDR output format. Currently limited to one, but possible for others in future. (issue 335)
+	* Implemented new customer attribute feature as per issue 132
+	* Implemented new data traffic service usage notifications to support multiple data cap/traffic type functionalities. (issue 319)
+	* Implemented new fields for storing upstream/provider vendor ID and general notes. (issue 223)
+	* Implemented new functions for generating grouped array data structures
+	* Implemented new repair scripts to issue credits against incorrectly billed service usage (issue 310)
+	* Implemented new structure, cronjob seporation and configuration options for service usage notifications (issue 320)
+	* Implemented new traffic type billing capabilities - services will now bill and itemise different traffic types. (issue 319)
+	* Implemented new UI features for timekeeping
+	* Implemented new user interface for performing application translations. (issue 166)
+	* Implemented new weekly, fortnightly and quarterly billing cycle options (issue 206)
+	* Implemented region-based local calling prefix (issue 220)
+	* Implemented region-based local prefix configuration (issue 220)
+	* Implemented repair script to compare call pricing between historical and new periods.
+	* Implemented repair script to enable sending of bulk invoices (issue 342)
+	* Implemented seporatation of usage notification from invoicing. (issue 320)
+	* Implemented service end date and termination (issue 309)
+	* Implemented service rebilling for repair script processes. (issue 310)
+	* Implemented service setup fee -> orders handling (issue 90)
+	* Implemented support for traffic_summary schema. (issue 286)
+	* Implemented traffic type management UI for regional/type data traffic billing (issue 319)
+	* Implemented type-specific data cap override functionality (issue 319)
+	* Implement invoicing history in telco style invoice.
+	* Improved CSS for translation popup (issue 166)
+	* Improved customer attributes page handling (issue 132)
+	* Improved handling of prefixes (issue 233)
+	* Improved matching of NAD records. (issue 273)
+	* Improved service and product group handling
+	* Improved UI of rate displays to better handle large tables of prefixes and to shorten to selected region/bill groups. (issue 302)
+	* Improved UI showing usage vs plan invoice billed status. (issue 33)
+	* Improvements to CDR repair to provide the ability to refund *just* CDR charges, and not the DDI/trunk charges associated. (issue 310)
+	* Improvided CSV import functionality and display of call records. (issue 273)
+	* Improvments to service usage functionality
+	* Issue 144: Minor Invoice Tweaks - bug fixed in if statements, text unbolded, address fixed
+	* Issue 144: Minor Invoice Tweaks - telco style invoice fixed
+	* Large number of bug fixes and improvements to the codebase resulting from testing. (issue 31)
+	* Lightened up gray border
+	* Made adjustments to structure of usage code sections. (issue 179)
+	* Main bits and bobs should be working, but not yet thoroughly tested
+	* Merged Amberphplib v_20110327
+	* Merged in SQL changes required for new Credit Notes functionality (issue 30)
+	* Minor adjustments due to need to support PHP < 5.3
+	* Minor adjustments to ordering and display of new permissions groups. (issue 200)
+	* Minor adjustments to remove debugging that breaks non-developer systems (issue 132)
+	* Minor logging change to framework
+	* Missed a couple debugging lines, now removed
+	* More features and bug fixes for attributes page
+	* Move attributes
+	* Moved generic usage handling into seporate class/file
+	* Moving AJAX files out of include/
+	* New Groups
+	* New schema changes including features from issue 206, 187 and 184.
+	* New tables to be added as such:
+	* Now using money_format function to format output
+	* Prepared new clean install SQL file to reflect changed database structure.
+	* Refresh invoice-export page when invoice is downloaded/ emailed
+	* Removed deprecated taxation calculation logic (issue 285)
+	* Resolved bug with handling of error code returns from authentication that lead to silent access denial
+	* Safety check: Unable to delete an invoice which has a credit note assigned to it. (issue 30)
+	* Schema upgrade 20100803 for numerious issues.
+	* see issue 200 for necessary DB changes
+	* SELinux policies for Fedora 13 (required for issue 171)
+	* separated css to enable simpler themeing 
+	* SQL changes for usage bug fixes (issue 33)
+	* SQL changes required for NAD import and region-based local calling prefixes.
+	* Started assembly of new schemea update
+	* Tided up reseller's user interface and added filter option for resellers to the customer list page. (issue 335)
+	* Tidying up of the permissions UI
+	* Tweaks to service usage handling code. (issue 180)
+	* UI changes and improvements to support credit notes for customers/AR (issue 30)
+	* UI for DDI ranges to be added to services page
+	* UI improvement: added product name to items table
+	* Updated copyright for 2011
+	* Updated currency processing to accept user configs as per issue 184
+	* Updated dropdowns throughout billing system to order by codes rather than names and to hide closed customers/vendors/projects etc
+	* Updated for schema changes for 20110519.
+	* Updated menu links for customer orders page. (issue 90)
+	* Updated product documentation - for changes introduced in issue 319
+	* Updated tax reports to include credit notes into calculations. (issue 30)
+	* Upgraded framework to provide filtering options (issue 302)
+	* Upgraded handling of product taxes to provide the same behaviour as customers and vendors.
+	* Upgrades to Amberphplib CLI-based debugging & logging. (issue 285)
+	* Usability: Extended timer from 1second to 2seconds (handles slower servers better)
+	* Various credit note functional changes and fixes. (issue 30)
+	* Very rough customer attributes UI/ group abilities
+
+	Bug Fixes:
+	* Bug Fix: Added billgroup dropdown for CSV import (issue 273)
+	* Bug Fix: Added handling code for non-usage services to prevent fatal errors. (issue 274)
+	* Bug Fix: Added missing debug statements to new function. (issue 130)
+	* Bug Fix: Adding a contact without a description would add a broken entry. (issue 130)
+	* Bug Fix: Added missing dependency php-pear-Mail to RPM (issue 171)
+	* Bug Fix: Adjusted automatic page reload timer from 2000 ms to 8000 ms to handle delays in invoice prep (issue 280)
+	* Bug Fix: Better handling when unexpected issues cause a template file to be missing
+	* Bug Fix: CDR rates view page showing items belonging to other rates tables. (issue 180)
+	* Bug Fix: Charge for trunk calls on tollfree phone services. (issue 297)
+	* Bug Fix: Check on credit balance before accepting credit payments. (issue 30)
+	* Bug Fix: Check for both mail modules in inc_invoices (issue 183)
+	* Bug Fix: Commited fix to handle phone_* items properly for partial periods. (issue 298)
+	* Bug Fix: Commited fix to handle telco mode usage periods properly for partial time periods. (issue 298)
+	* Bug Fix: Commited fix for Issue 140: Invoice text template
+	* Bug Fix: Correct by usage unit billing to return to 2 significant figures (eg 27.12 GB) and to bill and display accordingly. (issue 328)
+	* Bug Fix: Corrected broken button on service bundle parent link. (issue 323)
+	* Bug Fix: Corrected clearence of SQL query cache
+	* Bug Fix: Corrected config attribute name
+	* Bug Fix: Corrected display of billing modes that have been disabled/de-activated.
+	* Bug Fix: Corrected display problem of service usage groups vs service plan groups
+	* Bug Fix: Corrected handling of service invoice billing date
+	* Bug Fix: Corrected incorrect SQL query (issue 223)
+	* Bug Fix: corrected issue where checkbox states not being saved across error returns.
+	* Bug Fix: corrected reference to "balance owing" in quotes template. (issue 263)
+	* Bug Fix: Corrected return path email address to ensure bounces return to a useful mailbox address. (issue 185)
+	* Bug Fix: Corrected service usage notifications to respect service override options using new OO classes. (issue 320)
+	* Bug Fix: Corrected traffic type edit check - related to issue 319
+	* Bug Fix: Correctly disable services rather than infiloop (issue 329)
+	* Bug Fix: Correctly handle incremental usage alerts, so that slow accurual of usage will still trigger alerts. (issue 33)
+	* Bug Fix: Correctly handling CSS require paths
+	* Bug Fix: Correctly import configuration values from DB
+	* Bug Fix: Correct statement history invoice order and prevent more recent invoices from appearing.
+	* Bug Fix: CSS class was being broken when help messages were also used. (issue 292)
+	* Bug Fix: Eliminated billgroups that have no charges associated from invoices to reduce clutter. (issue 300)
+	* Bug Fix: Emails now work from cron. (issue 130)
+	* Bug Fix: Enabled ability to override a service fee with $0. (issue 322)
+	* Bug Fix: Corrected E_NOTICE errors (issue 279)
+	* Bug Fix for new service final period/termination option. (issue 309)
+	* Bug Fix: Removed pricing display for individual services from bundle members. (issue 180)
+	* Bug Fix: Excess PHP error notices (issue 279)
+	* Bug Fix: Fixed deletion of credit payments to prevent breaking other credit payments. (issue 30)
+	* Bug Fix: Fixed local call charging application bug.
+	* Bug Fix: Fixed problem with bad invoices causing complete billing run failure, now will only impact one invoice. (issue 277)
+	* Bug Fix: Fixed sanity and safety checks of input for orders (issue 325)
+	* Bug Fix: Fixed UI error. (issue 300)
+	* Bug Fix: Fixing up field display formatting, recent code changes resulted in removal of newline after each checkbox
+	* Bug Fix: Fixed transaction handling where a new transaction would not be opened after completing the previous one. (issue 282)
+	* Bug Fix: Fixed issue with $_GET paramater handling
+	* Bug Fix: Fixed a magic quotes bug with API input data
+	* Bug Fix: Fixed API functionality for release 1.5.0 (issue 369)
+	* Bug Fix: fixed a taborder bug in customers page
+	* Bug Fix: Fixed bug in customer attributes page caused by new translation dialogue options
+	* Bug Fix: Fixed bug with new contacts handling (issue 130)
+	* Bug Fix: Fixed css themeing bugs as per issue 154
+	* Bug Fix: Fixed customer orders deletion after invoicing. (issue 90)
+	* Bug Fix: Fixed customers page to work with new database structure
+	* Bug Fix: Fixed error messages and processing order in AR Bulk Payment
+	* Bug Fix: Fixed errors caused by OO code structure changes.
+	* Bug Fix: Fixed issue with incorrect include of bundled services. (issue 345)
+	* Bug Fix: Fixed minor javascript logic bug where aftering adding a new project, the add phase field would remain disabled.
+	* Bug Fix: Fixed missing dest_account for automatic invoice payments from customer credit. (issue 317)
+	* Bug Fix: Fixed missing dest_account on credit note items. (issue 317)
+	* Bug Fix: Fixed missing include in cronjob for service/orders billing
+	* Bug Fix: Fixed number of PHP notice errors (issue 279)
+	* Bug Fix: Fixed packaging bug.
+	* Bug Fix: Fixed payment processeing bug for AR bulk payments
+	* Bug Fix: Fixed problems with select filtering working with dynamically created elements
+	* Bug Fix: Fixed SQL query mistake
+	* Bug Fix: Fixed version number. :-)
+	* Bug Fix: Fixes for 4 SF CDR call rates. (issue 311)
+	* Bug Fix: Fixes for issue 144: Minor Invoice Tweaks - PO and order numbers in XHTML templates, PO number in LaTeX templates 
+	* Bug Fix: Fixing a spelling error, charactors to characters.
+	* Bug Fix for month-based billing with periods > 1 month (eg bimonthly, 6monthly, yearly) to correctly bill for partial periods. (issue 333)
+	* Bug Fix: Framework grouped structure bug
+	* Bug Fix: generic_usage, license service types usage field broken (issue 281)
+	* Bug Fix: If an email address doesn't exist for a customer, don't generate one.
+	* Bug Fix: Implemented support for accurate usage notifications on short and long billing periods. (issue 320)
+	* Bug Fix: Improved 100% internet usage check
+	* Bug Fix: Incorrect error handling for traffic modes
+	* Bug Fix - Incorrectly ignoring the final DDI with ranges when billing. Bug found by Junewon Park.
+	* Bug Fix: Invalid reference to table_highlight_green CSS attribute replaced with table_highlight_open
+	* Bug Fix: Missing helpmessage javascript and CSS logic
+	* Bug Fix: mistake in date shift function logic
+	* Bug Fix: No invoice generated field, use send date (issue 180)
+	* Bug Fix: Orders invoices are still emailed when ACCOUNTS_INVOICE_AUTOEMAIL is disabled. (issue 326)
+	* Bug Fix: Removed left over console message
+	* Bug Fix: Removed obsolete search keyword terms
+	* Bug Fix: Resellers logic sometimes causes invalid errors due to no reseller ID provided when not needed.
+	* Bug Fix: Resolution of debugging issue where page becomes overly wide on chrome. (issue 275)
+	* Bug Fix: Resolved issue caused by new "active" field in joined tables.
+	* Bug Fix: Resolved issue with invoice wrapping failing on newlines in invoice descriptions. (issue 306)
+	* Bug Fix: Resolved issue with overdue notifications being applied to non-overdue invoices. UI now correctly shows invoices 1+ days overdue. (issue 221)
+	* Bug Fix: Service IPv4 and DDI information will now be deleted when the service is deleted from the customer. (issue 180)
+	* Bug Fix to correctly bill yearly services with month-based billing yearly, rather than monthly (issue 333)
+	* Bug Fix: UI improvement, no longer display 0 as the default for a generic_with_usage service. (issue 321)
+	* Bug Fix: unable to enable/disable service units.
+	* Bug Fix: Various fixes for E_NOTICE handling. (issue 279)
+	* Bug Fix: When generating batch invoices from the cron process, only the first invoice would succeed, subsequent invoices would be unable to load the template file due to being stuck in /tmp directory.
+	* Bug Fix: When generating multiple invoices in an automated process, the includes can cause functional breakage - replaced with include once and surpressed errors
+
+
 2010-06-28 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 1.5.0_beta_1
