@@ -1,6 +1,24 @@
 This directory contains policies for SELinux for various distributions.
 
-You can generate modules by running:
-$ checkmodule -M -m -o amberdmsbs.mod amberdmsbs.te
-$ semodule_package -o amberdmsbs.pp -m amberdmsbs.mod
+
+To generate the rules required for ABS to perform auctions, set SELinux to permissive mode
+and execute all key functions of ABS that require anything other than standard PHP/MySQL.
+
+Then take the logs from /var/log/audit/audit.log and pass into audit2allow:
+cat capturedlog | audit2allow -m amberdmsbs > amberdmsbs.te
+
+This will work 99% of the time, however sometimes some manual adjustments are needed
+to the setup.
+
+
+You can generate the installable & packagable SELinux modules by running:
+# checkmodule -M -m -o amberdmsbs.mod amberdmsbs.te
+# semodule_package -o amberdmsbs.pp -m amberdmsbs.mod
+
+Once generated, modules can be installed/upgraded with:
+# semodule -i amberdmsbs.pp
+
+If you need to remove the SELinux policies, use:
+# semodule -r amberdmsbs
+
 
