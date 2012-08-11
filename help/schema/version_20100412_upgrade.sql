@@ -27,7 +27,7 @@ INSERT INTO `service_types` (`id`, `name`, `description`) VALUES ('9', 'phone_to
 
 INSERT INTO `service_groups` (`id`, `group_name`, `group_description`) VALUES ('1', 'General Services', '');
 
-ALTER TABLE `services` ADD `id_service_group` INT NOT NULL AFTER `id_rate_table`; 
+ALTER TABLE `services` ADD `id_service_group` INT NOT NULL AFTER `id_rate_table`;
 
 
 INSERT INTO `language` (`id`, `language`, `label`, `translation`) VALUES(NULL, 'en_us', 'menu_services_groups', 'Manage Service Groups');
