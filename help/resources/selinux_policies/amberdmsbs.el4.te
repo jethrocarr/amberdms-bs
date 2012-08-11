@@ -1,0 +1,23 @@
+Unfortunately the version of SELinux shipped with RHEL 4 doesn't support
+loadable policy modules, however if you require SELinux support, you can make
+adjustments to the policies yourself by running the following commands:
+
+
+yum install -y selinux-policy-targeted-sources
+
+cat > /etc/selinux/targeted/src/policy/domains/misc/amberdms_billing_system.te << "EOF"
+
+# Allow apache to access tetex fonts and binaries, this is required
+# to allow the Amberdms Billing System to run.
+
+allow httpd_sys_script_t tetex_data_t:dir { getattr read search write };
+allow httpd_sys_script_t tetex_data_t:file { getattr read };
+allow httpd_sys_script_t tmp_t:file getattr;
+allow httpd_sys_script_t var_lib_t:dir getattr;
+allow httpd_sys_script_t var_t:dir getattr;
+
+EOF
+
+cd /etc/selinux/targeted/src/policy
+make load
+

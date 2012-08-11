@@ -1,0 +1,3 @@
+EL6 does not require the installation of policies, just the execution of:
+# setsebool -P httpd_execmem 1
+
