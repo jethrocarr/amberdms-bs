@@ -1099,6 +1099,44 @@ class template_engine_htmltopdf extends template_engine
 			log_debug("template_engine_htmltopdf", "wkhtmltopdf: $line");
 		}
 
+		if (in_array("wkhtmltopdf: cannot connect to X server", $output))
+		{
+			log_debug("template_engine_htmltopdf", "Known fault on older systems, unable to run wkhtmltopdf without X server instance");
+
+			/*
+				On older distribution versions of wkhtmltopdf, the shipped version of wkhtmltopdf/QT doesn't
+				work without a running X server.
+
+				This was fixed by patching both QT and wkhtmltopdf in later releases, however most distributions
+				don't appear to go to the extend of shipping this patched QT version. On RHEL platforms (as of RHEL 4/5/6), there is
+				no wkhtmltopdf, so we just ship a good package, on Ubuntu (as of 10.04 lts) where is the more limited package
+				we execute a wrapper script which runs a short lived Xorg session in a virtual framebuffer.
+
+				It's not perfect, in testing the PDFs are rendering nicely, apart from the page size being incorrect, regardless what paramaters
+				are passed to it - hence, we give the user a notification warning, so they know why the invoices are weird and how to fix it.
+
+				If we have numerious problems with a popular platform, then it will be worth Amberdms building packages for that platform, but
+				it's not a small effort.
+
+				TODO: Maybe we should have an external/natives/ static binary directory for some key essentials for common architectures?
+			*/
+
+			$install_directory	= dirname( __FILE__ );
+			$legacy_wrapper_cmd	= "$install_directory/../../external/legacy/wkhtmltopdf_x11wrap.sh $tmp_filename.html $tmp_filename.pdf 2>&1";
+
+			log_debug("template_engine_htmltopdf", "Executing $legacy_wrapper_cmd");
+
+			$output = array();
+			exec($legacy_wrapper_cmd, $output);
+	
+			foreach ($output as $line)
+			{
+				log_debug("template_engine_htmltopdf", "wkhtmltopdf (legacy wrapper): $line");
+			}
+
+			log_write("notification", "template_engine_htmltopdf", "Warning: Your server has a older/limited version of wkhtmltopdf installed, this can cause some performance and page-size rendering issues. If these cause you major issues, consider obtaining the static binary version and adjusting the configured executable path. A static version can be found on the wkhtmltopdf developer's website at http://code.google.com/p/wkhtmltopdf/downloads/list ");
+		}
+
 
 
 		/*
