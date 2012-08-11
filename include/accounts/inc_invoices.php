@@ -1001,7 +1001,7 @@ class invoice
 		switch($template_data['template_type']) 
 		{
 			case $this->type .'_invoice_htmltopdf':
-				$this->obj_pdf =& New template_engine_htmltopdf;
+				$this->obj_pdf = New template_engine_htmltopdf;
 				$template_file = $template_data['template_file']."/index.html";
 				
 				if (is_dir("../../{$template_data['template_file']}"))
@@ -1016,7 +1016,7 @@ class invoice
 			
 			case $this->type .'_invoice_tex':
 			default:
-				$this->obj_pdf =& New template_engine_latex;
+				$this->obj_pdf = New template_engine_latex;
 				$template_file = $template_data['template_file'].".tex";
 			break;
 		
