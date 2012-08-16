@@ -1371,6 +1371,32 @@ class customer_services extends customer
 		$sql_obj->trans_begin();
 
 
+		/*
+			Do any existing periods exist for this service? If so, we need to fetch the last date of these services
+			and increment them in order to set the next period date.
+
+			If we don't do this, it will lead to a situation where a service can be active with periods, then disabled
+			and re-enabled, with the next period date being reset. The next billing run would then see the blank period
+			date and end up re-creating and re-billing existing periods, which is naturally undesired....
+		*/
+
+		$sql_obj		= New sql_query;
+		$sql_obj->string	= "SELECT date_end FROM `services_customers_periods` WHERE id_service_customer='". $this->id_service_customer ."' ORDER BY date_start DESC LIMIT 1";
+		$sql_obj->execute();
+
+		if ($sql_obj->num_rows())
+		{
+			$sql_obj->fetch_array();
+
+			// get the date of the last period + 1 day, to calculate the next period date of the re-enabled service
+			$date_period_next	= $sql_obj->data[0]["date_end"];
+			$data_period_next	= sql_get_singlevalue("SELECT DATE_ADD('$date_period_next', INTERVAL 1 DAY) as value");
+		}
+		else
+		{
+			// no next period date, leave blank.
+			$date_period_next	= "0000-00-00";
+		}
 
 
 		/*
@@ -1403,7 +1429,7 @@ class customer_services extends customer
 
 					// activate service
 					$sql_obj		= New sql_query;
-					$sql_obj->string	= "UPDATE services_customers SET active='1' WHERE id='". $data_component["id"] ."' LIMIT 1";
+					$sql_obj->string	= "UPDATE services_customers SET active='1', date_period_next='$date_period_next' WHERE id='". $data_component["id"] ."' LIMIT 1";
 		
 					if (!$sql_obj->execute())
 					{
@@ -1429,7 +1455,7 @@ class customer_services extends customer
 		*/
 
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "UPDATE services_customers SET active='1' WHERE id='". $this->id_service_customer ."' LIMIT 1";
+		$sql_obj->string	= "UPDATE services_customers SET active='1', date_period_next='$date_period_next' WHERE id='". $this->id_service_customer ."' LIMIT 1";
 		
 		if (!$sql_obj->execute())
 		{
