@@ -1839,7 +1839,8 @@ class service_usage_cdr extends service_usage
 				{
 					log_write("debug", "service_usage_cdr", "Billing for tollfree service on $ddi");
 
-					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, src, dst FROM cdr WHERE disposition='ANSWERED' AND dst='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
+					// NOTE! for toll-free services, we reverse src and dst for reverse billing calculations
+					$obj_cdr_db_sql->string		= "SELECT calldate, billsec, dst as src, src as dst FROM cdr WHERE disposition='ANSWERED' AND dst='$ddi' AND calldate >= '$date_start' AND calldate < '$date_end'";
 					$obj_cdr_db_sql->execute();
 				}
 				else
