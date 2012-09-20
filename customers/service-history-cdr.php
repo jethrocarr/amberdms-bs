@@ -137,7 +137,7 @@ class page_output
 		$this->obj_table->add_column("standard", "number_src", "usage1");
 		$this->obj_table->add_column("standard", "number_dst", "usage2");
 		$this->obj_table->add_column("standard", "billable_seconds", "usage3");
-		$this->obj_table->add_column("money", "price", "");
+		$this->obj_table->add_column("money_float", "price", "");
 
 		// defaults
 		$this->obj_table->columns		= array("date", "rate_billgroup", "number_src", "number_dst", "billable_seconds", "price");
