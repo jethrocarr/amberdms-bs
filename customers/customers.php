@@ -127,9 +127,9 @@ class page_output
 				FROM account_ar AS ar 
 				WHERE 1 GROUP BY ar.customerid
 				UNION
-				SELECT arc.customerid, sum(arc.amount_total) as bal
-				FROM account_ar_credit AS arc
-				WHERE 1 GROUP BY arc.customerid
+ 				SELECT arc.id_customer AS customerid, - sum(arc.amount_total) as bal
+ 				FROM customers_credits AS arc
+ 				WHERE 1 GROUP BY arc.id_customer
 				) as tbl GROUP by customerid";
 
 			$obj_balance_owed_sql->execute();
