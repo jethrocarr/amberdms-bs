@@ -58,6 +58,9 @@ class page_output
 		$this->obj_table_list->add_column("money", "service_price_yearly", "NONE");
 		$this->obj_table_list->add_column("money", "balance_owed", "NONE");
 
+		// totals
+		$this->obj_table_list->total_columns = array("balance_owed");
+
 		// defaults
 		$this->obj_table_list->columns			= array("code_customer", "name_customer", "name_contact", "contact_phone", "contact_email");
 		$this->obj_table_list->columns_order		= array("name_customer");
@@ -477,6 +480,39 @@ class page_output
 					print "</td>";
 				print "</tr>";
 			}
+
+			// display totals for columns
+			if (isset($this->obj_table_list->total_columns))
+			{
+				print "<tr>\n";
+
+				foreach ($this->obj_table_list->columns as $column)
+				{
+					print "\t<td class=\"footer\">";
+
+					if (in_array($column, $this->obj_table_list->total_columns))
+					{
+						print "<b>". $this->obj_table_list->data_render["total"][$column] ."</b>";
+					}
+					else
+					{
+						print "&nbsp;";
+					}
+
+					print "</td>\n";
+				}
+
+				// optional: totals for rows
+				if (isset($this->obj_table_list->total_rows))
+				{
+					print "\t<td class=\"footer\"><b>". @$this->obj_table_list->data_render["total"]["total"] ."</b></td>\n";
+				}
+
+				print "\t<td class=\"footer\">&nbsp;</td>\n";
+				print "</tr>\n";
+
+			}
+
 			print "</table>";
 			print "<br />";
 
