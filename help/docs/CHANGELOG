@@ -1,5 +1,21 @@
 CHANGELOG
 
+2013-06-09 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 2.0.0
+	* (Formally 1.5.0 - version bumped to reflect vast amount of changes)
+
+	New Functionality
+	* Improved UX of CDR service history.
+	* Added customer balance total option to customers page
+
+	Bug Fixes
+	* Bug Fix: Minor packaging fixes and adjustments
+	* Bug Fix: Workaround for dealing with OSes shipping poor wkhtmltopdf versions.
+	* Bug Fix: Disabling & re-enabling a service caused duplicate periods bug
+	* Bug Fix: Resolved issues where CDR call charges were billed in the incorrect order
+	* Bug Fix: Fixed calculation of customer balance. Was previously not taking into account credit note refund/payments. 
+
 
 2012-08-11 Jethro Carr <jethro.carr@amberdms.com>
 	
