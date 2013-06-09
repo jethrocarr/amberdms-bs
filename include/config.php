@@ -56,6 +56,14 @@ else
 */
 include("config-settings.php");
 
+/*
+	Silence warnings to avoid unexpected errors appearing on newer PHP versions
+	than what the developers tested with - but turn on for devs
+*/
+if (empty($_SESSION["user"]["debug"]))
+{
+	ini_set("display_errors", 0);
+}
 
 
 /*
