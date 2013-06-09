@@ -40,7 +40,7 @@ else
 		function render_html()
 		{
 			print "<h3>OVERVIEW</h3>";
-			print "<p>Welcome to the Amberdms Billing System, a powerful, fully <a target=\"new\" href=\"http://www.amberdms.com/opensource\">open source</a> web-based application providing accounting, invoicing, service management and time management functions.</p>";
+			print "<p>Welcome to the Amberdms Billing System, a powerful, fully open source web-based application providing accounting, invoicing, service management and time management functions.</p>";
 
 
 			format_msgbox("open", "<p>To get started, use the menu above or download the product manuals (including a detailed user guide) using the buttons below.</p>");
@@ -56,7 +56,6 @@ else
 
 			/*
 				COMMERCIAL SUPPORT PACKAGES
-			*/
 			
 			print "<br><br>";
 
@@ -108,6 +107,7 @@ else
 
 				break;
 			}
+			*/
 
 
 
@@ -115,9 +115,9 @@ else
 				Community Mailing List
 			*/
 			print "<br><br>";
-			print "<h3>COMMUNITY MAILING LIST</h3>";
+			print "<h3>COMMUNITY SUPPORT</h3>";
 
-			print "<p>You may also be able to get support and discuss the Amberdms Billing System on the community mailing lists:</p>";
+			print "<p>A good way to get support is on the community mailing list from the developers of the Amberdms Billing System, as well as other fellow users and contributors. You can also <a href=\"https://projects.jethrocarr.com/p/oss-amberdms-bs/issues/\">file bug reports against the public issue tracker here</a> if you believe the issue is a software bug.</p>";
 
 			print "<table cellpadding=\"5\">";
 			print "<tr>";
@@ -130,13 +130,19 @@ else
 				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/mailman/listinfo/amberdms-bs-devel\">Sign Up</a></td>";
 				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/pipermail/amberdms-bs-devel/\">Archives</a></td>";
 			print "</tr>";
+      			print "<tr>";
+				print "<td><b>Public Issue Tracker</b></td>";
+				print "<td colspan=\"2\"><a target=\"new\" class=\"button\" href=\"https://projects.jethrocarr.com/p/oss-amberdms-bs/issues/\">View Issues</a></td>";
+			print "</tr>";
+
+
 			print "</table>";
+
 
 						
 
 			/*
 				Customisations
-			*/
 			print "<br><br><br>";
 			print "<h3>CUSTOMISATIONS</h3>";
 
@@ -145,6 +151,8 @@ else
 				and we can give you competitive quotes and service from the developers who designed and wrote this program.</p>";
 
 			print "<a target=\"new\" class=\"button\" href=\"http://www.amberdms.com/contact\">Contact Amberdms</a><br>";
+
+			*/
 
 
 
@@ -158,7 +166,14 @@ else
 				the <a target=\"new\" href=\"help/docs/COPYING\">GNU AGPL software license</a> - this means anyone can download the source
 				code for this program and make modifications or run it on your own servers. The AGPL also requires that anyone running the Amberdms
 				Billing System provides a download for any changes that they have made to the software.</p>";
-	
+
+			print "<p>Contributions of all kinds (features, bug fixes, documentation and more) are welcome - please open an issue in our tracker along with a patch, or email the developers mailing list with your patch and details.</p>";
+
+			print "<p><a class=\"button\" href=\"https://projects.jethrocarr.com/p/oss-amberdms-bs/\">Open Source Project Homepage</a></p>";
+
+
+
+/*	
 			switch ($subscription_support)
 			{
 				case "hosted":
@@ -175,16 +190,10 @@ else
 				case "enterprise":
 				case "opensource":
 				default:
-					print "<p>There are two options for downloading the source code provided - you can either download the offical source code from the Amberdms website, or you
-						can download a diff of the changes made to the Amberdms Billing System (if any).</p>";
 
-					print "<p>";
-						print "<a class=\"button\" href=\"index.php?page=source/getsource.php\">Download Source Code</a> ";
-						print "<a class=\"button\" href=\"index.php?page=admin/db_backup.php\">Export Database</a> ";
-					print "</p>";
 				break;
 			}
-
+*/
 		}
 	}
 }

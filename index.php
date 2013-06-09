@@ -385,11 +385,11 @@ if (!preg_match('/^user/', $page))
 	<table id="footer_table_inner">
 	<tr>
 		<td id="footer_copyright">
-		<p id="footer_copyright_text">(c) Copyright 2013 <a href="http://www.amberdms.com">Amberdms Ltd</a>.</p>
+		<p id="footer_copyright_text">This software is Open Source <a href="https://projects.jethrocarr.com/p/oss-amberdms-bs/">(contribute!)</a></p>
 		</td>
 
 		<td id="footer_version">
-		<p id="footer_version_text">Version <?php print $GLOBALS["config"]["app_version"]; ?></p>
+		<p id="footer_version_text">(c) Copyright 2013 <a href="http://www.amberdms.com">Amberdms Ltd</a> // Version <?php print $GLOBALS["config"]["app_version"]; ?></p>
 		</td>
 	</tr>
 	</table>
