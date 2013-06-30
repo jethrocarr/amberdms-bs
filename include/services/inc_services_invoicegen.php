@@ -809,7 +809,6 @@ function service_invoices_generate($customerid = NULL)
 								."services_customers.date_period_next, "
 								."services_customers.date_period_last, "
 								."services_customers.id as id_service_customer, "
-								."services_customers.quantity, "
 								."services_customers.serviceid "
 								."FROM services_customers_periods "
 								."LEFT JOIN services_customers ON services_customers.id = services_customers_periods.id_service_customer "
@@ -1533,10 +1532,10 @@ function service_invoices_generate($customerid = NULL)
 								*/
 
 								// charge for any extra licenses
-								if ($period_data["quantity"] > $obj_service->data["included_units"])
+								if ($obj_service->data["quantity"] > $obj_service->data["included_units"])
 								{
 									// there is excess usage that we can bill for.
-									$licenses_excess = $period_data["quantity"] - $obj_service->data["included_units"];
+									$licenses_excess = $obj_service->data["quantity"] - $obj_service->data["included_units"];
 
 
 									// set item attributes

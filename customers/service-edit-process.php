@@ -430,6 +430,7 @@ if (user_permissions_get('customers_write'))
 
 			$obj_customer->obj_service->data["price"]		= $data["price"];
 			$obj_customer->obj_service->data["discount"]		= $data["discount"];
+			$obj_customer->obj_service->data["quantity"]		= $data["quantity"];
 
 			$obj_customer->obj_service->data["price_setup"]		= $data["price_setup"];
 			$obj_customer->obj_service->data["discount_setup"]	= $data["discount_setup"];

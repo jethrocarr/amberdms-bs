@@ -399,7 +399,7 @@ class page_output
 				break;
 
 
-				case "license":
+				case "licenses":
 
 					$structure = NULL;
 					$structure["fieldname"] 	= "quantity_msg";
@@ -1008,7 +1008,7 @@ class page_output
 			}
 
 			// fetch DB data
-			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, date_period_last, quantity FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
+			$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, date_period_last FROM `services_customers` WHERE id='". $this->obj_customer->id_service_customer ."' LIMIT 1";
 			$this->obj_form->load_data();
 
 

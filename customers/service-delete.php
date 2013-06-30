@@ -177,7 +177,7 @@ class page_output
 
 
 		// fetch DB data
-		$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next, quantity FROM `services_customers` WHERE id='". $this->obj_service->option_type_id."' LIMIT 1";
+		$this->obj_form->sql_query = "SELECT active, date_period_first, date_period_next FROM `services_customers` WHERE id='". $this->obj_service->option_type_id."' LIMIT 1";
 		$this->obj_form->load_data();
 
 		// fetch service item data
