@@ -80,6 +80,11 @@ else
 }
 
 
+// Disable SQL modes for this session to ensure backwards compat with
+// newer MySQL version (> 5.6) using STRICT modes.
+
+mysql_query("SET SESSION sql_mode=''", $link);
+
 
 /*
 	Bootstrap Framework
