@@ -1,0 +1,2 @@
+RewriteEngine on
+RewriteRule ^(.*\.wsdl)$ wsdl_filter.php?wsdl=$1

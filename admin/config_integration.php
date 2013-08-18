@@ -41,13 +41,19 @@ class page_output
 
 
 		// customer portal stuff
-		$structure = NULL;
-		$structure["fieldname"]				= "MODULE_CUSTOMER_PORTAL";
-		$structure["type"]				= "checkbox";
-		$structure["options"]["no_translate_fieldname"]	= "yes";
-		$structure["options"]["label"]			= "Enable/disable the customer portal integration.";
-		$this->obj_form->add_input($structure);
-				
+        $structure = NULL;
+        $structure["fieldname"] = "MODULE_CUSTOMER_PORTAL";
+        $structure["type"] = "checkbox";
+        $structure["options"]["no_translate_fieldname"] = "yes";
+        $structure["options"]["label"] = "Enable/disable the customer portal integration.";
+        $this->obj_form->add_input($structure);
+
+        $structure = NULL;
+        $structure["fieldname"] = "CUSTOMER_PORTAL_CONTACT_LOGIN";
+        $structure["type"] = "checkbox";
+        $structure["options"]["no_translate_fieldname"] = "yes";
+        $structure["options"]["label"] = "Allow customer contacts to login rather than customers themselves.";
+        $this->obj_form->add_input($structure);
 
 		// submit section
 		$structure = NULL;
@@ -58,8 +64,8 @@ class page_output
 		
 		
 		// define subforms
-		$this->obj_form->subforms["config_integration"]		= array("MODULE_CUSTOMER_PORTAL");
-		$this->obj_form->subforms["submit"]			= array("submit");
+		$this->obj_form->subforms["config_integration"] = array("MODULE_CUSTOMER_PORTAL", "CUSTOMER_PORTAL_CONTACT_LOGIN");
+		$this->obj_form->subforms["submit"] = array("submit");
 
 		if (error_check())
 		{

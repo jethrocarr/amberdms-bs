@@ -19,18 +19,19 @@ if (user_permissions_get("admin"))
 		Load Data
 	*/
 
-	$data["MODULE_CUSTOMER_PORTAL"]			= @security_form_input_predefined("checkbox", "MODULE_CUSTOMER_PORTAL", 0, "");
-
-
-	if ($data["MODULE_CUSTOMER_PORTAL"])
-	{
-		$data["MODULE_CUSTOMER_PORTAL"]		= "enabled";
-	}
-	else
-	{
-		$data["MODULE_CUSTOMER_PORTAL"]		= "disabled";
+	$data["MODULE_CUSTOMER_PORTAL"] = @security_form_input_predefined("checkbox", "MODULE_CUSTOMER_PORTAL", 0, "");
+	if($data["MODULE_CUSTOMER_PORTAL"]) {
+		$data["MODULE_CUSTOMER_PORTAL"] = "enabled";
+	} else {
+		$data["MODULE_CUSTOMER_PORTAL"] = "disabled";
 	}
 
+    $data["CUSTOMER_PORTAL_CONTACT_LOGIN"] = @security_form_input_predefined("checkbox", "CUSTOMER_PORTAL_CONTACT_LOGIN", 0, "");
+    if($data["CUSTOMER_PORTAL_CONTACT_LOGIN"]) {
+        $data["CUSTOMER_PORTAL_CONTACT_LOGIN"] = "enabled";
+    } else {
+        $data["CUSTOMER_PORTAL_CONTACT_LOGIN"] = "disabled";
+    }
 
 	/*
 		Process Errors

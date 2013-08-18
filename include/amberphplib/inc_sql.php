@@ -288,7 +288,7 @@ class sql_query
 		// execute query
 		if (!$this->db_resource = mysql_query($this->string, $this->db_link))
 		{
-			log_write("error", "sql_query", $trans . "Problem executing SQL query - ". mysql_error($this->db_link));
+			log_write("error", "sql_query", $trans . "Problem executing SQL query <code>".$this->string."</code>: ". mysql_error($this->db_link));
 			return 0;
 		}
 		else

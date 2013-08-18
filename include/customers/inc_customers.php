@@ -639,7 +639,6 @@ class customer
 	{
 		log_debug("inc_customers", "Executing action_update_contact($index)");
 
-
 		$sql_obj = New sql_query;
 	
 		$sql_obj->string	= "UPDATE customer_contacts SET
@@ -648,6 +647,12 @@ class customer
 						role = '" .$this->data["contacts"][$index]["role"]. "'
 						WHERE id = '" .$this->data["contacts"][$index]["contact_id"]. "'";		
 		$sql_obj->execute();
+
+        //update passwords if neccessary
+        if(!empty($this->data["contacts"][$index]["password"]) &&
+            $this->data["contacts"][$index]["password"] == $this->data["contacts"][$index]["password_confirm"]) {
+
+        }
 		
 		//create records
 		for ($i=0; $i<$this->data["contacts"][$index]["num_records"]; $i++)
@@ -2657,88 +2662,119 @@ class customer_portal extends customer
 	{
 		log_write("debug", "customer_portal", "Executing auth_login(*plaintextpassword*)");
 
-
 		// fetch the password & salt from DB
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT portal_salt, portal_password FROM customers WHERE id='". $this->id ."' LIMIT 1";
+		$sql_obj = New sql_query;
+		$sql_obj->string = "SELECT portal_password FROM customers WHERE id='".$this->id."' LIMIT 1";
 		$sql_obj->execute();
 		$sql_obj->fetch_array();
 
-		// general encrypted PWD from DB salt and supplied password
-		$password_crypt = sha1( $sql_obj->data[0]["portal_salt"]  ."$password_plaintext");
-
 		// verify
-		if ($sql_obj->data[0]["portal_password"] == $password_crypt)
-		{
+		if(password_verify($password_plaintext, $sql_obj->data[0]["portal_password"])) {
 			log_write("debug", "customer_portal", "Successful Authentication");
 
 			// update DB with session login information
-			$sql_obj		= New sql_query;
-			$sql_obj->string	= "UPDATE `customers` SET portal_login_time='". time() ."', portal_login_ipaddress='". $_SERVER["REMOTE_ADDR"] ."' WHERE id='". $this->id ."' LIMIT 1";
+			$sql_obj = New sql_query;
+			$sql_obj->string = "UPDATE `customers` SET portal_login_time='".time()."', portal_login_ipaddress='".$_SERVER["REMOTE_ADDR"]."' WHERE id='".$this->id."' LIMIT 1";
 			$sql_obj->execute();
 
 			return 1;
-		}
-		else
-		{
+		} else {
 			log_write("debug", "customer_portal", "Authentication Failure");
 			return 0;
 		}
 	} // end of auth_login
 
-
-
 	/*
-		auth_changepwd
+        auth_changepwd
 
-		Updates the customer's portal password entry in the database with the provided plaintext
-		passpharase.
+        Updates the customer's portal password entry in the database with the provided plaintext
+        passpharase.
 
-		Returns
-		0	Unexpected failure
-		1	Success
-	*/
-	function auth_changepwd($password_plaintext)
-	{
-		log_write("debug", "customer_portal", "Executing auth_changepwd(*plaintextpassword*)");
+        Returns
+        0   Unexpected failure
+        1   Success
+    */
+    function auth_changepwd($password_plaintext)
+    {
+        log_write("debug", "customer_portal", "Executing auth_changepwd(*plaintextpassword*)");
 
+        // encrypt password with random salt
+        $password_crypt = password_hash($password_plaintext, PASSWORD_DEFAULT);
 
-		// Here we generate a password salt. This is used, so that in the event of an attacker
-		// getting a copy of the users table, they can't brute force the passwords using pre-created
-		// hash dictionaries.
-		//
-		// The salt requires them to have to re-calculate each password possibility for any passowrd
-		// they wish to try and break.
-		//
-		$feed		= "0123456789abcdefghijklmnopqrstuvwxyz";
-		$password_salt	= null;
+        // apply changes to DB.
+        $sql_obj = New sql_query;
+        $sql_obj->string = "UPDATE `customers` SET portal_password='".$password_crypt."', portal_salt='' WHERE id='".$this->id."' LIMIT 1";
 
-		for ($i=0; $i < 20; $i++)
-		{
-			$password_salt .= substr($feed, rand(0, strlen($feed)-1), 1);
-		}				
-			
-		// encrypt password with salt
-		$password_crypt = sha1("$password_salt"."$password_plaintext");
+        if($sql_obj->execute()) {
+            log_write("notification", "customer_portal", "Successfully updated customer's portal password");
+            return 1;
+        } else {
+            log_write("error", "customer_portal", "An unexpected failure occured whilst attempting to update the selected customer's portal password");
+            return 0;
+        }
 
-		// apply changes to DB.
-		$sql_obj		= New sql_query;
-		$sql_obj->string	= "UPDATE `customers` SET portal_password='". $password_crypt ."', portal_salt='". $password_salt ."' WHERE id='". $this->id ."' LIMIT 1";
+    } // end of auth_changepwd
 
-		if ($sql_obj->execute())
-		{
-			log_write("notification", "customer_portal", "Successfully updated customer's portal password");
-			return 1;
-		}
-		else
-		{
-			log_write("error", "customer_portal", "An unexpected failure occured whilst attempting to update the selected customer's portal password");
-			return 0;
-		}
+    /*
+        auth_contact_login($imdex, $password_plaintext)
 
-	} // end of auth_changepwd
+        Returns
+        0   Failure to Authentication // Invalid Password
+        1   Successful Authentication
+    */
+    function auth_contact_login($index, $password_plaintext)
+    {
+        log_write("debug", "customer_portal", "Executing auth_contact_login($index, *plaintextpassword*)");
 
+        // fetch the password & salt from DB
+        $sql_obj = New sql_query;
+        $sql_obj->string = "SELECT portal_password FROM customer_contacts WHERE id='".$this->data["contacts"][$index]["contact_id"]."' LIMIT 1";
+        $sql_obj->execute();
+        $sql_obj->fetch_array();
 
+        // verify
+        if(password_verify($password_plaintext, $sql_obj->data[0]["portal_password"])) {
+            log_write("debug", "customer_portal", "Successful Authentication");
+
+            // update DB with session login information
+            $sql_obj = New sql_query;
+            $sql_obj->string = "UPDATE `customer_contacts` SET portal_login_time='".time()."', portal_login_ipaddress='".$_SERVER["REMOTE_ADDR"]."' WHERE id='".$this->data["contacts"][$index]["contact_id"]."' LIMIT 1";
+            $sql_obj->execute();
+
+            return 1;
+        } else {
+            log_write("debug", "customer_portal", "Authentication Failure");
+            return 0;
+        }
+    } // end of auth_contact_login
+
+    /*
+        auth_contact_changepwd
+
+        Returns
+        0   Unexpected failure
+        1   Success
+    */
+    function auth_contact_changepwd($index, $password_plaintext)
+    {
+        log_write("debug", "customer_portal", "Executing auth_contact_changepwd($index, *plaintextpassword*)");
+
+        // encrypt password with random salt
+        $password_crypt = password_hash($password_plaintext, PASSWORD_DEFAULT);
+
+        // apply changes to DB.
+        $sql_obj = New sql_query;
+        $sql_obj->string = "UPDATE `customer_contacts` SET portal_password='".$password_crypt."', portal_salt='' WHERE id='".$this->data["contacts"][$index]["contact_id"]."' LIMIT 1";
+
+        if($sql_obj->execute()) {
+            log_write("notification", "customer_portal", "Successfully updated customer contact's portal password");
+            return 1;
+        } else {
+            log_write("error", "customer_portal", "An unexpected failure occured whilst attempting to update the selected customer contact's portal password");
+            return 0;
+        }
+
+    } // end of auth_contact_changepwd
 
 } // end of customer_portal
 

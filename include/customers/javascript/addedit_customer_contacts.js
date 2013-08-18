@@ -138,6 +138,9 @@ $(document).ready(function()
 			$("label[for='description_" + id + "']").parent("span").show();
 			$("select[name='role_" + id + "']").show();
 			$("label[for='role_" + id + "']").parent("span").show();
+            $("input[name='password_" + id + "']").show();
+            $("input[name='password_confirm_" + id + "']").show();
+            $("label[for='password_" + id + "']").parent("span").show();
 			$("input[name='change_contact_" + id + "']").val("open");
 			$("#change_contact_" + id).text("done");
 		}
@@ -155,6 +158,9 @@ $(document).ready(function()
 			$("textarea[name='description_" + id + "']").hide();
 			$("label[for='role_" + id + "']").parent("span").hide();
 			$("select[name='role_" + id + "']").hide();
+            $("input[name='password_" + id + "']").hide();
+            $("input[name='password_confirm_" + id + "']").hide();
+            $("label[for='password_" + id + "']").parent("span").hide();
 			$("label[for='description_" + id + "']").parent("span").hide();
 			$("input[name='change_contact_" + id + "']").val("closed");
 			$("#change_contact_" + id).text("change...");
@@ -255,8 +261,15 @@ $(document).ready(function()
 								"<br /><label for=\"role_" + c_id + "\">Role: </label><br />" +
 							"</span>" +
 							"<select class=\"hidden_form_field\" style=\"width: 205px;\" name=\"role_" + c_id + "\">" +
-								"<option value=\"other\" selected=\"\">other</option>" +
+								"<option value=\"accounts\">Accounts</option>" +
+                                "<option value=\"other\" selected>other</option>" +
+                                "<option value=\"disabled\">disabled</option>" +
 							"</select>" +
+                            "<span class=\"hidden_text\" style=\"display: inline;\">" +
+                                "<label for=\"password_" + c_id + "\">Password:</label><br>" +
+                            "</span>" +
+                            "<input class=\"hidden_form_field\" type=\"password\" style=\"width: 91px; display: inline;\" name=\"password_" + c_id + "\">&nbsp;&nbsp;" +
+                            "<input class=\"hidden_form_field\" type=\"password\" style=\"width: 91px; display: inline;\" name=\"password_confirm_" + c_id + "\">" +
 							"<input type=\"hidden\" value=\"0\" name=\"num_records_" + c_id + "\">" +
 							"<div id=\"contact_text_" + c_id + "\">" +
 								"<b>&nbsp;</b>" +
