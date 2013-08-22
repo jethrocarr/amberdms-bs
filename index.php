@@ -36,8 +36,8 @@ log_debug("index", "Starting index.php");
 */
 if (!$_SERVER["HTTPS"])
 {
-	header("Location: https://". $_SERVER["SERVER_NAME"] ."/".  $_SERVER['PHP_SELF'] );
-	exit(0);
+	//header("Location: https://". $_SERVER["SERVER_NAME"] ."/".  $_SERVER['PHP_SELF'] );
+	//exit(0);
 }
 
 

@@ -1,11 +1,10 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <definitions name="accounts_invoices_manage"
 	targetNamespace="http://www.amberdms.com/billing_system/api/accounts/invoices_manage.wsdl"
 	xmlns="http://schemas.xmlsoap.org/wsdl/"
 	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
 	xmlns:tns="http://www.amberdms.com/billing_system/api/accounts/invoices_manage.wsdl"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
 
 	<types>
 		<schema xmlns="http://www.w3.org/2001/XMLSchema"
@@ -28,7 +27,6 @@
 					<element name="status" type="xsd:string"/>
 				</all>
 			</complexType>
-
 
 			<complexType name="invoice_items_list">
 				<complexContent>
@@ -53,11 +51,10 @@
 					<element name="amount" type="xsd:string"/>
 					<element name="price" type="xsd:string"/>
 					<element name="description" type="xsd:string"/>
-					<element name='taxes' type='xsd1:invoice_items_tax_list'/>
+					<element name="taxes" type="xsd1:invoice_items_tax_list"/>
 					<element name="discount" type="xsd:string"/>
 				</all>
 			</complexType>
-
 
 			<complexType name="invoice_taxes_list">
 				<complexContent>
@@ -76,8 +73,6 @@
 				</all>
 			</complexType>
 
-
-
 			<complexType name="invoice_payments_list">
 				<complexContent>
 					<restriction base="soapenc:Array">
@@ -85,7 +80,6 @@
 					</restriction>
 				</complexContent>
 			</complexType>
-
 
 			<complexType name="invoice_payments_row">
 				<all>
@@ -102,126 +96,128 @@
 		</schema>
 	</types>
 
- 	<message name='get_invoice_id_from_code_request'>
-		<part name='code_invoice' type='xsd:string'/>
-		<part name='invoicetype' type='xsd:string'/>
+ 	<message name="get_invoice_id_from_code_request">
+		<part name="code_invoice" type="xsd:string"/>
+		<part name="invoicetype" type="xsd:string"/>
 	</message>
 
- 	<message name='get_invoice_id_from_code_response'>
-		<part name='id' type='xsd:int'/>
+ 	<message name="get_invoice_id_from_code_response">
+		<part name="id" type="xsd:int"/>
 	</message>
 
+    <message name="get_invoice_details_request">
+        <part name="id" type="xsd:int"/>
+        <part name="invoicetype" type="xsd:string"/>
+    </message>
 
-	<message name='get_invoice_details_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+    <message name="get_invoice_details_response">
+        <part name="locked" type="xsd:int"/>
+        <part name="orgid" type="xsd:int"/>
+        <part name="orgid_label" type="xsd:string"/>
+        <part name="employeeid" type="xsd:int"/>
+        <part name="employeeid_label" type="xsd:string"/>
+        <part name="dest_account" type="xsd:int"/>
+        <part name="dest_account_label" type="xsd:string"/>
+        <part name="code_invoice" type="xsd:string"/>
+        <part name="code_ordernumber" type="xsd:string"/>
+        <part name="code_ponumber" type="xsd:string"/>
+        <part name="date_due" type="xsd:string"/>
+        <part name="date_trans" type="xsd:string"/>
+        <part name="date_create" type="xsd:string"/>
+        <part name="date_sent" type="xsd:string"/>
+        <part name="sentmethod" type="xsd:string"/>
+        <part name="amount_total" type="xsd:string"/>
+        <part name="amount_tax" type="xsd:string"/>
+        <part name="amount" type="xsd:string"/>
+        <part name="amount_paid" type="xsd:string"/>
+        <part name="notes" type="xsd:string"/>
+    </message>
+
+    <message name="get_invoice_pdf_request">
+        <part name="id" type="xsd:int"/>
+        <part name="invoicetype" type="xsd:string"/>
+    </message>
+
+    <message name="get_invoice_pdf_response">
+        <part name="pdf" type="xsd:string" />
+    </message>
+
+	<message name="get_invoice_items_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 	</message>
 
-	<message name='get_invoice_details_response'>
-		<part name='locked' type='xsd:int'/>
-		<part name='orgid' type='xsd:int'/>
-		<part name='orgid_label' type='xsd:string'/>
-		<part name='employeeid' type='xsd:int'/>
-		<part name='employeeid_label' type='xsd:string'/>
-		<part name='dest_account' type='xsd:int'/>
-		<part name='dest_account_label' type='xsd:string'/>
-		<part name='code_invoice' type='xsd:string'/>
-		<part name='code_ordernumber' type='xsd:string'/>
-		<part name='code_ponumber' type='xsd:string'/>
-		<part name='date_due' type='xsd:string'/>
-		<part name='date_trans' type='xsd:string'/>
-		<part name='date_create' type='xsd:string'/>
-		<part name='date_sent' type='xsd:string'/>
-		<part name='sentmethod' type='xsd:string'/>
-		<part name='amount_total' type='xsd:string'/>
-		<part name='amount_tax' type='xsd:string'/>
-		<part name='amount' type='xsd:string'/>
-		<part name='amount_paid' type='xsd:string'/>
-		<part name='notes' type='xsd:string'/>
+	<message name="get_invoice_items_response">
+		<part name="return" type="xsd1:invoice_items_list"/>
 	</message>
 
-
-	<message name='get_invoice_items_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="get_invoice_taxes_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 	</message>
 
-	<message name='get_invoice_items_response'>
-		<part name='return' type='xsd1:invoice_items_list'/>
+	<message name="get_invoice_taxes_response">
+		<part name="return" type="xsd1:invoice_taxes_list"/>
 	</message>
 
-
-	<message name='get_invoice_taxes_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="get_invoice_payments_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 	</message>
 
-	<message name='get_invoice_taxes_response'>
-		<part name='return' type='xsd1:invoice_taxes_list'/>
+	<message name="get_invoice_payments_response">
+		<part name="return" type="xsd1:invoice_payments_list"/>
 	</message>
 
-
-	<message name='get_invoice_payments_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_details_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
+		<part name="locked" type="xsd:int"/>
+		<part name="orgid" type="xsd:int"/>
+		<part name="employeeid" type="xsd:int"/>
+		<part name="dest_account" type="xsd:int"/>
+		<part name="code_invoice" type="xsd:string"/>
+		<part name="code_ordernumber" type="xsd:string"/>
+		<part name="code_ponumber" type="xsd:string"/>
+		<part name="date_due" type="xsd:string"/>
+		<part name="date_trans" type="xsd:string"/>
+		<part name="date_sent" type="xsd:string"/>
+		<part name="sentmethod" type="xsd:string"/>
+		<part name="notes" type="xsd:string"/>
 	</message>
 
-	<message name='get_invoice_payments_response'>
-		<part name='return' type='xsd1:invoice_payments_list'/>
+	<message name="set_invoice_details_response">
+		<part name="id" type="xsd:int"/>
 	</message>
 
-
-	<message name='set_invoice_details_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
-		<part name='locked' type='xsd:int'/>
-		<part name='orgid' type='xsd:int'/>
-		<part name='employeeid' type='xsd:int'/>
-		<part name='dest_account' type='xsd:int'/>
-		<part name='code_invoice' type='xsd:string'/>
-		<part name='code_ordernumber' type='xsd:string'/>
-		<part name='code_ponumber' type='xsd:string'/>
-		<part name='date_due' type='xsd:string'/>
-		<part name='date_trans' type='xsd:string'/>
-		<part name='date_sent' type='xsd:string'/>
-		<part name='sentmethod' type='xsd:string'/>
-		<part name='notes' type='xsd:string'/>
-	</message>
-
-	<message name='set_invoice_details_response'>
-		<part name='id' type='xsd:int'/>
-	</message>
-
-
-	<message name='set_invoice_item_standard_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_item_standard_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="chartid" type="xsd:int"/>
 		<part name="amount" type="xsd:string"/>
 		<part name="description" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_item_standard_response'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="set_invoice_item_standard_response">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-	<message name='set_invoice_item_standard_tax_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_item_standard_tax_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="taxid" type="xsd:int"/>
 		<part name="status" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_item_standard_tax_response'>
-		<part name='returncode' type='xsd:int'/>
+	<message name="set_invoice_item_standard_tax_response">
+		<part name="returncode" type="xsd:int"/>
 	</message>
 
-
-	<message name='set_invoice_item_product_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_item_product_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="price" type="xsd:string"/>
 		<part name="quantity" type="xsd:string"/>
@@ -231,14 +227,13 @@
 		<part name="discount" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_item_product_response'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="set_invoice_item_product_response">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-
-	<message name='set_invoice_item_time_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_item_time_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="price" type="xsd:string"/>
 		<part name="productid" type="xsd:int"/>
@@ -247,27 +242,24 @@
 		<part name="discount" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_item_time_response'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="set_invoice_item_time_response">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-
-
-	<message name='set_invoice_override_tax_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_override_tax_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="amount" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_override_tax_response'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="set_invoice_override_tax_response">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-
-	<message name='set_invoice_payment_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="set_invoice_payment_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 		<part name="itemid" type="xsd:int"/>
 		<part name="date_trans" type="xsd:string"/>
 		<part name="chartid" type="xsd:int"/>
@@ -276,268 +268,329 @@
 		<part name="description" type="xsd:string"/>
 	</message>
 
-	<message name='set_invoice_payment_response'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="set_invoice_payment_response">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-
-	<message name='delete_invoice_request'>
-		<part name='id' type='xsd:int'/>
-		<part name='invoicetype' type='xsd:string'/>
+	<message name="delete_invoice_request">
+		<part name="id" type="xsd:int"/>
+		<part name="invoicetype" type="xsd:string"/>
 	</message>
 
-	<message name='delete_invoice_response'>
-		<part name='returncode' type='xsd:int'/>
+	<message name="delete_invoice_response">
+		<part name="returncode" type="xsd:int"/>
 	</message>
 
-	<message name='delete_invoice_item_request'>
-		<part name='itemid' type='xsd:int'/>
+	<message name="delete_invoice_item_request">
+		<part name="itemid" type="xsd:int"/>
 	</message>
 
-	<message name='delete_invoice_item_response'>
-		<part name='returncode' type='xsd:int'/>
+	<message name="delete_invoice_item_response">
+		<part name="returncode" type="xsd:int"/>
 	</message>
 
+    <message name="get_credit_id_from_code_request">
+        <part name="code_credit" type="xsd:string"/>
+        <part name="creditttype" type="xsd:string"/>
+    </message>
 
+    <message name="get_credit_id_from_code_response">
+        <part name="id" type="xsd:int"/>
+    </message>
 
+    <message name="get_credit_pdf_request">
+        <part name="id" type="xsd:int"/>
+        <part name="creditttype" type="xsd:string"/>
+    </message>
 
-	<portType name='accounts_invoices_manage_porttype'>
+    <message name="get_credit_pdf_response">
+        <part name="pdf" type="xsd:string" />
+    </message>
 
-		<operation name='get_invoice_id_from_code'>
-			<input message='tns:get_invoice_id_from_code_request'/>
-			<output message='tns:get_invoice_id_from_code_response'/>
+	<portType name="accounts_invoices_manage_porttype">
+
+		<operation name="get_invoice_id_from_code">
+			<input message="tns:get_invoice_id_from_code_request"/>
+			<output message="tns:get_invoice_id_from_code_response"/>
 		</operation>
 
-		<operation name='get_invoice_details'>
-			<input message='tns:get_invoice_details_request'/>
-			<output message='tns:get_invoice_details_response'/>
+        <operation name="get_invoice_details">
+            <input message="tns:get_invoice_details_request"/>
+            <output message="tns:get_invoice_details_response"/>
+        </operation>
+
+        <operation name="get_invoice_pdf">
+            <input message="tns:get_invoice_pdf_request"/>
+            <output message="tns:get_invoice_pdf_response"/>
+        </operation>
+
+		<operation name="get_invoice_items">
+			<input message="tns:get_invoice_items_request"/>
+			<output message="tns:get_invoice_items_response"/>
 		</operation>
 
-		<operation name='get_invoice_items'>
-			<input message='tns:get_invoice_items_request'/>
-			<output message='tns:get_invoice_items_response'/>
+		<operation name="get_invoice_taxes">
+			<input message="tns:get_invoice_taxes_request"/>
+			<output message="tns:get_invoice_taxes_response"/>
 		</operation>
 
-		<operation name='get_invoice_taxes'>
-			<input message='tns:get_invoice_taxes_request'/>
-			<output message='tns:get_invoice_taxes_response'/>
+		<operation name="get_invoice_payments">
+			<input message="tns:get_invoice_payments_request"/>
+			<output message="tns:get_invoice_payments_response"/>
 		</operation>
 
-		<operation name='get_invoice_payments'>
-			<input message='tns:get_invoice_payments_request'/>
-			<output message='tns:get_invoice_payments_response'/>
+		<operation name="set_invoice_details">
+			<input message="tns:set_invoice_details_request"/>
+			<output message="tns:set_invoice_details_response"/>
 		</operation>
 
-		<operation name='set_invoice_details'>
-			<input message='tns:set_invoice_details_request'/>
-			<output message='tns:set_invoice_details_response'/>
+		<operation name="set_invoice_item_standard">
+			<input message="tns:set_invoice_item_standard_request"/>
+			<output message="tns:set_invoice_item_standard_response"/>
 		</operation>
 
-		<operation name='set_invoice_item_standard'>
-			<input message='tns:set_invoice_item_standard_request'/>
-			<output message='tns:set_invoice_item_standard_response'/>
+		<operation name="set_invoice_item_standard_tax">
+			<input message="tns:set_invoice_item_standard_tax_request"/>
+			<output message="tns:set_invoice_item_standard_tax_response"/>
 		</operation>
 
-		<operation name='set_invoice_item_standard_tax'>
-			<input message='tns:set_invoice_item_standard_tax_request'/>
-			<output message='tns:set_invoice_item_standard_tax_response'/>
+		<operation name="set_invoice_item_product">
+			<input message="tns:set_invoice_item_product_request"/>
+			<output message="tns:set_invoice_item_product_response"/>
 		</operation>
 
-		<operation name='set_invoice_item_product'>
-			<input message='tns:set_invoice_item_product_request'/>
-			<output message='tns:set_invoice_item_product_response'/>
+		<operation name="set_invoice_item_time">
+			<input message="tns:set_invoice_item_time_request"/>
+			<output message="tns:set_invoice_item_time_response"/>
 		</operation>
 
-		<operation name='set_invoice_item_time'>
-			<input message='tns:set_invoice_item_time_request'/>
-			<output message='tns:set_invoice_item_time_response'/>
+		<operation name="set_invoice_override_tax">
+			<input message="tns:set_invoice_override_tax_request"/>
+			<output message="tns:set_invoice_override_tax_response"/>
 		</operation>
 
-		<operation name='set_invoice_override_tax'>
-			<input message='tns:set_invoice_override_tax_request'/>
-			<output message='tns:set_invoice_override_tax_response'/>
+		<operation name="set_invoice_payment">
+			<input message="tns:set_invoice_payment_request"/>
+			<output message="tns:set_invoice_payment_response"/>
 		</operation>
 
-		<operation name='set_invoice_payment'>
-			<input message='tns:set_invoice_payment_request'/>
-			<output message='tns:set_invoice_payment_response'/>
+		<operation name="delete_invoice">
+			<input message="tns:delete_invoice_request"/>
+			<output message="tns:delete_invoice_response"/>
 		</operation>
 
-		<operation name='delete_invoice'>
-			<input message='tns:delete_invoice_request'/>
-			<output message='tns:delete_invoice_response'/>
-		</operation>
+        <operation name="delete_invoice_item">
+            <input message="tns:delete_invoice_item_request"/>
+            <output message="tns:delete_invoice_item_response"/>
+        </operation>
 
-		<operation name='delete_invoice_item'>
-			<input message='tns:delete_invoice_item_request'/>
-			<output message='tns:delete_invoice_item_response'/>
-		</operation>
+        <operation name="get_credit_id_from_code">
+            <input message="tns:get_credit_id_from_code_request"/>
+            <output message="tns:get_credit_id_from_code_response"/>
+        </operation>
+
+        <operation name="get_credit_pdf">
+            <input message="tns:get_credit_pdf_request"/>
+            <output message="tns:get_credit_pdf_response"/>
+        </operation>
 
 	</portType>
 
-	<binding name='accounts_invoices_manage_binding' type='tns:accounts_invoices_manage_porttype'>
-		<soap:binding style='rpc' transport='http://schemas.xmlsoap.org/soap/http'/>
+	<binding name="accounts_invoices_manage_binding" type="tns:accounts_invoices_manage_porttype">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
 
-		<operation name='get_invoice_id_from_code'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="get_invoice_id_from_code">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='get_invoice_details'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+        <operation name="get_invoice_details">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+
+        <operation name="get_invoice_pdf">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+
+		<operation name="get_invoice_items">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='get_invoice_items'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="get_invoice_taxes">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
-			</output>
-		</operation>
-
-		<operation name='get_invoice_taxes'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
-			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
-			</input>
-
-			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 	
-
-		<operation name='get_invoice_payments'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="get_invoice_payments">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 					
-		<operation name='set_invoice_details'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_details">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_item_standard'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_item_standard">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_item_standard_tax'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_item_standard_tax">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_item_product'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_item_product">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_item_time'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_item_time">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_override_tax'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_override_tax">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='set_invoice_payment'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="set_invoice_payment">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='delete_invoice'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="delete_invoice">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
 
-		<operation name='delete_invoice_item'>
-			<soap:operation soapAction='accounts_invoices_manage'/>
+		<operation name="delete_invoice_item">
+			<soap:operation soapAction="accounts_invoices_manage"/>
 			<input>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
 
 			<output>
-				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+				<soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
+
+        <operation name="get_credit_id_from_code">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+
+        <operation name="get_credit_pdf">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
 
 	</binding>
 
-<service name='accounts_invoices_manage_service'>
-  <port name='accounts_invoices_manage_port' binding='accounts_invoices_manage_binding'>
-    <soap:address location='http://www.amberdms.com/billing_system/api/accounts/invoices_manage.php'/>
+<service name="accounts_invoices_manage_service">
+  <port name="accounts_invoices_manage_port" binding="accounts_invoices_manage_binding">
+    <soap:address location="https://127.0.0.1/amberdms/api/accounts/invoices_manage.php"/>
   </port>
 </service>
 </definitions>

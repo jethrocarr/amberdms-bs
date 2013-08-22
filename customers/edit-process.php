@@ -17,7 +17,7 @@ require("../include/customers/inc_customers.php");
 
 if (user_permissions_get('customers_write'))
 {
-	$obj_customer = New customer;
+	$obj_customer = New customer_portal;
 	$num_del_contacts = 0;
 	$num_del_records = array();
 
@@ -84,6 +84,8 @@ if (user_permissions_get('customers_write'))
 		$obj_customer->data["contacts"][$i]["contact_id"]	= @security_form_input_predefined("int", "contact_id_$i", 0, "");
 		$obj_customer->data["contacts"][$i]["delete_contact"]	= @security_form_input_predefined("any", "delete_contact_$i", 0, "");
 		$obj_customer->data["contacts"][$i]["role"]		= @security_form_input_predefined("any", "role_$i", 0, "");
+        $obj_customer->data["contacts"][$i]["password"]     = @security_form_input_predefined("any", "password_$i", 0, "");
+        $obj_customer->data["contacts"][$i]["password_confirm"]     = @security_form_input_predefined("any", "password_confirm_$i", 0, "");
 		$obj_customer->data["contacts"][$i]["contact"]		= @security_form_input_predefined("any", "contact_" .$i, 0, "");
 		$obj_customer->data["contacts"][$i]["description"]	= @security_form_input_predefined("any", "description_$i", 0, "");
 		
@@ -147,7 +149,6 @@ if (user_permissions_get('customers_write'))
 			$obj_customer->data["tax_". $data_tax["id"] ] = @security_form_input_predefined("any", "tax_". $data_tax["id"], 0, "");
 		}
 	}
-
 
 	/*
 		Error Handling
@@ -213,6 +214,13 @@ if (user_permissions_get('customers_write'))
 		}
 	}
 	
+    //make sure contact password changes match
+    for($i=0; $i<$num_contacts; $i++) {
+        if(!empty($obj_customer->data["contacts"][$i]["password"]) && $obj_customer->data["contacts"][$i]["password"] != $obj_customer->data["contacts"][$i]["password_confirm"]) {
+            log_write("error", "process", "Contact password change fields must match");
+            error_flag_field("contact_" .$i);
+        }
+    }   
 
 	// return to input page if any errors occurred
 	if ($_SESSION["error"]["message"])
@@ -243,6 +251,13 @@ if (user_permissions_get('customers_write'))
 	// update customer
 	$obj_customer->action_update();
 	$obj_customer->action_update_taxes();
+
+    // update contact passwords
+    for($i=0; $i<$num_contacts; $i++) {
+        if(!empty($obj_customer->data["contacts"][$i]["password"])) {
+            $obj_customer->auth_contact_changepwd($i, $obj_customer->data["contacts"][$i]["password"]);
+        }
+    } 
 
 	// commit
 	if (error_check())

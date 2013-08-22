@@ -775,85 +775,99 @@ class customers_manage_soap
 		#	Successful authentication, customer ID returned
 	*/
 
-	function customer_portal_auth($id_customer, $code_customer, $password_plaintext)
+	function customer_portal_auth($id_customer = null, $username = null, $password_plaintext = null)
 	{
-		log_debug("customers", "Executing customer_portal_auth($id_customer, $code_customer, *plaintextpassword*)");
+		log_debug('customers', "Executing customer_portal_auth($id_customer, $username, *plaintextpassword*)");
 
-		if (user_permissions_get("customers_portal_auth"))
-		{
-			$obj_customer = New customer_portal;
+		if(!user_permissions_get('customers_portal_auth')) {
+            throw new SoapFault('Sender', 'ACCESS DENIED');
+        }
 
-			/*
-				Load SOAP Data
-			*/
-			$data["id"]			= @security_script_input_predefined("int", $id_customer);
-			$data["code_customer"]		= @security_script_input_predefined("any", $code_customer);
-			$data["password_plaintext"]	= @security_script_input_predefined("any", $password_plaintext);
+		// load SOAP data
+		$data['id'] = @security_script_input_predefined('int', $id_customer);
+		$data['username'] = @security_script_input_predefined('any', $username);
+		$data['password_plaintext']	= @security_script_input_predefined('any', $password_plaintext);
 
-			foreach (array_keys($data) as $key)
-			{
-				if ($data[$key] == "error" && $data[$key] != 0)
-				{
-					throw new SoapFault("Sender", "INVALID_INPUT ");
-				}
+		foreach(array_keys($data) as $key) {
+			if($data[$key] == 'error' && $data[$key] != 0) {
+				throw new SoapFault('Sender', 'INVALID_INPUT');
 			}
-
-
-
-			/*
-				Fetch & verify ID
-			*/
-
-			if (!$data["id"])
-			{
-				// verify the supplied customer code and fetch the ID from it
-				$sql_obj		= New sql_query;
-				$sql_obj->string	= "SELECT id FROM customers WHERE code_customer='". $data["code_customer"] ."' LIMIT 1";
-				$sql_obj->execute();
-
-				if ($sql_obj->num_rows())
-				{
-					$sql_obj->fetch_array();
-
-					$obj_customer->id = $sql_obj->data[0]["id"];
-				}
-				else
-				{
-					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
-				}
-			}
-			else
-			{
-				// use supplied ID
-				$obj_customer->id = $data["id"];
-
-				// verify valid ID
-				if (!$obj_customer->verify_id())
-				{
-					throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
-				}
-			}
-
-
-			/*
-				Verify Password
-			*/
-
-			if ($obj_customer->auth_login($data["password_plaintext"]))
-			{
-				return $obj_customer->id;
-			}
-			else
-			{
-				throw new SoapFault("Sender", "INVALID_AUTHDETAILS");
-			}
-
-
 		}
-		else
-		{
-			throw new SoapFault("Sender", "ACCESS DENIED");
-		}
+
+        // create customer object
+        $obj_customer = New customer_portal;
+
+        // determine authentication method
+        if(sql_get_singlevalue("SELECT value FROM config WHERE name='CUSTOMER_PORTAL_CONTACT_LOGIN' LIMIT 1") == 'enabled') {
+
+            // verify the supplied customer code and fetch the ID from it
+            $sql_obj = New sql_query;
+            $sql_obj->string = "SELECT a.id, c.contact_id
+                FROM customers a,
+                    customer_contacts b,
+                    customer_contact_records c
+                WHERE a.id = b.customer_id
+                    AND c.contact_id = b.id
+                    AND LOWER(c.detail) = LOWER('". $data['username'] ."')
+                LIMIT 1";
+            $sql_obj->execute();
+
+            if($sql_obj->num_rows()) {
+                $sql_obj->fetch_array();
+                $obj_customer->id = $sql_obj->data[0]['id'];
+            } else {
+                throw new SoapFault('Sender', 'INVALID_AUTHDETAILS');
+            }
+
+            // load up customer contacts
+            $obj_customer->load_data_contacts();
+
+            // determine the index of the contact we are logging in
+            for($i=0; $i<$obj_customer->data['num_contacts']; $i++) {
+                // verify index
+                if($obj_customer->data['contacts'][$i]['contact_id'] == $sql_obj->data[0]['contact_id']) {
+                    // verify password
+                    if($obj_customer->auth_contact_login($i, $data['password_plaintext'])) {
+                        return $obj_customer->id;
+                    } else {
+                        throw new SoapFault('Sender', 'INVALID_AUTHDETAILS');
+                    }
+                }
+            }
+
+        } else {
+
+    		// fetch & verify customer ID
+    		if(!$data['id']) {
+    			// verify the supplied customer code and fetch the ID from it
+    			$sql_obj = New sql_query;
+    			$sql_obj->string = "SELECT id FROM customers WHERE code_customer='". $data['username'] ."' LIMIT 1";
+    			$sql_obj->execute();
+
+    			if($sql_obj->num_rows()) {
+    				$sql_obj->fetch_array();
+    				$obj_customer->id = $sql_obj->data[0]['id'];
+    			} else {
+    				throw new SoapFault('Sender', 'INVALID_AUTHDETAILS');
+    			}
+    		} else {
+    			// use supplied ID
+    			$obj_customer->id = $data['id'];
+
+    			// verify valid ID
+    			if(!$obj_customer->verify_id()) {
+    				throw new SoapFault('Sender', 'INVALID_AUTHDETAILS');
+    			}
+    		}
+
+    		// verify password
+    		if($obj_customer->auth_login($data['password_plaintext'])) {
+    			return $obj_customer->id;
+    		} else {
+    			throw new SoapFault('Sender', 'INVALID_AUTHDETAILS');
+    		}
+
+        }
 
 	} // end of customer_portal_auth
 

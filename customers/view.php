@@ -37,7 +37,8 @@ class page_output
 
 		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->id ."", TRUE);
 
-		if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled")
+		if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled" &&
+            sql_get_singlevalue("SELECT value FROM config WHERE name='CUSTOMER_PORTAL_CONTACT_LOGIN' LIMIT 1") != "enabled")
 		{
 			$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->id ."");
 		}
@@ -129,6 +130,8 @@ class page_output
 
 		// this should be replaced with load_data_contacts in some point in the future.
 
+        $contacts_passwords = sql_get_singlevalue("SELECT value FROM config WHERE name='CUSTOMER_PORTAL_CONTACT_LOGIN' LIMIT 1") == "enabled" ? true : false;
+
 		$sql_contacts_obj		= New sql_query;
 		$sql_contacts_obj->string	= "SELECT id, role, contact, description FROM customer_contacts WHERE customer_id = " .$this->id;
 		$sql_contacts_obj->execute();
@@ -188,17 +191,10 @@ class page_output
 			$structure["type"]		= "dropdown";
 			$structure["defaultvalue"]	= $sql_contacts_obj->data[$i]["role"];
 			$structure["options"]["width"]	= "205";
-			if ($i == 0)
-			{
-				$structure["values"]			= array("accounts");
-				$structure["options"]["autoselect"]	= "yes";
-				$structure["options"]["disabled"]	= "yes";
-			}
-			else
-			{
-				$structure["values"]			= array("other");
-				$structure["options"]["autoselect"]	= "yes";
-			}
+			$structure["values"]			= array("accounts", "other", "disabled");
+			$structure["options"]["autoselect"]	= "yes";
+			$structure["options"]["disabled"]	= "no";
+
 			if ($_SESSION["error"]["contact_" .$i. "-error"])
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
@@ -224,6 +220,32 @@ class page_output
 			$structure["options"]["width"]			= "205";
 			$structure["options"]["height"]			= "";
 			$this->obj_form->add_input($structure);
+
+            // contact password
+            if($contacts_passwords) {
+                
+                $structure = NULL;
+                $structure["fieldname"] = "password_" .$i;
+                $structure["type"] = "password";
+                if($_SESSION["error"]["contact_" .$i. "-error"]) {
+                    $structure["options"]["css_field_class"]    = "hidden_form_field_error";
+                } else {
+                    $structure["options"]["css_field_class"]    = "hidden_form_field";
+                }
+                $structure["options"]["width"] = "91";
+                $this->obj_form->add_input($structure);
+            
+                $structure = NULL;
+                $structure["fieldname"] = "password_confirm_" .$i;
+                $structure["type"] = "password";
+                if($_SESSION["error"]["contact_" .$i. "-error"]) {
+                    $structure["options"]["css_field_class"]    = "hidden_form_field_error";
+                } else {
+                    $structure["options"]["css_field_class"]    = "hidden_form_field";
+                }
+                $structure["options"]["width"] = "91";
+                $this->obj_form->add_input($structure);
+            }
 			
 			//contact records
 			$sql_records_obj		= New sql_query;			
@@ -500,6 +522,8 @@ class page_output
 
 	function render_html()
 	{
+        $contacts_passwords = sql_get_singlevalue("SELECT value FROM config WHERE name='CUSTOMER_PORTAL_CONTACT_LOGIN' LIMIT 1") == "enabled" ? true : false;
+
 		// title	
 		print "<h3>CUSTOMER DETAILS</h3><br>";
 		print "<p>This page allows you to view and adjust the customer's records.</p>";
@@ -570,6 +594,23 @@ class page_output
 						print "<label for=\"role_$i\">Role: </label><br />";
 						print "</span>";
 						$this->obj_form->render_field("role_$i");
+
+                        // passwords
+                        if ($contacts_passwords) {
+                            if ($_SESSION["error"]["contact_" .$i. "-error"])
+                            {
+                                print "<span>";
+                            }
+                            else
+                            {
+                                print "<span class=\"hidden_text\">";
+                            }
+                            print "<label for=\"password_$i\">Change Password:</label><br />";
+                            print "</span>";
+                            $this->obj_form->render_field("password_$i");
+                            print "&nbsp;&nbsp;";
+                            $this->obj_form->render_field("password_confirm_$i");
+                        }
 						
 						$this->obj_form->render_field("num_records_$i");
 						print "<div ";
