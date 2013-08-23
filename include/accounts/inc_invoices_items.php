@@ -234,7 +234,8 @@ class invoice_list_items
 				break;
 
 				case "quote":
-					$authtype = "quote";
+				case "quotes":
+					$authtype = "quotes";
 				break;
 			}
 
