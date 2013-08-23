@@ -22,7 +22,7 @@ include("../../include/amberphplib/main.php");
 // custom includes
 include("../../include/accounts/inc_invoices.php");
 include("../../include/accounts/inc_invoices_items.php");
-
+include("../../include/accounts/inc_credits.php");
 
 
 class accounts_invoices_manage_soap
@@ -172,6 +172,53 @@ class accounts_invoices_manage_soap
 		}
 
 	} // end of get_invoice_details
+
+
+    /*
+        get_invoice_pdf
+
+        Fetch the PDF contact for the specified invoice
+    */
+    function get_invoice_pdf($id, $invoicetype)
+    {
+        log_debug("invoices_manage_soap", "Executing get_invoice_pdf($id, $invoicetype)");
+
+        // check the invoice type
+        if($invoicetype != "ar" && $invoicetype != "ap") {
+            throw new SoapFault("Sender", "INVALID_INVOICE_TYPE");
+        }
+
+        if(user_permissions_get("accounts_".$invoicetype."_view")) {
+            $obj_invoice = New invoice;
+            $obj_invoice->type  = $invoicetype;
+
+            // sanitise input
+            $obj_invoice->id = @security_script_input_predefined("int", $id);
+
+            if(!$obj_invoice->id || $obj_invoice->id == "error") {
+                throw new SoapFault("Sender", "INVALID_INPUT");
+            }
+
+            // verify that the invoice is valid
+            if(!$obj_invoice->verify_invoice()) {
+                throw new SoapFault("Sender", "INVALID_INVOICE");
+            }
+
+            // load data from DB for this invoice
+            if(!$obj_invoice->load_data()) {
+                throw new SoapFault("Sender", "UNEXPECTED_ACTION_ERROR");
+            }
+
+            // generate PDF
+            $obj_invoice->generate_pdf();
+
+            // return data
+            return base64_encode($obj_invoice->obj_pdf->output);
+        } else {
+            throw new SoapFault("Sender", "ACCESS_DENIED");
+        }
+
+    } // end of get_invoice_pdf
 
 
 	/*
@@ -1775,7 +1822,85 @@ class accounts_invoices_manage_soap
 
 	} // end of delete_invoice_item
 
+    /*
+        get_creditnote_id_from_code
 
+        Return the ID of the provided credit note code/number
+    */
+    function get_credit_id_from_code($code_credit, $credittype)
+    {
+        log_debug('invoices_manage_soap', "Executing get_credit_id_from_code($code_credit, $credittype)");
+
+        // check the credit type
+        if($credittype != 'ar' && $credittype != 'ap') {
+            throw new SoapFault('Sender', 'INVALID_CREDIT_TYPE');
+        }
+
+        if(user_permissions_get('accounts_'.$credittype.'_view')) {
+            // sanitise input
+            $code_credit = @security_script_input_predefined('any', $code_credit);
+
+            if(!$code_credit || $code_credit == 'error') {
+                throw new SoapFault('Sender', 'INVALID_INPUT');
+            }
+
+            // fetch the invoice ID
+            $sql_obj = New sql_query;
+            $sql_obj->string = "SELECT id FROM account_".$credittype."_credit WHERE code_credit='$code_credit' LIMIT 1";
+            $sql_obj->execute();
+
+            if($sql_obj->num_rows()) {
+                $sql_obj->fetch_array();
+                return $sql_obj->data[0]['id'];
+            } else {
+                throw new SoapFault('Sender', 'INVALID_ID');
+            }
+        } else {
+            throw new SoapFault('Sender', 'ACCESS_DENIED');
+        }
+
+    } // end of get_credit_id_from_code
+
+    /*
+        get_credit_pdf
+
+        Fetch the PDF for the specified credit note
+    */
+    function get_credit_pdf($id, $credittype)
+    {
+        log_debug('invoices_manage_soap', "Executing get_creditnote_pdf($id, $credittype)");
+
+        // check the credit type
+        if($credittype != 'ar' && $credittype != 'ap') {
+            throw new SoapFault('Sender', 'INVALID_CREDIT_TYPE');
+        }
+
+        if(user_permissions_get('accounts_'.$credittype.'_view')) {
+            $obj_credit = New credit;
+            $obj_credit->type = $credittype;
+
+            // sanitise input
+            $obj_credit->id = @security_script_input_predefined('int', $id);
+
+            if(!$obj_credit->id || $obj_credit->id == 'error') {
+                throw new SoapFault('Sender', 'INVALID_INPUT');
+            }
+
+            // load data from DB for this credit note
+            if(!$obj_credit->load_data()) {
+                throw new SoapFault('Sender', 'UNEXPECTED_ACTION_ERROR');
+            }
+
+            // generate PDF
+            $obj_credit->generate_pdf();
+
+            // return data
+            return base64_encode($obj_credit->obj_pdf->output);
+        } else {
+            throw new SoapFault('Sender', 'ACCESS_DENIED');
+        }
+
+    } // end of get_credit_pdf
 
 } // end of invoices_manage_soap class
 

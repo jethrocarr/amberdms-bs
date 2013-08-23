@@ -151,6 +151,16 @@
 	</message>
 
 
+    <message name="get_invoice_pdf_request">
+        <part name="id" type="xsd:int"/>
+        <part name="invoicetype" type="xsd:string"/>
+    </message>
+
+    <message name="get_invoice_pdf_response">
+        <part name="pdf" type="xsd:string" />
+    </message>
+
+
 	<message name='get_invoice_taxes_request'>
 		<part name='id' type='xsd:int'/>
 		<part name='invoicetype' type='xsd:string'/>
@@ -252,7 +262,6 @@
 	</message>
 
 
-
 	<message name='set_invoice_override_tax_request'>
 		<part name='id' type='xsd:int'/>
 		<part name='invoicetype' type='xsd:string'/>
@@ -290,6 +299,7 @@
 		<part name='returncode' type='xsd:int'/>
 	</message>
 
+
 	<message name='delete_invoice_item_request'>
 		<part name='itemid' type='xsd:int'/>
 	</message>
@@ -299,7 +309,24 @@
 	</message>
 
 
+    <message name="get_credit_id_from_code_request">
+        <part name="code_credit" type="xsd:string"/>
+        <part name="creditttype" type="xsd:string"/>
+    </message>
 
+    <message name="get_credit_id_from_code_response">
+        <part name="id" type="xsd:int"/>
+    </message>
+
+
+    <message name="get_credit_pdf_request">
+        <part name="id" type="xsd:int"/>
+        <part name="creditttype" type="xsd:string"/>
+    </message>
+
+    <message name="get_credit_pdf_response">
+        <part name="pdf" type="xsd:string" />
+    </message>
 
 	<portType name='accounts_invoices_manage_porttype'>
 
@@ -317,6 +344,11 @@
 			<input message='tns:get_invoice_items_request'/>
 			<output message='tns:get_invoice_items_response'/>
 		</operation>
+
+        <operation name="get_invoice_pdf">
+            <input message="tns:get_invoice_pdf_request"/>
+            <output message="tns:get_invoice_pdf_response"/>
+        </operation>
 
 		<operation name='get_invoice_taxes'>
 			<input message='tns:get_invoice_taxes_request'/>
@@ -373,6 +405,16 @@
 			<output message='tns:delete_invoice_item_response'/>
 		</operation>
 
+        <operation name="get_credit_id_from_code">
+            <input message="tns:get_credit_id_from_code_request"/>
+            <output message="tns:get_credit_id_from_code_response"/>
+        </operation>
+
+        <operation name="get_credit_pdf">
+            <input message="tns:get_credit_pdf_request"/>
+            <output message="tns:get_credit_pdf_response"/>
+        </operation>
+
 	</portType>
 
 	<binding name='accounts_invoices_manage_binding' type='tns:accounts_invoices_manage_porttype'>
@@ -410,6 +452,17 @@
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
+
+        <operation name="get_invoice_pdf">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
 
 		<operation name='get_invoice_taxes'>
 			<soap:operation soapAction='accounts_invoices_manage'/>
@@ -532,6 +585,28 @@
 				<soap:body use='encoded' namespace='urn:amberdms:accounts_invoices_manage' encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
 			</output>
 		</operation>
+
+        <operation name="get_credit_id_from_code">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+
+        <operation name="get_credit_pdf">
+            <soap:operation soapAction="accounts_invoices_manage"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+
+            <output>
+                <soap:body use="encoded" namespace="urn:amberdms:accounts_invoices_manage" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
 
 	</binding>
 
