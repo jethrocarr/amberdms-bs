@@ -1461,15 +1461,13 @@ class invoice
 			}
 		}
 		
-		
-		
 		foreach($structure_invoiceitems as $invoice_item)
 		{
 			$invoice_items_by_group[$invoice_item['group']][] = $invoice_item;
 		}
-		
-		
+
 		ksort($invoice_items_by_group);
+
 		if(count($invoice_items_by_group) > 1)
 		{
 			$structure_invoiceitems = array();

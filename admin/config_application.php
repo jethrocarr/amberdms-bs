@@ -252,13 +252,26 @@ class page_output
 		$this->obj_form->add_input($structure);
 	
 
-		// contributions
+		// amberstats phone home
 		$structure = NULL;
 		$structure["fieldname"]				= "PHONE_HOME";
 		$structure["type"]				= "checkbox";
-		$structure["options"]["label"]			= "Phone home to Amberdms with application, OS and PHP version so we can better improve this software. (all information is anonymous and private)";
+		$structure["options"]["label"]			= "Report back to the developers with application, OS, PHP version and a random unique ID so we can better improve this software. (all information is anonymous, private and greatly appreciated. We use this information to focus development and packaging on the main platforms our users are running to better meet your needs.";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
+
+		$phone_home_info = New phone_home;
+		$phone_home_info->stats_generate();
+
+		$structure = NULL;
+		$structure["fieldname"]				= "PHONE_HOME_EXAMPLE";
+		$structure["type"]				= "text";
+		$structure["defaultvalue"]			= "<i>Actual information to be sent: ". format_arraytocommastring(array_values($phone_home_info->stats)) ."</i>";
+		$structure["options"]["no_fieldname"]		= "yes";
+		$structure["options"]["no_shift"]		= "yes";
+		$this->obj_form->add_input($structure);
+
+
 
 
 		// security options
@@ -351,7 +364,7 @@ class page_output
 		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");
 		$this->obj_form->subforms["config_timesheet"]		= array("TIMESHEET_BOOKTOFUTURE");
 		$this->obj_form->subforms["config_auditlocking"]	= array("ACCOUNTS_INVOICE_LOCK", "ACCOUNTS_GL_LOCK", "JOURNAL_LOCK", "TIMESHEET_LOCK");
-		$this->obj_form->subforms["config_contributions"]	= array("PHONE_HOME");
+		$this->obj_form->subforms["config_contributions"]	= array("PHONE_HOME", "PHONE_HOME_EXAMPLE");
 		$this->obj_form->subforms["config_security"]		= array("SESSION_TIMEOUT", "BLACKLIST_ENABLE", "BLACKLIST_LIMIT");
 		$this->obj_form->subforms["config_misc"]		= array("UPLOAD_MAXBYTES", "API_URL");
 

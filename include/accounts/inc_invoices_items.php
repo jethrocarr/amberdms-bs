@@ -84,6 +84,7 @@ class invoice_list_items
 		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("type!='payment'");
 		
 		$this->obj_table_standard->sql_obj->prepare_sql_addorderby("type");
+		$this->obj_table_standard->sql_obj->prepare_sql_addorderby("customid");
 		$this->obj_table_standard->sql_obj->prepare_sql_addorderby("chartid");
 		$this->obj_table_standard->sql_obj->prepare_sql_addorderby("description");
 
