@@ -100,6 +100,10 @@ class page_output
 		// heading
 		print "<h3>SUPPORT TICKETS</h3><br><br>";
 
+		print "<br>";
+		format_msgbox("important", "<p>Support tickets is deprecated and ABS version 2.0.x will be the last version to include this feature. Please migrate your tickets out if you use this feature, this ticket handling has always been very weak and insufficent for most purposes - better to use a proper email integrated issue tracker, of which there are many different products available.</p>");
+		print "<br>";
+
 		// display options
 		$this->obj_table->render_options_form();
 
