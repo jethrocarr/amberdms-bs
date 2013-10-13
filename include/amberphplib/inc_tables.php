@@ -1175,7 +1175,7 @@ class table
 		// set start/end
 		if ($this->limit_rows)
 		{
-			if ($_SESSION["form"][$this->tablename]["limit_start"])
+			if (!empty($_SESSION["form"][$this->tablename]["limit_start"]))
 			{
 				$this->limit_start = $_SESSION["form"][$this->tablename]["limit_start"];
 			}
@@ -1184,13 +1184,13 @@ class table
 				$this->limit_start = 0;
 			}
 
-			if ($_SESSION["form"][$this->tablename]["limit_end"])
+			if (!empty($_SESSION["form"][$this->tablename]["limit_end"]))
 			{
 				$this->limit_end = $_SESSION["form"][$this->tablename]["limit_end"];
 			}
 			else
 			{
-				$this->limit_end = $this->limit_rows + $range_start;
+				$this->limit_end = $this->limit_rows + $this->limit_start;
 			}
 	
 		}
