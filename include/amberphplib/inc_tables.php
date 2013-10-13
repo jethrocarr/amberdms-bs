@@ -823,7 +823,7 @@ class table
 		// link bar instead of the main options table.
 		if (!isset($_SESSION["form"][$this->tablename]["custom_options_active"]))
 		{
-			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
+			if (isset($_SESSION["user"]["shrink_tableoptions"]) && $_SESSION["user"]["shrink_tableoptions"] == "on")
 			{
 				print "<div id=\"". $this->tablename ."_link\">";
 
@@ -1138,7 +1138,7 @@ class table
 		// auto-hide options at startup
 		if (!isset($_SESSION["form"][$this->tablename]["custom_options_active"]))
 		{
-			if ($_SESSION["user"]["shrink_tableoptions"] == "on")
+			if (isset($_SESSION["user"]["shrink_tableoptions"]) && $_SESSION["user"]["shrink_tableoptions"] == "on")
 			{
 				print "<script type=\"text/javascript\">";
 				print "obj_hide('". $this->tablename ."_form');";
@@ -1429,7 +1429,7 @@ class table
 
 
 		// calculate all the totals and prepare processed values
-		if (!isset($this->data_render))
+		if (empty($this->data_render))
 		{
 			$this->render_table_prepare();
 		}
@@ -1599,6 +1599,25 @@ class table
 					}
 				}
 
+				// handle bytes
+				if ($this->structure[$columns]["type"] == "bytes")
+				{
+					if ($content)
+					{
+						$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
+
+						if (!empty($GLOBALS["config"]["BYTECOUNT"]))
+						{
+							$content = round($content/pow($GLOBALS["config"]["BYTECOUNT"], ($z = floor(log($content, $GLOBALS["config"]["BYTECOUNT"])))), 2) . $file_size_types[$z];
+						}
+						else
+						{
+							// use 1024 bytes as a default
+							$content = round($content/pow(1024, ($z = floor(log($content, 1024)))), 2) . $file_size_types[$z];
+						}
+					}
+				}
+
 				// display content
 				if ($content)
 				{
@@ -1626,7 +1645,26 @@ class table
 			// optional: row totals column
 			if (isset($this->total_rows))
 			{
-				print "\t<td><b>". $this->data_render[$i]["total"] ."</b></td>\n";
+				$content = $this->data_render[$i]["total"];
+
+				// handle bytes
+				if ($this->structure[$column]["type"] == "bytes")
+				{
+					if ($content)
+					{
+						if (!empty($GLOBALS["config"]["BYTECOUNT"]))
+						{
+							$content = round($content/pow($GLOBALS["config"]["BYTECOUNT"], ($z = floor(log($content, $GLOBALS["config"]["BYTECOUNT"])))), 2) . $file_size_types[$z];
+						}
+						else
+						{
+							// use 1024 bytes as a default
+							$content = round($content/pow(1024, ($z = floor(log($content, 1024)))), 2) . $file_size_types[$z];
+						}
+					}
+				}
+
+				print "\t<td><b>". $content ."</b></td>\n";
 			}
 
 			
@@ -1720,6 +1758,10 @@ class table
 							// There are two ways:
 							// 1. (default) Link to index.php
 							// 2. Set the ["options]["full_link"] value to yes to force a full link
+							if (empty($this->links[$link]["options"]["class"]))
+							{
+								$this->links[$link]["options"]["class"] = "";
+							}
 
 							if (isset($this->links[$link]["options"]["full_link"]) && $this->links[$link]["options"]["full_link"] == "yes")
 							{
@@ -1742,7 +1784,7 @@ class table
 								{
 									print "&$getfield=". $this->links[$link]["options"][$getfield]["value"];
 								}
-								else
+								elseif (isset($this->links[$link]["options"][$getfield]["column"]))
 								{
 									print "&$getfield=". $this->data[$i][ $this->links[$link]["options"][$getfield]["column"] ];
 								}
@@ -1780,7 +1822,20 @@ class table
 		
 				if (in_array($column, $this->total_columns))
 				{
-					print "<b>". $this->data_render["total"][$column] ."</b>";
+					$content = $this->data_render["total"][$column];
+
+					// handle bytes
+					if ($this->structure[$column]["type"] == "bytes")
+					{
+						if ($content)
+						{
+							$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
+							$content = round($content/pow(1024, ($z = floor(log($content, 1024)))), 2) . $file_size_types[$z];
+						}
+					}
+
+					// render column total
+					print "<b>". $content ."</b>";
 				}
 				else
 				{
@@ -1793,7 +1848,19 @@ class table
 			// optional: totals for rows
 			if (isset($this->total_rows))
 			{
-				print "\t<td class=\"footer\"><b>". @$this->data_render["total"]["total"] ."</b></td>\n";
+				$content = @$this->data_render["total"]["total"];
+
+				// handle bytes
+				if ($this->structure[$column]["type"] == "bytes")
+				{
+					if ($content)
+					{
+						$file_size_types = array(" Bytes", " KB", " MB", " GB", " TB");
+						$content = round($content/pow(1024, ($z = floor(log($content, 1024)))), 2) . $file_size_types[$z];
+					}
+				}
+
+				print "\t<td class=\"footer\"><b>". $content ."</b></td>\n";
 			}
 
 

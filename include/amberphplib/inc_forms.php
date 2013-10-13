@@ -587,6 +587,7 @@ class form_input
 						["search_filter"]		Enable/disable the optional text box to allow search/ filtering of a dropdown
  						["help"]			In-field help message for input and textarea types. Is ignored if defaultvalue is set.
  						["disabled"]			Disables the field if set to yes
+						["autofill"]			Set to a value to fill the input field with upon being selected the first time.
 						["autocomplete"]		Autocomplete option for input fields, it will display a dropdown that filters
 											as the user types, using the Jquery Autocomplete UI functions. Options are
 											currenly "sql" to use a SQL query set in ["options"]["autocomplete_sql"] and 
@@ -668,6 +669,11 @@ class form_input
 				}
 
 				print "<input type=\"hidden\" name=\"".$fieldname."_helpmessagestatus\" value=\"".$helpmessagestatus."\">";
+				
+				if (isset($this->structure[$fieldname]["options"]["autofill"]))
+				{
+					print "<input type=\"hidden\" name=\"".$fieldname."_autofill\" value=\"". $this->structure[$fieldname]["options"]["autofill"] ."\">";
+				}
 			break;
 
 
@@ -1059,7 +1065,7 @@ class form_input
 
 						foreach (array_keys($this->actions[$fieldname]) as $target_field)
 						{
-							if ($this->actions[$fieldname][ $target_field ][ $value ])
+							if (isset($this->actions[$fieldname][ $target_field ][ $value ]))
 							{
 								$action = $this->actions[$fieldname][ $target_field ][ $value ];
 							}
@@ -1091,6 +1097,13 @@ class form_input
 						print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
 					}			
 						
+					
+					if (isset($this->structure[$fieldname]["options"]["disabled"]))
+					{
+						if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+							print "disabled=\"disabled\" ";
+					}
+					
 					print "type=\"radio\" style=\"border: 0px\" name=\"$fieldname\" value=\"$value\" id=\"". $fieldname ."_". $value ."\">";
 					print "<label for=\"". $fieldname ."_". $value ."\">". $translations[$value] ."</label><br>";
 				}
@@ -1129,7 +1142,7 @@ class form_input
 
 					foreach (array_keys($this->actions[$fieldname]) as $target_field)
 					{
-						if ($this->actions[$fieldname][ $target_field ]["1"])
+						if (isset($this->actions[$fieldname][ $target_field ]["1"]))
 						{
 							$action = $this->actions[$fieldname][ $target_field ]["1"];
 						}
@@ -1159,9 +1172,11 @@ class form_input
 					print "class=\"". $this->structure[$fieldname]["options"]["css_field_class"] ."\" ";
 				}			
 					
-
-				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
-					print "disabled=\"disabled\" ";
+				if (isset($this->structure[$fieldname]["options"]["disabled"]))
+				{
+					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+						print "disabled=\"disabled\" ";
+				}
 					
 				print "type=\"checkbox\" style=\"border: 0px\" name=\"". $fieldname ."\" id=\"". $fieldname ."\">";
 
@@ -1352,9 +1367,10 @@ class form_input
 
 				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\"";
 				
-				if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
+				if (isset($this->structure[$fieldname]["options"]["disabled"]))
 				{
-					print "disabled=\"disabled\" ";
+					if ($this->structure[$fieldname]["options"]["disabled"] == "yes")
+						print "disabled=\"disabled\" ";
 				}
 					
 				print ">";
@@ -1533,7 +1549,7 @@ class form_input
 
 
 		// start form
-		print "<form enctype=\"multipart/form-data\" method=\"". $this->method ."\" action=\"". $this->action ."\" class=\"form_standard\">";
+		print "<form enctype=\"multipart/form-data\" method=\"". $this->method ."\" action=\"". $this->action ."\" class=\"form_standard\" name=\"" . $this->formname ."\">";
 
 		// draw session form box
 		if ($this->sessionform)
@@ -1641,7 +1657,7 @@ class form_input
 							{
 								print "<tr>";
 								print "<td colspan=\"2\">";
-								print "<table class=\"table_highlight_grouped\">";
+								print "<table class=\"table_highlight\">";
 
 								$grouped_counter = 1;
 							}
@@ -1670,7 +1686,6 @@ class form_input
 							{
 								print "<tr>";
 							}
-
 
 							foreach ($this->subforms_grouped[$form_label][$fieldname] as $fieldname2)
 							{

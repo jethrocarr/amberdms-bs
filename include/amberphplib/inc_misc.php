@@ -664,11 +664,12 @@ function time_format_hourmins($seconds)
 
 	Values
 	date		Format YYYY-MM-DD OR unix timestamp (optional)
+	time		(optional) TRUE/FALSE to inclue time
 
 	Returns
 	string		Date in human-readable format.
 */
-function time_format_humandate($date = NULL)
+function time_format_humandate($date = NULL, $time = FALSE)
 {
 	log_debug("misc", "Executing time_format_humandate($date)");
 
@@ -706,14 +707,16 @@ function time_format_humandate($date = NULL)
 
 
 	// convert to human readable format
+	$string = "";
+
 	switch ($format)
 	{
 		case "mm-dd-yyyy":
-			return date("m-d-Y", $timestamp);
+			$string = date("m-d-Y", $timestamp);
 		break;
 
 		case "dd-mm-yyyy":
-			return date("d-m-Y", $timestamp);
+			$string = date("d-m-Y", $timestamp);
 		break;
 
 		case "dd-Mmm-yyyy":
@@ -722,8 +725,17 @@ function time_format_humandate($date = NULL)
 		
 		case "yyyy-mm-dd":
 		default:
-			return date("Y-m-d", $timestamp);
+			$string = date("Y-m-d", $timestamp);
 		break;
+	}
+	
+	if ($time)
+	{
+		return $string ." ". date("H:i");
+	}
+	else
+	{
+		return $string;
 	}
 }
 
@@ -1426,6 +1438,26 @@ function dir_list_contents($directory='.')
 */
 
 
+
+/*
+	ip_type_detect
+
+	Returns the type of IP address for the specified value (v4 or v6). This function assumes a
+	single address is being provided only (no ranges/subnets).
+
+	Returns
+	0		Failure/Error
+	4		IPv4
+	6		IPv6
+*/
+function ip_type_detect($address)
+{
+	log_debug("inc_misc", "Executing ip_type_detect($address)");
+     
+     	return strpos($address, ":") === false ? 4 : 6;
+}
+
+
 /*
 	ipv4_subnet_members
 
@@ -1491,6 +1523,74 @@ function ipv4_subnet_members($address_with_cidr, $include_network = FALSE)
 } // end of ipv4_subnet_members
 
 
+/*
+	ipv4_split_to_class_c
+
+	Takes the provided network & CIDR notation (less than /24) and divides it
+	into multiple /24s, returning those in CIDR notation in an array.
+
+	Fields
+	address_with_cidr
+
+	Returns
+	0	Failure
+	array	Array of /24 CIDR notation networks without notation
+*/
+
+function ipv4_split_to_class_c($address_with_cidr)
+{
+	log_write("debug", "inc_misc", "Executing ipv4_split_to_class_c($address_with_cidr)");
+
+	// source range
+	$matches	= split("/", $address_with_cidr);
+
+	$src_addr	= $matches[0];
+	$src_cidr	= $matches[1];
+
+
+	// calculate subnet mask
+	$bin = NULL;
+
+	for ($i = 1; $i <= 32; $i++)
+	{
+		$bin .= $src_cidr >= $i ? '1' : '0';
+	}
+
+	// calculate key values
+	$long_netmask	= bindec($bin);					// eg: 255.255.255.0
+	$long_network	= ip2long($src_addr);				// eg: 192.168.0.0
+	$long_broadcast	= ($long_network | ~($long_netmask));		// eg: 192.168.0.255
+	$long_classc	= ip2long("0.0.1.0");				// used for addition calculations
+
+	$long_broadcast	= ip2long(long2ip($long_broadcast));		// fixes ugly PHP math issues -without this
+									// the broadcast long is totally incorrect.
+
+
+	/*
+		Debugging
+
+	print "addr: $address_with_cidr <br>";
+	print "netmask: $long_netmask ". long2ip($long_netmask) ."<br>";
+	print "network: $long_network ". long2ip($long_network) ."<br>";
+	print "broadcast: $long_broadcast ". long2ip($long_broadcast) ."<br>";
+	print "classc: $long_classc ". long2ip($long_classc) ."<br>";
+
+	*/
+
+
+	// get network addresses for /24s
+	$curr	= $long_network;
+	$return	= array();
+
+	while ($curr < $long_broadcast)
+	{
+		$return[]	= long2ip($curr);
+		$curr		= $curr + $long_classc;
+	}
+
+	return $return;
+
+} // end of ipv4_split_to_class_c
 
 
 /*
@@ -1500,7 +1600,7 @@ function ipv4_subnet_members($address_with_cidr, $include_network = FALSE)
 	used for reverse DNS.
 
 	Fields
-	ipaddress
+	ipaddress (IPv4)
 
 	Returns
 	0		Invalid IP address
@@ -1518,6 +1618,163 @@ function ipv4_convert_arpa( $ipaddress )
 	return $result;
 
 } // end of ipv4_convert_arpa
+
+
+/*
+	ipv6_convert_arpa
+
+	Converts the provided IPv6 address into the arpa format typically
+	used for reverse DNS. Supports both CIDR and non-CIDR format addresses
+
+	Fields
+	ipaddress (IPv6)
+
+	Returns
+	0	Invalid IP Address / Other Error
+	string	arpa format eg 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
+*/
+
+function ipv6_convert_arpa( $ipaddress )
+{
+	log_write("debug", "inc_misc", "Executing ipv6_convert_arpa( $ipaddress)");
+
+	if (preg_match("/^([0-9a-f:]*)\/([0-9]*)$/i", $ipaddress, $matches))
+	{
+		$cidr		= $matches[2];
+		$addr		= inet_pton($matches[1]);
+		$unpack		= unpack('H*hex', $addr);
+		$hex		= $unpack['hex'];
+		$hex_array	= str_split($hex);
+		
+		for ($i=0; $i < ($cidr / 4); $i++)
+		{
+			$hex_array2[$i] = $hex_array[$i];
+		}
+
+		$result		= implode('.', array_reverse($hex_array2)) . '.ip6.arpa';
+	}
+	else
+	{
+		$addr	= inet_pton($ipaddress);
+		$unpack	= unpack('H*hex', $addr);
+		$hex	= $unpack['hex'];
+		$result	= implode('.', array_reverse(str_split($hex))) . '.ip6.arpa';
+	}
+
+	return $result;
+
+} // end of ipv6_convert_arpa
+
+
+/*
+	ipv6_convert_fromarpa
+
+	Takes the provided apra/PTR format IPv6 address and turns it into
+	a regular IPv6 address.
+
+	Fields
+	ipaddress_arpa (IPv6 arpa record, eg 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.)
+
+	Returns
+	0	Invalid IP Address / Other Error
+	string	IPv6 address, eg 2001:db8::1 or 2001:db8::/32
+*/
+
+
+function ipv6_convert_fromarpa ($arpa)
+{
+	// credit to http://stackoverflow.com/questions/6619682/convert-ipv6-to-nibble-format-for-ptr-records
+	log_write("debug", "inc_misc", "Executing ipv6_convert_fromarpa($arpa)");
+
+	$mainptr	= substr($arpa, 0, strlen($arpa)-9);
+	$pieces		= array_reverse(explode(".",$mainptr));  
+	$pieces2	= $pieces;
+
+	if (count($pieces) < 32)
+	{
+		// network? append the zeros to make the conversion work
+		$missing = 32 - count($pieces);
+
+		for ($i=0; $i < $missing; $i++)
+		{
+			$pieces2[] = '0';
+		}
+	}
+
+        $hex		= implode("",$pieces2);
+	$ipbin		= pack('H*', $hex);
+	$ipv6addr	= inet_ntop($ipbin);
+
+	// Is it a network address and requires a subnet mask? If so, we can tell by
+	// the length of the record and calculate the range from that
+	//
+	// TODO / Warning: This logic always assumes you have an arpa address that is dividable
+	// by 4 (eg /48, /52, /56, etc). It's possible to have weirder subnets (eg /49) but
+	// there's little/no good way to detect if this is the case without already knowing
+	// the subnet mask.
+	//
+	// Of course if I'm wrong and you can fix this, please send me a patch and I'll add
+	// a comment proclaiming your coding glory. :-)
+	//
+	// We only really use this function for making it easier to import IPv6 domains
+	// from zonefiles anyway....
+	//
+	if (count($pieces) < 32)
+	{
+		$ipv6cidr = count($pieces) * 4;
+		$ipv6addr = $ipv6addr .'/'. $ipv6cidr;
+	}
+
+	return $ipv6addr;
+}
+
+
+/*
+	SORTING FUNCTIONS
+
+	These functions exist to help with special sorting circumstances
+*/
+
+function sort_natural_ipaddress($a, $b)
+{
+	return strnatcmp($a["ipaddress"], $b["ipaddress"]);
+}
+
+
+
+
+
+/*
+	DEBUGGING/PROGRAMMER ASSIST FUNCTIONS
+
+	The following functions are intended for developers working with the Amberphplib codebase
+	or wanting to run debug proceedures.
+*/
+
+
+/*
+	break_array
+
+	Displays the provided array and then terminates the application with die() if set.
+
+	Fields
+	array
+	die		1 == kill, 0 == continue
+
+*/
+
+function break_array($array, $die = 0)
+{
+	print "<pre>";
+	print_r($array);
+	print "</pre>";
+
+	if ($die)
+	{
+		die("Forced execute of break_array()");
+	}
+
+} // end of break_array
 
 
 
