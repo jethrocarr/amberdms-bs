@@ -401,7 +401,7 @@ class page_output
 					if (user_permissions_get("customers_write"))
 					{ 
 						print "<div class=\"group_links\">&nbsp;";
-						print "<a href\"\" id=\"delete_group_" .$igroup_id. "\" class=\"delete_group button_small\">delete</a>";
+						print "<a href\"\" id=\"delete_group_" .$group_id. "\" class=\"delete_group button_small\">delete</a>";
 						print "&nbsp;&nbsp;";
 						print "<a href=\"\" class=\"show_change_group_name button_small\" id=\"show_change_group_name_" .$group_id. "\">change name</a>";
 						print "&nbsp;</div>";

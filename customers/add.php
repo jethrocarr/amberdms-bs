@@ -103,7 +103,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "contact_" .$i;
 			$structure["type"]		= "input";
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -134,7 +134,7 @@ class page_output
 				$structure["values"]			= array("other");
 				$structure["options"]["autoselect"]	= "yes";
 			}
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -153,7 +153,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "description_" .$i;
 			$structure["type"]		= "textarea";
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -268,6 +268,16 @@ class page_output
 				$this->tax_array[] = "tax_". $data_tax["id"];
 			}
 		}
+		else
+		{
+			$structure = NULL;
+			$structure["fieldname"] 		= "tax_message";
+			$structure["type"]			= "message";
+			$structure["defaultvalue"]		= "<p>No taxes can be selected for this customer, as there have been no taxes configured yet.</p>";
+			$this->obj_form->add_input($structure);
+		}
+
+
 
 
 		// purchase options
@@ -415,7 +425,7 @@ class page_output
 		{
 			print "<tr >";
 				print "<td>";
-				if ($_SESSION["error"]["contact_" .$i. "-error"])
+				if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 				{
 					print "<table id=\"contact_box_$i\" class=\"error_box contact_box\">";
 				}
@@ -509,7 +519,7 @@ class page_output
 						print "</span>";
 						$this->obj_form->render_field("description_$i");
 						print "<p class=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "hidden_text ";
 							}
@@ -521,7 +531,7 @@ class page_output
 
 
 						
-						if ($_SESSION["error"]["contact_" .$i. "-error"])
+						if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<p class=\"change_contact\"><a id=\"change_contact_$i\" href=\"\" >done</a></p>";
 						}

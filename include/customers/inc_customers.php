@@ -2207,7 +2207,7 @@ class customer_orders extends customer
 			log_write("debug", "inc_customers", "Fetching latest service billing dates for  customer ". $this->id ."");
 
 			// check the next service billing date
-			$service_ids = sql_get_singlecol("SELECT id as col FROM services_customers WHERE customerid='". $this->id ."'");
+			$service_ids = sql_get_singlecol("SELECT id as value FROM services_customers WHERE customerid='". $this->id ."'");
 
 			if (is_array($service_ids))
 			{
@@ -2468,7 +2468,7 @@ class customer_orders extends customer
 			print "<table width=\"100%\" class=\"table_highlight_open\">";
 			print "<tr>";
 				print "<td>";
-				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has unbilled order items.</b>";
+				print "<b>Customer ". $this->data["name_customer"] ." has unbilled order items.</b>";
 		
 				print "<table cellpadding=\"4\">";
 						
@@ -2495,7 +2495,7 @@ class customer_orders extends customer
 			print "<table width=\"100%\" class=\"table_highlight_info\">";
 			print "<tr>";
 				print "<td>";
-				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has no currently ordered items.</b>";
+				print "<b>Customer ". $this->data["name_customer"] ." has no currently ordered items.</b>";
 				print "<p>The customer currently has no order items to bill. Use the \"<a href=\"index.php?page=customers/orders-view.php&id_customer=". $this->id ."\">create order</a>\" page to start preparing a customer order.</p>";
 				print "</td>";
 			print "</tr>";
@@ -2583,7 +2583,7 @@ class customer_credits extends customer
 				print "<table width=\"100%\" class=\"table_highlight_open\">";
 				print "<tr>";
 					print "<td>";
-					print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has a zero credit balance.</b>";
+					print "<b>Customer ". $this->data["name_customer"] ." has a zero credit balance.</b>";
 			
 					print "<table cellpadding=\"4\">";
 							
@@ -2606,7 +2606,7 @@ class customer_credits extends customer
 			print "<table width=\"100%\" class=\"table_highlight_info\">";
 			print "<tr>";
 				print "<td>";
-				print "<b>Customer ". $this->obj_customer->data["name_customer"] ." has no credits against their account.</b>";
+				print "<b>Customer ". $this->data["name_customer"] ." has no credits against their account.</b>";
 				print "<p>To credit a customer account, create a credit note against a past invoice.</p>";
 				print "</td>";
 			print "</tr>";

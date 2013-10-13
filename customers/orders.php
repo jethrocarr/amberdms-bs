@@ -81,6 +81,8 @@ class page_output
 
 	function execute()
 	{
+		// load customer's general data
+		$this->obj_customer->load_data();
 
 		// establish a new table object
 		$this->obj_table = New table;
