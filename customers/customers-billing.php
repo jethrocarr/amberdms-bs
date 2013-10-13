@@ -145,7 +145,7 @@ class page_output
 			}
 
 			// re index after the potential unsets
-			$this->obj_table_list->data = array_values($this->obj_table_list->data);
+			$this->obj_table_list->data = @array_values($this->obj_table_list->data);
 			$this->obj_table_list->data_num_rows = count($this->obj_table_list->data);
 
 

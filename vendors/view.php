@@ -161,7 +161,7 @@ class page_output
 			$structure["fieldname"]		= "contact_" .$i;
 			$structure["type"]		= "input";
 			$structure["defaultvalue"]	= $sql_contacts_obj->data[$i]["contact"];
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -188,7 +188,7 @@ class page_output
 				$structure["values"]			= array("other");
 				$structure["options"]["autoselect"]	= "yes";
 			}
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -202,7 +202,7 @@ class page_output
 			$structure["fieldname"]		= "description_" .$i;
 			$structure["type"]		= "textarea";
 			$structure["defaultvalue"]	= $sql_contacts_obj->data[$i]["description"];
-			if ($_SESSION["error"]["contact_" .$i. "-error"])
+			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
 			}
@@ -353,6 +353,17 @@ class page_output
 				$this->tax_array[] = "tax_". $data_tax["id"];
 			}
 		}
+		else
+		{
+			$this->tax_array = array();
+
+			$structure = NULL;
+			$structure["fieldname"] 		= "tax_message";
+			$structure["type"]			= "message";
+			$structure["defaultvalue"]		= "<p>No taxes can be selected for this vendor, as there have been no taxes configured yet.</p>";
+			$this->obj_form->add_input($structure);
+		}
+
 
 
 		// purchase options
@@ -494,7 +505,7 @@ class page_output
 		{
 			print "<tr >";
 				print "<td>";
-				if ($_SESSION["error"]["contact_" .$i. "-error"])
+				if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 				{
 					print "<table id=\"contact_box_$i\" class=\"error_box contact_box\">";
 				}
@@ -508,7 +519,7 @@ class page_output
 					print "<td width=\"25%\">";
 						$this->obj_form->render_field("contact_id_$i");
 						
-						if ($_SESSION["error"]["contact_" .$i. "-error"])
+						if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<span>";
 						}
@@ -521,7 +532,7 @@ class page_output
 						$this->obj_form->render_field("contact_$i");
 						
 						
-						if ($_SESSION["error"]["contact_" .$i. "-error"])
+						if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<span>";
 						}
@@ -563,7 +574,7 @@ class page_output
 					print "<td width=\"25%\" class=\"description_cell\">";
 					
 					
-						if ($_SESSION["error"]["contact_" .$i. "-error"])
+						if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<span>";
 						}
@@ -582,7 +593,7 @@ class page_output
 							print "contact_description\" id=\"description_text_$i\">" .$this->obj_form->structure["description_$i"]["defaultvalue"]. "</p>";
 
 
-						if ($_SESSION["error"]["contact_" .$i. "-error"])
+						if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<p class=\"change_contact\"><a id=\"change_contact_$i\" href=\"\" >done</a></p>";
 						}
