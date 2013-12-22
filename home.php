@@ -121,14 +121,9 @@ else
 
 			print "<table cellpadding=\"5\">";
 			print "<tr>";
-				print "<td><b>General User Discussion List</b></td>";
+				print "<td><b>Community Support Mailing List</b></td>";
 				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/mailman/listinfo/amberdms-bs\">Sign Up</a></td>";
 				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/pipermail/amberdms-bs/\">Archives</a></td>";
-			print "</tr>";
-      			print "<tr>";
-				print "<td><b>Developers Mailing List</b></td>";
-				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/mailman/listinfo/amberdms-bs-devel\">Sign Up</a></td>";
-				print "<td><a target=\"new\" class=\"button\" href=\"http://lists.amberdms.com/pipermail/amberdms-bs-devel/\">Archives</a></td>";
 			print "</tr>";
       			print "<tr>";
 				print "<td><b>Public Issue Tracker</b></td>";
