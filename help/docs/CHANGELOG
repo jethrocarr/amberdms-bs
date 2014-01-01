@@ -1,5 +1,25 @@
 CHANGELOG
 
+2014-01-01 Jethro Carr <jethro.carr@amberdms.com>
+
+	* Released version 2.0.1
+
+	New Functionality
+	* Invoices and credit notes can be downloaded via SOAP API call (thanks to Max Milaney's contribution).
+	* Database schema updater now supported hosted/multi-instance mode.
+
+	Bug Fixes
+	* Service type "licenses" was missing in release 2.0.0
+	* Quotes page was missing edit/delete links (issue 395)
+	* Compatibility fixes for MySQL 5.6 STRICT mode.
+	* Fixes to the PHP HTTPS redirect (thanks to Dmitry Smirnov)
+	* Minor user interface fixes.
+
+	Other
+	* Upgraded to latest Amberphplib framework.
+	* Developer stats collection option provide more details about what gets sent home to developers.
+
+
 2013-06-09 Jethro Carr <jethro.carr@amberdms.com>
 
 	* Released version 2.0.0
