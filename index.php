@@ -34,9 +34,9 @@ log_debug("index", "Starting index.php");
 /*
 	Enforce HTTPS
 */
-if (!$_SERVER["HTTPS"])
+if (empty($_SERVER["HTTPS"]))
 {
-	header("Location: https://". $_SERVER["SERVER_NAME"] ."/".  $_SERVER['PHP_SELF'] );
+	header("Location: https://". $_SERVER["HTTP_HOST"] .$_SERVER["PHP_SELF"]);
 	exit(0);
 }
 
