@@ -1,7 +1,7 @@
 <?php
 /*
 	Amberdms Billing System
-	(c) Copyright 2013 Amberdms Ltd
+	(c) Copyright 2014 Amberdms Ltd
 
 	Please see LICENSE file for copyright information.
 */
