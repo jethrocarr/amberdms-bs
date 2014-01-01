@@ -5,10 +5,12 @@
 # This utility is licensed under the GNU AGPL Version 3.0
 #
 # This script is run manually by the user to setup the MySQL database
-# for the Amberdms Billing system.
+# for the Amberdms Billing system. This setup is for a single instance
+# installation, but it can be cloned for a multi-instance installation
+# if desired, as per the documentation.
 #
 # * Create the MySQL database
-# * Create AOConf user in MySQL
+# * Create user in MySQL
 # * Write settings to config file.
 # * Import the inital database.
 #
@@ -25,7 +27,7 @@ my $db_user		= "root";		# name of user to be used to create data
 my $db_name		= "billing_system";	# name of the DB to create
 my $db_host		= "localhost";		# MySQL server
 
-my $db_bs_user		= "billing_system";	# name of the aoconf user to create
+my $db_bs_user		= "billing_system";	# name of the MySQL user to create
 my $db_bs_password	= random_password(10);	# random password to generate
 
 # location of config.php file
@@ -78,12 +80,24 @@ print "Please enter MySQL $db_user password (if any): ";
 my $db_pass = get_question('^[\S\s]*$');
 
 
-# connect to mysql
-# note: not connecting to DB is deliberate, since at this stage the database does not exist.
+## 0. CREATE THE DATABASE
+
+# Firstly, connect to the DB and create an empty database for the import
+# to take place into.
+
 my $mysql_handle = DBI->connect("dbi:mysql:host=$db_host;user=$db_user;password=$db_pass") || die("Error: Unable to connect to MySQL database: $DBI::errstr\n");
 
+my $mysql_string = "CREATE DATABASE `$db_name` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci";
+my $mysql_result = $mysql_handle->prepare($mysql_string) || die("Error: SQL query ($mysql_string) failed: $DBI::errstr\n");
+$mysql_result->execute || die("Error: SQL query ($mysql_string) failed: $DBI::errstr\n");
 
-## 1. IMPORT SCHEMA
+
+# Re-connect into the DB itself.
+$mysql_handle = DBI->connect("dbi:mysql:database=$db_name;host=$db_host;user=$db_user;password=$db_pass") || die("Error: Unable to connect to MySQL database: $DBI::errstr\n");
+
+
+
+## 1. IMPORT INSTALL SCHEMA
 
 # import the latest database
 print "Searching $opt_schemadata for latest install schema...\n";
@@ -107,9 +121,67 @@ else
 }
 
 
+## 2. IMPORT UPGRADES
+
+# We only generate new install schemas when a number of changes have been made.
+# For minor stuff, we just create an upgrade schemas, which we apply ontop of the
+# most recent install schema file.
+
+print "Searching $opt_schemadata for latest upgrade schemas...\n";
+
+# get a list of upgrade files
+@data	= glob("$opt_schemadata/version_*_upgrade.sql");
+$count	= scalar @data;
+
+if ($count == 0)
+{
+	print "Installed schema is the latest, no upgrades to apply.\n";
+}
+else
+{
+	print "Applying any upgrade SQL files that match...\n";
+		
+	my ($latestversion, $opt_version_schema);
+
+	$mysql_string = "SELECT value FROM `config` WHERE name='SCHEMA_VERSION'";
+	$mysql_result = $mysql_handle->prepare($mysql_string) || die("Error: SQL query ($mysql_string) failed: $DBI::errstr\n");
+	$mysql_result->execute;
+
+	while (my $mysql_data = $mysql_result->fetchrow_hashref())
+	{
+		$opt_version_schema = $mysql_data->{value};
+	}
+	$mysql_result->finish;
 
 
-## 2. SETUP MYSQL USER
+	foreach my $sqlfile (@data)
+	{
+		if ($sqlfile =~ /_([0-9]{4}[0-9]{2}[0-9]{2}[0-9]*)_/)
+		{
+			$latestversion = $1;
+				
+			if ($latestversion > $opt_version_schema)
+			{
+				# Need to import this schema upgrade file
+				print "Applying DB update $sqlfile\n";
+				import_sql($sqlfile, $mysql_handle);
+
+				# update the schema version in the DB
+				$mysql_string = "UPDATE `config` SET value='$latestversion' WHERE name='SCHEMA_VERSION' LIMIT 1";
+				$mysql_result = $mysql_handle->prepare($mysql_string) || die("Error: SQL query ($mysql_string) failed: $DBI::errstr\n");
+				$mysql_result->execute;
+			}
+		}
+		else
+		{
+			print "Warning: Incorrectly named SQL upgrade file: $sqlfile\n";
+		}
+	}
+}
+
+
+
+## 3. SETUP MYSQL USER
 
 # create queries in tmp file
 open (MYSQL, ">$opt_tmpfile") || die("Unable to create tmp file mysqltmp\n");
@@ -138,7 +210,7 @@ system("rm -f $opt_tmpfile");
 
 
 
-## 3. WRITE CONFIGURATION FILE
+## 4. WRITE CONFIGURATION FILE
 
 # update configuration file
 print "Updating configuration file...\n";
@@ -257,27 +329,45 @@ sub import_sql
 	my $mysql_handle	= shift;
 
 	open(SQL, "$sqlfile") or die("Error: Unable to open $sqlfile\n");
-				
-	my @statements = split(/;\n/,join('',<SQL>));
-	foreach my $sqlline ( @statements )
+
+
+	# Filter out unwanted content
+	my @lines;
+	while (<SQL>)
 	{
 		# remove crap lines
-		if ($sqlline =~ /^\s*$/)
+		if ($_ =~ /^\s*$/)
 		{
 			next;
 		}
 		
-		if ($sqlline =~ /^#/)
+		if ($_ =~ /^#/)
 		{
 			next;
 		}
 
-
-		# line is good - process it.
-		if ($sqlline)
+		# Ignore any CREATE DATABASE/USE lines. These exist in older install SQL
+		# files but mess with our smarter installers.
+		if ($_ =~ /^CREATE\sDATABASE/)
 		{
-			$mysql_handle->do($sqlline);
+			next;
 		}
+
+		if ($_ =~ /^USE/)
+		{
+			next;
+		}
+
+		# Valid SQL line to process
+		push (@lines, $_);
+	}
+
+				
+	# A SQL statement can be multiline, need to rejoin into proper queries
+	my @statements = split(/;\n/,join('',@lines));
+	foreach my $sqlline ( @statements )
+	{
+		$mysql_handle->do($sqlline);
 	}
 				    
 	close(SQL);
