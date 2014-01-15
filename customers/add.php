@@ -720,7 +720,7 @@ class page_output
 		//shipping address
 		print "<table class=\"form_table\" width=\"100%\">";
 		print "<tr class=\"header\">";
-			print "<td colspan=\"2\"><b>" .lang_trans("address_billing"). "</b></td>";
+			print "<td colspan=\"2\"><b>" .lang_trans("address_shipping"). "</b></td>";
 		print "</tr>";
 		
 		$this->obj_form->render_row("address1_same_as_2");
