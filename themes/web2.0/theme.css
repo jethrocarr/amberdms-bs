@@ -101,6 +101,7 @@ a:active {
 	-khtml-border-radius: 7px;
 	-webkit-border-radius: 7px;
 	border-radius: 7px;
+	cursor: pointer;
 }
 
 .table_options_dropdown:hover 
