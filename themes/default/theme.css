@@ -97,7 +97,8 @@ a:active {
 	border-style: solid;
 	border-color: #ffffff;
 	background-color: #fff298;
-	color: #000000
+	color: #000000;
+	cursor: pointer;
 }
 
 .table_options_dropdown:hover 
