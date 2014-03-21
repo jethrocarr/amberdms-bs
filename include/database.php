@@ -30,14 +30,14 @@ if ($config["instance"] == "hosted")
 		*/
 
 		// login to the database
-		$link = mysql_connect($_SESSION["user"]["instance"]["db_hostname"], $config["db_user"], $config["db_pass"]);
+		$link = ($GLOBALS["___mysqli_ston"] = mysqli_connect($_SESSION["user"]["instance"]["db_hostname"],  $config["db_user"],  $config["db_pass"]));
 		if (!$link)
-			die("Unable to connect to DB:" . mysql_error());
+			die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 
 		// select the database
-		$db_selected = mysql_select_db($config["db_name"] ."_". $_SESSION["user"]["instance"]["id"], $link);
+		$db_selected = ((bool)mysqli_query( $link, "USE ". $config["db_name"] ."_". $_SESSION["user"]["instance"]["id"]));
 		if (!$db_selected)
-			die("Unable to connect to DB:" . mysql_error());
+			die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 	}
 	else
 	{
@@ -46,14 +46,14 @@ if ($config["instance"] == "hosted")
 		*/
 
 		// login to the database
-		$link = mysql_connect($config["db_host"], $config["db_user"], $config["db_pass"]);
+		$link = ($GLOBALS["___mysqli_ston"] = mysqli_connect($config["db_host"],  $config["db_user"],  $config["db_pass"]));
 		if (!$link)
-			die("Unable to connect to DB:" . mysql_error());
+			die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 
 		// select the database
-		$db_selected = mysql_select_db($config["db_name"] ."_instances", $link);
+		$db_selected = ((bool)mysqli_query( $link, "USE ". $config["db_name"] ."_instances"));
 		if (!$db_selected)
-			die("Unable to connect to DB:" . mysql_error());
+			die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 	}
 
 }
@@ -68,14 +68,14 @@ else
 
 		
 	// login to the database
-	$link = mysql_connect($config["db_host"], $config["db_user"], $config["db_pass"]);
+	$link = ($GLOBALS["___mysqli_ston"] = mysqli_connect($config["db_host"],  $config["db_user"],  $config["db_pass"]));
 	if (!$link)
-		die("Unable to connect to DB:" . mysql_error());
+		die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 
 	// select the database
-	$db_selected = mysql_select_db($config["db_name"], $link);
+	$db_selected = ((bool)mysqli_query( $link, "USE ". $config["db_name"]));
 	if (!$db_selected)
-		die("Unable to connect to DB:" . mysql_error());
+		die("Unable to connect to DB:" . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 
 }
 
@@ -83,7 +83,7 @@ else
 // Disable SQL modes for this session to ensure backwards compat with
 // newer MySQL version (> 5.6) using STRICT modes.
 
-mysql_query("SET SESSION sql_mode=''", $link);
+mysqli_query( $link, "SET SESSION sql_mode=''");
 
 
 /*
