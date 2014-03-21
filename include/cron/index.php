@@ -83,22 +83,22 @@ if ($GLOBALS["config"]["instance"] == "hosted")
 		// to the new server.
 		if ($data["db_hostname"] != $GLOBALS["config"]["db_host"])
 		{
-			$link = mysql_connect($data["db_hostname"], $config["db_user"], $config["db_pass"]);
+			$link = ($GLOBALS["___mysqli_ston"] = mysqli_connect($data["db_hostname"],  $config["db_user"],  $config["db_pass"]));
 
 			if (!$link)
 			{
-				die("Unable to connect to database server for instance ". $data["instanceid"] ." - error: " . mysql_error() ."\n");
+				die("Unable to connect to database server for instance ". $data["instanceid"] ." - error: " . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) ."\n");
 			}
 		}
 
 		// select the instance database
-		$dbaccess = mysql_select_db($GLOBALS["config"]["db_name"] ."_". $data["instanceid"]);
+		$dbaccess = ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $GLOBALS["config"]["db_name"] ."_". $data["instanceid"]"));
 	
 		if (!$dbaccess)
 		{
 			// invalid instance ID
 			// ID has a record in the instance table, but does not have a valid database
-			die("Instance ID has record but no database accessible - error: ". mysql_error() ."\n");
+			die("Instance ID has record but no database accessible - error: ". ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) ."\n");
 		}
 
 

@@ -404,24 +404,24 @@ class user_auth
 					if ($sql_instance_obj->data[0]["db_hostname"] != $GLOBALS["config"]["db_host"])
 					{
 						// TODO: does this connect statement need to be moved into the sql_obj framework?
-						$link = mysql_connect($sql_instance_obj->data[0]["db_hostname"], $config["db_user"], $config["db_pass"]);
+						$link = ($GLOBALS["___mysqli_ston"] = mysqli_connect($sql_instance_obj->data[0]["db_hostname"],  $config["db_user"],  $config["db_pass"]));
 
 						if (!$link)
 						{
-							log_write("error", "user_auth", "Unable to connect to database server for instance $instance - error: " . mysql_error());
+							log_write("error", "user_auth", "Unable to connect to database server for instance $instance - error: " . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 							return -1;
 						}
 					}
 
 
 					// select the instance database
-					$dbaccess = mysql_select_db($GLOBALS["config"]["db_name"] ."_$instance");
+					$dbaccess = ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE ". $GLOBALS["config"]["db_name"] ."_$instance"));
 		
 					if (!$dbaccess)
 					{
 						// invalid instance ID
 						// ID has a record in the instance table, but does not have a valid database
-						log_write("error", "user_auth", "Instance ID has record but no database accessible - error: ". mysql_error());
+						log_write("error", "user_auth", "Instance ID has record but no database accessible - error: ". ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
 						return -1;
 					}
 					else
