@@ -1,12 +1,13 @@
 # Amberdms Billing System (ABS)
 
+** Please Note: I consider this project deprecated, the code remains here as a reference but is not active maintained **
+
 ## Project Homepage
 
 For more information including source code, issue tracker and documentation
 visit the project homepage:
 
-https://projects.jethrocarr.com/p/oss-amberdms-bs/
-
+https://github.com/jethrocarr/amberdms-bs
 
 
 ## Introduction
