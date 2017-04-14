@@ -48,7 +48,12 @@ more targeted to your country's requirements) for the accounting.
 
 ## Getting Started
 
-To get started with Amberdms Billing System, read the installation instructions
-on the project homepage: https://projects.jethrocarr.com/p/oss-amberdms-bs/
+Somewhat out of date documentation/manuals available at:
+https://github.com/jethrocarr/amberdms-bs/tree/master/help/manual
 
+In particular, see [the manual installation guide](https://github.com/jethrocarr/amberdms-bs/blob/master/help/manual/amberdms_billing_system_install_manual.pdf)
+
+Recommend downloading the current `master` branch from Github, rather than
+using a tarball, since bug fixes and contributions get merged, but not
+doing releases very often (if ever?) now.
 
