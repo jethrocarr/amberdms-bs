@@ -23,7 +23,7 @@ class page_output
 	var $obj_form;
 	
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_customer		= New customer_services;
 

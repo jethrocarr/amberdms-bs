@@ -22,7 +22,7 @@ class page_output
 	var $mode;
 
 
-	function page_output()
+	function __construct()
 	{
 		// includes
 		$this->requires["javascript"][]	= "include/javascript/services.js";

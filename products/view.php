@@ -18,7 +18,7 @@ class page_output
 {
 	var $obj_productform;
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_productform			= New products_form_details;
 		$this->obj_productform->productid	= @security_script_input('/^[0-9]*$/', $_GET["id"]);

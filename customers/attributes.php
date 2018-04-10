@@ -27,7 +27,7 @@ class page_output
 	var $group_list;
 
 
-	function page_output()
+	function __construct()
 	{
 		// requirements
 		$this->requires["css"][]		= "include/attributes/css/attributes.css";

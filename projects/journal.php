@@ -17,7 +17,7 @@ class page_output
 	var $obj_journal;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -28,8 +28,9 @@ class page_output
 		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+                $this->obj_menu_nav->add_item("Project Expenses", "page=projects/expenses.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."", TRUE);
+                $this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."", TRUE);
 
 		if (user_permissions_get("projects_write"))
 		{

@@ -67,6 +67,7 @@ function ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amoun
 				."'". $source ."', "
 				."'". $memo ."' "
 				.")";
+
 	if ($sql_obj->execute())
 	{
 		return 1;
@@ -118,7 +119,26 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=$customid\">$result</a>";
 		break;
+                
+		case "project":
+			// for AR invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_project as value FROM projects WHERE id='$customid'");
+			
+			$result = "Project expense $result";
 
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=projects/view.php&id=$customid\">$result</a>";
+		break;
+
+                case "proj_ar":
+			// for project to invoice transation, get invoice 
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar LEFT JOIN account_items ON account_items.invoiceid=account_ar.id WHERE account_items.id='$customid'");
+			$invid = sql_get_singlevalue("SELECT invoiceid AS value FROM account_items WHERE id='".$customid."'");
+			$result = "Project to AR invoice $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$invid\">$result</a>";
+		break;
 		
 		case "ap":
 		case "ap_tax":

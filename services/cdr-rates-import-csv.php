@@ -20,7 +20,7 @@ class page_output
 	var $example_array;
 	
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_rate_table	= New cdr_rate_table;
 

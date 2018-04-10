@@ -24,7 +24,7 @@ class page_output
 
 	
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_customer				= New customer_services;
 		$this->obj_ddi					= New cdr_customer_service_ddi;

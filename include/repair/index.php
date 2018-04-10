@@ -93,7 +93,7 @@ if ($GLOBALS["config"]["instance"] == "hosted")
 		}
 
 		// select the instance database
-		$dbaccess = ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $GLOBALS["config"]["db_name"] ."_". $data["instanceid"]"));
+		$dbaccess = ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE ".$GLOBALS["config"]["db_name"] ."_". $data["instanceid"]));
 	
 		if (!$dbaccess)
 		{

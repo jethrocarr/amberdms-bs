@@ -18,7 +18,7 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form_credit;
 
-	function page_output()
+	function __construct()
 	{
 		$this->requires["javascript"][]		= "include/customers/javascript/populate_invoices_dropdown.js";
 	}

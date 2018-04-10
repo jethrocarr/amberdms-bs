@@ -17,7 +17,7 @@ class page_output
 	var $obj_journal;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch vapiables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -113,6 +113,8 @@ class page_output
 			format_msgbox("locked", "<p>Note: your permissions limit you to read-only access to the journal</p>");
 		}
 
+          
+                
 		// display options form
 		$this->obj_journal->render_options_form();
 		

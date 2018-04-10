@@ -50,10 +50,10 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 	$data["customerid"]		= @security_form_input_predefined("int", "customerid", 1, "");
 	$data["employeeid"]		= @security_form_input_predefined("int", "employeeid", 1, "");
 	$data["notes"]			= @security_form_input_predefined("any", "notes", 0, "");
-	
+		
 	$data["date_trans"]		= @security_form_input_predefined("date", "date_trans", 1, "");
 	$data["date_validtill"]		= @security_form_input_predefined("date", "date_validtill", 1, "");
-
+	$data["terms_of_business"]	= @security_form_input_predefined("any", "terms_of_business",0,"");
 
 	// are we editing an existing quote or adding a new one?
 	if ($id)
@@ -159,7 +159,8 @@ function quotes_form_details_process($mode, $returnpage_error, $returnpage_succe
 						."notes='". $data["notes"] ."', "
 						."code_quote='". $data["code_quote"] ."', "
 						."date_trans='". $data["date_trans"] ."', "
-						."date_validtill='". $data["date_validtill"] ."' "
+						."date_validtill='". $data["date_validtill"] ."', "
+						."terms_of_business='". $data["terms_of_business"] ."' "
 						."WHERE id='$id' LIMIT 1";
 		
 			$sql_obj->execute();

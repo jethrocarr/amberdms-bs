@@ -139,6 +139,12 @@ class page_output
 		$structure["options"]["label"]			= " Check to have invoices automatically paid where there is credit or reoccuring billing details.";
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]				= "ACCOUNTS_CANCEL_DELETE";
+		$structure["type"]				= "checkbox";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$structure["options"]["label"]			= " Check to have invoices cancelled when 'deleted'. Uncheck for proper deletion.";
+		$this->obj_form->add_input($structure);
 
 
 		// email options
@@ -358,7 +364,7 @@ class page_output
 		
 		// define subforms
 		$this->obj_form->subforms["config_defcodes"]		= array("ACCOUNTS_AP_INVOICENUM", "ACCOUNTS_AR_INVOICENUM", "ACCOUNTS_GL_TRANSNUM", "ACCOUNTS_QUOTES_NUM", "ACCOUNTS_CREDIT_NUM", "CODE_ACCOUNT", "CODE_CUSTOMER", "CODE_VENDOR", "CODE_PRODUCT", "CODE_PROJECT", "CODE_STAFF");
-		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_SERVICES_DATESHIFT", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_AUTOPAY");
+		$this->obj_form->subforms["config_accounts"]		= array("ACCOUNTS_SERVICES_ADVANCEBILLING", "ACCOUNTS_SERVICES_DATESHIFT", "ACCOUNTS_TERMS_DAYS", "ACCOUNTS_AUTOPAY", "ACCOUNTS_CANCEL_DELETE");
 		$this->obj_form->subforms["config_accounts_email"]	= array("ACCOUNTS_EMAIL_ADDRESS", "ACCOUNTS_INVOICE_AUTOEMAIL", "ACCOUNTS_EMAIL_AUTOBCC", "ACCOUNTS_INVOICE_BATCHREPORT");
 		$this->obj_form->subforms["config_services_email"]	= array("SERVICES_USAGEALERTS_ENABLE");
 		$this->obj_form->subforms["config_orders"]		= array("ORDERS_BILL_ONSERVICE", "ORDERS_BILL_ENDOFMONTH");

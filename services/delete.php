@@ -17,7 +17,7 @@ class page_output
 {
 	var $obj_serviceform;
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_serviceform			= New services_form_delete;
 		$this->obj_serviceform->serviceid	= @security_script_input('/^[0-9]*$/', $_GET["id"]);

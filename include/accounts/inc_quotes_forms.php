@@ -105,6 +105,13 @@ class quote_form_details
 		$structure["options"]["width"]	= 500;
 		$this->obj_form->add_input($structure);
 
+		$structure = NULL;
+		$structure["fieldname"]			= "terms_of_business";
+		$structure["type"]			= "radio";
+		$structure["options"]["autoselect"]	= "yes";
+		$structure["defaultvalue"]		= "terms_none";
+		$structure["values"]			= array("terms_consumer","terms_business","terms_none");
+		$this->obj_form->add_input($structure);
 
 
 		// dates
@@ -139,13 +146,13 @@ class quote_form_details
 
 
 		// load data
-		$this->obj_form->sql_query = "SELECT customerid, employeeid, code_quote, notes, date_trans, date_validtill FROM account_quotes WHERE id='". $this->quoteid ."'";
+		$this->obj_form->sql_query = "SELECT customerid, employeeid, code_quote, notes, date_trans, date_validtill,terms_of_business FROM account_quotes WHERE id='". $this->quoteid ."'";
 		$this->obj_form->load_data();
 
 
 		// define subforms
 		$this->obj_form->subforms["quote_details"]	= array("customerid", "employeeid", "code_quote", "date_trans", "date_validtill");
-		$this->obj_form->subforms["quote_other"]	= array("notes");
+		$this->obj_form->subforms["quote_other"]	= array("notes","terms_of_business");
 
 		$this->obj_form->subforms["hidden"]		= array("id_quote");
 		$this->obj_form->subforms["submit"]		= array("submit");

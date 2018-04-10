@@ -23,7 +23,7 @@ class page_output
 	var $obj_table;
 
 
-	function page_output()
+	function __construct()
 	{
 		// customer object
 		$this->obj_customer		= New customer_orders;

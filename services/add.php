@@ -15,7 +15,7 @@ class page_output
 {
 	var $obj_serviceform;
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_serviceform			= New services_form_details;
 		$this->obj_serviceform->serviceid	= 0;

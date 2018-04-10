@@ -271,7 +271,6 @@ class menu_main
 		// sort the menu data in the opposite direction for correct rendering
 		$this->menu_structure = array_reverse($sql_menu_obj->data);
 
-
 		// return success
 		return 1;
 
@@ -298,7 +297,6 @@ class menu_main
 	function render_menu_standard()
 	{
 		log_debug("menu_main", "Executing render_menu_standard()");
-
 
 		print "<table class=\"menu_table\">";
 

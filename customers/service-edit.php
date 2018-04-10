@@ -28,7 +28,7 @@ class page_output
 
 	
 
-	function page_output()
+	function __construct()
 	{
 		// define page dependencies
 		$this->requires["javascript"][]		= "include/javascript/services.js";

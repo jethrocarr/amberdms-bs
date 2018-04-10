@@ -22,7 +22,7 @@ class page_output
 	var $tax_array = array();
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);

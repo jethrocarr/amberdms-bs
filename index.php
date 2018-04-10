@@ -31,9 +31,9 @@ include("include/amberphplib/main.php");
 log_debug("index", "Starting index.php");
 
 
-/*
-	Enforce HTTPS
-*/
+
+//	Enforce HTTPS
+
 if (empty($_SERVER["HTTPS"]))
 {
 	header("Location: https://". $_SERVER["HTTP_HOST"] .$_SERVER["PHP_SELF"]);
@@ -112,12 +112,6 @@ else
 $theme_path = "themes/".$folder."/";
 
 
-
-
-
-
-
-
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
@@ -169,9 +163,21 @@ $theme_path = "themes/".$folder."/";
 <script type="text/javascript" src="external/jquery-ui/jquery-ui-1.8.2.js"></script>
 <script type="text/javascript" src="include/javascript/javascript.js"></script>
 <script type="text/javascript" src="include/language/javascript/translate_ui.js"></script>
-
-
 <?php
+// If TinyMCE is installed, include the scripts for it
+	if(file_exists("external/tinymce/js/tinymce/tinymce.min.js"))
+	{
+		print("<script src=\"external/tinymce/js/tinymce/tinymce.min.js\"></script>\n");
+		print("<script>\n");
+		print("tinymce.init({  \n");
+		print("  selector: '.tinymce',\n");
+		print("  resize: 'both',\n");
+		print("  plugins: 'advlist link lists table hr paste',\n");
+		print("  menubar: 'edit insert view format table'\n");
+		print("});\n");
+		print("</script>\n");
+	}
+
 
 // include page-specific javascript files
 if (isset($page_obj->requires["javascript"]))
@@ -216,7 +222,7 @@ if (file_exists("language/translate.php"));
 	<td id="header_td_outer">
 		<table id="header_table_inner">
 		<tr>
-			<?php print "<td id=\"header_logo\"><img src=\"".$theme_path."logo.png\" alt=\"Amberdms Billing System\"></td>"; ?>
+			<?php print "<td id=\"header_logo\"><a href=\"index.php\"><img src=\"".$theme_path."logo.png\" alt=\"Amberdms Billing System\"></a></td>"; ?>
 			<td id="header_logout">
 			<?php
 
@@ -263,7 +269,6 @@ if (user_online())
 
 		print "</td></tr>";
 	}
-		
 }
 
 
@@ -285,10 +290,8 @@ if ($page_valid == 1)
 		{
 			print "<tr><td>";
 			$page_obj->obj_menu_nav->render_html();
-			print "</tr></td>";
+			print "</td></tr>";
 		}
-
-
 
 		/*
 			Check data
