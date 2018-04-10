@@ -30,7 +30,7 @@ class page_output
 	var $access_staff_ids_write;
 	
 
-	function page_output()
+	function __construct()
 	{
 		//include required JS and CSS
 		$this->requires["javascript"][]		= "include/timekeeping/javascript/timereg-day-edit.js";
@@ -115,7 +115,7 @@ class page_output
 			}
 			else
 			{
-				log_render("error", "page", "Before you can add or edit timesheet hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_write permission.");
+				log_write("error", "page", "Before you can add or edit timesheet hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_write permission.");
 			}
 		}
 	}

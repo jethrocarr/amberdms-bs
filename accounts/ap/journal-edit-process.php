@@ -40,7 +40,7 @@ if (user_permissions_get('accounts_ap_write'))
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"]["journal_edit"] = "failed";
 		header("Location: ../../index.php?page=accounts/ap/journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."&action=". $journal->structure["action"] ."");

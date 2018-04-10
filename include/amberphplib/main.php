@@ -33,7 +33,17 @@
 */
 function log_debug($category, $content)
 {
-	return log_write("debug", $category, $content);
+        $dbg=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2);
+        if(isset($dbg[1]))
+        {
+            $dbg="; ".basename($dbg[1]["file"]).": ".$dbg[1]["line"]."";
+        }
+        else
+        {
+            $dbg="";
+        }
+
+	return log_write("debug", $category, $content.$dbg);
 }
 
 function log_write($type, $category, $content)

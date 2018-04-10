@@ -21,7 +21,7 @@ class page_output
 	var $obj_form_invoice;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -34,7 +34,15 @@ class page_output
 		$this->obj_menu_nav->add_item("Invoice Payments", "page=accounts/ar/invoice-payments.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Invoice Journal", "page=accounts/ar/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Export Invoice", "page=accounts/ar/invoice-export.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Delete Invoice", "page=accounts/ar/invoice-delete.php&id=". $this->id ."", TRUE);
+		if($GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+                {
+                    $title="Cancel Invoice";
+                }
+                else
+                {
+                    $title="Delete Invoice";
+                }
+                $this->obj_menu_nav->add_item($title, "page=accounts/ar/invoice-delete.php&id=". $this->id ."",TRUE);
 	}
 
 
@@ -77,10 +85,18 @@ class page_output
 
 	function render_html()
 	{
-		// heading
-		print "<h3>DELETE INVOICE</h3><br>";
-		print "<p>This page allows you to delete incorrect invoices, provided that they have not been locked.</p>";
-		
+                if($GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+                {
+                    // heading
+                    print "<h3>CANCEL INVOICE</h3><br>";
+                    print "<p>This page allows you to cancel incorrect invoices, provided that they have not been locked.</p>";
+                }
+                else
+                {
+                    // heading
+                    print "<h3>DELETE INVOICE</h3><br>";
+                    print "<p>This page allows you to delete incorrect invoices, provided that they have not been locked.</p>";
+                }
 		// display summary box
 		invoice_render_summarybox("ar", $this->id);
 

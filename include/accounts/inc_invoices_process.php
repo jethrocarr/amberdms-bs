@@ -423,7 +423,14 @@ function invoice_form_delete_process($type, $returnpage_error, $returnpage_succe
 	
 	if ($invoice->action_delete())
 	{
+            if($invoice->type=="ar" && $GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+            {
+                $_SESSION["notification"]["message"] = array("Invoice has been successfully cancelled.");
+            }
+            else
+            {
 		$_SESSION["notification"]["message"] = array("Invoice has been successfully deleted.");
+            }
 	}
 	else
 	{

@@ -24,7 +24,7 @@ class page_output
 	var $obj_refund;
 
 	
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->obj_customer		= New customer_credits;

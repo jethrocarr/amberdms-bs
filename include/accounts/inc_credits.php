@@ -1231,7 +1231,7 @@ class credit
 		switch($template_data['template_type']) 
 		{
 			case $this->type .'_htmltopdf':
-				$this->obj_pdf =& New template_engine_htmltopdf;
+				$this->obj_pdf = New template_engine_htmltopdf;
 				$template_file = $template_data['template_file']."/index.html";
 				
 				if (is_dir("../../{$template_data['template_file']}"))
@@ -1246,7 +1246,7 @@ class credit
 			
 			case $this->type .'_tex':
 			default:
-				$this->obj_pdf =& New template_engine_latex;
+				$this->obj_pdf = New template_engine_latex;
 				$template_file = $template_data['template_file'].".tex";
 			break;
 		

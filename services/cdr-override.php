@@ -23,7 +23,7 @@ class page_output
 	var $obj_menu_nav;
 
 
-	function page_output()
+	function __construct()
 	{
 		// init
 		$this->obj_cdr_rate_table	= New cdr_rate_table_rates_override;

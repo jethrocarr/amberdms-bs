@@ -29,7 +29,7 @@ class journal_base
 
 		Class Contructor
 	*/
-	function journal_base()
+	function __construct()
 	{
 		// init the SQL structure
 		$this->sql_obj = New sql_query;	
@@ -152,7 +152,7 @@ class journal_base
 				$_SESSION["form"][$this->journalname]["custom_options_active"] = 1;
 
 
-				log_debug("journal_base", "Loading options form from $_GET");
+				log_debug("journal_base", "Loading options form from GET");
 				
 				// load filterby options
 				foreach (array_keys($this->filter) as $fieldname)
@@ -935,9 +935,11 @@ class journal_input extends journal_base
 
 		Class Contructor
 	*/
-	function journal_input()
+	function __construct()
 	{
-		// init the form object
+            parent::__construct();
+
+            // init the form object
 		$this->form_obj = New form_input;
 	}
 
@@ -1352,8 +1354,10 @@ class journal_process extends journal_base
 
 		Class Contructor
 	*/
-	function journal_process()
-	{
+	function __construct()
+	{   
+                parent::__construct();
+                
 		// sql query
 		$this->sql_obj = New sql_query;	
 

@@ -22,7 +22,7 @@ class page_output
 	var $obj_table_items;
 
 
-	function page_output()
+	function __construct()
 	{
 		$this->requires["css"][]	= "include/accounts/css/invoice-items-edit.css";
 

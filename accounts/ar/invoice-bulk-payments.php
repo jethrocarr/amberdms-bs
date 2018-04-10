@@ -14,7 +14,7 @@ class page_output
 	var $obj_table;
 	var $obj_form;
 	
-	function page_output()
+	function __construct()
 	{
 		// requirements
 		$this->requires["css"][]		= "include/accounts/css/invoice-bulk-payments.css";

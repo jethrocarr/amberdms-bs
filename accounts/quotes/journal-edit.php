@@ -19,7 +19,7 @@ class page_output
 	var $obj_form_journal;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch quote ID
 		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -35,6 +35,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Quote Items", "page=accounts/quotes/quotes-items.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Quote Journal", "page=accounts/quotes/journal.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Export Quote", "page=accounts/quotes/quotes-export.php&id=". $this->id ."");
+                $this->obj_menu_nav->add_item("Create Project", "page=accounts/quotes/quotes-convert-project.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Convert to Invoice", "page=accounts/quotes/quotes-convert.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Delete Quote", "page=accounts/quotes/quotes-delete.php&id=". $this->id ."");
 	}

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head> 
+	    <title>Invoice (code_invoice)</title>
+		<link rel="stylesheet" href="(tmp_filename)html_data/style.css" type="text/css" charset="utf-8" />
+		<link rel="stylesheet" href="./html_data/style.css" type="text/css" charset="utf-8" />
+	</head>
+	<body>
+<!-- if invoice_cancelled -->
+            
+            <div id="background">
+                <p id="bg-text">CANCELLED</p>
+            </div>
+<!-- end -->
+            
+		<div class='page'>
+			<div class='header'>
+				<img src='(company_logo)' alt='(company_name)' title='(company_name)'/>
+			
+			</div>
+			
+			<div class='content'>
+
+				<div class='main-content'>
+					<div class='from-address'>
+						<strong>From:</strong>
+						<p>
+							<span class='address'>
+								(company_name)<br /><br />
+								<strong>Correspondence Address</strong><br />
+								(company_address1_street)<br />
+								(company_address1_city)<br />
+								(company_address1_country)<br />
+								(company_address1_zipcode)
+							</span>
+							<br />
+							<br />
+							<table>
+							<tr><th>Email</th><td>(company_contact_email)</td></tr>
+							<tr><th>Phone</th><td>(company_contact_phone)</td></tr>
+<!-- if company_contact_fax -->
+							<tr><th>Fax</th><td>(company_contact_fax)</td></tr>
+<!-- end -->
+							</table>
+						</p>
+					
+					</div>
+					<div class='to-address'>
+						<strong>To:</strong>
+						<p>
+							(customer_contact)<br />
+							(customer_name)<br />
+							(customer_address1_street)<br />
+							(customer_address1_city)<br />
+							(customer_address1_state)<br />
+							(customer_address1_country)<br />
+							(customer_address1_zipcode)<br />
+						</p>
+						<br /><br /> 
+					</div>
+					
+					<div class='current-activity invoice_details'>
+						<div class="invoice-title">INVOICE</div>
+						<br /><br />
+						<table>
+<!-- foreach taxes -->
+							<tr> <td>(name_tax)</td> <td>(taxnumber)</td> </tr>
+<!-- end -->							
+<!-- if customer_tax_number -->
+							<tr> <td>Customer Tax ID</td> <td>(customer_tax_number)</td> </tr>
+<!-- end -->
+						</table>
+						
+						<table>
+							<tr> <th>Account ID</th> <td>(code_customer)</td> </tr>
+							<tr> <th>Invoice No</th> <td>(code_invoice)</td> </tr>
+<!-- if code_ordernumber -->
+							<tr> <th>Order No</th> <td>(code_ordernumber)</td> </tr>
+<!-- end -->
+<!-- if code_ponumber -->
+							<tr> <th>PO No</th> <td>(code_ponumber)</td> </tr>
+<!-- end -->
+							
+							<tr> <th>Date Created</th> <td>(date_trans)</td> </tr>
+							<tr> <th>Date Due</th> <td>(date_due)</td> </tr>
+						</table>
+					</div>
+					
+					
+					<div class='current-activity invoice_items'>
+						
+						<table>
+							<tr> <th>Number</th> <th>Description</th> <th>Quantity</th> <th>Unit</th> <th>Price</th> <th>Amount</th> </tr>
+<!-- foreach invoice_pages -->
+<!-- foreach invoice_items -->						
+							<tr> <td>(info)</td> <td>(description)</td> <td>(quantity)</td> <td>(units)</td> <td>(price)</td> <td>(amount)</td> </tr>
+<!-- end invoice_items -->
+<!-- end invoice_pages -->
+
+
+							<tr> <td colspan='2' class='top_border'></td> <td colspan='2' class='top_border'><strong>Subtotal</strong></td> <td class='top_border'></td> <td class='values top_border'>(amount)</td> </tr>
+<!-- foreach taxes -->
+							<tr> <td colspan='2'></td> <td colspan='2' class='top_border'>(name_tax)</td> <td class='top_border'></td> <td class='top_border'>(amount)</td> </tr>
+<!-- end -->
+
+<!-- foreach invoice_payments -->
+							<tr> <td colspan='2'></td> <td colspan='2' class='top_border'>Payment on (date)</td> <td class='top_border'></td> <td class='top_border'>- (amount)</td> </tr>							 
+<!-- end -->
+							<tr>
+								<td colspan='2'></td>
+								<td colspan='2' class='top_border'>Total Due by (date_due) </td>
+								<td class='top_border'></td>
+								<td class='values top_border'>(amount_total)</td>
+							</tr>
+						</table>
+					</div>
+					
+<!-- if company_payment_details -->					
+					<div class='current-activity payment_details'>
+						<strong>PAYMENT METHODS</strong>
+						<p>
+							(company_payment_details)
+						</p>
+					</div>
+<!-- end -->
+					
+				</div>
+			</div>
+
+			<div class="footer">
+					<div class='company-numbers'>
+<!-- if company_tax_number -->
+						<p>
+							<strong>Company VAT Number: </strong> (company_tax_number)
+						</p>			
+<!-- end -->
+<!-- if company_reg_number -->
+						<p>
+							<strong>Company Registration Number: </strong> (company_reg_number)
+						</p>
+					</div>
+<!-- end -->
+					<div class="company-reg-address">
+						<strong>Company Registered Address:</strong><br />
+<!-- if company_address2_street -->
+						(company_address2_street), 
+<!-- end -->
+<!-- if company_address2_city -->
+						(company_address2_city), 
+<!-- end --> 
+<!-- if company_address2_state -->
+						(company_address2_state), 
+<!-- end --> 
+						(company_address2_country) 
+						(company_address2_zipcode)
+					</div>
+			</div>			
+			
+		</div>
+		
+	</body>
+</html>

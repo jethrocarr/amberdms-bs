@@ -29,9 +29,15 @@ if (user_permissions_get("admin"))
 	$data["COMPANY_ADDRESS1_COUNTRY"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_COUNTRY", 1, "");
 	$data["COMPANY_ADDRESS1_ZIPCODE"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS1_ZIPCODE", 0, "");
 	$data["COMPANY_PAYMENT_DETAILS"]	= @security_form_input_predefined("any", "COMPANY_PAYMENT_DETAILS", 1, "");
-	
-
-
+	$data["COMPANY_TAX_NUMBER"]		= @security_form_input_predefined("any", "COMPANY_TAX_NUMBER", 0, "");
+	$data["COMPANY_REG_NUMBER"]		= @security_form_input_predefined("any", "COMPANY_REG_NUMBER", 0, "");
+	$data["COMPANY_ADDRESS2_STREET"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS2_STREET", 1, "");
+	$data["COMPANY_ADDRESS2_CITY"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS2_CITY", 1, "");
+	$data["COMPANY_ADDRESS2_STATE"]		= @security_form_input_predefined("any", "COMPANY_ADDRESS2_STATE", 0, "");
+	$data["COMPANY_ADDRESS2_COUNTRY"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS2_COUNTRY", 1, "");
+	$data["COMPANY_ADDRESS2_ZIPCODE"]	= @security_form_input_predefined("any", "COMPANY_ADDRESS2_ZIPCODE", 0, "");
+	$data["COMPANY_B2C_TERMS"]		= @security_form_input_predefined("html", "COMPANY_B2C_TERMS", 0,"");
+	$data["COMPANY_B2B_TERMS"]		= @security_form_input_predefined("html", "COMPANY_B2B_TERMS", 0,"");
 	/*
 		Process company logo upload and verify content 
 		if any has been supplied. Enforce png only

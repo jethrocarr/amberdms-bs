@@ -19,7 +19,7 @@ class page_output
 	var $obj_table;
 
 	
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->obj_customer		= New customer_credits;

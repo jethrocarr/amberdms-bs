@@ -25,7 +25,7 @@ class page_output
 	var $access_staff_ids;
 
 
-	function page_output()
+	function __construct()
 	{
 		// get selected employee
 		$this->employeeid	= @security_script_input('/^[0-9]*$/', $_GET["employeeid"]);

@@ -18,7 +18,7 @@ class page_output
 {
 	var $obj_serviceform;
 
-	function page_output()
+	function __construct()
 	{
 		// includes
 		$this->requires["javascript"][]	= "include/javascript/services.js";

@@ -1,0 +1,277 @@
+body {
+	font-family: "DejaVu Sans", sans-serif;
+	font-size: 10pt;
+	margin: 0px;
+	padding: 0px;
+	height: 100%;
+}
+
+div.page {
+	display: block;
+	
+	width: 207mm;
+	height: 297mm;
+	margin: 0px;
+	padding: 0px;
+	/*min-height: 287mm;*/
+	position: relative;
+}
+
+div.header {
+	display: block;
+	background: #d1f3ff;
+	width: 100%;
+	height: 50mm;
+	margin: 0px;
+	padding: 0px;
+	
+}
+
+div.header img {
+	margin: 2mm 0mm 0mm 2mm;
+	padding: 0mm;
+	height: 30mm;
+}
+
+div.footer {
+	display: block;
+	
+	width: 80%;
+	height: 30mm;
+	margin: 0px;
+	padding: 0px;
+	position: relative;
+	bottom: 0;
+	margin-left:auto;
+	margin-right: auto;
+}
+
+
+div.to-address {
+	float: left;
+}
+
+div.from-address {
+	float: right;
+	width: 98mm;
+	font-size: 10pt;
+	padding: 0mm 0mm 0mm 0mm;
+}
+
+div.from-address h3 {
+	font-size: 14pt;
+	margin: 0mm 0mm 0mm 0mm;
+}
+
+div.from-address h3 span {
+	font-weight: normal;
+}
+
+div.from-address span.address {
+	/*white-space: pre;*/
+}
+
+div.from-address p, div.to-address p {
+	margin: 0px;
+}
+
+div.from-address tr {
+	text-align: left;
+}
+
+div.from-address th {
+	padding-right: 5mm;
+}
+
+div.from-address table {
+	margin: 0;
+}
+
+div.content {
+	display: block;
+	width: 100%;
+        height: 217mm;
+	position: relative;
+	margin: 0px;
+	padding: 0px;
+	/*padding-bottom: 50mm; /* height of footer */
+}
+
+div.invoice_list div.right-column {
+	height: 250mm;
+}
+
+div.sidebar-subsection {
+	margin-bottom: 3mm;
+	font-size: 8pt;
+	
+}
+
+div.sidebar-subsection h4 {
+	display: block;
+	text-transform: uppercase;
+	font-weight: normal;
+	font-size: inherit;
+	margin: 0px;
+}
+
+div.sidebar-subsection span.value {
+	color: #332a4d;
+}
+
+div.content table{
+	border-collapse: collapse;
+}
+
+div.main-content {
+	padding: 6mm 5mm 0mm 9mm;
+	width:187mm;
+}
+
+div.main-content> div.invoice_details {
+	border-top: none;
+	clear: both;
+}
+
+div.invoice_details table {
+	font-size: 8pt;
+	width: 36%;
+	margin-bottom: 3.2em;
+	margin-left: 1.6mm;
+}
+
+div.invoice_details table th, div.invoice_details table td {
+	text-align: left;
+}
+
+div.invoice-title {
+	font-size: 14pt;
+	font-weight: bold;
+}
+
+div.main-content > div.invoice_items {
+	border-top: none;
+	font-size: 8pt;
+	clear: both;
+}
+
+div.main-content > div.invoice_items table {
+	margin-bottom: 0.8em;
+}
+
+div.main-content > div.invoice_items table:empty {
+	display: none;
+}
+
+div.main-content > div.invoice_items table tr th {
+	border-top: none;
+	text-align: left;
+	padding: 0.5mm 1mm 0.4mm 1mm;
+}
+
+div.main-content > div.invoice_items table tr td {
+	padding: 0.5mm 1mm 0.6mm 1mm;
+	vertical-align: top;
+}
+
+div.main-content > div.invoice_items table tr td:first-child {
+	padding-left: 0.2mm;
+}
+
+div.main-content > div.invoice_items table tr:nth-child(even) td {
+	background-color: #efefef;
+}
+
+
+div.main-content > div> div {
+	padding-left: 1mm;
+	padding-bottom: 1mm; 
+}
+
+div.company-numbers {
+	text-align: center;
+	font-size: 10pt;
+}
+
+div.company-reg-address {
+	text-align: center;
+	font-size: 8pt;
+}
+
+div.invoice_items table {
+	width: 183.4mm;
+	margin-left: 1.6mm;
+	margin-right: 1.6mm;
+}
+
+td {
+	border: none;
+	/* text-align: right; */
+	padding: 0.2mm 0mm 0.2mm 0mm;
+}
+
+div.main-content table td:first-child {
+	text-align: left;
+	white-space: nowrap;
+	padding-right: 4px;
+}
+
+div.main-content> div h4 {
+	font-size: inherit;
+	margin: 0.4mm 0mm 0mm 0mm;
+}
+div.main-content> div> h4 {
+	font-size: 12pt;
+	margin: 0mm 0mm 2mm 0mm;
+}
+
+
+div.main-content div.to-address {
+	border-top: none;
+}
+
+div.previous-activity {
+	width: 100%;
+	border-top: 2px solid #666666;
+	color: #5d97aa;
+}
+
+div.previous-activity td.previous_value_total {
+	border-top: 1px solid #333333;
+}
+
+div.invoice-section.total {
+	margin-top: 5mm;
+	
+}
+
+div.customer-reminder {
+	font-size: 10pt;
+	text-align: center;
+	width: 150mm;
+	margin: auto;
+	margin-top: 10mm;
+}
+
+div.payment_details {
+	margin-top: 2em;
+	border: 1px solid gray;
+	padding: 2mm;
+}
+div.payment_details p {
+	font-size: 8pt;
+}
+
+td.top_border, th.top_border {
+	border-top: 1px solid #333333;
+}
+
+table tbody td {
+	border-collapse: collapse;
+}
+
+table thead tr.column-names td , table tfoot tr.column-names td {
+	background-color: #cccccc;
+	border: 1px solid #666666;	
+	border-collapse: collapse;
+}

@@ -232,6 +232,8 @@ class page_output
 			$sql_obj->prepare_sql_addwhere("date_trans <= '". $this->date_end ."'");
 		}
 
+                // Only include uncancelled invoices only
+                $sql_obj->prepare_sql_addwhere("cancelled='0'");
 
 		// paid invoices only
 		if ($this->mode == "Cash")
