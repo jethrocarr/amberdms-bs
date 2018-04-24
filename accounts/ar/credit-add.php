@@ -53,7 +53,7 @@ class page_output
 	function render_html()
 	{
 		// heading
-		print "<h3>ADD CREDIT NODE</h3><br>";
+		print "<h3>ADD CREDIT NOTE</h3><br>";
 		print "<p>This page provides features to allow you to create a new credit note.</p>";
 
 		// display form

@@ -30,7 +30,8 @@ class page_output
 		$this->obj_menu_nav->add_item("Vendor's Details", "page=vendors/view.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Vendor's Journal", "page=vendors/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Vendor's Invoices", "page=vendors/invoices.php&id=". $this->id ."");
-
+                $this->obj_menu_nav->add_item("Vendor's Credits", "page=vendors/credit.php&id=". $this->id ."");
+                
 		if (user_permissions_get("vendors_write"))
 		{
 			$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->id ."");
@@ -546,7 +547,7 @@ class page_output
 						
 						$this->obj_form->render_field("num_records_$i");
 						print "<div ";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "class=\"hidden_text\" ";
 							}
@@ -586,7 +587,7 @@ class page_output
 						print "</span>";
 						$this->obj_form->render_field("description_$i");
 						print "<p class=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "hidden_text ";
 							}
@@ -603,7 +604,7 @@ class page_output
 						}
 												
 						print "<input type=\"hidden\" name=\"change_contact_$i\" value=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "open\" />";
 							}

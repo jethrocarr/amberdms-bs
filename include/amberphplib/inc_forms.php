@@ -378,6 +378,10 @@ class form_input
 	{
 		log_debug("form", "Executing render_row($fieldname)");
 		
+                // Check to see if we have a null fieldname 
+                if($fieldname=="")
+                        return;
+                
 		//create array of classes
 		$class_array = array();
 		if(isset($this->structure[$fieldname]["options"]["css_row_class"]))
@@ -1434,7 +1438,7 @@ class form_input
 			break;
 
 			default:
-				log_debug("form", "Error: Unknown field type of ". $this->structure["fieldname"]["type"] ."");
+				log_debug("form", "Error: Unknown field type of ". $this->structure[$fieldname]["type"] ."");
 			break;
 		}
 

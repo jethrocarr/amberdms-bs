@@ -3297,7 +3297,7 @@ class invoice_items
 		/*
 			Run through all the tax structure and generate tax items (if any)
 		*/
-		if ($tax_structure)
+		if ($tax_structure && $enabled_taxes)
 		{
 			foreach (array_keys($tax_structure) as $taxid)
 			{
@@ -3467,7 +3467,7 @@ class invoice_items
 		
 		$sql_obj = New sql_query;
 
-		if ($this->type_invoice == "quotes" || $this->type_invoice == "ar_credit" || $this->type_invoice == "ar_credit")
+		if ($this->type_invoice == "quotes" || $this->type_invoice == "ar_credit" || $this->type_invoice == "ap_credit")
 		{
 			$sql_obj->string = "UPDATE `account_". $this->type_invoice ."` SET "
 						."amount='". $amount ."', "

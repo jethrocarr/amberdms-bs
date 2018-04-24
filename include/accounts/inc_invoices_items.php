@@ -1093,7 +1093,7 @@ class invoice_form_item
 			Fetch customer ID
 		*/
 
-		if ($this->type == "ap")
+		if (substr($this->type,0,2) == "ap")
 		{
 			// fetch the vendorid for this invoice
 			$orgid = sql_get_singlevalue("SELECT vendorid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");

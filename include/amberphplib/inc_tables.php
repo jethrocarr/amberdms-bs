@@ -1384,7 +1384,10 @@ class table
 					{
 						if (isset($this->data[$i][$column]))
 						{
+                                                    if(is_numeric($this->data[$i][$column]))
+                                                    {
 							$this->data["total"][$column] += $this->data[$i][$column];
+                                                    }
 						}
 					}
 

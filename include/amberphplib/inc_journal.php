@@ -1465,7 +1465,7 @@ class journal_process extends journal_base
 		{
 			// a file might not have been uploaded - we want to allow users to be able
 			// to change the notes on file uploads, without having to upload the file again.
-			if ($_FILES["upload"]["size"] < 1)
+			if (!isset($_FILES["upload"]["size"]))
 			{
 				// nothing has been uploaded
 				if (!$this->structure["id"])

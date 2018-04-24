@@ -166,8 +166,9 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 		case "ar_credit_tax":
 			// for AP invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_credit as value FROM account_ar_credit WHERE id='$customid'");
-						
-			$result = "AR Credit Note $result";
+                        $extra= sql_get_singlevalue("SELECT code_invoice as value FROM account_ar LEFT JOIN account_ar_credit ON account_ar.id=account_ar_credit.invoiceid WHERE account_ar_credit.id='$customid'");
+                    
+			$result = "AR Credit Note $result [for Invoice $extra]";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=$customid\">$result</a>";
@@ -185,7 +186,30 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 				$result = "<a href=\"index.php?page=customers/credit.php&id_customer=$customerid\">$result</a>";
 		break;
 
+		case "ap_credit":
+		case "ap_credit_tax":
+			// for AP invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_credit as value FROM account_ap_credit WHERE id='$customid'");
+                        $extra= sql_get_singlevalue("SELECT code_invoice as value FROM account_ap LEFT JOIN account_ap_credit ON account_ap.id=account_ap_credit.invoiceid WHERE account_ap_credit.id='$customid'");
+						
+			$result = "AP Credit Note $result [for Invoice $extra]";
 
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ap/credit-view.php&id=$customid\">$result</a>";
+		break;
+
+		case "ap_refund":
+			// for AP invoices/transaction fetch the invoice ID
+			$vendorid	= sql_get_singlevalue("SELECT id_vendor as value FROM vendors_credits WHERE id='$customid'");
+			$result 	= sql_get_singlevalue("SELECT code_vendor as value FROM vendors WHERE id='$vendorid'");
+						
+			$result = "Refund from vendor $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=vendors/credit.php&id_vendor=$vendorid\">$result</a>";
+		break;
+
+                
 		case "gl":
 			// general ledger transaction
 			$result = sql_get_singlevalue("SELECT code_gl as value FROM account_gl WHERE id='$customid'");
@@ -245,7 +269,7 @@ class ledger_account_list
 
 		Constructor Function
 	*/
-	function ledger_account_list()
+	function __construct()
 	{
 		// init the table object
 		$this->obj_table = New table;

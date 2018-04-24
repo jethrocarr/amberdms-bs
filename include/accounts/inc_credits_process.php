@@ -117,13 +117,13 @@ function credit_form_details_process($type, $mode, $returnpage_error, $returnpag
 
 
 	// make sure we don't choose a credit credit number that is already in use
-	if ($credit->data["code_credit"])
+	if (isset($credit->data["code_credit"]))
 	{
 		$credit->prepare_code_credit($credit->data["code_credit"]);
 	}
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$type ."_credit_". $mode] = "failed";
 		header("Location: ../../index.php?page=$returnpage_error&id=". $credit->id ."");
@@ -134,7 +134,7 @@ function credit_form_details_process($type, $mode, $returnpage_error, $returnpag
 		// GENERATE INVOICE ID
 
 		// if no credit ID has been supplied, we now need to generate a unique credit id
-		if (!$credit->data["code_credit"])
+		if (!isset($credit->data["code_credit"]))
 		{
 			$credit->prepare_code_credit();
 			
@@ -370,7 +370,7 @@ function credit_form_export_process($type, $returnpage_error, $returnpage_succes
 */
 function credit_form_delete_process($type, $returnpage_error, $returnpage_success)
 {
-	log_debug("inc_credits_forms", "Executing credit_form_delete_process($type, $mode, $returnpage_error, $returnpage_success)");
+	log_debug("inc_credits_forms", "Executing credit_form_delete_process($type, $returnpage_error, $returnpage_success)");
 
 
 	$credit	= New credit;
@@ -410,7 +410,7 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 
 
 	// return to input page in event of an error
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$type ."_credit_delete"] = "failed";
 		header("Location: ../../index.php?page=$returnpage_error&id=". $credit->id);
@@ -435,7 +435,7 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 
 		
 	// display updated details
-	header("Location: ../../index.php?page=$returnpage_success&id=$id");
+	header("Location: ../../index.php?page=$returnpage_success&id=$credit->id");
 	exit(0);
 			
 
@@ -446,7 +446,7 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 
 
 /*
-	credit_form_lock_process($type, $mode, $returnpage_error, $returnpage_success)
+	credit_form_lock_process($type, $returnpage_error, $returnpage_success)
 
 	Form for processing credit deletion form requests.
 
@@ -457,7 +457,7 @@ function credit_form_delete_process($type, $returnpage_error, $returnpage_succes
 */
 function credit_form_lock_process($type, $returnpage_error, $returnpage_success)
 {
-	log_debug("inc_credits_forms", "Executing credit_form_lock_process($type, $mode, $returnpage_error, $returnpage_success)");
+	log_debug("inc_credits_forms", "Executing credit_form_lock_process($type, $returnpage_error, $returnpage_success)");
 
 
 	$credit	= New credit;
@@ -499,7 +499,7 @@ function credit_form_lock_process($type, $returnpage_error, $returnpage_success)
 
 
 	// return to input page in event of an error
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$type ."_credit_lock"] = "failed";
 		header("Location: ../../index.php?page=$returnpage_error&id=". $credit->id);
