@@ -673,7 +673,7 @@ class service_usage
 	/*
 		Constructor
 	*/
-	function service_usage()
+	function __construct()
 	{
 		log_write("debug", "service_usage", "Executing service_usage()");
 

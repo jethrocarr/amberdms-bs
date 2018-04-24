@@ -269,7 +269,7 @@ function format_file_name($filepath)
 
 function format_file_contenttype($file_extension)
 {
-	log_debug("misc". "Executing format_file_contenttype($file_extension)");
+	log_debug("misc", "Executing format_file_contenttype($file_extension)");
 
 	$ctype = NULL;
 

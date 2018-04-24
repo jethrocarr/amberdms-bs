@@ -40,14 +40,17 @@ function credit_render_summarybox($type, $id)
 	{
 		$sql_obj->prepare_sql_addfield("date_sent");
 		$sql_obj->prepare_sql_addfield("sentmethod");
+             	$sql_obj->prepare_sql_addfield("customerid");
 	}
+        else
+        {
+             	$sql_obj->prepare_sql_addfield("vendorid");            
+        }
 	
 	$sql_obj->prepare_sql_addfield("code_credit");
 	$sql_obj->prepare_sql_addfield("amount_total");
 	$sql_obj->prepare_sql_addfield("locked");
-
 	$sql_obj->prepare_sql_addfield("invoiceid");
-	$sql_obj->prepare_sql_addfield("customerid");
 
 	$sql_obj->prepare_sql_addwhere("id='$id'");
 	$sql_obj->prepare_sql_setlimit("1");
@@ -134,7 +137,7 @@ function credit_render_summarybox($type, $id)
 				$vendor_name	= sql_get_singlevalue("SELECT CONCAT_WS('--', code_vendor, name_vendor) as value FROM vendors WHERE id='". $sql_obj->data[0]["vendorid"] ."' LIMIT 1");
 
 				print "<tr>";
-					print "<td>Credited Vendor</td>";
+					print "<td>Credit from Vendor</td>";
 					print "<td><a href=\"index.php?page=vendors/credit.php&id_vendor=". $sql_obj->data[0]["vendorid"] ."\">". $vendor_name ."</a></td>";
 				print "</tr>";
 
@@ -799,13 +802,13 @@ class credit
 		// fetch the original dest_account value - we will use it after we update the invoice details
 		$this->data["dest_account_orig"]	= sql_get_singlevalue("SELECT dest_account as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
 
-		if ($this->data["customerid"])
+		if (isset($this->data["customerid"]))
 		{
 			$this->data["customerid_orig"]	= sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
 		}
 		else
 		{
-			$this->data["vendorid_orig"]	= sql_get_singlevalue("SELECT vendoridid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
+			$this->data["vendorid_orig"]	= sql_get_singlevalue("SELECT vendorid as value FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1");
 		}
 
 
@@ -821,7 +824,7 @@ class credit
 			Update the invoice details
 		*/
 			
-		if ($this->type == "ap")
+		if ($this->type == "ap_credit")
 		{
 			@$sql_obj->string = "UPDATE `account_". $this->type ."` SET "
 						."vendorid='". $this->data["vendorid"] ."', "
@@ -895,7 +898,7 @@ class credit
 			This is very important, if the customer/vendor is changed, we will need to remove the credit from them, and add to the correct customer/vendor.
 		*/
 		
-		if ($this->data["customerid"])
+		if (isset($this->data["customerid"]))
 		{
 			if ($this->data["customerid_orig"] != $this->data["customerid"])
 			{
@@ -986,7 +989,7 @@ class credit
 			Delete and update
 		*/
 
-		if ($this->type == "ap")
+		if ($this->type == "ap_credit")
 		{
 			$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $this->data["vendorid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
@@ -1159,7 +1162,7 @@ class credit
 			Delete customer/vendor credit allocations
 		*/
 
-		if ($this->type == "ap")
+		if ($this->type == "ap_credit")
 		{
 			$sql_obj->string = "DELETE FROM vendors_credits WHERE id_vendor='". $this->data["vendorid"] ."' AND type='creditnote' AND id_custom='". $this->id ."' LIMIT 1";
 			$sql_obj->execute();
@@ -1231,7 +1234,7 @@ class credit
 		switch($template_data['template_type']) 
 		{
 			case $this->type .'_htmltopdf':
-				$this->obj_pdf =& New template_engine_htmltopdf;
+				$this->obj_pdf = New template_engine_htmltopdf;
 				$template_file = $template_data['template_file']."/index.html";
 				
 				if (is_dir("../../{$template_data['template_file']}"))
@@ -1246,7 +1249,7 @@ class credit
 			
 			case $this->type .'_tex':
 			default:
-				$this->obj_pdf =& New template_engine_latex;
+				$this->obj_pdf = New template_engine_latex;
 				$template_file = $template_data['template_file'].".tex";
 			break;
 		
@@ -1901,8 +1904,8 @@ class credit_refund
 			$sql_obj->execute();
 			
 			// add new ledger records
-			ledger_trans_add("debit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_asset"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
-			ledger_trans_add("credit", "ar_refund", $this->id, $this->data["date_trans"], $this->data["account_dest"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+			ledger_trans_add("debit", "ap_refund", $this->id, $this->data["date_trans"], $this->data["account_asset"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
+			ledger_trans_add("credit", "ap_refund", $this->id, $this->data["date_trans"], $this->data["account_dest"], $this->data["amount_total"], 'CREDIT REFUND', $this->data["description"]);
 		}
 
 

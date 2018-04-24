@@ -83,6 +83,12 @@ function invoice_render_summarybox($type, $id)
 {
 	log_debug("inc_invoices", "invoice_render_summarybox($type, $id)");
 
+        if($type=="project")
+        {
+            print "<br>";
+            return;
+        }
+        
 	// fetch invoice information
 	$sql_obj = New sql_query;
 	$sql_obj->prepare_sql_settable("account_$type");
@@ -91,6 +97,7 @@ function invoice_render_summarybox($type, $id)
 	{
 		$sql_obj->prepare_sql_addfield("date_sent");
 		$sql_obj->prepare_sql_addfield("sentmethod");
+                $sql_obj->prepare_sql_addfield("cancelled");
 	}
 	
 	$sql_obj->prepare_sql_addfield("code_invoice");
@@ -105,7 +112,21 @@ function invoice_render_summarybox($type, $id)
 
 	if ($sql_obj->num_rows())
 	{
-		$sql_obj->fetch_array();
+            $sql_obj->fetch_array();
+            
+            if(isset($sql_obj->data[0]["cancelled"]) && $sql_obj->data[0]["cancelled"]=='1')
+            {
+			print "<table width=\"100%\" class=\"table_highlight_important\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Invoice ". $sql_obj->data[0]["code_invoice"] ." is cancelled.</b>";
+				print "<p>This invoice cannot be modified.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+            }
+            else
+            {
 
 		// check for presence of invoice items
 		$sql_item_obj		= New sql_query;
@@ -188,6 +209,7 @@ function invoice_render_summarybox($type, $id)
 				
 			}
 		}
+            }
 
 		print "<br>";
 	}
@@ -217,7 +239,6 @@ class invoice
 		
 	var $invoice_fields;		// array for storage of all invoice fields with associated data
 	
-
 	var $obj_pdf;		// generated PDF object
 
 
@@ -445,9 +466,32 @@ class invoice
 		$this->invoice_fields["company_address1_country"] = $data_company["company_address1_country"]; 
 		$this->invoice_fields["company_address1_zipcode"] = $data_company["company_address1_zipcode"]; 
 		
+		$this->invoice_fields["company_address2_street"] = $data_company["company_address2_street"]; 
+		$this->invoice_fields["company_address2_city"] = $data_company["company_address2_city"]; 
+		$this->invoice_fields["company_address2_state"] = $data_company["company_address2_state"]; 
+		$this->invoice_fields["company_address2_country"] = $data_company["company_address2_country"]; 
+		$this->invoice_fields["company_address2_zipcode"] = $data_company["company_address2_zipcode"]; 
+
+		$this->invoice_fields["company_reg_number"] = $data_company["company_reg_number"]; 
+		$this->invoice_fields["company_tax_number"] = $data_company["company_tax_number"];
+		
 		if ($this->type == "ar")
 		{
 			$this->invoice_fields["company_payment_details"] = $data_company["company_payment_details"]; 
+		}
+
+		if ($this->type == "quotes")
+		{
+			$this->invoice_fields["notes"] = $this->data["notes"];
+			
+			if($this->data["terms_of_business"]=="terms_consumer")
+			{
+				$this->invoice_fields["terms_of_business"] = $data_company["company_b2c_terms"];
+			}
+			else if($this->data["terms_of_business"]=="terms_business")
+			{
+				$this->invoice_fields["terms_of_business"] = $data_company["company_b2b_terms"];
+			}
 		}
 
 		/*
@@ -458,7 +502,11 @@ class invoice
 			$this->invoice_fields["code_invoice"] = $this->data["code_invoice"]; 
 			$this->invoice_fields["code_ordernumber"] = $this->data["code_ordernumber"]; 
 			$this->invoice_fields["code_ponumber"] = $this->data["code_ponumber"]; 
-			$this->invoice_fields["date_due"] = time_format_humandate($this->data["date_due"]);  
+			$this->invoice_fields["date_due"] = time_format_humandate($this->data["date_due"]);
+                        if($this->data["cancelled"]=='1')
+                        {
+                            $this->invoice_fields["invoice_cancelled"]=$this->data["cancelled"];
+                        }
 		}
 		else
 		{
@@ -888,10 +936,32 @@ class invoice
 			Delete Invoice
 		*/
 
-		$sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
-		$sql_obj->execute();
-		
-
+                if($this->type=="ar")
+                {
+                        if(sql_get_singlevalue("SELECT cancelled as value FROM account_ar WHERE id='".$this->id."'")=='0')
+                        {
+                                $rollback=1;
+                        }
+                        else
+                        {
+                                $rollback=0;
+                        }
+                }
+                else
+                {
+                    $rollback=1;
+                }
+                
+                if($GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1" && $this->type=="ar")
+                {
+                        $sql_obj->string	= "UPDATE account_". $this->type ." SET cancelled = 1 WHERE id='". $this->id ."' LIMIT 1";
+                        $sql_obj->execute();
+                }
+                else
+                {
+                        $sql_obj->string	= "DELETE FROM account_". $this->type ." WHERE id='". $this->id ."' LIMIT 1";
+                        $sql_obj->execute();
+                }
 
 		/*
 			Delete Invoice Items
@@ -915,6 +985,8 @@ class invoice
 
 				$obj_invoice_item->type_invoice		= $this->type;
 				$obj_invoice_item->id_invoice		= $this->id;
+                                $obj_invoice_item->rollback             = $rollback;
+                                $obj_invoice_item->deletecancel         = $GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"];
 				$obj_invoice_item->id_item		= $data_sql["id"];
 				$obj_invoice_item->action_delete();
 
@@ -927,8 +999,14 @@ class invoice
 		/*
 			Delete Journal
 		*/
-		journal_delete_entire("account_". $this->type ."", $this->id);
-
+                if($GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1" && $this->type=="ar")
+                {
+                    journal_quickadd_event("account_".$this->type."", $this->id, "Invoice cancelled");
+                }
+                else
+                {
+                    journal_delete_entire("account_". $this->type ."", $this->id);
+                }
 
 
 		/*
@@ -1521,6 +1599,10 @@ class invoice
 				$structure_taxitems[] = $structure;
 			}
 		}
+		else
+		{
+			$structure_taxitems=array();
+		}
 	
 		$this->obj_pdf->prepare_add_array("taxes", $structure_taxitems);
 
@@ -1629,7 +1711,7 @@ class invoice
 		*/
 
 		// perform string escaping for latex
-		$this->obj_pdf->prepare_escape_fields();
+		$this->obj_pdf->prepare_escape_fields(array("terms_of_business"));
 		
 		// fillter template data
 		$this->obj_pdf->fillter_template_data();
@@ -2095,7 +2177,10 @@ class invoice_items
 
 	var $data;		// data of the item
 
-
+        var $rollback;          // Set to true if items need to be rolled back
+        
+        var $deletecancel=0;      // Set to true if items are for an invoice being cancelled.
+                                // Items will be deleted otherwise.
 
 	/*
 		verify_invoice
@@ -2109,11 +2194,19 @@ class invoice_items
 	function verify_invoice()
 	{
 		/*
-			Verify that the invoice exists
+			Verify that the invoice exists (or the project)
 		*/
+            
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "SELECT id FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."' LIMIT 1";
-		$sql_obj->execute();
+                if($this->type_invoice=="project")
+                {
+                    $sql_obj->string	= "SELECT id FROM projects WHERE id='". $this->id_invoice ."' LIMIT 1";
+                }
+                else
+                {
+                    $sql_obj->string	= "SELECT id FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."' LIMIT 1";
+                }
+                $sql_obj->execute();
 	
 		if (!$sql_obj->num_rows())
 		{
@@ -2681,6 +2774,7 @@ class invoice_items
 	*/
 	function action_update()
 	{
+
 		log_debug("invoice_items", "Executing action_update()");
 	
 		/*
@@ -2690,7 +2784,7 @@ class invoice_items
 		$sql_obj = New sql_query;
 		$sql_obj->trans_begin();
 
-
+                
 
 		// create a new item if required
 		if (!$this->id_item)
@@ -2720,12 +2814,27 @@ class invoice_items
 			$this->data["credit"]	= "CREDIT";
 		}
 
-
+                if ($this->type_item == "product" && ($this->type_invoice=="ar" || $this->type_invoice=="ap" || $this->type_invoice=="project"))
+                {
+                    $quantdiff= $this->data["quantity"]-sql_get_singlevalue("SELECT quantity as value FROM account_items WHERE id='".$this->id_item."'");
+                }
 	
 		/*
 			Update Item
 		*/
-			
+
+		// Setting defaults when they haven't been set
+		if(!isset($this->data["price"]))
+			$this->data["price"]=0;
+		if(!isset($this->data["discount"]))
+			$this->data["discount"]=0;
+		if(!isset($this->data["quantity"]))
+			$this->data["quantity"]=0;
+		if(!isset($this->data["units"]))
+			$this->data["units"]="";
+		if(!isset($this->data["customid"]))
+			$this->data["customid"]="";
+
 		$sql_obj->string = "UPDATE `account_items` SET "
 					."type='". $this->type_item ."', "
 					."amount='". $this->data["amount"] ."', "
@@ -2739,7 +2848,30 @@ class invoice_items
 						
 		$sql_obj->execute();
 	
+                /* Update product quantities
+                 * 
+                 */
+                if($this->type_item=="product"  && ($this->type_invoice=="ar" || $this->type_invoice=="ap" || $this->type_invoice=="project"))
+                {
+                    $quantnew = sql_get_singlevalue("SELECT quantity_instock as value FROM products WHERE id='".$this->data["customid"]."'");
+                    
+                    if($this->type_invoice=="ar" || $this->type_invoice=="project")
+                        $quantdiff=-$quantdiff;
+                    
+                    $quantnew+=$quantdiff;
+                    if($quantnew<0)
+                        $quantnew=0;
+                    
+                    if($quantdiff!=0)
+                    {
+                        $sql_obj->string = "UPDATE products SET quantity_instock='".$quantnew."' WHERE id='".$this->data["customid"]."' LIMIT 1";
+                        $sql_obj->execute();
 
+                        $invproj=$this->type_invoice=="project"?"project":"invoice";
+                        journal_quickadd_event("products",$this->data["customid"],"Product added to $invproj. (Stock Adj. ".sprintf("%+d",$quantdiff).")");
+                    }
+                }
+                
 		/*
 			Update Item Options
 		*/
@@ -3001,7 +3133,14 @@ class invoice_items
 							{
 								// automatic
 								// note: no need to multiple by quantity, since the item amount is already price * quantity
-								$tax_structure[ $data_product_tax["taxid"] ]["auto"]	+= $data["amount"];
+								if (!isset($tax_structure[ $data_product_tax["taxid"] ]["auto"]))
+								{
+									$tax_structure[ $data_product_tax["taxid"] ]["auto"]	= $data["amount"];
+								}
+								else
+								{
+									$tax_structure[ $data_product_tax["taxid"] ]["auto"]	+= $data["amount"];
+								}
 							}
 						}
 					break;
@@ -3054,13 +3193,18 @@ class invoice_items
 
 						if ($sql_item_tax_obj->num_rows())
 						{
-							$sql_item_tax_obj->fetch_array();
-
 							foreach ($sql_item_tax_obj->data as $data_item_tax)
 							{
 								// automatic
 								// note: no need to multiple by quantity, since the item amount is already price * quantity
-								$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+								if (!isset($tax_structure[ $data_item_tax["taxid"] ]["auto"]))
+								{
+									$tax_structure[ $data_item_tax["taxid"] ]["auto"]	= $data["amount"];
+								}
+								else
+								{
+									$tax_structure[ $data_item_tax["taxid"] ]["auto"]	+= $data["amount"];
+								}
 							}
 						}
 					break;
@@ -3086,7 +3230,14 @@ class invoice_items
 							{
 								// automatic
 								// note: no need to multiple by quantity, since the item amount is already price * quantity
-								$tax_structure[ $data_item_tax["taxid"] ]["auto"] += $data["amount"];
+								if (!isset($tax_structure[ $data_item_tax["taxid"] ]["auto"]))
+								{
+									$tax_structure[ $data_item_tax["taxid"] ]["auto"]	= $data["amount"];
+								}
+								else
+								{
+									$tax_structure[ $data_item_tax["taxid"] ]["auto"]	+= $data["amount"];
+								}
 							}
 						}
 					break;
@@ -3122,7 +3273,7 @@ class invoice_items
 				}
 			}
 		}
-		else
+		elseif($this->type_invoice!="project")
 		{
 			$customerid		= sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."'");
 
@@ -3146,7 +3297,7 @@ class invoice_items
 		/*
 			Run through all the tax structure and generate tax items (if any)
 		*/
-		if ($tax_structure)
+		if ($tax_structure && $enabled_taxes)
 		{
 			foreach (array_keys($tax_structure) as $taxid)
 			{
@@ -3251,6 +3402,11 @@ class invoice_items
 	{
 		log_debug("invoice_items", "Executing action_update_total()");
 
+                // Ignore if project
+                if($this->type_invoice=="project")
+                {
+                    return 1;
+                }
 
 		// default values
 		$amount		= "0";
@@ -3311,7 +3467,7 @@ class invoice_items
 		
 		$sql_obj = New sql_query;
 
-		if ($this->type_invoice == "quotes" || $this->type_invoice == "ar_credit" || $this->type_invoice == "ar_credit")
+		if ($this->type_invoice == "quotes" || $this->type_invoice == "ar_credit" || $this->type_invoice == "ap_credit")
 		{
 			$sql_obj->string = "UPDATE `account_". $this->type_invoice ."` SET "
 						."amount='". $amount ."', "
@@ -3383,7 +3539,14 @@ class invoice_items
 
 		// fetch key information from invoice
 		$sql_inv_obj		= New sql_query;
-		$sql_inv_obj->string	= "SELECT id, dest_account, date_trans FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."' LIMIT 1";
+                if($this->type_invoice=="project")
+                {
+                    $sql_inv_obj->string    = "SELECT id, dest_account, CURDATE() AS date_trans FROM projects WHERE id='". $this->id_invoice ."' LIMIT 1";    
+                }
+                else
+                {
+                    $sql_inv_obj->string    = "SELECT id, dest_account, date_trans FROM account_". $this->type_invoice ." WHERE id='". $this->id_invoice ."' LIMIT 1";
+                }
 		$sql_inv_obj->execute();
 		$sql_inv_obj->fetch_array();
 
@@ -3452,6 +3615,7 @@ class invoice_items
 					break;
 
 					case "ar":
+                                        case "project":
 					default:
 						ledger_trans_add("credit", $trans_type, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $item_data["chartid"], $item_data["amount"], "", "");
 					break;
@@ -3479,6 +3643,7 @@ class invoice_items
 				break;
 
 				case "ar":
+                                case "project":
 				default:
 					// create debit to AR account
 					ledger_trans_add("debit", $this->type_invoice, $this->id_invoice, $sql_inv_obj->data[0]["date_trans"], $sql_inv_obj->data[0]["dest_account"], $amount, "", "");
@@ -3628,8 +3793,6 @@ class invoice_items
 			$this->type_item = sql_get_singlevalue("SELECT type as value FROM account_items WHERE id='". $this->id_item ."' LIMIT 1");
 		}
 
-
-
 		/*
 			Start SQL Transaction
 		*/
@@ -3637,11 +3800,29 @@ class invoice_items
 		$sql_obj->trans_begin();
 
 
+                /*
+                 *      Replace stock items if necessary
+                 */
+                if ($this->rollback==1 && $this->type_item == "product" && ($this->type_invoice=="ar" || $this->type_invoice=="ap" || $this->type_invoice=="project"))
+                {
+                    $quant=sql_get_singlevalue("SELECT quantity as value FROM account_items WHERE id='".$this->id_item."'");
+                    $prodid=sql_get_singlevalue("SELECT customid as value FROM account_items WHERE id='".$this->id_item."'");
+                    $quantnew = sql_get_singlevalue("SELECT quantity_instock as value FROM products WHERE id='".$prodid."'");
 
+                    if($this->type_invoice=="ap")
+                        $quant=-$quant;
+                           
+                    $sql_obj->string = "UPDATE products SET quantity_instock='".($quantnew+$quant)."' WHERE id='".$prodid."' LIMIT 1";
+                    $sql_obj->execute();
+                    
+                    $invproj=$this->type_invoice=="project"?"project":"invoice";
+                    journal_quickadd_event("products",$prodid,"Product removed from $invproj. (Stock Adj.".sprintf("%+d",$quant).")");
+                }
+                
 		/*
 			Unlock time_groups if required
 		*/
-		if ($this->type_item == "time")
+		if ($this->rollback==1 && $this->type_item == "time")
 		{
 			$groupid = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='TIMEGROUPID'");
 		
@@ -3663,7 +3844,7 @@ class invoice_items
 			Delete credit payments if required
 		*/
 
-		if ($this->type_item == "payment")
+		if ($this->rollback==1 && $this->type_item == "payment")
 		{
 			$credit = sql_get_singlevalue("SELECT option_value as value FROM account_items_options WHERE itemid='". $this->id_item ."' AND option_name='CREDIT'");
 
@@ -3687,30 +3868,36 @@ class invoice_items
 
 		}
 
+                // Delete any project expenses transactions
+                $sql_obj->string = "DELETE FROM account_trans WHERE type='proj_ar' AND customid='".$this->id_item."'";
+                $sql_obj->execute();
 	
+                // Delete links to projects
+                $sql_obj->string	= "DELETE FROM account_items_options WHERE option_name='INVOICED_EXPENSE' AND option_value='". $this->id_item ."'";
+                $sql_obj->execute();
+                
 		/*
 			Delete the invoice item options
 		*/
-
-		$sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $this->id_item ."'";
-		$sql_obj->execute();
-
+                if(($this->deletecancel=="0" && $this->type_invoice=="ar") || $this->type_invoice!="ar")
+                {
+                        $sql_obj->string	= "DELETE FROM account_items_options WHERE itemid='". $this->id_item ."'";
+                        $sql_obj->execute();
 	
+                                                
 		/*
 			Delete the invoice item
 		*/
 
-		$sql_obj->string	= "DELETE FROM account_items WHERE id='". $this->id_item ."' AND invoicetype='". $this->type_invoice ."' LIMIT 1";
-		$sql_obj->execute();
-
-
-		/*
-			Update Journal
-		*/
-
-		journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully deleted");
-
-
+                        $sql_obj->string	= "DELETE FROM account_items WHERE id='". $this->id_item ."' AND invoicetype='". $this->type_invoice ."' LIMIT 1";
+                        $sql_obj->execute();
+                        
+                        journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully deleted.");
+                }
+                else
+                {
+                    journal_quickadd_event("account_". $this->type_invoice ."", $this->id_invoice, "Item successfully cancelled.");
+                }
 
 		/*
 			Commit

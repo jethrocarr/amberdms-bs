@@ -22,7 +22,7 @@ class page_output
 	var $tax_array = array();
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -621,7 +621,7 @@ class page_output
 						print "</span>";
 						$this->obj_form->render_field("description_$i");
 						print "<p class=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "hidden_text ";
 							}
@@ -638,7 +638,7 @@ class page_output
 						}
 												
 						print "<input type=\"hidden\" name=\"change_contact_$i\" value=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "open\" />";
 							}

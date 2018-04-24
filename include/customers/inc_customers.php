@@ -937,7 +937,7 @@ class customer_services extends customer
 	/*
 		Constructor
 	*/
-	function customer_services()
+	function __construct()
 	{
 		log_write("debug", "customer_services", "Executing customer_services()");
 
@@ -1890,7 +1890,7 @@ class customer_orders extends customer
 	/*
 		Constructor
 	*/
-	function customer_orders()
+	function __construct()
 	{
 		log_write("debug", "customer_orders", "Executing customer_orders()");
 
