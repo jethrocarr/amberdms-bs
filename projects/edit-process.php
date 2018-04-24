@@ -20,12 +20,15 @@ if (user_permissions_get('projects_write'))
 	
 	$data["code_project"]		= @security_form_input_predefined("any", "code_project", 0, "");	
 	$data["name_project"]		= @security_form_input_predefined("any", "name_project", 1, "You must set a project name");
+	$data["project_quote"]		= @security_form_input_predefined("any", "project_quote", 0,"");
 	$data["internal_only"]		= @security_form_input_predefined("any", "internal_only", 0, "");
 	$data["details"]		= @security_form_input_predefined("any", "details", 0, "");
 	
 	$data["date_start"]		= @security_form_input_predefined("date", "date_start", 1, "");
 	$data["date_end"]		= @security_form_input_predefined("date", "date_end", 0, "");
 
+        $data["customerid"]             = @security_form_input_predefined("int", "customerid", 1, "");
+        $data["dest_account"]		= @security_form_input_predefined("int", "dest_account", 1, "");
 
 	// process checkboxes
 	if ($data["internal_only"])
@@ -95,7 +98,7 @@ if (user_permissions_get('projects_write'))
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		if ($mode == "edit")
 		{
@@ -150,9 +153,12 @@ if (user_permissions_get('projects_write'))
 			$sql_obj->string	= "UPDATE `projects` SET "
 							."name_project='". $data["name_project"] ."', "
 							."code_project='". $data["code_project"] ."', "
+							."project_quote='". $data["project_quote"] ."', "
 							."date_start='". $data["date_start"] ."', "
 							."date_end='". $data["date_end"] ."', "
 							."internal_only='". $data["internal_only"] ."', "
+                                                        ."customerid='". $data["customerid"] ."', "
+                                                        ."dest_account='". $data["dest_account"] ."', "
 							."details='". $data["details"] ."' "
 							."WHERE id='$id' LIMIT 1";
 

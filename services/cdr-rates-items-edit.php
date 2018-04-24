@@ -20,7 +20,7 @@ class page_output
 
 
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_rate_table		= New cdr_rate_table_rates;
 

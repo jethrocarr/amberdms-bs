@@ -8,7 +8,7 @@
 	Displays all the details for the project and if the user has correct
 	permissions allows the project to be updated.
 */
-
+require("include/accounts/inc_charts.php");
 
 class page_output
 {
@@ -17,7 +17,7 @@ class page_output
 	var $obj_form;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -28,6 +28,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+                $this->obj_menu_nav->add_item("Project Expenses", "page=projects/expenses.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
 
@@ -79,7 +80,7 @@ class page_output
 		$this->obj_form->method = "post";
 		
 
-		// general		
+		// general
 		$structure = NULL;
 		$structure["fieldname"] 	= "name_project";
 		$structure["type"]		= "input";
@@ -92,14 +93,20 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
+		$structure["fieldname"]		= "project_quote";
+		$structure["type"]		= "input";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
 		$structure["fieldname"] 	= "date_start";
 		$structure["type"]		= "date";
+		$structure["defaultvalue"]	= date("Y-m-d");
 		$structure["options"]["req"]	= "yes";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure["fieldname"] 	= "date_end";
-		$structure["type"]		= "date";
+		$structure["fieldname"] = "date_end";
+		$structure["type"]	= "date";
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -111,6 +118,29 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "details";
 		$structure["type"]		= "textarea";
+		$this->obj_form->add_input($structure);
+
+                // load customer dropdown	
+                $sql_struct_obj	= New sql_query;
+                $sql_struct_obj->prepare_sql_settable("customers");
+                $sql_struct_obj->prepare_sql_addfield("id", "customers.id");
+                $sql_struct_obj->prepare_sql_addfield("label", "customers.code_customer");
+                $sql_struct_obj->prepare_sql_addfield("label1", "customers.name_customer");
+                $sql_struct_obj->prepare_sql_addorderby("code_customer");
+                $sql_struct_obj->prepare_sql_addwhere("id = 'CURRENTID' OR date_end = '0000-00-00'");
+
+                $structure = form_helper_prepare_dropdownfromobj("customerid", $sql_struct_obj);
+                $structure["options"]["req"]		= "yes";
+                $structure["options"]["width"]		= "600";
+                $structure["options"]["search_filter"]	= "enabled";
+                $structure["defaultvalue"]		= "";
+                $this->obj_form->add_input($structure);
+
+                $structure = charts_form_prepare_acccountdropdown("dest_account", "ar_summary_account");
+                $structure["options"]["req"]		= "yes";
+		$structure["options"]["autoselect"]	= "yes";
+		$structure["options"]["search_filter"]	= "enabled";
+		$structure["options"]["width"]		= "600";
 		$this->obj_form->add_input($structure);
 
 
@@ -131,7 +161,8 @@ class page_output
 
 		
 		// define subforms
-		$this->obj_form->subforms["project_view"]		= array("code_project", "name_project", "date_start", "date_end", "internal_only", "details");
+		$this->obj_form->subforms["project_view"]	= array("code_project", "name_project","customerid", "date_start", "date_end", "internal_only", "details");
+		$this->obj_form->subforms["project_financials"] = array("project_quote","dest_account");
 		$this->obj_form->subforms["hidden"]			= array("id_project");
 		
 		if (user_permissions_get("projects_write"))

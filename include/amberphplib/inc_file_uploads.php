@@ -69,7 +69,7 @@ class file_storage
 
 		Constructor function
 	*/
-	function file_storage()
+	function __construct()
 	{
 		$this->config["data_storage_method"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_METHOD' LIMIT 1");
 		$this->config["data_storage_location"]	= sql_get_singlevalue("SELECT value FROM config WHERE name='DATA_STORAGE_LOCATION' LIMIT 1");
@@ -299,7 +299,7 @@ class file_storage
 
 		$this->data["file_size"]		= $_FILES[ $fieldname ]["size"];
 
-		if (!$this->data["file_name"])
+		if (!isset($this->data["file_name"]))
 		{
 			// no filename supplied, take the filename of the uploaded fie
  			$this->data["file_name"]	= $_FILES[ $fieldname ]["name"];

@@ -44,6 +44,18 @@ class page_output
 		$structure["type"]				= "input";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_REG_NUMBER";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"] = "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_TAX_NUMBER";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"] = "yes";
+		$this->obj_form->add_input($structure);
 	
 		$structure = NULL;
 		$structure["fieldname"]				= "COMPANY_CONTACT_EMAIL";
@@ -102,7 +114,64 @@ class page_output
 		$structure["options"]["height"]			= "60";
 		$structure["options"]["no_translate_fieldname"]	= "yes";
 		$this->obj_form->add_input($structure);
-		
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_ADDRESS2_STREET";
+		$structure["type"]				= "textarea";
+		$structure["options"]["width"]			= "300";
+		$structure["options"]["height"]			= "60";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+	
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_ADDRESS2_CITY";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+	
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_ADDRESS2_STATE";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_ADDRESS2_COUNTRY";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_ADDRESS2_ZIPCODE";
+		$structure["type"]				= "input";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"] 			= "COMPANY_ADDRESS_MSG";
+		$structure["type"]				= "message";
+		$structure["defaultvalue"]			= "Enter the registered address of the company below, if different to the contact address.";
+		$structure["options"]["no_translate_fieldname"]	= "yes";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_B2C_TERMS";
+		$structure["type"]				= "tinymce";
+		$structure["options"]["width"]			= 500;
+		$structure["options"]["height"]			= 100;
+		$structure["options"]["no_translate_fieldname"] = "yes";
+		$structure["options"]["css_field_class"]	= "tinymce";
+		$this->obj_form->add_input($structure);
+
+		$structure = NULL;
+		$structure["fieldname"]				= "COMPANY_B2B_TERMS";
+		$structure["type"]				= "tinymce";
+		$structure["options"]["width"]			= 500;
+		$structure["options"]["height"]			= 100;
+		$structure["options"]["no_translate_fieldname"] = "yes";
+		$structure["options"]["css_field_class"]	= "tinymce";
+		$this->obj_form->add_input($structure);
+
 		$structure = NULL;
 		$structure["fieldname"] 			= "COMPANY_LOGO";
 		$structure["type"]				= "file";
@@ -127,7 +196,8 @@ class page_output
 		// define subforms
 		$this->obj_form->subforms["config_company_details"]		= array("COMPANY_NAME", "COMPANY_LOGO", "COMPANY_LOGO_MSG");
 		$this->obj_form->subforms["config_company_contact"]		= array("COMPANY_CONTACT_EMAIL", "COMPANY_CONTACT_PHONE", "COMPANY_CONTACT_FAX", "COMPANY_ADDRESS1_STREET", "COMPANY_ADDRESS1_CITY","COMPANY_ADDRESS1_STATE","COMPANY_ADDRESS1_COUNTRY", "COMPANY_ADDRESS1_ZIPCODE");
-		$this->obj_form->subforms["config_company_invoices"]		= array("COMPANY_PAYMENT_DETAILS");
+		$this->obj_form->subforms["config_company_registration"]		= array("COMPANY_TAX_NUMBER","COMPANY_REG_NUMBER","COMPANY_ADDRESS_MSG","COMPANY_ADDRESS2_STREET","COMPANY_ADDRESS2_CITY","COMPANY_ADDRESS2_STATE","COMPANY_ADDRESS2_COUNTRY","COMPANY_ADDRESS2_ZIPCODE");
+		$this->obj_form->subforms["config_company_terms"] 		= array("COMPANY_PAYMENT_DETAILS","COMPANY_B2C_TERMS","COMPANY_B2B_TERMS");
 		$this->obj_form->subforms["submit"]			= array("submit");
 
 		if (error_check())

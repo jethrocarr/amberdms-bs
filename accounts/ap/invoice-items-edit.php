@@ -28,10 +28,10 @@ class page_output
 	var $obj_form_item;
 
 
-	function page_output()
+	function __construct()
 	{
 		//require javascript file
-		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-items-edit.js";
+		$this->requires["javascript"][]		= "include/accounts/javascript/invoice-items-edit_ap.js";
 		
 		// fetch vapiables
 		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);

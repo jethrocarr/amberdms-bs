@@ -19,7 +19,7 @@ class page_output
 	var $chart_type;	// hold the ID of the chart type
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);

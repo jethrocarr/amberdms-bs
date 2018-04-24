@@ -20,7 +20,7 @@ class page_output
 	var $obj_menu_nav;
 
 
-	function page_output()
+	function __construct()
 	{
 		// service objects
 		$this->obj_bundle	= New service_bundle;

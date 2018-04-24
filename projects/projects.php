@@ -35,6 +35,7 @@ class page_output
 		// define all the columns and structure
 		$this->obj_table->add_column("standard", "code_project", "");
 		$this->obj_table->add_column("standard", "name_project", "");
+		$this->obj_table->add_column("standard", "project_quote", "");
 		$this->obj_table->add_column("date", "date_start", "");
 		$this->obj_table->add_column("date", "date_end", "");
 
@@ -63,7 +64,7 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] = "searchbox";
 		$structure["type"]	= "input";
-		$structure["sql"]	= "(code_project LIKE '%value%' OR name_project LIKE '%value%')";
+		$structure["sql"]	= "(code_project LIKE '%value%' OR name_project LIKE '%value%' OR project_quote LIKE '%value%')";
 		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
@@ -119,12 +120,16 @@ class page_output
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("timebooked", "projects/timebooked.php", $structure);
+
+			// expenses link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("expenses", "projects/expenses.php", $structure);
 			
 			// timebilled link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("timebilled", "projects/timebilled.php", $structure);
-
 
 
 

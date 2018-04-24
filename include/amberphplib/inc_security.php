@@ -41,7 +41,7 @@ function security_localphp($url)
 
 
 /*
-	security_form_input ( $expression, $valuename, $numchars, $errormsg )
+	security_form_input ( $expression, $valuename, $numchars, $errormsg, $striptags )
 
 	Verifies input from $_POST[$valuename] using the regex provided
 	as well as checking the length of the variable.
@@ -58,7 +58,7 @@ function security_localphp($url)
 			Appends the errormessage to the errormessage value
 			Returns the value.
 */
-function security_form_input($expression, $valuename, $numchars, $errormsg)
+function security_form_input($expression, $valuename, $numchars, $errormsg,$striptags=true)
 {
 	// get post data
 	$input = $_POST[$valuename];
@@ -74,7 +74,14 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 
 
 	// strip any HTML tags
-	$input = strip_tags($input);
+	if($striptags)
+	{
+		$input = strip_tags($input);
+	}
+	else
+	{
+		$input = strip_tags($input,"<a><b><br><em><hr><h1><h2><h3><h4><i><ol><p><s><table><tr><t><u><ul><li><strong>");
+	}
 
         // check if magic quotes is on or off and process the input correctly.
         //
@@ -142,6 +149,7 @@ function security_form_input($expression, $valuename, $numchars, $errormsg)
 
 	"type" options:
 	* any		Allow any input (note: HTML tags will still be stripped)
+	* html		Allow any input with basic styling HTML tags allowed
 	* date		Reassembles 3 different fields into a single YYYY-MM-DD format
 	* date_string	Accepts YYYY-MM-DD
 	* hourmins	Take 2 fields (hours + minutes), adds them, and returns the number of seconds
@@ -166,6 +174,7 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 	switch ($type)
 	{
 		case "any":
+		case "html":
 			$expression = "/^[\S\s]*$/";
 		break;
 
@@ -455,9 +464,9 @@ function security_form_input_predefined ($type, $valuename, $numchar, $errormsg)
 			$expression = "/^[\S\s]*$/";
 		break;
 
-	}
+	}	
 
-	return security_form_input($expression, $valuename, $numchar, $errormsg);
+	return security_form_input($expression, $valuename, $numchar, $errormsg,$type!="html");
 }
 
 

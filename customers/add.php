@@ -14,7 +14,7 @@ class page_output
 	var $num_contacts;
 	var $tax_array = array();
 
-	function page_output()
+	function __construct()
 	{
 		// required pages
 		$this->requires["javascript"][]		= "include/customers/javascript/addedit_customers.js";
@@ -103,6 +103,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "contact_" .$i;
 			$structure["type"]		= "input";
+			$structure["defaultvalue"]	= "";
 			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
@@ -153,6 +154,7 @@ class page_output
 			$structure = NULL;
 			$structure["fieldname"]		= "description_" .$i;
 			$structure["type"]		= "textarea";
+			$structure["defaultvalue"]	= "";
 			if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 			{
 				$structure["options"]["css_field_class"]	= "hidden_form_field_error";
@@ -443,7 +445,7 @@ class page_output
 						{
 							print "<span>";
 						}
-						else if ($_SESSION["error"]["contact_" .$i. "-error"])
+						else if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<span>";
 						}
@@ -459,7 +461,7 @@ class page_output
 						{
 							print "<span>";
 						}
-						else if ($_SESSION["error"]["contact_" .$i. "-error"])
+						else if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 						{
 							print "<span>";
 						}
@@ -473,7 +475,7 @@ class page_output
 						
 						$this->obj_form->render_field("num_records_$i");
 						print "<div ";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "class=\"hidden_text\" ";
 							}
@@ -507,7 +509,7 @@ class page_output
 					{
 						print "<span>";
 					}
-					else if ($_SESSION["error"]["contact_" .$i. "-error"])
+					else if (isset($_SESSION["error"]["contact_" .$i. "-error"]))
 					{
 						print "<span>";
 					}
@@ -545,7 +547,7 @@ class page_output
 						}
 												
 						print "<input type=\"hidden\" name=\"change_contact_$i\" value=\"";
-							if($_SESSION["error"]["contact_" .$i. "-error"])
+							if(isset($_SESSION["error"]["contact_" .$i. "-error"]))
 							{
 								print "open\" />";
 							}

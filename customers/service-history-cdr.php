@@ -24,7 +24,7 @@ class page_output
 	var $id_service_period;
 
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_customer				= New customer_services;
 

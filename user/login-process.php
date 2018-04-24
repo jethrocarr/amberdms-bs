@@ -39,7 +39,7 @@ else
 	$password	= @security_form_input_predefined("any", "password_amberdms_bs", 4, "Please enter a password.");
 
 
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{
 		// errors occured
 		header("Location: ../index.php?page=user/login.php");

@@ -23,10 +23,10 @@ $GLOBALS["config"] = array();
 
 // define the application details
 $GLOBALS["config"]["app_name"]			= "Amberdms Billing System";
-$GLOBALS["config"]["app_version"]		= "2.0.1";
+$GLOBALS["config"]["app_version"]		= "2.0.3";
 
 // define the schema version required
-$GLOBALS["config"]["schema_version"]		= "20140101";
+$GLOBALS["config"]["schema_version"]		= "20171205";
 
 
 

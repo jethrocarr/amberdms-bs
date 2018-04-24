@@ -19,7 +19,7 @@ class page_output
 	var $obj_form;
 
 
-	function page_output()
+	function __construct()
 	{
 		// init
 		$this->obj_product_group	= New product_groups;

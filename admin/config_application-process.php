@@ -35,6 +35,7 @@ if (user_permissions_get("admin"))
 	$data["ACCOUNTS_SERVICES_DATESHIFT"]		= @security_form_input_predefined("int", "ACCOUNTS_SERVICES_DATESHIFT", 1, "");
 	$data["ACCOUNTS_TERMS_DAYS"]			= @security_form_input_predefined("int", "ACCOUNTS_TERMS_DAYS", 0, "");
 	$data["ACCOUNTS_AUTOPAY"]			= @security_form_input_predefined("checkbox", "ACCOUNTS_AUTOPAY", 0, "");
+        $data["ACCOUNTS_CANCEL_DELETE"]			= @security_form_input_predefined("checkbox", "ACCOUNTS_CANCEL_DELETE", 0, "");
 
 	$data["ACCOUNTS_EMAIL_ADDRESS"]			= @security_form_input_predefined("email", "ACCOUNTS_EMAIL_ADDRESS", 1, "");
 	$data["ACCOUNTS_EMAIL_AUTOBCC"]			= @security_form_input_predefined("checkbox", "ACCOUNTS_EMAIL_AUTOBCC", 1, "");

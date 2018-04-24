@@ -35,7 +35,7 @@ class template_engine
 	/*
 		Constructor/Destructors
 	*/
-	function template_engine()
+	function __construct()
 	{
 		log_debug("template_engine", "Executing template_engine()");
 		
@@ -590,12 +590,15 @@ class template_engine_latex extends template_engine
 		prepare_escape_fields()
 
 		Escapes bad characters for latex - eg: \, % and others.
-		
+
+		$exception - array of field names that are bypass the
+			     escape process (ignore in this function)
+
 		Returns
 		0		failure
 		1		success
 	*/
-	function prepare_escape_fields()
+	function prepare_escape_fields($exception=array())
 	{
 		log_debug("template_engine_latex", "Executing prepare_escape_fields()");  
 
@@ -879,12 +882,14 @@ class template_engine_htmltopdf extends template_engine
 		prepare_escape_fields()
 
 		Escapes bad characters for html using htmlentities
-		
+
+		$exception - an array of fields to bypass escapeing process
+
 		Returns
 		0		failure
 		1		success
 	*/
-	function prepare_escape_fields()
+	function prepare_escape_fields($exception=array())
 	{
 		log_debug("template_engine_htmltopdf", "Executing prepare_escape_fields()");
 
@@ -893,7 +898,10 @@ class template_engine_htmltopdf extends template_engine
 		{
 			foreach (array_keys($this->data) as $var)
 			{
-				$this->data[$var] = htmlentities($this->data[$var], ENT_QUOTES, "UTF-8");
+				if(!in_array($var,$exception))
+				{
+					$this->data[$var] = htmlentities($this->data[$var], ENT_QUOTES, "UTF-8");
+				}
 				$this->data[$var] = str_replace("\n", "<br />", $this->data[$var]);
 			}
 		}
@@ -908,7 +916,10 @@ class template_engine_htmltopdf extends template_engine
 				{
 					foreach (array_keys($this->data_array[$fieldname][$j]) as $var)
 					{
-						$this->data_array[$fieldname][$j][$var] = htmlentities($this->data_array[$fieldname][$j][$var], ENT_QUOTES, "UTF-8");
+						if(!in_array($var,$exception))
+						{
+							$this->data_array[$fieldname][$j][$var] = htmlentities($this->data_array[$fieldname][$j][$var], ENT_QUOTES, "UTF-8");
+						}
 						$this->data_array[$fieldname][$j][$var] = str_replace("\n", "<br />", $this->data_array[$fieldname][$j][$var]); 
 					}
 				}
@@ -1092,7 +1103,7 @@ class template_engine_htmltopdf extends template_engine
 		}
 	
 		chdir("/tmp");		// TODO: fix this to be a configurable value
-		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm $tmp_filename.html $tmp_filename.pdf 2>&1", $output);
+		exec("$app_wkhtmltopdf -B 5mm -L 5mm -R 5mm -T 5mm -d 96 --zoom 1.5  $tmp_filename.html $tmp_filename.pdf 2>&1", $output);
 
 		foreach ($output as $line)
 		{

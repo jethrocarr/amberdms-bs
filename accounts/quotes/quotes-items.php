@@ -22,7 +22,7 @@ class page_output
 	var $obj_table_items;
 
 
-	function page_output()
+	function __construct()
 	{
 		$this->requires["css"][]		= "include/accounts/css/invoice-items-edit.css";
 		// fetch quote ID
@@ -38,6 +38,7 @@ class page_output
 
 		if (user_permissions_get("accounts_quotes_write"))
 		{
+                        $this->obj_menu_nav->add_item("Create Project", "page=accounts/quotes/quotes-convert-project.php&id=". $this->id ."");
 			$this->obj_menu_nav->add_item("Convert to Invoice", "page=accounts/quotes/quotes-convert.php&id=". $this->id ."");
 			$this->obj_menu_nav->add_item("Delete Quote", "page=accounts/quotes/quotes-delete.php&id=". $this->id ."");
 		}

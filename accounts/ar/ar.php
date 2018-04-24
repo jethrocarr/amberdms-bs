@@ -46,13 +46,15 @@ class page_output
 		$this->obj_table->add_column("price", "amount_total", "account_ar.amount_total");
 		$this->obj_table->add_column("price", "amount_paid", "account_ar.amount_paid");
 		$this->obj_table->add_column("bool_tick", "sent", "account_ar.sentmethod");
+                $this->obj_table->add_column("bool_tick", "cancelled", "account_ar.cancelled");
+                $this->obj_table->add_column("bool_tick", "closed", "(account_ar.amount_paid=account_ar.amount_total AND account_ar.amount_total>0)");
 
 		// totals
 		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
 
 		
 		// defaults
-		$this->obj_table->columns		= array("code_invoice", "name_customer", "date_trans", "amount_total", "amount_paid");
+		$this->obj_table->columns		= array("code_invoice", "name_customer", "date_trans", "amount_total", "amount_paid","closed");
 		$this->obj_table->columns_order		= array("code_invoice");
 		$this->obj_table->columns_order_options	= array("code_invoice", "code_ordernumber", "code_ponumber", "name_customer", "name_staff", "date_trans", "date_due", "sent");
 
@@ -93,13 +95,23 @@ class page_output
 		$this->obj_table->add_filter($structure);
 		
 		$structure = NULL;
-		$structure["fieldname"] 	= "hide_closed";
-		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Hide Closed Invoices";
-		$structure["defaultvalue"]	= "enabled";
-		$structure["sql"]		= "account_ar.amount_paid!=account_ar.amount_total";
+		$structure["fieldname"]                 = "hide_closed";
+		$structure["type"]                      = "checkbox";
+		$structure["options"]["label"]          = "Hide Completed Invoices";
+		$structure["defaultvalue"]              = "enabled";
+		$structure["sql"]                       = "((account_ar.amount_paid<>account_ar.amount_total AND account_ar.amount_total>0) OR (account_ar.amount_total=0))";
 		$this->obj_table->add_filter($structure);
-
+                
+                $structure = NULL;
+		$structure["fieldname"]                 = "hide_cancelled";
+		$structure["type"]                      = "checkbox";
+		$structure["options"]["label"]          = "Hide Cancelled Invoices";
+                $structure["options"]["no_fieldname"]   = true;
+                $structure["options"]["no_shift"]       = true;
+		$structure["defaultvalue"]              = "enabled";
+		$structure["sql"]                       = "account_ar.cancelled=0";
+		$this->obj_table->add_filter($structure);
+                
 		// load options
 		$this->obj_table->load_options_form();
 
@@ -158,6 +170,15 @@ class page_output
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("payments", "accounts/ar/invoice-payments.php", $structure);
 
+                        // journal link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("journal", "accounts/ar/journal.php", $structure);
+
+			// export link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("export", "accounts/ar/invoice-export.php", $structure);
 
 			
 
