@@ -121,6 +121,7 @@ class page_output
 		else
 		{
 			// calculate all the totals and prepare processed values
+<<<<<<< HEAD
 			$this->obj_table->render_table_prepare();
 
 			// display header row
@@ -222,6 +223,26 @@ class page_output
 			}
 			print "</table>";
 			print "<br />";
+=======
+			//$this->obj_table->render_table_prepare();
+                    
+      			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("view", "vendors/view.php", $structure);
+
+                        // invoices link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("invoices", "vendors/invoices.php", $structure);
+
+                        // credits link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("credits", "vendors/credit.php", $structure);
+
+                        $this->obj_table->render_table_html();
+>>>>>>> a56d0300d63d464660c7d0fc563e83f17321674a
 
 //			 display CSV & PDF download links
 			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";
