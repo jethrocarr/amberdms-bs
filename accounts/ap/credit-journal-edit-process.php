@@ -1,8 +1,8 @@
 <?php
 /*
-	accounts/ar/journal-edit-process.php
+	accounts/ap/journal-edit-process.php
 
-	access: accounts_ar_write
+	access: accounts_ap_write
 
 	Allows the user to post an entry to the journal or edit an existing journal entry.
 */
@@ -12,14 +12,14 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 
-if (user_permissions_get('accounts_ar_write'))
+if (user_permissions_get('accounts_ap_write'))
 {
 	/////////////////////////
 	
 	// start the journal processing
 
 	$journal = New journal_process;
-	$journal->prepare_set_journalname("account_ar_credit");
+	$journal->prepare_set_journalname("account_ap_credit");
 
 	// import form data
 	$journal->process_form_input();
@@ -30,7 +30,7 @@ if (user_permissions_get('accounts_ar_write'))
 
 	// make sure the invoice ID submitted really exists
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id FROM account_ar_credit WHERE id='". $journal->structure["customid"] ."'";
+	$sql_obj->string	= "SELECT id FROM account_ap_credit WHERE id='". $journal->structure["customid"] ."'";
 	$sql_obj->execute();
 	
 	if (!$sql_obj->num_rows())
@@ -43,7 +43,7 @@ if (user_permissions_get('accounts_ar_write'))
 	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"]["journal_edit"] = "failed";
-		header("Location: ../../index.php?page=accounts/ar/credit-journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."&action=". $journal->structure["action"] ."");
+		header("Location: ../../index.php?page=accounts/ap/credit-journal.php&id=". $journal->structure["customid"] ."&journalid=". $journal->structure["id"] ."&action=". $journal->structure["action"] ."");
 		exit(0);
 	}
 	else
@@ -60,7 +60,7 @@ if (user_permissions_get('accounts_ar_write'))
 		
 	
 		// display updated details
-		header("Location: ../../index.php?page=accounts/ar/credit-journal.php&id=". $journal->structure["customid"] ."");
+		header("Location: ../../index.php?page=accounts/ap/credit-journal.php&id=". $journal->structure["customid"] ."");
 		exit(0);
 	}
 

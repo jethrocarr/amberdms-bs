@@ -1,15 +1,15 @@
 <?php
 /*
-	customers/credit-refund.php
+	vendors/credit-refund.php
 	
-	access: customers_credit
+	access: vendors_credit
 
-	Form to make a credit refund payment - a refund is essentially an item in the credits pool for a customer
+	Form to make a credit refund payment - a refund is essentially an item in the credits pool from a vendor
 	as well as an associated GL transaction crediting the asset account.
 */
 
 
-require("include/customers/inc_customers.php");
+require("include/vendors/inc_vendors.php");
 require("include/accounts/inc_credits.php");
 require("include/accounts/inc_charts.php");
 
@@ -20,62 +20,48 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_table;
 
-	var $obj_customer;
+	var $obj_vendor;
 	var $obj_refund;
 
 	
 	function __construct()
 	{
 		// fetch variables
-		$this->obj_customer		= New customer_credits;
-		$this->obj_customer->id		= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_vendor		= New vendor_credits;
+		$this->obj_vendor->id		= @security_script_input('/^[0-9]*$/', $_GET["id_vendor"]);
 
 		$this->obj_refund		= New credit_refund;
-		$this->obj_refund->type		= "customer";
+		$this->obj_refund->type		= "vendor";
 		$this->obj_refund->id		= @security_script_input('/^[0-9]*$/', $_GET["id_refund"]);
-
 
 		// define the navigiation menu
 		$this->obj_menu_nav = New menu_nav;
 
-		$this->obj_menu_nav->add_item("Customer's Details", "page=customers/view.php&id=". $this->obj_customer->id ."");
-
-		if (sql_get_singlevalue("SELECT value FROM config WHERE name='MODULE_CUSTOMER_PORTAL' LIMIT 1") == "enabled")
+		$this->obj_menu_nav->add_item("Vendor's Details", "page=vendors/view.php&id=". $this->obj_vendor->id ."");
+		$this->obj_menu_nav->add_item("Vendor's Journal", "page=vendors/journal.php&id=". $this->obj_vendor->id ."");
+		$this->obj_menu_nav->add_item("Vendor's Invoices", "page=vendors/invoices.php&id=". $this->obj_vendor->id ."");
+                $this->obj_menu_nav->add_item("Vendor's Credits", "page=vendors/credit.php&id=". $this->obj_vendor->id ."", TRUE);
+		
+                if (user_permissions_get("vendors_write"))
 		{
-			$this->obj_menu_nav->add_item("Portal Options", "page=customers/portal.php&id=". $this->obj_customer->id ."");
+			$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->obj_vendor->id ."");
 		}
 
-		$this->obj_menu_nav->add_item("Customer's Journal", "page=customers/journal.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Attributes", "page=customers/attributes.php&id_customer=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id=". $this->obj_customer->id ."", TRUE);
-		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
-
-		if ($this->obj_customer->verify_reseller() == 1)
-		{
-	               $this->obj_menu_nav->add_item("Reseller's Customers", "page=customers/reseller.php&id_customer=". $this->obj_customer->id ."");
-		}
-
-		if (user_permissions_get("customers_write"))
-		{
-			$this->obj_menu_nav->add_item("Delete Customer", "page=customers/delete.php&id=". $this->obj_customer->id ."");
-		}
 	}
 
 
 	function check_permissions()
 	{
-		return user_permissions_get("customers_credit");
+		return user_permissions_get("vendors_write");
 	}
 	
 
 	function check_requirements()
 	{
 		// verify that customer exists
-		if (!$this->obj_customer->verify_id())
+		if (!$this->obj_vendor->verify_id())
 		{
-			log_write("error", "page_output", "The requested customer (". $this->obj_customer->id .") does not exist - possibly the customer has been deleted.");
+			log_write("error", "page_output", "The requested vendor (". $this->obj_vendor->id .") does not exist - possibly the vendor has been deleted.");
 			return 0;
 		}
 
@@ -102,7 +88,7 @@ class page_output
 		$this->obj_form->formname	= "credit_refund";
 		$this->obj_form->language	= $_SESSION["user"]["lang"];
 
-		$this->obj_form->action		= "customers/credit-refund-edit-process.php";
+		$this->obj_form->action		= "vendors/credit-refund-edit-process.php";
 		$this->obj_form->method		= "post";
 
 	
@@ -155,7 +141,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure = charts_form_prepare_acccountdropdown("account_asset", "ar_payment");
+		$structure = charts_form_prepare_acccountdropdown("account_asset", "ap_payment");
 		$structure["options"]["search_filter"]	= "enabled";
 		$structure["options"]["autoselect"]	= "enabled";
 		$structure["options"]["width"]		= "600";
@@ -163,7 +149,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure = charts_form_prepare_acccountdropdown("account_dest", "ar_summary_account");
+		$structure = charts_form_prepare_acccountdropdown("account_dest", "ap_summary_account");
 		$structure["options"]["search_filter"]	= "enabled";
 		$structure["options"]["autoselect"]	= "enabled";
 		$structure["options"]["width"]		= "600";
@@ -175,9 +161,9 @@ class page_output
 
 		// hidden values
 		$structure = NULL;
-		$structure["fieldname"]		= "id_customer";
+		$structure["fieldname"]		= "id_vendor";
 		$structure["type"]		= "hidden";
-		$structure["defaultvalue"]	= $this->obj_customer->id;
+		$structure["defaultvalue"]	= $this->obj_vendor->id;
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
@@ -200,7 +186,7 @@ class page_output
 		// define base subforms	
 		$this->obj_form->subforms["credit_refund_details"]	= array("date_trans", "type", "id_employee", "description");
 		$this->obj_form->subforms["credit_refund_amount"]	= array("amount", "account_asset", "account_dest");
-		$this->obj_form->subforms["hidden"]			= array("id_customer", "id_refund");
+		$this->obj_form->subforms["hidden"]			= array("id_vendor", "id_refund");
 		$this->obj_form->subforms["submit"] 			= array("submit");
 
 
@@ -214,14 +200,14 @@ class page_output
 			$this->obj_form->structure["amount"]["defaultvalue"]		= $this->obj_refund->data["amount_total"];
 			$this->obj_form->structure["id_employee"]["defaultvalue"]	= $this->obj_refund->data["id_employee"];
 			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_refund->data["description"];
-                        $this->obj_form->structure["account_dest"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ar_refund' AND amount_debit>0 AND customid=".$this->obj_refund->id);
-                        $this->obj_form->structure["account_asset"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ar_refund' AND amount_credit>0 AND customid=".$this->obj_refund->id);
+                        $this->obj_form->structure["account_asset"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ap_refund' AND amount_debit>0 AND customid=".$this->obj_refund->id);
+                        $this->obj_form->structure["account_dest"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ap_refund' AND amount_credit>0 AND customid=".$this->obj_refund->id);
 		}
 		else
 		{
 			// set defaults
 			$this->obj_form->structure["date_trans"]["defaultvalue"]	= date("Y-m-d");
-			$this->obj_form->structure["amount"]["defaultvalue"]		= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $this->obj_customer->id ."' AND id!='". $this->obj_refund->id ."'");
+			$this->obj_form->structure["amount"]["defaultvalue"]		= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendors_credits WHERE id_vendor='". $this->obj_vendor->id ."' AND id!='". $this->obj_refund->id ."'");
 		}
 
 			
@@ -239,11 +225,11 @@ class page_output
 	{
 		// heading
 		print "<h3>CREDIT REFUND</h3>";
-		print "<p>If a customer has requested a refund of their credit, rather than applying it to their next invoice, this page enables a refund to be made.</p>";
+		print "<p>If a vendor has issued a refund of our credit, rather than applying it to their next invoice, this page enables a refund to be recorded.</p>";
 
-		$this->obj_customer->credit_render_summarybox();
+		$this->obj_vendor->credit_render_summarybox();
 
-                $credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $this->obj_customer->id ."'");
+                $credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendors_credits WHERE id_vendor='". $this->obj_vendor->id ."'");
 		
                 // Only show the form if there is credit to be refunded
                 if($credit_total_amount>0 || $this->obj_refund->id)

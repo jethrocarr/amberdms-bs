@@ -1735,7 +1735,7 @@ class table
 							{
 								if ($this->links[$link]["options"]["logic"]["if_not"]["column"])
 								{
-									if (!$this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ])
+									if (!isset($this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ]))
 									{
 										$link_valid = 1;
 									}

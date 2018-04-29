@@ -121,106 +121,24 @@ class page_output
 		else
 		{
 			// calculate all the totals and prepare processed values
-			$this->obj_table->render_table_prepare();
+			//$this->obj_table->render_table_prepare();
+                    
+      			// view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("view", "vendors/view.php", $structure);
 
-			// display header row
-			print "<table class=\"table_content\" cellspacing=\"0\" width=\"100%\">";	
-					
-			print "<tr>";
-				foreach ($this->obj_table->columns as $column)
-				{
-					print "<td class=\"header\"><b>". $this->obj_table->render_columns[$column] ."</b></td>";
-				}
-				
-				//placeholder for links
-				print "<td class=\"header\">&nbsp;</td>";				
-				
-			print "</tr>";
-			
-			// display data
-			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
-			{
-				$vendor_id = $this->obj_table->data[$i]["id"];
-				$contact_id = sql_get_singlevalue("SELECT id AS value FROM vendor_contacts WHERE vendor_id = '" .$vendor_id. "' AND role = 'accounts' LIMIT 1");
-				print "<tr>";
-				foreach ($this->obj_table->columns as $columns)
-				{
-					print "<td valign=\"top\">";						
-						//contact name
-						if ($columns == "name_contact")
-						{
-							$value = sql_get_singlevalue("SELECT contact AS value FROM vendor_contacts WHERE id = '" .$contact_id. "' LIMIT 1");
-							if ($value)
-							{
-								print $value;
-							}
-						}
-						
-						//contact phone
-						else if ($columns == "contact_phone")
-						{
-							$value = sql_get_singlevalue("SELECT detail AS value FROM vendor_contact_records WHERE contact_id = '" .$contact_id. "' AND type = 'phone' LIMIT 1");
-							if ($value)
-							{
-								print $value;
-							}
-						}
-						
-						//contact mobile
-						else if ($columns == "contact_mobile")
-						{
-							$value = sql_get_singlevalue("SELECT detail AS value FROM vendor_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'mobile' LIMIT 1");
-							if ($value)
-							{
-								print $value;
-							}
-						}
-						
-						//contact email
-						else if ($columns == "contact_email")
-						{
-							$value = sql_get_singlevalue("SELECT detail AS value FROM vendor_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'email' LIMIT 1");
-							if ($value)
-							{
-								print $value;
-							}
-						}
-						
-						//contact fax
-						else if ($columns == "contact_fax")
-						{
-							$value = sql_get_singlevalue("SELECT detail AS value FROM vendor_contact_records WHERE contact_id = '" .$contact_id. "' AND type= 'fax' LIMIT 1");
-							if ($value)
-							{
-								print $value;
-							}
-						}
-						
-						//all other columns
-						else
-						{
-							if ($this->obj_table->data_render[$i][$columns])
-							{
-//								print $columns;
-								print $this->obj_table->data_render[$i][$columns];
-							}
-							else
-							{
-								print "&nbsp;";
-							}
-						}
-					print "</td>";
-				}
-				
-					//links
-					print "<td align=\"right\" nowrap >";
-						print "<a class=\"button_small\" href=\"index.php?page=vendors/view.php&id=" .$this->obj_table->data[$i]["id"]. "\">" .lang_trans("details"). "</a>";
-						print "<a class=\"button_small\" href=\"index.php?page=vendors/invoices.php&id=" .$this->obj_table->data[$i]["id"]. "\">" .lang_trans("invoices"). "</a>";
-					print "</td>";
-				print "</tr>";
-			}
-			print "</table>";
-			print "<br />";
+                        // invoices link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("invoices", "vendors/invoices.php", $structure);
+
+                        // credits link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("credits", "vendors/credit.php", $structure);
+
+                        $this->obj_table->render_table_html();
 
 //			 display CSV & PDF download links
 			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=vendors/vendors.php\">Export as CSV</a></p>";

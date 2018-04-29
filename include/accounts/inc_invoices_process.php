@@ -118,14 +118,14 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 
 
 	// make sure we don't choose a invoice invoice number that is already in use
-	if ($invoice->data["code_invoice"])
+	if (isset($invoice->data["code_invoice"]))
 	{
 		$invoice->prepare_code_invoice($invoice->data["code_invoice"]);
 	}
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$type ."_invoice_". $mode] = "failed";
 		header("Location: ../../index.php?page=$returnpage_error&id=". $invoice->id ."");
@@ -135,7 +135,7 @@ function invoice_form_details_process($type, $mode, $returnpage_error, $returnpa
 	{
 		// GENERATE INVOICE ID
 		// if no invoice ID has been supplied, we now need to generate a unique invoice id
-		if (!$invoice->data["code_invoice"])
+		if (!isset($invoice->data["code_invoice"]))
 		{
 			$invoice->prepare_code_invoice();
 		}

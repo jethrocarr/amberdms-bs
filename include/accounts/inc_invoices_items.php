@@ -1712,7 +1712,7 @@ class invoice_form_item
 
 				$structure = NULL;
 
-				if ($this->type == "ap")
+				if ($this->type == "ap_credit")
 				{
 					$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
 				}
