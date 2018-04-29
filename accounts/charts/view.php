@@ -28,7 +28,12 @@ class page_output
 		$this->obj_menu_nav = New menu_nav;
 
 		$this->obj_menu_nav->add_item("Account Details", "page=accounts/charts/view.php&id=". $this->id ."", TRUE);
-		$this->obj_menu_nav->add_item("Account Ledger", "page=accounts/charts/ledger.php&id=". $this->id ."");
+		
+                $isheading= sql_get_singlevalue("SELECT (VALUE='Heading') as value FROM account_chart_type LEFT JOIN account_charts ON account_chart_type.id = account_charts.chart_type WHERE account_charts.id ='". $this->id ."'");
+                if(!$isheading)
+                {
+                    $this->obj_menu_nav->add_item("Account Ledger", "page=accounts/charts/ledger.php&id=". $this->id ."");
+                }
 
 		if (user_permissions_get("accounts_charts_write"))
 		{

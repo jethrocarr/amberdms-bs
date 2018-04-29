@@ -25,7 +25,8 @@ class page_output
 		$this->obj_menu_nav->add_item("Vendor's Details", "page=vendors/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Vendor's Journal", "page=vendors/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Vendor's Invoices", "page=vendors/invoices.php&id=". $this->id ."", TRUE);
-
+                $this->obj_menu_nav->add_item("Vendor's Credits", "page=vendors/credit.php&id=". $this->id ."");
+                
 		if (user_permissions_get("vendors_write"))
 		{
 			$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->id ."");

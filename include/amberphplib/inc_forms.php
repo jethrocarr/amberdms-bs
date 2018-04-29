@@ -498,7 +498,7 @@ class form_input
 					// field name
 					if (!isset($this->structure[$fieldname]["options"]["no_translate_fieldname"]))
 					{
-						$translation = language_translate_string($this->language, $fieldname);
+						$translation = lang_trans($fieldname);
 					}
 					else
 					{
@@ -824,7 +824,7 @@ class form_input
 				{
 						$this->structure[$fieldname]["defaultvalue"] = '';
 				}
-				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
+				$translation = lang_trans($this->structure[$fieldname]["defaultvalue"]);
 
 				print "$translation";
 
@@ -1213,7 +1213,7 @@ class form_input
 					}
 					else
 					{
-						$translation = language_translate_string($this->language, $fieldname);
+						$translation = lang_trans($fieldname);
 					}
 	
 					print "<label for=\"". $fieldname ."\">". $translation ."</label>";
@@ -1288,8 +1288,8 @@ class form_input
 					}
 					else
 					{
-						print "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
-						print "<input type=\"hidden\" name=\"$fieldname\" value=\"". "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable." ."\">";
+						print "No ". lang_trans( $fieldname) ." avaliable.";
+						print "<input type=\"hidden\" name=\"$fieldname\" value=\"". "No ". lang_trans($fieldname) ." avaliable." ."\">";
 						break;
 					}
 				}
@@ -1385,7 +1385,7 @@ class form_input
 			break;
 
 			case "submit":
-				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
+				$translation = lang_trans($this->structure[$fieldname]["defaultvalue"]);
 
 				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\"";
 				
@@ -1607,7 +1607,7 @@ class form_input
 
 				// form header
 				print "<tr class=\"header\">";
-				print "<td colspan=\"2\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
+				print "<td colspan=\"2\"><b>". lang_trans($form_label) ."</b></td>";
 				print "</tr>";
 
 
@@ -1857,7 +1857,7 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{
@@ -1899,7 +1899,7 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{
@@ -2046,7 +2046,7 @@ function form_helper_prepare_dropdownfromgroup($fieldname, $sqlquery)
 		// no valid data found
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{

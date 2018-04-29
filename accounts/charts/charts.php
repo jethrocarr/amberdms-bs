@@ -66,6 +66,9 @@ class page_output
 			if ($this->obj_table->data[$i]["chart_type"] == "Heading")
 			{
 				$this->obj_table->data[$i]["options"]["css_class"] = "chart_heading";
+                                $this->obj_table->data[$i]["chart_type"] ="";
+                                $this->obj_table->data[$i]["description"]="<b>".  $this->obj_table->data[$i]["description"] ."</b>";
+                                $this->obj_table->data[$i]["code_chart"]="<b>".  $this->obj_table->data[$i]["code_chart"] ."</b>";
 			}
 		}
 
@@ -132,15 +135,17 @@ class page_output
 		}
 		else
 		{
-			// view link
-			$structure = NULL;
-			$structure["id"]["column"]	= "id";
-			$this->obj_table->add_link("view", "accounts/charts/view.php", $structure);
 
 			// ledger link
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
+                        $structure["logic"]["if"]["column"] = "chart_type";
 			$this->obj_table->add_link("ledger", "accounts/charts/ledger.php", $structure);
+
+                        // view link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("view", "accounts/charts/view.php", $structure);
 
 
 			// display the table

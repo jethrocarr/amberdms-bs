@@ -1,18 +1,17 @@
 <?php 
 /*
-	customers/ajax/populate_invoices_dropdown.php
+	vendors/ajax/populate_invoices_dropdown.php
 
-	Function called by pages wanting lists of invoice dropdowns relating to a specific customer.
+	Function called by pages wanting lists of invoice dropdowns relating to a specific vendor.
 
 	Access
-	customers_view
+	vendors_view
 	or
-	accounts_ar_view	[used by credit and invoicing pages]
+	accounts_ap_view	[used by credit and invoicing pages]
 
 	Fields
-	[GET] id_customer
+	[GET] id_vendor
 	[GET] id_selected
- *      [GET] inccan - if set to 1, includes cancelled invoices
 
 	Returns
 	<option value="INVOICE_ID">INVOICE_CODE</option>
@@ -22,13 +21,13 @@ require("../../include/config.php");
 require("../../include/amberphplib/main.php");
 
 
-if (user_permissions_get('customers_view') || user_permissions_get('accounts_ar_view'))
+if (user_permissions_get('vendors_view') || user_permissions_get('accounts_ap_view'))
 {
-	$id_customer 		= @security_script_input_predefined("int", $_GET['id_customer']);
+	$id_vendor 		= @security_script_input_predefined("int", $_GET['id_vendor']);
 	$id_selected		= @security_script_input_predefined("int", $_GET['id_selected']);
-	
+		
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id, code_invoice FROM account_ar WHERE amount_paid>0 AND customerid=" .$id_customer ." AND cancelled=0";
+	$sql_obj->string	= "SELECT id, code_invoice FROM account_ap WHERE vendorid=" .$id_vendor . "";
 	$sql_obj->execute();
 
 	
@@ -50,7 +49,7 @@ if (user_permissions_get('customers_view') || user_permissions_get('accounts_ar_
 	}
 	else
 	{
-		$option_string .= "<option value=\"\"> -- there are no invoices associated with this customer -- </option>";
+		$option_string .= "<option value=\"\"> -- there are no invoices associated with this vendor -- </option>";
 	}
 
 	unset($sql_obj);

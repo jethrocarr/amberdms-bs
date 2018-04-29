@@ -12,21 +12,21 @@ require("../include/config.php");
 require("../include/amberphplib/main.php");
 
 require("../include/accounts/inc_credits.php");
-require("../include/customers/inc_customers.php");
+require("../include/vendors/inc_vendors.php");
 
 
 
-if (user_permissions_get('customers_credit'))
+if (user_permissions_get('vendors_write'))
 {
 	/*
 		Load Data
 	*/
 
-	$obj_customer				= New customer_credits;
-	$obj_customer->id			= @security_script_input_predefined("int", $_GET["id_customer"]);
+	$obj_vendor				= New vendor_credits;
+	$obj_vendor->id			= @security_script_input_predefined("int", $_GET["id_vendor"]);
 
 	$obj_refund				= New credit_refund;
-	$obj_refund->type			= "customer";
+	$obj_refund->type			= "vendor";
 	$obj_refund->id				= @security_script_input_predefined("int", $_GET["id_refund"]);
 
 
@@ -36,9 +36,9 @@ if (user_permissions_get('customers_credit'))
 
 
 	// check that the specified customer actually exists
-	if (!$obj_customer->verify_id())
+	if (!$obj_vendor->verify_id())
 	{
-		log_write("error", "process", "The customer you have attempted to edit - ". $obj_customer->id ." - does not exist in this system.");
+		log_write("error", "process", "The vendor you have attempted to edit - ". $obj_vendor->id ." - does not exist in this system.");
 	}
 	else
 	{
@@ -63,7 +63,7 @@ if (user_permissions_get('customers_credit'))
 	*/
 	if (error_check())
 	{	
-		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."&id_refund=". $obj_refund->id);
+		header("Location: ../index.php?page=vendors/credit.php&id=". $obj_vendor->id ."&id_refund=". $obj_refund->id);
 		exit(0);
 	}
 	else
@@ -83,7 +83,7 @@ if (user_permissions_get('customers_credit'))
 		/*
 			Return
 		*/
-		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."");
+		header("Location: ../index.php?page=vendors/credit.php&id=". $obj_vendor->id ."");
 		exit(0);
 			
 	}

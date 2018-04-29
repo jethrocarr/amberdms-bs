@@ -1,8 +1,8 @@
 <?php
 /*
-	customers/credit-refund-edit-process.php
+	vendors/credit-refund-edit-process.php
 
-	access: customers_credit
+	access: vendors_credit
 
 	Allows a refund to be made, or adjusted.
 */
@@ -13,21 +13,21 @@ require("../include/amberphplib/main.php");
 
 require("../include/accounts/inc_credits.php");
 require("../include/accounts/inc_ledger.php");
-require("../include/customers/inc_customers.php");
+require("../include/vendors/inc_vendors.php");
 
 
 
-if (user_permissions_get('customers_credit'))
+if (user_permissions_get('vendors_write'))
 {
 	/*
 		Load Data
 	*/
 
-	$obj_customer				= New customer_credits;
-	$obj_customer->id			= @security_form_input_predefined("int", "id_customer", 1, "");
+	$obj_vendor				= New vendor_credits;
+	$obj_vendor->id                         = @security_form_input_predefined("int", "id_vendor", 1, "");
 
 	$obj_refund				= New credit_refund;
-	$obj_refund->type			= "customer";
+	$obj_refund->type			= "vendor";
 	$obj_refund->id				= @security_form_input_predefined("int", "id_refund", 0, "");
 
 	/*
@@ -36,9 +36,9 @@ if (user_permissions_get('customers_credit'))
 
 
 	// check that the specified customer actually exists
-	if (!$obj_customer->verify_id())
+	if (!$obj_vendor->verify_id())
 	{
-		log_write("error", "process", "The customer you have attempted to edit - ". $obj_customer->id ." - does not exist in this system.");
+		log_write("error", "process", "The vendor you have attempted to edit - ". $obj_vendor->id ." - does not exist in this system.");
 	}
 	else
 	{
@@ -68,14 +68,14 @@ if (user_permissions_get('customers_credit'))
 	$obj_refund->data["account_dest"]			= @security_form_input_predefined("int", "account_dest", 1, "");
 	$obj_refund->data["account_asset"]			= @security_form_input_predefined("int", "account_asset", 1, "");
 	$obj_refund->data["id_employee"]			= @security_form_input_predefined("int", "id_employee", 1, "");
-	$obj_refund->data["id_customer"]			= $obj_customer->id;
+	$obj_refund->data["id_vendor"]			= $obj_vendor->id;
 	
 	@security_form_input_predefined("any", "type", 0, ""); // ignored, for error handling only
 
 
 
 	// make sure the refund amount isn't more than the available credit
-	$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $obj_customer->id ."' AND id!='". $obj_refund->id ."'");
+	$credit_balance	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendors_credits WHERE id_vendor='". $obj_vendor->id ."' AND id!='". $obj_refund->id ."'");
 
 	if ($obj_refund->data["amount_total"] > $credit_balance)
 	{
@@ -90,7 +90,7 @@ if (user_permissions_get('customers_credit'))
 	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["credit-refund_view"] = "failed";
-		header("Location: ../index.php?page=customers/credit-refund.php&id_customer=". $obj_customer->id ."&id_refund=". $obj_refund->id);
+		header("Location: ../index.php?page=vendors/credit-refund.php&id_vendor=". $obj_vendor->id ."&id_refund=". $obj_refund->id);
 		exit(0);
 	}
 	else
@@ -114,7 +114,7 @@ if (user_permissions_get('customers_credit'))
 		}
 
 		// return to services page
-		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."");
+		header("Location: ../index.php?page=vendors/credit.php&id=". $obj_vendor->id ."");
 		exit(0);
 			
 	}

@@ -232,7 +232,14 @@ function credit_render_invoiceselect($type, $id, $processpage)
 			return 1;
 		}
 
-
+                // Check to see if the amount on the credit note is less than that on the invoice
+                $invtotal= sql_get_singlevalue("SELECT amount_total AS value FROM account_" . substr($type,0,2) . " WHERE id=" . $sql_obj->data[0]['invoiceid'] );
+                if($invtotal<=$sql_obj->data[0]['amount_total'])
+                {
+                    // No more credit available, nothing to do
+                    return 1;
+                }
+                
 		/*
 			Select Invoice Items
 		*/
@@ -1801,7 +1808,7 @@ class credit_refund
 
 		// create new credit table entry
 		$sql_obj		= New sql_query;
-		$sql_obj->string	= "INSERT INTO ". $this->type ."s_credits (date_trans, type, id_". $this->type .") VALUES ('".$this->data["date_trans"]."', 'refund', '". $this->data["id_customer"] ."')";
+		$sql_obj->string	= "INSERT INTO ". $this->type ."s_credits (date_trans, type, id_". $this->type .") VALUES ('".$this->data["date_trans"]."', 'refund', '". $this->data["id_".$this->type] ."')";
 
 		if (!$sql_obj->execute())
 		{

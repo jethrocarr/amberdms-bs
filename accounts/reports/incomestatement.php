@@ -46,7 +46,7 @@ class page_output
 
 		if (!$this->mode)
 		{
-			if ($_SESSION["account_reports"]["mode"])
+			if (isset($_SESSION["account_reports"]["mode"]))
 			{
 				$this->mode = $_SESSION["account_reports"]["mode"];
 			}
@@ -58,7 +58,7 @@ class page_output
 
 		if (!$this->date_start || $this->date_start == "--")
 		{
-			if ($_SESSION["account_reports"]["date_start"])
+			if (isset($_SESSION["account_reports"]["date_start"]))
 			{
 				$this->date_start = $_SESSION["account_reports"]["date_start"];
 			}
@@ -70,7 +70,7 @@ class page_output
 		
 		if (!$this->date_end || $this->date_end == "--")
 		{
-			if ($_SESSION["account_reports"]["date_end"])
+			if (isset($_SESSION["account_reports"]["date_end"]))
 			{
 				$this->date_end = $_SESSION["account_reports"]["date_end"];
 			}
