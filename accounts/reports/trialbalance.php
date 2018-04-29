@@ -42,7 +42,7 @@ class page_output
 	
 		if (!$this->date_start || $this->date_start == "--")
 		{
-			if ($_SESSION["account_reports"]["date_start"])
+			if (isset($_SESSION["account_reports"]["date_start"]))
 			{
 				$this->date_start = $_SESSION["account_reports"]["date_start"];
 			}
@@ -54,7 +54,7 @@ class page_output
 		
 		if (!$this->date_end || $this->date_end == "--")
 		{
-			if ($_SESSION["account_reports"]["date_end"])
+			if (isset($_SESSION["account_reports"]["date_end"]))
 			{
 				$this->date_end = $_SESSION["account_reports"]["date_end"];
 			}
@@ -98,7 +98,7 @@ class page_output
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= $this->date_end;
 		$this->obj_form->add_input($structure);
-
+		
 		// submit
 		$structure = NULL;
 		$structure["fieldname"] 	= "submit";

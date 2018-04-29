@@ -68,7 +68,7 @@ class table
 
 		Constructor Function
 	*/
-	function table()
+	function __construct()
 	{
 		// init the SQL structure
 		$this->sql_obj = New sql_query;
@@ -525,7 +525,7 @@ class table
 				// the table options dropdown
 				$_SESSION["form"][$this->tablename]["custom_options_active"] = 1;
 
-				log_debug("table", "Loading options form from $_GET");
+				log_debug("table", "Loading options form from GET");
 				
 				$this->columns		= array();
 				$this->columns_order	= array();
@@ -1384,7 +1384,10 @@ class table
 					{
 						if (isset($this->data[$i][$column]))
 						{
+                                                    if(is_numeric($this->data[$i][$column]))
+                                                    {
 							$this->data["total"][$column] += $this->data[$i][$column];
+                                                    }
 						}
 					}
 
@@ -1732,7 +1735,7 @@ class table
 							{
 								if ($this->links[$link]["options"]["logic"]["if_not"]["column"])
 								{
-									if (!$this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ])
+									if (!isset($this->data[$i][  $this->links[$link]["options"]["logic"]["if_not"]["column"] ]))
 									{
 										$link_valid = 1;
 									}

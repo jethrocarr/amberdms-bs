@@ -59,7 +59,7 @@ if (user_online())
 	//// PROCESS DATA ////////////////////////////
 
 
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{
 		$_SESSION["error"]["form"]["user_options"] = "failed";
 		header("Location: ../index.php?page=user/options.php&id=$id");
@@ -77,7 +77,7 @@ if (user_online())
 		/*
 			Generate new password
 		*/
-		if ($data["password"])
+		if (isset($data["password"]))
 		{
 			user_changepwd($id, $data["password"]);
 		}
@@ -162,7 +162,7 @@ if (user_online())
 			Complete
 		*/
 		
-		if (!$_SESSION["error"]["message"])
+		if (!isset($_SESSION["error"]["message"]))
 		{
 			$sql_obj->trans_commit();
 

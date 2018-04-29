@@ -24,7 +24,7 @@ class page_output
 	var $obj_refund;
 
 	
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->obj_customer		= New customer_credits;
@@ -49,7 +49,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Attributes", "page=customers/attributes.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id=". $this->obj_customer->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
 
 		if ($this->obj_customer->verify_reseller() == 1)
@@ -155,7 +155,7 @@ class page_output
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
-		$structure = charts_form_prepare_acccountdropdown("account_asset", "ap_payment");
+		$structure = charts_form_prepare_acccountdropdown("account_asset", "ar_payment");
 		$structure["options"]["search_filter"]	= "enabled";
 		$structure["options"]["autoselect"]	= "enabled";
 		$structure["options"]["width"]		= "600";
@@ -214,6 +214,8 @@ class page_output
 			$this->obj_form->structure["amount"]["defaultvalue"]		= $this->obj_refund->data["amount_total"];
 			$this->obj_form->structure["id_employee"]["defaultvalue"]	= $this->obj_refund->data["id_employee"];
 			$this->obj_form->structure["description"]["defaultvalue"]	= $this->obj_refund->data["description"];
+                        $this->obj_form->structure["account_dest"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ar_refund' AND amount_debit>0 AND customid=".$this->obj_refund->id);
+                        $this->obj_form->structure["account_asset"]["defaultvalue"]	= sql_get_singlevalue("SELECT chartid AS value FROM account_trans WHERE type='ar_refund' AND amount_credit>0 AND customid=".$this->obj_refund->id);
 		}
 		else
 		{
@@ -241,7 +243,13 @@ class page_output
 
 		$this->obj_customer->credit_render_summarybox();
 
-		$this->obj_form->render_form();
+                $credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $this->obj_customer->id ."'");
+		
+                // Only show the form if there is credit to be refunded
+                if($credit_total_amount>0 || $this->obj_refund->id)
+                {
+                    $this->obj_form->render_form();
+                }
 	}
 
 

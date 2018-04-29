@@ -18,7 +18,7 @@ class page_output
 	var $obj_traffic_type;
 	var $locked;
 
-	function page_output()
+	function __construct()
 	{
 		$this->obj_traffic_type	= New traffic_types;
 

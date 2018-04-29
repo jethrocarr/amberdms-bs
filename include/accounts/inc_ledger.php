@@ -67,6 +67,7 @@ function ledger_trans_add($mode, $type, $customid, $date_trans, $chartid, $amoun
 				."'". $source ."', "
 				."'". $memo ."' "
 				.")";
+
 	if ($sql_obj->execute())
 	{
 		return 1;
@@ -103,7 +104,7 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 			// for AR invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
 			
-			$result = "AR invoice $result";
+			$result = "AR Invoice $result";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$customid\">$result</a>";
@@ -113,19 +114,38 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 			// for AR invoice payments fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar WHERE id='$customid'");
 						
-			$result = "AR payment $result";
+			$result = "AR Payment $result";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ar/invoice-payments.php&id=$customid\">$result</a>";
 		break;
+                
+		case "project":
+			// for AR invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_project as value FROM projects WHERE id='$customid'");
+			
+			$result = "Project Expense $result";
 
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=projects/view.php&id=$customid\">$result</a>";
+		break;
+
+                case "proj_ar":
+			// for project to invoice transation, get invoice 
+			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ar LEFT JOIN account_items ON account_items.invoiceid=account_ar.id WHERE account_items.id='$customid'");
+			$invid = sql_get_singlevalue("SELECT invoiceid AS value FROM account_items WHERE id='".$customid."'");
+			$result = "Project to AR Invoice $result";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=$invid\">$result</a>";
+		break;
 		
 		case "ap":
 		case "ap_tax":
 			// for AP invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
 						
-			$result = "AP invoice $result";
+			$result = "AP Invoice $result";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ap/invoice-view.php&id=$customid\">$result</a>";
@@ -135,7 +155,7 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 			// for AP invoice payments fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_invoice as value FROM account_ap WHERE id='$customid'");
 						
-			$result = "AP payment $result";
+			$result = "AP Payment $result";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ap/invoice-payments.php&id=$customid\">$result</a>";
@@ -146,8 +166,9 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 		case "ar_credit_tax":
 			// for AP invoices/transaction fetch the invoice ID
 			$result = sql_get_singlevalue("SELECT code_credit as value FROM account_ar_credit WHERE id='$customid'");
-						
-			$result = "AR Credit Note $result";
+                        $extra= sql_get_singlevalue("SELECT code_invoice as value FROM account_ar LEFT JOIN account_ar_credit ON account_ar.id=account_ar_credit.invoiceid WHERE account_ar_credit.id='$customid'");
+                    
+			$result = "AR Credit Note $result (for Invoice $extra)";
 
 			if ($enablelink)
 				$result = "<a href=\"index.php?page=accounts/ar/credit-view.php&id=$customid\">$result</a>";
@@ -158,14 +179,39 @@ function ledger_trans_typelabel($type, $customid, $enablelink = FALSE)
 			// for AR invoices/transaction fetch the invoice ID
 			$customerid	= sql_get_singlevalue("SELECT id_customer as value FROM customers_credits WHERE id='$customid'");
 			$result 	= sql_get_singlevalue("SELECT code_customer as value FROM customers WHERE id='$customerid'");
-						
-			$result = "Refund to customer $result";
+			$extra          = sql_get_singlevalue("SELECT name_customer as value FROM customers WHERE id='$customerid'");			
+                        
+			$result = "Refund to $extra ($result)";
 
 			if ($enablelink)
-				$result = "<a href=\"index.php?page=customers/credit.php&id_customer=$customerid\">$result</a>";
+				$result = "<a href=\"index.php?page=customers/credit.php&id=$customerid\">$result</a>";
 		break;
 
+		case "ap_credit":
+		case "ap_credit_tax":
+			// for AP invoices/transaction fetch the invoice ID
+			$result = sql_get_singlevalue("SELECT code_credit as value FROM account_ap_credit WHERE id='$customid'");
+                        $extra= sql_get_singlevalue("SELECT code_invoice as value FROM account_ap LEFT JOIN account_ap_credit ON account_ap.id=account_ap_credit.invoiceid WHERE account_ap_credit.id='$customid'");
+						
+			$result = "AP Credit Note $result (for Invoice $extra)";
 
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=accounts/ap/credit-view.php&id=$customid\">$result</a>";
+		break;
+
+		case "ap_refund":
+			// for AP invoices/transaction fetch the invoice ID
+			$vendorid	= sql_get_singlevalue("SELECT id_vendor as value FROM vendors_credits WHERE id='$customid'");
+			$result 	= sql_get_singlevalue("SELECT code_vendor as value FROM vendors WHERE id='$vendorid'");
+                        $extra          = sql_get_singlevalue("SELECT name_vendor as value FROM vendors WHERE id='$vendorid'");
+						
+			$result = "Refund from $extra ($result)";
+
+			if ($enablelink)
+				$result = "<a href=\"index.php?page=vendors/credit.php&id=$vendorid\">$result</a>";
+		break;
+
+                
 		case "gl":
 			// general ledger transaction
 			$result = sql_get_singlevalue("SELECT code_gl as value FROM account_gl WHERE id='$customid'");
@@ -225,7 +271,7 @@ class ledger_account_list
 
 		Constructor Function
 	*/
-	function ledger_account_list()
+	function __construct()
 	{
 		// init the table object
 		$this->obj_table = New table;

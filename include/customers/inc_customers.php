@@ -237,7 +237,7 @@ class customer
 
 		// data for customer might not be loaded yet, if it isn't, we should do so.
 		//
-		if (!isset($this->data["reseller_customer"]))
+/*		if (!isset($this->data["reseller_customer"]))
 		{
 			$sql_obj		= New sql_query;
 			$sql_obj->string	= "SELECT reseller_customer, reseller_id FROM customers WHERE id='". $this->id ."' LIMIT 1";
@@ -259,7 +259,10 @@ class customer
 
 			unset($sql_obj);
 		}
-		
+*/
+                if(!isset($this->data))
+                    $this->load_data();
+                
 		// use loaded data
 		//
 		switch ($this->data["reseller_customer"])
@@ -937,7 +940,7 @@ class customer_services extends customer
 	/*
 		Constructor
 	*/
-	function customer_services()
+	function __construct()
 	{
 		log_write("debug", "customer_services", "Executing customer_services()");
 
@@ -1890,7 +1893,7 @@ class customer_orders extends customer
 	/*
 		Constructor
 	*/
-	function customer_orders()
+	function __construct()
 	{
 		log_write("debug", "customer_orders", "Executing customer_orders()");
 
@@ -2543,7 +2546,6 @@ class customer_credits extends customer
 			$this->load_data();
 		}
 
-
 		// are there any credits? If there are none, balance is simple.
 		$obj_sql 		= New sql_query;
 		$obj_sql->string	= "SELECT id FROM `customers_credits` WHERE id_customer='". $this->id ."'";
@@ -2555,7 +2557,7 @@ class customer_credits extends customer
 			$credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM customers_credits WHERE id_customer='". $this->id ."'");
 
 			// display credits summary information
-			if ($credit_total_amount > 1)
+			if ($credit_total_amount > 0)
 			{
 				// current credit
 				print "<table width=\"100%\" class=\"table_highlight_open\">";
@@ -2584,18 +2586,7 @@ class customer_credits extends customer
 				print "<tr>";
 					print "<td>";
 					print "<b>Customer ". $this->data["name_customer"] ." has a zero credit balance.</b>";
-			
-					print "<table cellpadding=\"4\">";
-							
-						print "<tr>";
-							print "<td>Total Amount:</td>";
-							print "<td>". format_money($order_total_amount) ."</td>";
-						print "</tr>";
-
-					print "</table>";
-
 					print "</td>";
-
 				print "</tr>";
 				print "</table>";
 			}

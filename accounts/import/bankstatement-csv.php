@@ -15,7 +15,7 @@ class page_output
 	var $example_array;
 	
 	
-	function page_output()
+	function __construct()
 	{
 		$this->requires["javascript"][]		= "include/accounts/javascript/import.js";
 		$this->requires["css"][]		= "include/accounts/css/bankstatement-csv.css";

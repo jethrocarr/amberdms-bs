@@ -378,6 +378,10 @@ class form_input
 	{
 		log_debug("form", "Executing render_row($fieldname)");
 		
+                // Check to see if we have a null fieldname 
+                if($fieldname=="")
+                        return;
+                
 		//create array of classes
 		$class_array = array();
 		if(isset($this->structure[$fieldname]["options"]["css_row_class"]))
@@ -494,7 +498,7 @@ class form_input
 					// field name
 					if (!isset($this->structure[$fieldname]["options"]["no_translate_fieldname"]))
 					{
-						$translation = language_translate_string($this->language, $fieldname);
+						$translation = lang_trans($fieldname);
 					}
 					else
 					{
@@ -547,6 +551,7 @@ class form_input
 				text		- text only display, with hidden field as well
 
 				textarea	- space for blocks of text
+				tinymce		- textarea with TinyMCE editor
 				
 				date		- special date field - splits a timestamp into 3 DD/MM/YYYY fields
 				hourmins	- splits the specified number of seconds into hours, and minutes
@@ -587,6 +592,7 @@ class form_input
 						["search_filter"]		Enable/disable the optional text box to allow search/ filtering of a dropdown
  						["help"]			In-field help message for input and textarea types. Is ignored if defaultvalue is set.
  						["disabled"]			Disables the field if set to yes
+						["postlabellink"]		Link to show after the field. An array of {[link],[caption]} is passed here.
 						["autofill"]			Set to a value to fill the input field with upon being selected the first time.
 						["autocomplete"]		Autocomplete option for input fields, it will display a dropdown that filters
 											as the user types, using the Jquery Autocomplete UI functions. Options are
@@ -673,6 +679,11 @@ class form_input
 				if (isset($this->structure[$fieldname]["options"]["autofill"]))
 				{
 					print "<input type=\"hidden\" name=\"".$fieldname."_autofill\" value=\"". $this->structure[$fieldname]["options"]["autofill"] ."\">";
+				}
+
+				if(isset($this->structure[$fieldname]["options"]["postlabellink"]))
+				{
+					print "<a href=\"". $this->structure[$fieldname]["options"]["postlabellink"]["link"] ."\">". $this->structure[$fieldname]["options"]["postlabellink"]["caption"] ."</a>"; 
 				}
 			break;
 
@@ -813,7 +824,7 @@ class form_input
 				{
 						$this->structure[$fieldname]["defaultvalue"] = '';
 				}
-				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
+				$translation = lang_trans($this->structure[$fieldname]["defaultvalue"]);
 
 				print "$translation";
 
@@ -824,6 +835,7 @@ class form_input
 			break;
 
 			case "textarea":
+			case "tinymce":
 				
 				// set default size
 				if (!isset($this->structure[$fieldname]["options"]["width"]))
@@ -840,7 +852,12 @@ class form_input
 
 				// display
 				print "<textarea name=\"$fieldname\" ";
-				
+
+				if($this->structure[$fieldname]["type"]=='tinymce')
+				{
+					print "id=\"tinymcearea\" ";
+				}
+
 				if (isset($this->structure[$fieldname]["options"]["wrap"]))
 				{
 					print "wrap=\"". $this->structure[$fieldname]["options"]["wrap"] ."\" ";
@@ -905,28 +922,33 @@ class form_input
 					// user hasn't chosen a default time format yet - use the system default
 					$format = sql_get_singlevalue("SELECT value FROM config WHERE name='DATEFORMAT' LIMIT 1");
 				}
-
+                                
+                                if (isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
+                                        $dis= "disabled=\"disabled\" ";
+                                else
+                                        $dis="";
+                                
 				switch ($format)
 				{
 					case "mm-dd-yyyy":
-						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
-						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
-						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\" ".$dis."> ";
 						print " <i>(mm/dd/yyyy)</i>";
 					break;
 
 					case "dd-mm-yyyy":
-						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\"> ";
-						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
-						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\">";
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\" ".$dis."> ";
 						print " <i>(dd/mm/yyyy)</i>";
 					break;
 					
 					case "yyyy-mm-dd":
 					default:
-						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\"> ";
-						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\"> ";
-						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\">";
+						print "<input name=\"". $fieldname ."_yyyy\" style=\"width: 50px;\" maxlength=\"4\" value=\"". $date_a[0] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_mm\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[1] ."\" ".$dis."> ";
+						print "<input name=\"". $fieldname ."_dd\" style=\"width: 25px;\" maxlength=\"2\" value=\"". $date_a[2] ."\" ".$dis."> ";
 						print " <i>(yyyy/mm/dd)</i>";
 					break;
 				}
@@ -1191,7 +1213,7 @@ class form_input
 					}
 					else
 					{
-						$translation = language_translate_string($this->language, $fieldname);
+						$translation = lang_trans($fieldname);
 					}
 	
 					print "<label for=\"". $fieldname ."\">". $translation ."</label>";
@@ -1266,8 +1288,8 @@ class form_input
 					}
 					else
 					{
-						print "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
-						print "<input type=\"hidden\" name=\"$fieldname\" value=\"". "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable." ."\">";
+						print "No ". lang_trans( $fieldname) ." avaliable.";
+						print "<input type=\"hidden\" name=\"$fieldname\" value=\"". "No ". lang_trans($fieldname) ." avaliable." ."\">";
 						break;
 					}
 				}
@@ -1301,7 +1323,7 @@ class form_input
 				}
 
 				// start dropdown/select box
-				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\"";
+				print "<select name=\"$fieldname\" size=\"1\" style=\"width: ". $this->structure[$fieldname]["options"]["width"] ."px;\" ";
 				if ( isset($this->structure[$fieldname]["options"]["disabled"]) && ($this->structure[$fieldname]["options"]["disabled"] == "yes"))
 					print "disabled=\"disabled\" ";
 					
@@ -1363,7 +1385,7 @@ class form_input
 			break;
 
 			case "submit":
-				$translation = language_translate_string($this->language, $this->structure[$fieldname]["defaultvalue"]);
+				$translation = lang_trans($this->structure[$fieldname]["defaultvalue"]);
 
 				print "<input name=\"$fieldname\" type=\"submit\" value=\"$translation\"";
 				
@@ -1416,7 +1438,7 @@ class form_input
 			break;
 
 			default:
-				log_debug("form", "Error: Unknown field type of ". $this->structure["fieldname"]["type"] ."");
+				log_debug("form", "Error: Unknown field type of ". $this->structure[$fieldname]["type"] ."");
 			break;
 		}
 
@@ -1585,7 +1607,7 @@ class form_input
 
 				// form header
 				print "<tr class=\"header\">";
-				print "<td colspan=\"2\"><b>". language_translate_string($this->language, $form_label) ."</b></td>";
+				print "<td colspan=\"2\"><b>". lang_trans($form_label) ."</b></td>";
 				print "</tr>";
 
 
@@ -1835,7 +1857,7 @@ function form_helper_prepare_dropdownfromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{
@@ -1877,7 +1899,7 @@ function form_helper_prepare_radiofromdb($fieldname, $sqlquery)
 		$structure = array();
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{
@@ -2024,7 +2046,7 @@ function form_helper_prepare_dropdownfromgroup($fieldname, $sqlquery)
 		// no valid data found
 		$structure["fieldname"] 	= $fieldname;
 		$structure["type"]		= "text";
-		$structure["defaultvalue"]	= "No ". language_translate_string($_SESSION["user"]["lang"], $fieldname) ." avaliable.";
+		$structure["defaultvalue"]	= "No ". lang_trans($fieldname) ." avaliable.";
 	}
 	else
 	{

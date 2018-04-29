@@ -44,13 +44,14 @@ class page_output
 		$this->obj_table->add_column("price", "amount", "account_ap.amount");
 		$this->obj_table->add_column("price", "amount_total", "account_ap.amount_total");
 		$this->obj_table->add_column("price", "amount_paid", "account_ap.amount_paid");
+                $this->obj_table->add_column("bool_tick", "closed", "(account_ap.amount_paid=account_ap.amount_total AND account_ap.amount_total>0)");
 
 		// totals
 		$this->obj_table->total_columns	= array("amount_tax", "amount", "amount_total", "amount_paid");
 
 		
 		// defaults
-		$this->obj_table->columns		= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid");
+		$this->obj_table->columns		= array("name_vendor", "code_invoice", "date_trans", "amount_total", "amount_paid","closed");
 		$this->obj_table->columns_order		= array("code_invoice");
 		$this->obj_table->columns_order_options	= array("name_vendor", "code_invoice", "code_ordernumber", "code_ponumber", "name_staff", "date_trans", "date_due", "sent");
 		
@@ -93,12 +94,10 @@ class page_output
 		$structure = NULL;
 		$structure["fieldname"] 	= "hide_closed";
 		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Hide Closed Invoices";
+		$structure["options"]["label"]	= "Hide Completed Invoices";
 		$structure["defaultvalue"]	= "enabled";
-		$structure["sql"]		= "account_ap.amount_paid!=account_ap.amount_total";
+		$structure["sql"]		= "((account_ap.amount_paid<>account_ap.amount_total AND account_ap.amount_total>0) OR (account_ap.amount_total=0))";
 		$this->obj_table->add_filter($structure);
-
-
 
 		// load options
 		$this->obj_table->load_options_form();
@@ -157,6 +156,12 @@ class page_output
 			$structure = NULL;
 			$structure["id"]["column"]	= "id";
 			$this->obj_table->add_link("payments", "accounts/ap/invoice-payments.php", $structure);
+
+      			// journal link
+			$structure = NULL;
+			$structure["id"]["column"]	= "id";
+			$this->obj_table->add_link("journal", "accounts/ap/journal.php", $structure);
+
 
 
 			// display the table

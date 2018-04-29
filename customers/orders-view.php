@@ -22,10 +22,10 @@ class page_output
 
 	
 
-	function page_output()
+	function __construct()
 	{
 		// javascript: AJAX call to load product information
-		$this->requires["javascript"][]			= "include/accounts/javascript/invoice-items-edit.js";
+		$this->requires["javascript"][]			= "include/accounts/javascript/invoice-items-edit_ar.js";
 
 		// customer object
 		$this->obj_customer				= New customer_orders;

@@ -36,7 +36,7 @@ function lang_trans($label)
 {
 	log_write("debug", "inc_language", "Executing lang_trans($label)");
 
-	//
+	
 	// see if the value is already cached
 	if (isset($GLOBALS["cache"]["lang"][$label]))
 	{

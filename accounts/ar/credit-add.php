@@ -18,7 +18,7 @@ class page_output
 	var $obj_menu_nav;
 	var $obj_form_credit;
 
-	function page_output()
+	function __construct()
 	{
 		$this->requires["javascript"][]		= "include/customers/javascript/populate_invoices_dropdown.js";
 	}
@@ -53,7 +53,7 @@ class page_output
 	function render_html()
 	{
 		// heading
-		print "<h3>ADD CREDIT NODE</h3><br>";
+		print "<h3>ADD CREDIT NOTE</h3><br>";
 		print "<p>This page provides features to allow you to create a new credit note.</p>";
 
 		// display form

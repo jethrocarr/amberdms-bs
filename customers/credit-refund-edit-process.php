@@ -90,7 +90,7 @@ if (user_permissions_get('customers_credit'))
 	if (error_check())
 	{	
 		$_SESSION["error"]["form"]["credit-refund_view"] = "failed";
-		header("Location: ../index.php?page=customers/credit-refund.php&id_customer=". $obj_customer->id ."&id_order=". $obj_customer->id_order);
+		header("Location: ../index.php?page=customers/credit-refund.php&id_customer=". $obj_customer->id ."&id_refund=". $obj_refund->id);
 		exit(0);
 	}
 	else
@@ -114,7 +114,7 @@ if (user_permissions_get('customers_credit'))
 		}
 
 		// return to services page
-		header("Location: ../index.php?page=customers/credit.php&id_customer=". $obj_customer->id ."");
+		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."");
 		exit(0);
 			
 	}

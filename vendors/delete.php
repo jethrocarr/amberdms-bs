@@ -21,7 +21,7 @@ class page_output
 	var $locked;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -36,6 +36,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Vendor's Details", "page=vendors/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Vendor's Journal", "page=vendors/journal.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Vendor's Invoices", "page=vendors/invoices.php&id=". $this->id ."");
+                $this->obj_menu_nav->add_item("Vendor's Credits", "page=vendors/credit.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Delete Vendor", "page=vendors/delete.php&id=". $this->id ."", TRUE);
 	}
 

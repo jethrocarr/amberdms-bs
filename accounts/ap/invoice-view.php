@@ -26,7 +26,7 @@ class page_output
 	var $obj_form_invoice;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch vapiables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);

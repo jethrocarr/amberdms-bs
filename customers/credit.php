@@ -19,11 +19,11 @@ class page_output
 	var $obj_table;
 
 	
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->obj_customer		= New customer_credits;
-		$this->obj_customer->id		= @security_script_input('/^[0-9]*$/', $_GET["id_customer"]);
+		$this->obj_customer->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);
 
 
 
@@ -41,7 +41,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Attributes", "page=customers/attributes.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->obj_customer->id ."");
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->obj_customer->id ."");
-		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->obj_customer->id ."", TRUE);
+		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id=". $this->obj_customer->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->obj_customer->id ."");
 		
 		if ($this->obj_customer->verify_reseller() == 1)
@@ -220,14 +220,17 @@ class page_output
 				{
 					$this->obj_table->data[$i]["accounts"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["id_custom"] ."\">". $this->obj_table->data[$i]["accounts"] ."</a>";
 				}
+                                                                
+                                // Translate the type field
+                                $this->obj_table->data[$i]["type"]=lang_trans($this->obj_table->data[$i]["type"]);
 			}
 
 			// display the table
 			$this->obj_table->render_table_html();
 
 			// display CSV/PDF download link
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/credit.php&id_customer=". $this->obj_customer->id ."\">Export as CSV</a></p>";
-			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/credit.php&id_customer=". $this->obj_customer->id ."\">Export as PDF</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=csv&page=customers/credit.php&id=". $this->obj_customer->id ."\">Export as CSV</a></p>";
+			print "<p align=\"right\"><a class=\"button_export\" href=\"index-export.php?mode=pdf&page=customers/credit.php&id=". $this->obj_customer->id ."\">Export as PDF</a></p>";
 		}
 
 

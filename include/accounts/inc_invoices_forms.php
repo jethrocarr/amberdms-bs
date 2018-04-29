@@ -25,6 +25,8 @@ class invoice_form_details
 	var $processpage;	// Page to submit the form to
 
 	var $locked;
+        
+        var $cancelled;
 
 	var $mode;
 	
@@ -50,7 +52,10 @@ class invoice_form_details
 		if ($this->mode == "edit")
 		{
 			$sql_invoice_obj		= New sql_query;
-			$sql_invoice_obj->string	= "SELECT id, locked FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
+                        if($this->type=="ar")
+                            $sql_invoice_obj->string	= "SELECT id, locked,cancelled FROM account_ar WHERE id='". $this->invoiceid ."' LIMIT 1";
+                        else
+                            $sql_invoice_obj->string	= "SELECT id, locked FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1";
 			$sql_invoice_obj->execute();
 			
 			if (!$sql_invoice_obj->num_rows())
@@ -63,6 +68,11 @@ class invoice_form_details
 				$sql_invoice_obj->fetch_array();
 				
 				$this->locked = $sql_invoice_obj->data[0]["locked"];
+                                
+                                if(isset($sql_invoice_obj->data[0]["cancelled"]))
+                                    $this->cancelled=$sql_invoice_obj->data[0]["cancelled"];
+                                else
+                                    $this->cancelled=0;
 			}
 		}
 
@@ -116,7 +126,14 @@ class invoice_form_details
 			$structure = form_helper_prepare_dropdownfromobj("customerid", $sql_struct_obj);
 			$structure["options"]["req"]		= "yes";
 			$structure["options"]["width"]		= "600";
-			$structure["options"]["search_filter"]	= "enabled";
+                        if($this->cancelled==0)
+                        {
+                            $structure["options"]["search_filter"]	= "enabled";
+                        }
+                        else
+                        {
+                            $structure["options"]["disabled"]           = "yes";
+                        }
 			$structure["defaultvalue"]		= $this->customer_id;
 			$this->obj_form->add_input($structure);
 		}
@@ -133,13 +150,20 @@ class invoice_form_details
 		$structure["options"]["req"]		= "yes";
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["width"]		= "600";
-		$structure["options"]["search_filter"]	= "enabled";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$structure["defaultvalue"]		= @$_SESSION["user"]["default_employeeid"];
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "code_invoice";
 		$structure["type"]		= "input";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 
 		if ($this->mode == "edit")
 			$structure["options"]["req"] = "yes";
@@ -150,11 +174,19 @@ class invoice_form_details
 		$structure = NULL;
 		$structure["fieldname"] 	= "code_ordernumber";
 		$structure["type"]		= "input";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "code_ponumber";
 		$structure["type"]		= "input";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 			
 		$structure = NULL;
@@ -162,6 +194,10 @@ class invoice_form_details
 		$structure["type"]		= "textarea";
 		$structure["options"]["height"]	= "100";
 		$structure["options"]["width"]	= 500;
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 
@@ -171,12 +207,20 @@ class invoice_form_details
 		$structure["fieldname"] 	= "date_trans";
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= date("Y-m-d");
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 		$structure = NULL;
 		$structure["fieldname"] 	= "date_due";
 		$structure["type"]		= "date";
 		$structure["defaultvalue"]	= invoice_calc_duedate(date("Y-m-d"));
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 
@@ -194,6 +238,10 @@ class invoice_form_details
 		$structure["options"]["autoselect"]	= "yes";
 		$structure["options"]["search_filter"]	= "enabled";
 		$structure["options"]["width"]		= "600";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 
@@ -212,6 +260,10 @@ class invoice_form_details
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
 		$structure["defaultvalue"]	= "Save Changes";
+                if($this->cancelled==1)
+                {
+                    $structure["options"]["disabled"]           = "yes";
+                }
 		$this->obj_form->add_input($structure);
 
 
@@ -254,7 +306,7 @@ class invoice_form_details
 		$this->obj_form->subforms["hidden"]					= array("id_invoice");
 	
 	
-		if ($this->locked)
+		if ($this->locked ||$this->cancelled)
 		{
 			$this->obj_form->subforms["submit"]				= array();
 		}
@@ -622,10 +674,18 @@ class invoice_form_delete
 		$structure["type"]		= "text";
 		$this->obj_form->add_input($structure);
 		
-		$structure = NULL;
-		$structure["fieldname"] 	= "delete_confirm";
+  		$structure = NULL;
+		
 		$structure["type"]		= "checkbox";
-		$structure["options"]["label"]	= "Yes, I wish to delete this invoice and realise that once deleted the data can not be recovered.";
+                if($this->type=="ar" && $GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+                {
+                     $structure["options"]["label"] = "Yes, I wish to cancel this invoice and realise that once cancelled the invoice can not be used.";
+                }
+                else
+                {
+                     $structure["options"]["label"] ="Yes, I wish to delete this invoice and realise that once deleted the data can not be recovered.";
+                }
+                $structure["fieldname"] 	= "delete_confirm";
 		$this->obj_form->add_input($structure);
 
 
@@ -650,7 +710,14 @@ class invoice_form_delete
 		$structure = NULL;
 		$structure["fieldname"]		= "submit";
 		$structure["type"]		= "submit";
-		$structure["defaultvalue"]	= "Delete Invoice";
+                if($this->type=="ar" && $GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+                {
+                    $structure["defaultvalue"]	= "Cancel Invoice";
+                }
+                else
+                {
+                    $structure["defaultvalue"]	= "Delete Invoice";    
+                }
 		$this->obj_form->add_input($structure);
 
 
@@ -659,7 +726,14 @@ class invoice_form_delete
 		$this->obj_form->load_data();
 
 
-		$this->obj_form->subforms[$this->type ."_invoice_delete"]	= array("code_invoice");
+                if($this->type=="ar" && $GLOBALS["config"]["ACCOUNTS_CANCEL_DELETE"]=="1")
+                {
+                    $this->obj_form->subforms["ar_invoice_cancel"]              = array("code_invoice");
+                }
+                else
+                {
+                    $this->obj_form->subforms[$this->type ."_invoice_delete"]	= array("code_invoice");
+                }
 
 		$this->obj_form->subforms["hidden"]				= array("id_invoice", "date_create");
 
@@ -670,7 +744,7 @@ class invoice_form_delete
 		}
 		else
 		{
-			$this->obj_form->subforms["submit"]			= array("delete_confirm", "submit");
+                        $this->obj_form->subforms["submit"]			= array("delete_confirm", "submit");
 		}
 
 	}

@@ -21,7 +21,7 @@ class page_output
 	var $obj_form_credit;
 
 
-	function page_output()
+	function __construct()
 	{
 		$this->requires["javascript"][]		= "include/accounts/javascript/credit-export.js";
 		

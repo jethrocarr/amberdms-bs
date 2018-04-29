@@ -63,7 +63,7 @@ if (user_permissions_get('customers_credit'))
 	*/
 	if (error_check())
 	{	
-		header("Location: ../index.php?page=customers/credit.php&id_customer=". $obj_customer->id ."&id_refund=". $obj_refund->id);
+		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."&id_refund=". $obj_refund->id);
 		exit(0);
 	}
 	else
@@ -83,7 +83,7 @@ if (user_permissions_get('customers_credit'))
 		/*
 			Return
 		*/
-		header("Location: ../index.php?page=customers/credit.php&id_customer=". $obj_customer->id ."");
+		header("Location: ../index.php?page=customers/credit.php&id=". $obj_customer->id ."");
 		exit(0);
 			
 	}

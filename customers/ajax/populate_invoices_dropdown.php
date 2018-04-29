@@ -12,6 +12,7 @@
 	Fields
 	[GET] id_customer
 	[GET] id_selected
+ *      [GET] inccan - if set to 1, includes cancelled invoices
 
 	Returns
 	<option value="INVOICE_ID">INVOICE_CODE</option>
@@ -25,9 +26,9 @@ if (user_permissions_get('customers_view') || user_permissions_get('accounts_ar_
 {
 	$id_customer 		= @security_script_input_predefined("int", $_GET['id_customer']);
 	$id_selected		= @security_script_input_predefined("int", $_GET['id_selected']);
-		
+	
 	$sql_obj		= New sql_query;
-	$sql_obj->string	= "SELECT id, code_invoice FROM account_ar WHERE customerid=" .$id_customer . "";
+	$sql_obj->string	= "SELECT id, code_invoice FROM account_ar WHERE amount_paid>0 AND customerid=" .$id_customer ." AND cancelled=0";
 	$sql_obj->execute();
 
 	

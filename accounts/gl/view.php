@@ -22,7 +22,7 @@ class page_output
 	var $num_trans;
 
 
-	function page_output()
+	function __construct()
 	{
 		// define page dependencies
 		$this->requires["javascript"][]		= "include/accounts/javascript/gl.js";

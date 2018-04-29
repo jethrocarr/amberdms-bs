@@ -105,6 +105,19 @@ class credit_form_details
 
 
 			// load AP invoice list
+                        $structure = form_helper_prepare_dropdownfromdb("invoiceid", "SELECT id, code_invoice as label FROM account_ap WHERE amount_total > 0 ORDER BY code_invoice");
+
+			if (@count($structure["values"]) == 0)
+			{
+				$structure["defaultvalue"] = "There are no invoices that can be credited!";
+			}
+
+			$structure["options"]["search_filter"] = "enabled";
+			$structure["options"]["width"]		= "350";
+			
+			$this->obj_form->add_input($structure);
+
+
 		}
 		else
 		{
@@ -126,7 +139,7 @@ class credit_form_details
 
 
 			// load AR invoice list
-			$structure = form_helper_prepare_dropdownfromdb("invoiceid", "SELECT id, code_invoice as label FROM account_ar WHERE amount_total > 0 ORDER BY code_invoice");
+			$structure = form_helper_prepare_dropdownfromdb("invoiceid", "SELECT id, code_invoice as label FROM account_ar WHERE amount_paid > 0 AND cancelled=0 ORDER BY code_invoice");
 
 			if (@count($structure["values"]) == 0)
 			{

@@ -22,7 +22,7 @@ class page_output
 	var $obj_menu_nav;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch key service details
 		$this->id		= @security_script_input('/^[0-9]*$/', $_GET["id"]);

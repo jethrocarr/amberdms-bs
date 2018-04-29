@@ -23,7 +23,7 @@ class page_output
 	var $obj_customer;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -53,7 +53,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Customer's Attributes", "page=customers/attributes.php&id_customer=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Orders", "page=customers/orders.php&id_customer=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Invoices", "page=customers/invoices.php&id=". $this->id ."");
-		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id_customer=". $this->id ."");
+		$this->obj_menu_nav->add_item("Customer's Credit", "page=customers/credit.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Customer's Services", "page=customers/services.php&id=". $this->id ."", TRUE);
 
 		if ($this->obj_customer->verify_reseller() == 1)

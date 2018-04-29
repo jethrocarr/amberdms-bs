@@ -16,7 +16,7 @@ class page_output
 	var $obj_table;
 
 
-	function page_output()
+	function __construct()
 	{
 		// fetch variables
 		$this->id = @security_script_input('/^[0-9]*$/', $_GET["id"]);
@@ -27,6 +27,7 @@ class page_output
 		$this->obj_menu_nav->add_item("Project Details", "page=projects/view.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Project Phases", "page=projects/phases.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebooked", "page=projects/timebooked.php&id=". $this->id ."");
+                $this->obj_menu_nav->add_item("Project Expenses", "page=projects/expenses.php&id=". $this->id ."");
 		$this->obj_menu_nav->add_item("Timebilled/Grouped", "page=projects/timebilled.php&id=". $this->id ."", TRUE);
 		$this->obj_menu_nav->add_item("Project Journal", "page=projects/journal.php&id=". $this->id ."");
 
@@ -55,7 +56,7 @@ class page_output
 			}
 			else
 			{
-				log_render("error", "page", "Before you can view project hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
+				log_write("error", "page", "Before you can view project hours, your administrator must configure the staff accounts you may access, or set the timekeeping_all_view permission.");
 			}
 		}
 	}
@@ -167,6 +168,12 @@ class page_output
 		{
 			for ($i=0; $i < $this->obj_table->data_num_rows; $i++)
 			{
+				// Initialise totals if necessary
+				if(!isset($this->obj_table->data[$i]["time_billed"]))
+					$this->obj_table->data[$i]["time_billed"]=0;
+				if(!isset($this->obj_table->data[$i]["time_not_billed"]))
+					$this->obj_table->data[$i]["time_not_billed"]=0;
+					
 				// fetch the time totals
 				// (because we have to do two different sums, we can't use a join)
 				$sql_obj		= New sql_query;
@@ -190,8 +197,7 @@ class page_output
 					}
 				}
 			}
-		}
-		
+		}		
 	}
 
 
@@ -218,7 +224,7 @@ class page_output
 			{
 				if ($this->obj_table->data[$i]["code_invoice"])
 				{
-					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["invoiceid"] ."\">AR ". $this->obj_table->data[$i]["code_invoice"] ."</a>";
+					$this->obj_table->data[$i]["code_invoice"] = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table->data[$i]["invoiceid"] ."\">". $this->obj_table->data[$i]["code_invoice"] ."</a>";
 				}
 			}
 			

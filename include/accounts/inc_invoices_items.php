@@ -26,24 +26,36 @@ class invoice_list_items
 	var $page_delete;	// Page for deleting the invoice item
 
 	var $locked;
+        var $cancelled;
 	var $mode;
 	
 	var $obj_table_standard;
 	var $obj_table_taxes;
 
-
+        var $form_helper;
 
 	function execute()
 	{
 		log_debug("invoice_list_items", "Executing execute()");
 
 		// check lock status
-		if ($this->type != "quotes")
+		if ($this->type != "quotes" && $this->type!="project")
 		{
 			$this->locked = sql_get_singlevalue("SELECT locked as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
 		}
+                else
+                {
+                    $this->locked=0;
+                }
 
-
+                if ($this->type=="ar")
+                {
+                    $this->cancelled=sql_get_singlevalue("SELECT cancelled as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
+                }
+                else 
+                { 
+                    $this->cancelled=0; 
+                }
 
 		/*
 			Create table of standard object data
@@ -63,20 +75,46 @@ class invoice_list_items
 		$this->obj_table_standard->add_column("money", "price", "");
 		$this->obj_table_standard->add_column("standard", "discount", "NONE");
 		$this->obj_table_standard->add_column("money", "amount", "");
-
-		// defaults
-		$this->obj_table_standard->columns		= array("item_info", "description", "qnty", "units", "price", "discount", "amount");
-
+                if($this->type=="project")
+                {
+                    // Add column for billed for project expenses
+                    $this->obj_table_standard->add_column("bool_tick", "select", "NONE");
+                    $this->obj_table_standard->add_column("standard", "code_invoice", "c.code_invoice");
+                    $this->obj_table_standard->columns		= array("select","item_info", "description", "qnty", "units", "price", "discount", "amount","code_invoice");
+                }
+                else
+                {
+                    // defaults
+                    $this->obj_table_standard->columns		= array("item_info", "description", "qnty", "units", "price", "discount", "amount");
+                }
+                
 		// totals
 		$this->obj_table_standard->total_columns	= array("amount");
 
 		// define SQL structure
 		$this->obj_table_standard->sql_obj->prepare_sql_settable("account_items");
 		
-		$this->obj_table_standard->sql_obj->prepare_sql_addfield("id", "");
+		$this->obj_table_standard->sql_obj->prepare_sql_addfield("id", "account_items.id");
 		$this->obj_table_standard->sql_obj->prepare_sql_addfield("type", "");
 		$this->obj_table_standard->sql_obj->prepare_sql_addfield("customid", "");
 		$this->obj_table_standard->sql_obj->prepare_sql_addfield("chartid", "");
+                if($this->type=="project")
+                {
+                    // Check to see if the expense item has been allocated to an invoice
+                    $this->obj_table_standard->sql_obj->prepare_sql_addfield("invoice", "b.invid");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT itemid, option_value FROM account_items_options WHERE option_name=\"INVOICED_EXPENSE\") AS a ON account_items.id = a.itemid");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT id, invoiceid AS invid FROM account_items WHERE invoicetype='ar') AS b ON b.id= a.option_value");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT id, code_invoice FROM account_ar WHERE cancelled='0') AS c ON c.id= b.invid");
+                }
+                
+                if($this->type=="ar")
+                {
+                    $this->obj_table_standard->sql_obj->prepare_sql_addfield("projectid", "b.projid");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addfield("code_project", "c.code_project");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT itemid, option_value FROM account_items_options WHERE option_name=\"INVOICED_EXPENSE\") AS a ON account_items.id = a.option_value");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT id, invoiceid AS projid FROM account_items WHERE invoicetype='project') AS b ON b.id= a.itemid");
+                    $this->obj_table_standard->sql_obj->prepare_sql_addjoin("LEFT JOIN (SELECT id, code_project FROM projects) AS c ON c.id= b.projid");                    
+                }
 
 		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("invoiceid='". $this->invoiceid ."'");
 		$this->obj_table_standard->sql_obj->prepare_sql_addwhere("invoicetype='". $this->type ."'");
@@ -90,6 +128,7 @@ class invoice_list_items
 
 		// run SQL query
 		$this->obj_table_standard->generate_sql();
+               
 		$this->obj_table_standard->load_data_sql();
 
 		if ($this->obj_table_standard->data_num_rows)
@@ -226,21 +265,25 @@ class invoice_list_items
 			{
 				case "ar":
 				case "ar_credit":
-					$authtype = "ar";
+					$authtype = "accounts_ar";
 				break;
 
 				case "ap":
 				case "ap_credit":
-					$authtype = "ap";
+					$authtype = "accounts_ap";
 				break;
 
 				case "quote":
 				case "quotes":
-					$authtype = "quotes";
+					$authtype = "accounts_quotes";
 				break;
+                                
+                                case "project":
+                                        $authtype = "projects";
+                                break;
 			}
 
-			if (user_permissions_get("accounts_". $authtype ."_write") && !$this->locked)
+			if (user_permissions_get( $authtype ."_write") && !$this->locked)
 			{
 				// edit link
 				$structure = NULL;
@@ -325,14 +368,20 @@ class invoice_list_items
 
 		if (!$this->obj_table_standard->data_num_rows)
 		{
-			if ($this->type == "ar" || $this->type == "ap" || $this->type == "quotes")
+			if (($this->type == "ar" && $this->cancelled==0) || $this->type == "ap" || $this->type == "quotes" || $this->type=="project")
 			{
 				// regular invoice item
 				print "<table class=\"table_highlight_info\" width=\"100%\">";
 				print "<tr><td width=\"100%\">";
-
-					print "<p>This invoice has no items and is currently empty.</p>";
-
+                                
+                                if($this->type=="project")
+                                {
+                                    print "<p>This project has no expenses and is currently empty.</p>";
+                                }    
+				else
+                                {
+                                    print "<p>This invoice has no items and is currently empty.</p>";
+                                }
 					print "<div class=\"invoice_button_area\">";
 						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
 							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
@@ -360,7 +409,16 @@ class invoice_list_items
 		}
 		else
 		{
+                        /*
+                         * If this is a project expenses sheet, then add a form to submit the expenses to an invoice
+                         */
 
+                        if($this->type=="project")
+                        {
+                            print "<form method=\"post\" action=\"projects/expenses-invoice-process.php\" class=\"form_standard\">";
+                            
+                        }
+                            
 			print "<table width=\"100%\" class=\"table_content\" style=\"border-bottom: 0px;\" cellspacing=\"0\">";
 
 
@@ -392,18 +450,45 @@ class invoice_list_items
 				{
 					$content = $this->obj_table_standard->data_render[$i][$columns];
 
+                                        if($columns=="select")
+                                        {
+                                            if($this->obj_table_standard->data_render[$i]["code_invoice"]=="")
+                                            {
+                                                $content="<input type=\"checkbox\" name=\"itemid_".$this->obj_table_standard->data[$i]["id"]."\"></input>";
+                                            }
+                                            else
+                                            {
+                                                $content="&nbsp;";
+                                            }
+                                        }
+
+                                        if (isset($this->obj_table_standard->data_render[$i]["code_invoice"]) && $columns=="code_invoice")
+                                        {
+                                                $content = "<a href=\"index.php?page=accounts/ar/invoice-view.php&id=". $this->obj_table_standard->data[$i]["invoice"] ."\">". $this->obj_table_standard->data_render[$i]["code_invoice"] ."</a>";
+                                        }
+
+                                        if($columns=="item_info")
+                                        {
+                                            if(isset($this->obj_table_standard->data[$i]["projectid"]))
+                                            {
+                                                $content=$content." (Project <a href=\"index.php?page=projects/view.php&id=". $this->obj_table_standard->data[$i]["projectid"] ."\">".$this->obj_table_standard->data[$i]["code_project"]."</a> expense)";
+                                            }
+                                        }
+                                        
 					if (!$content)
 					{
 						$content = "&nbsp;";
 					}
 
+                                        
+                                            
 					// display
 					print "<td valign=\"top\">$content</td>";
 				}
 
 
 				// links
-				if (!empty($this->obj_table_standard->links))
+				if (!empty($this->obj_table_standard->links) && $this->cancelled==0)
 				{
 					print "<td align=\"right\">";
 
@@ -430,7 +515,6 @@ class invoice_list_items
 						{
 							print "<a class=\"button_small\" href=\"index.php?page=". $this->obj_table_standard->links[$link]["page"] ."";
 						}
-
 						// add each option
 						foreach (array_keys($this->obj_table_standard->links[$link]["options"]) as $getfield)
 						{
@@ -445,7 +529,8 @@ class invoice_list_items
 							}
 							else
 							{
-								print "&$getfield=". $this->obj_table_standard->data[$i][ $this->obj_table_standard->links[$link]["options"][$getfield]["column"] ];
+								if($getfield<>"full_link")
+									print "&$getfield=". $this->obj_table_standard->data[$i][ $this->obj_table_standard->links[$link]["options"][$getfield]["column"] ];
 							}
 						}
 
@@ -459,8 +544,12 @@ class invoice_list_items
 						}
 					}
 
-					print "</tr>";
+					print "</td>";
 				}
+                                else
+                                    print "<td></td>";
+                                
+                                print "</tr>";
 			}
 			
 			/*
@@ -470,27 +559,48 @@ class invoice_list_items
 			//calculate number of rows buttons can cover
 			$footer_rows = $this->obj_table_taxes->data_num_rows + 2;
 			
+                        if($this->type=="project")
+                        {
+                            $cols=5;
+                        }
+                        else
+                        {
+                            $cols=4;
+                        }
+                        
 			print "<tr>";
 				
-				print "<td class=\"blank\" colspan=\"4\" rowspan=\"$footer_rows\">";
+				print "<td class=\"blank\" colspan=\"$cols\" rowspan=\"$footer_rows\">";
+                                
+                                if($this->type=="project")
+                                {
+                                    $perm="projects";
+                                    $invproj="project";
+                                }
+                                else
+                                {
+                                    $perm="accounts_".$this->type;
+                                    $invproj="invoice";
+                                }
 				
-				if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+				if (user_permissions_get($perm ."_write") && !$this->locked && $this->cancelled==0)
 				{
-					print "<p><strong>Add new items to invoice:<strong></p>";
+					print "<p><strong>Add new items to $invproj:</strong></p>";
 					print "<div class=\"invoice_button_area\">";
-						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
+					print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=standard\">
 							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Basic Transaction</strong></a>
 							<br />";
 
-						if ($this->type == "ar")
-						{
-							print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
-								<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
-						}
+                                        if ($this->type == "ar")
+                                        {
+                                                print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=time\">
+                                                        <img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Time Item</strong></a><br />";
+                                        }
 
-						print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
-							<img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
-					print "</div>";
+                                        print "<a href=\"index.php?page=". $this->page_view ."&id=".$this->invoiceid."&type=product\">
+                                                <img src=\"images/icons/plus.gif\" height=\"15\" width=\"15\"/>&nbsp;&nbsp;<strong>Product</strong></a>";					
+					
+                                        print "</div>";
 				}
 				print "</td>";
 			
@@ -615,9 +725,53 @@ class invoice_list_items
 				print "<td class=\"footer\">&nbsp;</td>";
 			print "</tr>";
 
+                        
 
 			print "</table>";
-
+                        
+                        if($this->type=="project")
+                        {
+                            // get customer of project
+                            $customer=sql_get_singlevalue("SELECT customerid AS value FROM projects WHERE id='".$this->invoiceid."'");
+                            
+                            $this->form_helper=new form_input;
+                            $this->form_helper->language= $_SESSION["user"]["lang"];
+                            
+                            $sql_struct_obj	= New sql_query;
+                            $sql_struct_obj->prepare_sql_settable("account_ar");
+                            $sql_struct_obj->prepare_sql_addfield("id", "account_ar.id");
+                            $sql_struct_obj->prepare_sql_addfield("label", "account_ar.code_invoice");
+                            $sql_struct_obj->prepare_sql_addorderby("code_invoice");
+                            $sql_struct_obj->prepare_sql_addwhere("customerid = '".$customer."' AND cancelled='0' AND ((amount_total<>amount_paid AND amount_total>0) OR amount_total=0)");
+		
+                            $structure = form_helper_prepare_dropdownfromobj("invoiceid", $sql_struct_obj);
+                            $structure["options"]["req"]		= "yes";
+                            $structure["options"]["autoselect"]	= "yes";
+                            $structure["options"]["prelabel"]="Invoice: ";
+                            $this->form_helper->add_input($structure);
+                            
+                            $this->form_helper->render_field("invoiceid");
+                            
+                            $structure = NULL;
+                            $structure["fieldname"] 	= "projectid";
+                            $structure["type"]		= "hidden";
+                            $structure["defaultvalue"]	= $this->invoiceid;
+                            $this->form_helper->add_input($structure);
+                            
+                            $this->form_helper->render_field("projectid");
+                            
+                            // submit
+                            $structure = NULL;
+                            $structure["fieldname"]     = "submit";
+                            $structure["type"]		= "submit";
+                            $structure["defaultvalue"]	= "Add selected expenses to invoice";
+                            $this->form_helper->add_input($structure);
+                        
+                            print "&nbsp;";
+                            $this->form_helper->render_field("submit");
+                            
+                            print "</form>";
+                        }
 
 
 		} // end if items exist
@@ -742,6 +896,7 @@ class invoice_list_payments
 
 	var $mode;
 	var $locked;
+        var $cancelled;
 	
 //	var $obj_table_standard;
 //	var $obj_table_taxes;
@@ -755,7 +910,15 @@ class invoice_list_payments
 		// TODO: fix up this class to comply with the standard coding style of the rest of the application
 	
 		$this->locked = sql_get_singlevalue("SELECT locked as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
-
+                
+                if($this->type=="ar")
+                {
+                    $this->cancelled=sql_get_singlevalue("SELECT cancelled as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."'");
+                }
+                else
+                {
+                    $this->cancelled=0;
+                }
 		
 		return 1;
 	}
@@ -828,9 +991,16 @@ class invoice_list_payments
 			
 			}
 
+                        if($this->type=="project")
+                        {
+                            $perm="projects";
+                        }
+                        else
+                        {
+                            $perm="accounts_". $this->type;
+                        }
 
-
-			if (user_permissions_get("accounts_". $this->type ."_write") && !$this->locked)
+			if (user_permissions_get( $perm."_write") && !$this->locked && $this->cancelled==0)
 			{
 				// edit link
 				$structure = NULL;
@@ -855,7 +1025,7 @@ class invoice_list_payments
 			$item_list->render_table_html();
 		}
 
-		if (!$this->locked)
+		if (!$this->locked && $this->cancelled==0)
 		{
 			print "<p><a class=\"button\" href=\"index.php?page=". $this->page_view ."&id=". $this->invoiceid ."&type=payment\">Add Payment</a></p>";
 		}
@@ -923,16 +1093,20 @@ class invoice_form_item
 			Fetch customer ID
 		*/
 
-		if ($this->type == "ap")
+		if (substr($this->type,0,2) == "ap")
 		{
 			// fetch the vendorid for this invoice
 			$orgid = sql_get_singlevalue("SELECT vendorid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
 		}
-		else
+		elseif($this->type!="project")
 		{
 			// fetch the customer ID for this invoice
 			$orgid = sql_get_singlevalue("SELECT customerid as value FROM account_". $this->type ." WHERE id='". $this->invoiceid ."' LIMIT 1");
 		}
+                else
+                {
+                    $orgid=0;
+                }
 					
 
 		/*
@@ -941,6 +1115,8 @@ class invoice_form_item
 
 		switch ($this->item_type)
 		{
+
+                        
 			case "standard":
 			
 				/*
@@ -1207,7 +1383,7 @@ class invoice_form_item
 				if ($this->type == "ar")
 				{
 					// list of avaliable time groups
-					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
+					$structure = form_helper_prepare_dropdownfromdb("timegroupid", "SELECT time_groups.id, projects.name_project as label, time_groups.name_group as label1 FROM time_groups LEFT JOIN projects ON projects.id = time_groups.projectid WHERE time_groups.customerid='$orgid' AND (invoiceitemid='0' OR invoiceitemid='". $this->itemid ."') ORDER BY name_group");
 					$structure["options"]["width"]		= "600";
 					$structure["options"]["autoselect"]	= "yes";
 					$structure["options"]["search_filter"]	= "enabled";
@@ -1275,11 +1451,11 @@ class invoice_form_item
 
 					// TODO: need to look at improving time <-> product relationships
 					// fetch discount (if any) from product
-					// $discount_product = sql_get_singlevalue("SELECT discount FROM products WHERE id='". $this->productid ."' LIMIT 1");
+					$discount_product = sql_get_singlevalue("SELECT discount as value FROM products WHERE id='". $this->productid ."' LIMIT 1");
 
 
 					// choose the largest discount
-					if ($discount_org || $discount_product)
+					if ($discount_org!=0 || $discount_product!=0)
 					{
 						if ($discount_org > $discount_product)
 						{
@@ -1536,7 +1712,7 @@ class invoice_form_item
 
 				$structure = NULL;
 
-				if ($this->type == "ap")
+				if ($this->type == "ap_credit")
 				{
 					$structure = charts_form_prepare_acccountdropdown("chartid", "ap_expense");
 				}
@@ -1783,7 +1959,7 @@ class invoice_form_item
 	invoice-items.php -> invoice-items-add-process.php -> invoice-items-edit.php
 
 	Values
-	type			"ar" or "ap" invoice
+	type			"ar" or "ap" invoice or "project"
 	returnpage_error	Page to return to in event of errors or updates
 	returnpage_success	Page to return to if successful.
 */
@@ -1831,7 +2007,14 @@ function invoice_form_items_add_process($type,  $returnpage_error, $returnpage_s
 		}
 	}
 
-
+        if($type=="project")
+        {
+            $pathadj="";
+        }
+        else
+        {
+            $pathadj="../";
+        }
 
 	/*
 		Error Handling
@@ -1839,7 +2022,7 @@ function invoice_form_items_add_process($type,  $returnpage_error, $returnpage_s
 
 	if ($_SESSION["error"]["message"])
 	{
-		header("Location: ../../index.php?page=$returnpage_error&id=$invoiceid");
+		header("Location: ".$pathadj."../index.php?page=$returnpage_error&id=$invoiceid");
 		exit(0);
 	}
 
@@ -1849,7 +2032,7 @@ function invoice_form_items_add_process($type,  $returnpage_error, $returnpage_s
 		Success
 	*/
 
-	header("Location: ../../index.php?page=$returnpage_success&id=$invoiceid&type=$item_type&productid=$productid");
+	header("Location: ".$pathadj."../index.php?page=$returnpage_success&id=$invoiceid&type=$item_type&productid=$productid");
 	exit(0);
 
 
@@ -1899,7 +2082,14 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		$mode = "add";
 	}
 	
-	
+	 if($type=="project")
+        {
+            $pathadj="";
+        }
+        else
+        {
+            $pathadj="../";
+        }
 	
 	//// ERROR CHECKING ///////////////////////
 	
@@ -2074,13 +2264,11 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		log_write("error", "process", "An error was encountered whilst processing supplied data.");
 	}
 
-
-
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$item->type_invoice ."_invoice_". $mode] = "failed";
-		header("Location: ../../index.php?page=$returnpage_error&id=". $item->id_invoice ."&itemid=". $item->id_item ."&type=". $item->type_item ."");
+		header("Location: $pathadj../index.php?page=$returnpage_error&id=". $item->id_invoice ."&itemid=". $item->id_item ."&type=". $item->type_item ."");
 		exit(0);
 	}
 	else
@@ -2160,7 +2348,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 		}
 
 		// display updated details
-		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice."");
+		header("Location: $pathadj../index.php?page=$returnpage_success&id=". $item->id_invoice."");
 		exit(0);
 
 
@@ -2178,7 +2366,7 @@ function invoice_form_items_process($type,  $returnpage_error, $returnpage_succe
 	Processing page to delete invoice items.
 
 	Values
-	type			"ar", "ap" or "quotes"
+	type			"ar", "ap", "quotes" or "project"
 	returnpage_error	Page to return to in event of errors or updates
 	returnpage_success	Page to return to if successful.
 */
@@ -2186,7 +2374,17 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 {
 	log_debug("inc_invoices_items", "Executing invoice_form_items_delete_process($type, $returnpage_error, $returnpage_success)");
 
-
+        if($type=="project")
+        {
+            $pathadj="";
+        }
+        else
+        {
+            $pathadj="../";
+        }
+        
+        $mode="delete";
+        
 	/*
 		Start invoice_items object
 	*/
@@ -2231,10 +2429,10 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 
 
 	/// if there was an error, go back to the entry page
-	if ($_SESSION["error"]["message"])
+	if (isset($_SESSION["error"]["message"]))
 	{	
 		$_SESSION["error"]["form"][$type ."_invoice_". $mode] = "failed";
-		header("Location: ../../index.php?page=$returnpage_error&id=$id");
+		header("Location: ".$pathadj."../index.php?page=$returnpage_error&id=$item->id_invoice");
 		exit(0);
 	}
 	else
@@ -2250,7 +2448,31 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 		/*
 			Delete the item
 		*/
-		$item->action_delete();
+                
+                $sql_obj->string="SELECT id FROM account_items_options WHERE option_name='INVOICED_EXPENSE' AND option_value='".$item->id_item."'";
+                $sql_obj->execute();
+                $sql_obj->fetch_array();
+                
+                if($sql_obj->num_rows())
+                {
+                    $projectid=sql_get_singlevalue("SELECT b.projid AS value FROM account_items LEFT JOIN( SELECT itemid, option_value FROM account_items_options WHERE option_name = 'INVOICED_EXPENSE' ) AS a ON account_items.id = a.option_value LEFT JOIN( SELECT id, invoiceid AS projid FROM account_items WHERE invoicetype = 'project' ) AS b ON b.id = a.itemid WHERE account_items.id = '".$item->id_item."'");
+
+                    $item->rollback=0;
+                    $item->action_delete();
+                    
+                    journal_quickadd_event("projects", $projectid, "Project expense removed from Invoice ". sql_get_singlevalue("SELECT code_invoice AS value FROM account_ar WHERE id='$item->id_invoice'"));
+                
+                    $sql_obj->string="DELETE FROM account_items_options WHERE id='".$sql_obj->data[0]["id"]."'";
+                    $sql_obj->execute();
+                    
+                    // Need to reverse the ledger transaction related to this item
+                    $sql_obj->string="DELETE FROM account_trans WHERE type='proj_ar' AND customid='".$item->id_item."'";
+                    $sql_obj->execute();                }
+                else
+                {
+                    $item->rollback=1;
+                    $item->action_delete();
+                }
 
 
 		/*
@@ -2297,7 +2519,7 @@ function invoice_form_items_delete_process($type,  $returnpage_error, $returnpag
 			$sql_obj->trans_commit();
 		}
 
-		header("Location: ../../index.php?page=$returnpage_success&id=". $item->id_invoice ."");
+		header("Location: $pathadj../index.php?page=$returnpage_success&id=". $item->id_invoice ."");
 		exit(0);
 	}
 	
@@ -2319,7 +2541,14 @@ function invoice_form_tax_override_process($returnpage)
 {
 	log_debug("inc_invoices_items", "Executing invoice_form_tax_override_process($returnpage)");
 
-
+        if($type="project")
+        {
+            $pathadj="";
+        }
+        else
+        {
+            $pathadj="../";
+        }
 
 	/*
 		Start invoice_items object
@@ -2364,7 +2593,7 @@ function invoice_form_tax_override_process($returnpage)
 	if ($_SESSION["error"]["message"])
 	{	
 		$_SESSION["error"]["form"]["ap_invoice_". $mode ."_override"] = "failed";
-		header("Location: ../../index.php?page=$returnpage&id=". $item->id_invoice);
+		header("Location: $pathadj../index.php?page=$returnpage&id=". $item->id_invoice);
 		exit(0);
 	}
 	else
@@ -2427,7 +2656,7 @@ function invoice_form_tax_override_process($returnpage)
 		}
 
 		// done
-		header("Location: ../../index.php?page=$returnpage&id=". $item->id_invoice);
+		header("Location: $pathadj../index.php?page=$returnpage&id=". $item->id_invoice);
 		exit(0);
 	
 	}
@@ -2435,8 +2664,139 @@ function invoice_form_tax_override_process($returnpage)
 
 } // end of invoice_form_tax_override_process
 
+/*
+	expenses_to_invoice_form_items_process($returnpage_error, $returnpage_success)
+
+	Form for processing expenses to invoice form results
+
+	Values
+	returnpage_error	Page to return to in event of errors or updates
+	returnpage_success	Page to return to if successful.
+*/
+function expenses_to_invoice_form_items_process($returnpage_error, $returnpage_success)
+{
+        log_debug("inc_invoices_items", "Executing expenses_to_invoice_form_items_process($returnpage_error, $returnpage_success)");
+
+        $projectid=@security_form_input_predefined("int", "projectid", 1, "");
+        $invoiceid=@security_form_input_predefined("int", "invoiceid", 1, "");
+        
+        $sql_entries_obj = New sql_query;
+	
+	$sql_entries_obj->prepare_sql_settable("account_items");
+	$sql_entries_obj->prepare_sql_addfield("id", "");
+        $sql_entries_obj->prepare_sql_addwhere("invoicetype='project' AND invoiceid='".$projectid."'");
+        $sql_entries_obj->generate_sql();
+	$sql_entries_obj->execute();
+    
+        if ($sql_entries_obj->num_rows()) 
+        {
+            $sql_entries_obj->fetch_array();
+
+            foreach ($sql_entries_obj->data as $entries_data) 
+            {
+                // only get the data for selected time entries
+                if ($_POST["itemid_" . $entries_data["id"]] == "on") 
+                {
+                    $form_data[$entries_data["id"]] = 1;
+                }
+                else
+                {
+                    $form_data[$entries_data["id"]] = 0;
+                }
+            }
+        }
+
+        /*
+                Start SQL Transaction
+        */
+        $sql_obj = New sql_query;
+        $sql_obj->trans_begin();
+
+        foreach ($form_data as $itemid=>$isselected)
+        {
+            if($isselected)
+            {
+                // Add work to move expenses to invoice item here.
+                convert_expense_to_invoice($itemid,$invoiceid);
+            }
+        }
 
 
+        /*
+                Commit
+        */
 
+        if (error_check())
+        {
+                $sql_obj->trans_rollback();
+
+                log_write("error", "inc_invoice_items", "An error occured whilst updating the invoice item. No changes have been made.");
+        }
+        else
+        {            
+            $sql_obj->trans_commit();
+            journal_quickadd_event("projects", $projectid, "Expense(s) transferred to Invoice ". sql_get_singlevalue("SELECT code_invoice AS value FROM account_ar WHERE id='$invoiceid'"));
+            journal_quickadd_event("account_ar",$invoice_id,"Expense(s) transferred from Project ".sql_get_singlevalue("SELECT code_project AS value FROM projects LEFT JOIN account_items ON account_items.invoiceid=projects.id WHERE account_items.id='".$item_id."'"));
+
+        }
+
+        // display updated details
+        header("Location: ../index.php?page=$returnpage_success&id=". $projectid."");
+        exit(0);
+
+}
+
+function convert_expense_to_invoice($item_id,$invoice_id)
+{
+    $original=new invoice_items();
+            
+    $original->id_item=$item_id;
+    $original->type_item=sql_get_singlevalue("SELECT type AS value FROM account_items WHERE id='".$item_id."'");
+    $original->id_invoice=sql_get_singlevalue("SELECT invoiceid AS value FROM account_items WHERE id='".$item_id."'");
+    $original->type_invoice="project";
+    $original->load_data();
+    
+    // Get values for use in updaing the ledger later on
+    $projectaccount=sql_get_singlevalue("SELECT dest_account AS value FROM projects WHERE id='".$original->id_invoice."'");
+    $oldchartid=$original->data["chartid"];
+    $oldamount=$original->data["amount"];
+    
+    // Change the unit cost to the selling price, not the bought price
+    if($original->type_item=="product")
+    {
+        $original->data["price"]=sql_get_singlevalue("SELECT price_sale AS value FROM products WHERE id='".$original->data["customid"]."'");
+        $original->data["amount"]=$original->data["price"]*$original->data["quantity"];
+    }
+    
+    // Now, reset to make it a new item for the existing invoice.
+    $original->id_item=0;
+    $original->id_invoice=$invoice_id;
+    $original->type_invoice="ar";
+    
+    // Carry out the addition process
+    $original->action_create();
+
+    // Credit the project account with the cost of the item
+    ledger_trans_add("credit", "proj_ar", $original->id_item, sql_get_singlevalue("SELECT CURDATE() AS value"), $projectaccount, $oldamount, "", "");
+    ledger_trans_add("debit", "proj_ar", $original->id_item, sql_get_singlevalue("SELECT CURDATE() AS value"), $oldchartid, $oldamount, "", "");
+
+    $original->action_update();
+    $original->action_update_tax();
+    $original->action_update_total();
+    $original->action_update_ledger();
+    
+    if(!error_check())
+    {
+        $sql_obj=new sql_query;
+        $sql_obj->string="INSERT INTO account_items_options (itemid,option_name, option_value) VALUES ('".$item_id."','INVOICED_EXPENSE','".$original->id_item."')";
+        $sql_obj->execute();
+        
+        if(!$sql_obj->fetch_insert_id())
+        {
+            $_SESSION["error"]["message"][] = "Unable to update item data."; 
+        }
+        
+    }
+}
 
 ?>

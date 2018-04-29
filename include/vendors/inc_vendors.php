@@ -774,5 +774,95 @@ class vendor
 
 } // end of class:vendors
 
+class vendor_credits extends vendor
+{
+
+	/*
+		credit_render_summarybox()
+
+		Displays a summary box with information about the vendor's credit status such as balance.
+
+		Return Codes
+		0	failure
+		1	sucess
+	*/
+	function credit_render_summarybox()
+	{
+		log_debug("inc_vendors", "Executing credit_render_summarybox");
+
+
+		// load customer details if we haven't already
+		if (empty($this->data))
+		{
+			$this->load_data();
+		}
+
+
+		// are there any credits? If there are none, balance is simple.
+		$obj_sql 		= New sql_query;
+		$obj_sql->string	= "SELECT id FROM `vendors_credits` WHERE id_vendor='". $this->id ."'";
+		$obj_sql->execute();
+
+		if ($obj_sql->num_rows())
+		{
+			// fetch general details
+			$credit_total_amount	= sql_get_singlevalue("SELECT SUM(amount_total) as value FROM vendors_credits WHERE id_vendor='". $this->id ."'");
+			
+                        // display credits summary information
+			if ($credit_total_amount > 0)
+			{
+				// current credit
+				print "<table width=\"100%\" class=\"table_highlight_open\">";
+				print "<tr>";
+					print "<td>";
+					print "<b>Vendor ". $this->data["name_vendor"] ." has current outstanding credit.</b>";
+			
+					print "<table cellpadding=\"4\">";
+							
+						print "<tr>";
+							print "<td>Total Amount:</td>";
+							print "<td>". format_money($credit_total_amount) ."</td>";
+						print "</tr>";
+
+					print "</table>";
+
+					print "</td>";
+
+				print "</tr>";
+				print "</table>";
+			}
+			else
+			{
+				// no credit, but there have been in the past
+				print "<table width=\"100%\" class=\"table_highlight_open\">";
+				print "<tr>";
+					print "<td>";
+					print "<b>Vendor ". $this->data["name_vendor"] ." has a zero credit balance.</b>";
+					print "</td>";
+				print "</tr>";
+				print "</table>";
+			}
+		}
+		else
+		{
+			// no credits
+			print "<table width=\"100%\" class=\"table_highlight_info\">";
+			print "<tr>";
+				print "<td>";
+				print "<b>Vendor ". $this->data["name_vendor"] ." has no credits against their account.</b>";
+				print "<p>To obtain a credit on a vendor account, create a credit note against a past invoice.</p>";
+				print "</td>";
+			print "</tr>";
+			print "</table>";
+		}
+
+		print "<br>";
+	}
+
+
+
+}
+
+
 
 ?>

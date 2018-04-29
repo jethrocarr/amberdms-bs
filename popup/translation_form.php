@@ -13,7 +13,7 @@ class page_output
 	var $obj_form;
 	var $num_trans;
 
-	function page_output()
+	function __construct()
 	{
 		$this->id = $_SESSION["user"]["id"];
 	}
